@@ -1,0 +1,12 @@
+﻿Build started 3/11/2012 12:26:32 AM.
+     1>Project "D:\Code\game\core\core\core.vcxproj" on node 2 (rebuild target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\core.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       FinalizeBuildStatus:
+         Deleting file "Debug\core.unsuccessfulbuild".
+         Touching "Debug\core.lastbuildstate".
+     1>Done Building Project "D:\Code\game\core\core\core.vcxproj" (rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.04
