@@ -8,14 +8,13 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "core/cSystemLog.h"
+#include "core/Log.h"
 
-#include "engine/eInputManager.h"
-#include "engine/eRenderManager.h"
+#include "engine/InputManager.h"
+#include "engine/RenderManager.h"
 
-cSystemLog m_log;
-eRenderManager m_renderManager;
-eInputManager m_inputManager;
+Log m_log;
+InputManager m_inputManager;
 
 int main(int argc, char *argv[])
 {
@@ -64,8 +63,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 	
-    m_renderManager.Init(sc_colourBlack);
-    m_renderManager.Resize(1024, 768, 32);
+	// Subsystem startup
+	RenderManager * m_renderManager = new RenderManager();
+    m_renderManager->Init(sc_colourBlack);
+    m_renderManager->Resize(1024, 768, 32);
 
     // program main loop
     bool active = true;
@@ -78,13 +79,13 @@ int main(int argc, char *argv[])
             active = m_inputManager.Update(event);
         }
 
-        m_renderManager.DrawScene();
+        m_renderManager->DrawScene();
 
         // Cycle SDL scene
         SDL_GL_SwapBuffers();
     }
 
-    m_log.Write(cSystemLog::LL_INFO, cSystemLog::LC_CORE, "Exited cleanly");
+    m_log.Write(Log::LL_INFO, Log::LC_CORE, "Exited cleanly");
 
     return 0;
 }

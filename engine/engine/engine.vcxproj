@@ -74,16 +74,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\eGameObject.h" />
-    <ClInclude Include="..\eGameObjectComponent.h" />
-    <ClInclude Include="..\eInputManager.h" />
-    <ClInclude Include="..\eRenderManager.h" />
-    <ClInclude Include="..\eTimer.h" />
+    <ClInclude Include="..\Font.h" />
+    <ClInclude Include="..\GameObject.h" />
+    <ClInclude Include="..\GameObjectComponent.h" />
+    <ClInclude Include="..\InputManager.h" />
+    <ClInclude Include="..\RenderManager.h" />
+    <ClInclude Include="..\Singleton.h" />
+    <ClInclude Include="..\StringUtils.h" />
+    <ClInclude Include="..\Texture.h" />
+    <ClInclude Include="..\Time.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\eInputManager.cpp" />
-    <ClCompile Include="..\eRenderManager.cpp" />
-    <ClCompile Include="..\eTimer.cpp" />
+    <ClCompile Include="..\Font.cpp" />
+    <ClCompile Include="..\InputManager.cpp" />
+    <ClCompile Include="..\RenderManager.cpp" />
+    <ClCompile Include="..\Stringutils.cpp" />
+    <ClCompile Include="..\Texture.cpp" />
+    <ClCompile Include="..\Time.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

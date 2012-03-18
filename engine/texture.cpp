@@ -35,53 +35,6 @@ typedef struct {
 GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
 GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
-/* 
- * load in bitmap as a GL texture in three modes
- */
-GLuint loadTextureBMP(char* file, int mode) {
-	GLuint texture;
-	SDL_Surface *TextureImage; 
-
-    TextureImage = SDL_LoadBMP(file); 
-	if (TextureImage == NULL) {
-        printf("Couldn't load the texture reason: %s\n",  SDL_GetError());
-        return FALSE;
-	}
-	//generate three textures
-	glGenTextures(1, &texture);
-	
-	switch (mode) {
-		case 3:
-			// make a mip mapped tex that can be of any size
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, TextureImage->w, TextureImage->h, GL_BGR_EXT, GL_UNSIGNED_BYTE, TextureImage->pixels);
-			break;
-		case 2:
-			// make a linear tex suitable for 2D shapes
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage->w, TextureImage->h, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, TextureImage->pixels);
-			break;
-		case 1:
-			// make a low detail nearest tex
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage->w, TextureImage->h, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, TextureImage->pixels);	
-			break;
-		default:
-			return FALSE;
-			break;
-	}
-	
-	//clean up
-	if (TextureImage) { SDL_FreeSurface(TextureImage); }
-    return texture;
-}
-
 /*
  * loading a TGA file
  */
@@ -291,7 +244,7 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
     }
 
     /*
-     * If we need to flip it vertical then do so
+     * If we need to flip it vertical then do so, is this for texture compression??
      */
     if (!(imgDesc & 0x20)) {
         scanLine = (char *)malloc((*x)*(bypp));
@@ -306,37 +259,4 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
 
     fclose(input);
     return output;
-}
-
-int writeTGAFromData(int x, int y, int bpp, const char *data, const char *filename) {
-    FILE *output;
-    int size;
-
-    /*
-     * Put X, Y, and bpp into the tga header.
-     */
-    tgaHeader[12] = x % 256;
-    tgaHeader[13] = x >> 8;
-    tgaHeader[14] = y % 256;
-    tgaHeader[15] = y >> 8;
-
-    /*
-     * Calculate size
-     */
-    size = x * y * ((bpp+7) / 8);
-
-    /*
-     * Open output and write the stuff
-     */
-     fopen_s(&output, filename, "w");
-    
-	if (output == NULL) {
-        printf("writeTGAFromData failed to open %s for writing\n", filename);
-        return (-1);
-    }
-
-    fwrite(tgaHeader, 60, 1, output);
-    fwrite(data, size, 1, output);
-
-    return (0);
 }

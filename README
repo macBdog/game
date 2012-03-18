@@ -1,0 +1,39 @@
+What is this project?
+
+1. A lightweight, simple framework for indie 2D and 3D PC games.
+2. Well organised and easy to read and understand.
+3. Focused on making games easier to make by using only in-engine tools.
+
+What isn't this project?
+
+1. A commercial or otherwise noteworthy game "engine".
+2. Jam packed with the latest rendering techniques.
+3. Specialised for any one particular type of game.
+
+Technology Choices
+
+* libSDL for IO
+* OpenGL for rendering
+* irrKlang for Sound
+* TGA, OBJ and ANM file formats
+
+Organisation
+
+core/     
+Code for atomic data structures, collections and containers. Anything that exists here does not need to include any other file in the solution, generally. Most of the code here should be declaritive, not procedural (very little cpp expected).
+
+engine/
+Functions required by the engine to perform the basic tasks of running a game - processing inputs, rendering things to the screen, loading resources and the like. Nothing feature specific to reside here.
+
+./
+Game specific functionality. Code here is glue that links engine features to perform compound tasks like controlling an AI agent or responding to player actions.
+
+Style
+
+Variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
+m_variable for a member 
+a_variable for an argument
+variable for locally scoped.
+
+To be explicit about mutable arguments passed into a method by reference, the following convention is useful
+a_variable_OUT
