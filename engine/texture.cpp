@@ -1,7 +1,5 @@
 #include "texture.h"
 
-#include <windows.h>
-#include <GL/gl.h>
 #include <GL/glu.h>
 #include <iostream>
 #include <fstream>
@@ -17,17 +15,6 @@ static char tgaHeader[] = {
 	,0x73, 0x20, 0x54, 0x47, 0x41, 0x20, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72
 	,0x20, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x31, 0x2e, 0x32
 };
-
-typedef struct {
-	GLubyte		header[6];
-	GLuint		bytesPerPixel;
-	GLuint		imageSize;
-	GLuint		temp;
-	GLuint		type;
-	GLuint		Height;
-	GLuint		Width;
-	GLuint		Bpp;
-} TGA;
 
 /*
  * TGA loading bizniss
