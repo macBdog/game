@@ -25,16 +25,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // make sure SDL cleans up before exit
+    // Make sure SDL cleans up before exit
     atexit(SDL_Quit);
 
-    /* the flags to pass to SDL_SetVideoMode */
-    int videoFlags  = SDL_OPENGL;          /* Enable OpenGL in SDL */
-    videoFlags |= SDL_GL_DOUBLEBUFFER; /* Enable double buffering */
-    videoFlags |= SDL_HWPALETTE;       /* Store the palette in hardware */
-    videoFlags |= SDL_RESIZABLE;       /* Enable window resizing */
+    // The flags to pass to SDL_SetVideoMode */
+    int videoFlags  = SDL_OPENGL;         
+    videoFlags |= SDL_GL_DOUBLEBUFFER; 
+    videoFlags |= SDL_HWPALETTE;
+    videoFlags |= SDL_RESIZABLE;
 
-    /* This checks to see if surfaces can be stored in memory */
+    // This checks to see if surfaces can be stored in memory
     const SDL_VideoInfo * videoInfo = SDL_GetVideoInfo();
 
     if ( videoInfo->hw_available )
@@ -46,16 +46,16 @@ int main(int argc, char *argv[])
         videoFlags |= SDL_SWSURFACE;
     }
 
-    /* This checks if hardware blits can be done */
+    // This checks if hardware blits can be done
     if ( videoInfo->blit_hw )
     {
         videoFlags |= SDL_HWACCEL;
     }
 
-    /* Sets up OpenGL double buffering */
+    // Sets up OpenGL double buffering
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-    // create a new window
+    // Create a new window
     SDL_Surface* screen = SDL_SetVideoMode(1024, 768, 32, videoFlags);
     if ( !screen )
     {
@@ -68,7 +68,12 @@ int main(int argc, char *argv[])
     m_renderManager->Init(sc_colourBlack);
     m_renderManager->Resize(1024, 768, 32);
 
-    // program main loop
+	// Render a test quad
+	Texture * tex = new Texture();
+	tex->Load("path to tga file.tga");
+	m_renderManager->AdddQuad(RenderManager::eBatchNone, vecto blah);
+
+    // Game main loop
     bool active = true;
     while (active)
     {
@@ -81,7 +86,7 @@ int main(int argc, char *argv[])
 
         m_renderManager->DrawScene();
 
-        // Cycle SDL scene
+        // Cycle SDL surface
         SDL_GL_SwapBuffers();
     }
 
