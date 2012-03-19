@@ -10,14 +10,15 @@ What isn't this project?
 2. Jam packed with the latest rendering techniques.
 3. Specialised for any one particular type of game.
 
-Technology Choices
+Technology Choices:
 
 * libSDL for IO
 * OpenGL for rendering
 * irrKlang for Sound
 * TGA, OBJ and ANM file formats
+* For everything else, the choice is Roll-Your-Own because dependancies suck and this is a coding for fun project.
 
-Organisation
+Organisation:
 
 core/     
 Code for atomic data structures, collections and containers. Anything that exists here does not need to include any other file in the solution, generally. Most of the code here should be declaritive, not procedural (very little cpp expected).
@@ -28,9 +29,22 @@ Functions required by the engine to perform the basic tasks of running a game - 
 ./
 Game specific functionality. Code here is glue that links engine features to perform compound tasks like controlling an AI agent or responding to player actions.
 
-Style
+Style:
 
-Variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
+void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
+{
+  // Here we are explaining why this is happening, verbose comments
+  // are super nice. Comment lines don't cost anything and we are learning.
+  if (a_tellMeNow)
+  {
+    sprintf(a_tellMeHow, "%s", "LiekThis");
+  }
+
+  // We update our cached style version here
+  m_styleUpdated &= a_tellMeNow;
+}
+  
+For variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
 m_variable for a member 
 a_variable for an argument
 variable for locally scoped.
