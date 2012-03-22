@@ -31,6 +31,19 @@ Game specific functionality. Code here is glue that links engine features to per
 
 Style:
 
+#include <cstandardthings>
+
+#include <librarythings>
+
+#include "core/coreFoo.h"
+#include "core/coreBar.h"
+#include "core/coreBaz.h"
+
+#include "engine/engineThing.h"
+#include "engine/anotherThing.h"
+
+#include "thisFilesHeader.h"
+
 void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
 {
   // Here we are explaining why this is happening, verbose comments
