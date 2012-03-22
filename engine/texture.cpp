@@ -6,54 +6,57 @@
 
 #include "SDL.h"
 
-static int TEXTURE_DEPTH;
-
-static char tgaHeader[] = {
-	 0x2a, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+static const char tgaHeader[] = {
+		0x2a, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	,0x20, 0x03, 0x58, 0x02, 0x18, 0x20, 0x43, 0x52, 0x45, 0x41, 0x54, 0x4f
 	,0x52, 0x3a, 0x20, 0x54, 0x68, 0x65, 0x20, 0x47, 0x49, 0x4d, 0x50, 0x27
 	,0x73, 0x20, 0x54, 0x47, 0x41, 0x20, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72
 	,0x20, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x31, 0x2e, 0x32
 };
 
-/*
- * TGA loading bizniss
- */
-GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
-GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
+static const GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
+static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
-/*
- * loading a TGA file
- */
-GLuint loadTextureTGA(const char *filename) {
+bool Texture::Load(const char *a_tgaFilePath)
+{
     int x, y, bpp;
     GLubyte *textureData;
     GLuint textureID;
     GLenum texFormat, intTexFormat;
 
-    textureData = loadTGA(filename, &x, &y, &bpp);
-    if (textureData == NULL) { 
-        return (0);
+	// Early out for no file case
+	if (a_tgaFilePath == NULL)
+	{
+		return false;
+	}
+
+	// Load texture data into memory and check if successful
+    textureData = loadTGA(a_tgaFilePath, x, y, bpp);
+    if (textureData == NULL) 
+	{ 
+        return false;
     }
 
-    switch (bpp) {
+    switch (bpp) 
+	{
         case 24:
+		{
             texFormat = GL_RGB;
-            if (TEXTURE_DEPTH == 16)
-                intTexFormat = GL_RGB5;
-            else
-                intTexFormat = GL_RGB8;
-            break;
+            intTexFormat = GL_RGB8;
+		}
+		break;
         case 32:
+		{
             texFormat = GL_RGBA;
-            if (TEXTURE_DEPTH == 16)
-                intTexFormat = GL_RGBA4;
-            else
-                intTexFormat = GL_RGBA8;
-            break;
+            intTexFormat = GL_RGBA8;
+		}
+        break;
         default:
+		{
             texFormat = GL_RGBA;
             intTexFormat = GL_RGBA;
+		}
+		break;
     }
     
     glGenTextures(1, &textureID);
@@ -64,21 +67,15 @@ GLuint loadTextureTGA(const char *filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
-    glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, x, y, 0, texFormat,
-            GL_UNSIGNED_BYTE, textureData);
+    glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, x, y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
 
     free(textureData);
 
-    return (textureID);
+    return true;
 }
 
-/*
- * TGA file version
- */
-#define TGA_OLD 0
-#define TGA_NEW 1
-
-GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
+GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp)
+{
     FILE *input;
     GLubyte *output;
     int loop, size, tmp1, xloop, offset, tgaVersion, bypp, imgDesc;
@@ -90,18 +87,16 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
     int isRLE = 0, xpos, count; /* RLE variables */
     char pix[4];
 
-    fopen_s(&input, filename, "rb");
+    fopen_s(&input, a_tgaFilePath, "rb");
     if (input == NULL) {
-        printf("Texture file failed open: \"%s\"\n", filename);
+        printf("Texture file failed open: \"%s\"\n", a_tgaFilePath);
         return (NULL);
     }
 
     idLength = fgetc(input);
     fgetc(input);
         
-    /*
-     * Check this is a TGA
-     */
+    // Check this is a TGA
     loop = fgetc(input);
     switch (loop) {
         case 0x02:
@@ -113,21 +108,21 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
         return (NULL);
     }
 
-    /*
-     * Get X and Y
-     */
+    // Get X and Y
     for (loop = 0; loop < 9; ++loop)
+	{
         fgetc(input);
+	}
 
-    *x = fgetc(input);
-    *x += fgetc(input) << 8;
-    *y = fgetc(input);
-    *y += fgetc(input) << 8;
-    *bpp = fgetc(input);
+    a_x = fgetc(input);
+    a_x += fgetc(input) << 8;
+    a_y = fgetc(input);
+    a_y += fgetc(input) << 8;
+    a_bpp = fgetc(input);
     imgDesc = fgetc(input);
 
-    bypp = ((*bpp)>>3);
-    size = (*x)*(*y)*bypp;
+    bypp = ((a_bpp)>>3);
+    size = (a_x)*(a_y)*bypp;
 
     output = (GLubyte *)malloc(size);
     
@@ -136,25 +131,25 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
         return (NULL);
     }
 
-    /*
-     * Determine TGA version (new or old)
-     */
+    // Determine TGA version (new or old)
     filePos = ftell(input);
     fseek(input, -18, SEEK_END);
     fread(vendorString, 1, 16, input);
     vendorString[16] = 0;
-    if (strcmp(vendorString, "TRUEVISION-XFILE") == 0) {
-        tgaVersion = TGA_NEW;
-    } else
-        tgaVersion = TGA_OLD;
+    if (strcmp(vendorString, "TRUEVISION-XFILE") == 0) 
+	{
+        tgaVersion = eTGAVersionNew;
+    } 
+	else
+	{
+        tgaVersion = eTGAVersionOld;
+	}
     fseek(input, filePos, SEEK_SET); 
 
-    /*
-     * Read in pixel data
-     */
+    // Read in pixel data
     if (isRLE) {
         offset = 0;
-        xpos = (*y)*(*x)*bypp;
+        xpos = (a_y)*(a_x)*bypp;
         while (offset < xpos) {
             count = fgetc(input);
             if (count & 0x80) { /* repitition packet */
@@ -172,31 +167,27 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
             }
         } /* while loop */
     } else {
-        offset = ((*y)-1) * (*x)*bypp;
-        for (xloop = 0; xloop < (*y); ++xloop) {
-            fread(output+offset, 1, (*x)*bypp, input);
-            offset -= (*x)*bypp;
+        offset = ((a_y)-1) * (a_x)*bypp;
+        for (xloop = 0; xloop < (a_y); ++xloop) {
+            fread(output+offset, 1, (a_x)*bypp, input);
+            offset -= (a_x)*bypp;
         }
     }
     
-    /*
-     * Swap the red and blue channels
-     */
+    // Swap the red and blue channels
     for (loop = 0; loop < size; loop += bypp) {
         tmp1 = output[loop];
         output[loop] = output[loop+2];
         output[loop+2] = tmp1;
     }
 
-    /*
-     * if we need to flip it horizintally then do so
-     */
+    // If we need to flip it horizintally then do so
     if (imgDesc & 0x10) {
-        for (loop = 0; loop < (*y); ++loop) {
-            for (xloop = 0; xloop < (*x)/2; ++xloop) {
-                if (*bpp == 24) {
-                    offset = loop*(*x)*3 + (xloop*3);
-                    tmp1 = loop*(*x)*3 + ((*x)*3)-((xloop+1)*3);
+        for (loop = 0; loop < (a_y); ++loop) {
+            for (xloop = 0; xloop < (a_x)/2; ++xloop) {
+                if (a_bpp == 24) {
+                    offset = loop*(a_x)*3 + (xloop*3);
+                    tmp1 = loop*(a_x)*3 + ((a_x)*3)-((xloop+1)*3);
                     tmpd[0] = output[offset];
                     tmpd[1] = output[offset+1];
                     tmpd[2] = output[offset+2];
@@ -209,8 +200,8 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
                     output[tmp1 - offset +1] = tmpd[1];
                     output[tmp1 - offset +2] = tmpd[2];
                 } else {
-                    offset = loop*(*x)*4 + (xloop*4);
-                    tmp1 = loop*(*x)*4 + ((*x)*4)-((xloop+1)*4);
+                    offset = loop*(a_x)*4 + (xloop*4);
+                    tmp1 = loop*(a_x)*4 + ((a_x)*4)-((xloop+1)*4);
                     tmpd[0] = output[offset];
                     tmpd[1] = output[offset+1];
                     tmpd[2] = output[offset+2];
@@ -230,16 +221,14 @@ GLubyte *loadTGA(const char *filename, int *x, int *y, int *bpp) {
         }
     }
 
-    /*
-     * If we need to flip it vertical then do so, is this for texture compression??
-     */
+    // If we need to flip it vertical then do so, is this for texture compression??
     if (!(imgDesc & 0x20)) {
-        scanLine = (char *)malloc((*x)*(bypp));
-        for (loop = 0; loop < (*y)/2; ++loop) {
-            memcpy(scanLine, output+(loop*bypp*(*x)), (*x)*bypp);
-            memcpy(output+(loop*bypp*(*x)),
-                    output+(*x)*((*y)-1-loop)*bypp, (*x)*bypp);
-            memcpy(output+(*x)*((*y)-1-loop)*bypp, scanLine, (*x)*bypp);
+        scanLine = (char *)malloc((a_x)*(bypp));
+        for (loop = 0; loop < (a_y)/2; ++loop) {
+            memcpy(scanLine, output+(loop*bypp*(a_x)), (a_x)*bypp);
+            memcpy(output+(loop*bypp*(a_x)),
+                    output+(a_x)*((a_y)-1-loop)*bypp, (a_x)*bypp);
+            memcpy(output+(a_x)*((a_y)-1-loop)*bypp, scanLine, (a_x)*bypp);
         }
         free(scanLine);
     }
