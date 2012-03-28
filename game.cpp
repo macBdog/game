@@ -18,6 +18,10 @@ InputManager m_inputManager;
 
 int main(int argc, char *argv[])
 {
+	// Unused arguments
+	argc;
+	argv;
+
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -71,7 +75,13 @@ int main(int argc, char *argv[])
 	// Render a test quad
 	Texture * tex = new Texture();
 	tex->Load("path to tga file.tga");
-	m_renderManager->AdddQuad(RenderManager::eBatchNone, vecto blah);
+	m_renderManager->AddQuad(RenderManager::eBatchNone, Vector(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, tex);
+
+	// TODO next:
+	// File reader for a simple cfg file that looks like CSS
+	// Load game options from a cfg file which points to the data dir
+	// data dir has paths to tex dir which inits the texture manager
+	// gui dir has paths to gui config files etc
 
     // Game main loop
     bool active = true;
