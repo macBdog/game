@@ -7,17 +7,6 @@
 
 template<> RenderManager* Singleton<RenderManager>::s_instance = NULL;
 
-RenderManager::RenderManager()
-: m_clearColour(sc_colourBlack)
-{
-
-}
-
-RenderManager::~RenderManager()
-{
-
-}
-
 bool RenderManager::Init(Colour a_clearColour)
 {
     // Set the clear colour
@@ -76,4 +65,13 @@ void RenderManager::DrawScene()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     glLoadIdentity( );
+}
+
+void RenderManager::AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient)
+{
+	a_batch;
+	a_topLeft;
+	a_width;
+	a_height;
+	a_tex;
 }

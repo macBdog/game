@@ -16,15 +16,16 @@ public:
 	//\brief A Batch is a way to specify rendering order
 	enum eBatch
 	{
-		eBatchNone = 0,
-		eBatchGui,
-		eBatchWorld,
+		eBatchNone = 0,		//< It's valid to render in the none batch
+		eBatchWorld,		//< But it will be drawn over by the world
+		eBatchGui,			//< GUI covers the world
+		eBatchDebug,		//< Devbug text over everything
 
 		eBatchCount,
-	}
-
-	RenderManager();
-	~RenderManager();
+	};
+	
+	//\ No work done in the constructor, only Init
+	RenderManager() : m_clearColour(sc_colourBlack) {}
 
 	//\brief Set clear colour buffer and depth buffer setup 
     bool Init(Colour a_clearColour);
@@ -41,8 +42,7 @@ public:
 
 	//\brief Drawing functions
 	void AddTri(eBatch a_batch, Vector a_p1, Vector a_p2, Vector a_p3, Colour a_colour);
-	void AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = eOrientationNormal);
-	void AdddQuad(eBatch a_batch, Vector a_center, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = eOrientationNormal);
+	void AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 private:
 	unsigned int m_viewWidth;
