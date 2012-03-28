@@ -50,7 +50,7 @@ void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
   // are super nice. Comment lines don't cost anything and we are learning.
   if (a_tellMeNow)
   {
-    sprintf(a_tellMeHow, "%s", "LiekThis");
+    sprintf(a_tellMeHow_OUT, "%s", "LiekThis");
   }
 
   // We update our cached style version here
@@ -68,4 +68,4 @@ a_variable_OUT
 Other Notes:
 
 In 3D the Z axis is UP
-In 2D the middle of the screen is 0,0, top left of the screen is -1,1
+In 2D the middle of the screen is 0,0, top left of the screen is -1,1. 2D quads are drawn top left to bottom right.
