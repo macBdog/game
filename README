@@ -2,7 +2,7 @@ What is this project?
 
 1. A lightweight, simple framework for indie 2D and 3D PC games.
 2. Well organised and easy to read and understand.
-3. Focused on making games easier to make by using only in-engine tools.
+3. Focused on making games easier to develop by using only in-engine tools.
 
 What isn't this project?
 
@@ -50,7 +50,7 @@ void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
   // are super nice. Comment lines don't cost anything and we are learning.
   if (a_tellMeNow)
   {
-    sprintf(a_tellMeHow, "%s", "LiekThis");
+    sprintf(a_tellMeHow_OUT, "%s", "LiekThis");
   }
 
   // We update our cached style version here
@@ -64,3 +64,8 @@ variable for locally scoped.
 
 To be explicit about mutable arguments passed into a method by reference, the following convention is useful
 a_variable_OUT
+
+Other Notes:
+
+In 3D the Z axis is UP
+In 2D the middle of the screen is 0,0, top left of the screen is -1,1. 2D quads are drawn top left to bottom right.
