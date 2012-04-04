@@ -10,6 +10,7 @@
 
 #include "core/Log.h"
 
+#include "engine/GameFile.h"
 #include "engine/InputManager.h"
 #include "engine/RenderManager.h"
 
@@ -72,16 +73,14 @@ int main(int argc, char *argv[])
     m_renderManager->Init(sc_colourBlack);
     m_renderManager->Resize(1024, 768, 32);
 
+	// Load game options
+	GameFile * configFile = new GameFile();
+	configFile->Load("config.cfg");
+
 	// Render a test quad
 	Texture * tex = new Texture();
-	tex->Load("path to tga file.tga");
+	tex->Load(configFile->GetString("gameOptions", "texturePath"));
 	m_renderManager->AddQuad(RenderManager::eBatchNone, Vector(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, tex);
-
-	// TODO next:
-	// File reader for a simple cfg file that looks like CSS
-	// Load game options from a cfg file which points to the data dir
-	// data dir has paths to tex dir which inits the texture manager
-	// gui dir has paths to gui config files etc
 
     // Game main loop
     bool active = true;
