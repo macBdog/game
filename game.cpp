@@ -8,25 +8,40 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "core/Log.h"
-
 #include "engine/GameFile.h"
 #include "engine/InputManager.h"
+#include "engine/Log.h"
 #include "engine/RenderManager.h"
+#include "engine/StringUtils.h"
 
-Log m_log;
 InputManager m_inputManager;
 
 int main(int argc, char *argv[])
 {
-	// Unused arguments
-	argc;
-	argv;
+	// Startup logging first so any initialisation errors are reported
+	Log * m_log = new Log();
+
+	// Single parameter to the executable is the main confi file
+	char configFilePath[StringUtils::s_maxCharsPerLine];
+	memset(&configFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	if (argc > 1)
+	{
+		memcpy(&configFilePath, argv, strlen(argv[1]));
+		configFilePath[strlen(argv[1])] = '\0';
+	}
+	else // No argument specified, use a fallback
+	{
+		sprintf(configFilePath, "game.cfg");
+	}
+
+	// Read the main config file to setup video etc
+	GameFile * configFile = new GameFile();
+	configFile->Load(configFilePath);
 
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-        printf("Unable to init SDL: %s\n", SDL_GetError());
+		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Unable to init SDL");
         return 1;
     }
 
@@ -61,7 +76,10 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
     // Create a new window
-    SDL_Surface* screen = SDL_SetVideoMode(1024, 768, 32, videoFlags);
+	int width = configFile->GetInt("config", "width");
+	int height = configFile->GetInt("config", "height");
+	int bpp = configFile->GetInt("config", "bpp");
+    SDL_Surface* screen = SDL_SetVideoMode(width, height, bpp, videoFlags);
     if ( !screen )
     {
         printf("Unable to set video: %s\n", SDL_GetError());
@@ -70,12 +88,8 @@ int main(int argc, char *argv[])
 	
 	// Subsystem startup
 	RenderManager * m_renderManager = new RenderManager();
-    m_renderManager->Init(sc_colourBlack);
-    m_renderManager->Resize(1024, 768, 32);
-
-	// Load game options
-	GameFile * configFile = new GameFile();
-	configFile->Load("config.cfg");
+    RenderManager::Get().Init(sc_colourBlack);
+    RenderManager::Get().Resize(1024, 768, 32);
 
 	// Render a test quad
 	Texture * tex = new Texture();
@@ -99,7 +113,7 @@ int main(int argc, char *argv[])
         SDL_GL_SwapBuffers();
     }
 
-    m_log.Write(Log::LL_INFO, Log::LC_CORE, "Exited cleanly");
+    Log::Get().Write(Log::LL_INFO, Log::LC_CORE, "Exited cleanly");
 
     return 0;
 }

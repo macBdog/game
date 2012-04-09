@@ -5,7 +5,7 @@
 
 #include "RenderManager.h"
 
-template<> RenderManager* Singleton<RenderManager>::s_instance = NULL;
+template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 
 bool RenderManager::Init(Colour a_clearColour)
 {

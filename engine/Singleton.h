@@ -27,7 +27,7 @@ public:
 	{
 		if (s_instance == NULL)
 		{
-			s_instance = new(T) T; 
+			s_instance = new(T); 
 		}
 
 		return *s_instance;

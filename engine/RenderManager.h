@@ -8,9 +8,8 @@
 #include "../core/Colour.h"
 #include "../core/Vector.h"
 
-class RenderManager : Singleton<RenderManager>
+class RenderManager : public Singleton<RenderManager>
 {
-
 public:
 
 	//\brief A Batch is a way to specify rendering order

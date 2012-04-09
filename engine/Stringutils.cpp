@@ -1,8 +1,9 @@
 #include "StringUtils.h"
 
+#include <string.h>
 #include <stdlib.h>
 
-static const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
+const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
 {
 	// Early out for bad string or no delim
 	if (a_buffer == NULL || 
@@ -89,15 +90,19 @@ const char * StringUtils::TrimString(const char * a_buffer)
 		if (retBuf != NULL)
 		{
 			// Copy chars from the buffer and terminate the string
+			unsigned int nonNullChars = 0;
 			for (unsigned int i = 0; i < stringLength; i++) 
 			{
-				if (a_buffer[i] != 10) 
+				// Remove all whitespace characters
+				if (a_buffer[i] != 10 && 
+					a_buffer[i] != 32 &&
+					a_buffer[i] != ';') 
 				{
-					retBuf[i] = a_buffer[i];
+					retBuf[nonNullChars++] = a_buffer[i];
 				}
 			}
 
-			retBuf[stringLength] = '\0';
+			retBuf[nonNullChars] = '\0';
 
 			return retBuf;
 		}
@@ -109,12 +114,12 @@ const char * StringUtils::TrimString(const char * a_buffer)
 const char * StringUtils::ReadLine(FILE *a_filePointer) 
 {
 	// Buffer of the max characters per line
-	char * retBuf = (char*)malloc(sizeof(char)*sc_maxCharsPerLine+1);
-	memset(&retBuf, 0, sizeof(char) * sc_maxCharsPerLine);
+	char * retBuf = (char*)malloc(sizeof(char)*s_maxCharsPerLine+1);
+	memset(&retBuf, 0, sizeof(char) * s_maxCharsPerLine);
 
     char *findc;
 	do {
-		fgets(retBuf, sc_maxCharsPerLine, a_filePointer);
+		fgets(retBuf, s_maxCharsPerLine, a_filePointer);
 
 		// Early out for bad file
         if (feof(a_filePointer)) 

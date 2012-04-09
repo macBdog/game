@@ -60,6 +60,7 @@ public:
 	inline LinkedListNode<T> * GetHead() { return m_head; }
 	inline LinkedListNode<T> * GetTail() { return m_tail; }
 	inline bool IsEmpty() { return m_length == 0; }
+	inline unsigned int GetLength() { return m_length; }
 
 	inline void Insert(LinkedListNode<T> * a_node)
 	{
@@ -204,7 +205,7 @@ private:
 	LinkedListNode<T> * m_cursor;
 
 	// Helper for list length
-	int m_length;
+	unsigned int m_length;
 
 	// Allows linked list nodes to use static functions
 	friend class LinkedListNode<T>;
