@@ -48,7 +48,6 @@ private:
 	unsigned int m_viewHeight;
 	unsigned int m_bpp;
 	Colour m_clearColour;
-
 };
 
 #endif // _ENGINE_RENDER_MANAGER

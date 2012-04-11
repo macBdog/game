@@ -14,6 +14,7 @@ bool GameFile::Load(const char * a_filePath)
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	Object * currentObject = NULL;
 	ifstream file(a_filePath);
+	unsigned int lineCount = 0;
 	
 	// Open the file and parse each line 
 	if (file.is_open())
@@ -22,6 +23,7 @@ bool GameFile::Load(const char * a_filePath)
 		while (file.good())
 		{
 			file.getline(line, StringUtils::s_maxCharsPerLine);
+			lineCount++;
 			
 			// A line without any symbols means a new object
 			if (!strstr(line, "{") && 
@@ -30,22 +32,25 @@ bool GameFile::Load(const char * a_filePath)
 			{
 				currentObject = AddObject(line);
 				file.getline(line, StringUtils::s_maxCharsPerLine);
+				lineCount++;
 
 				// Next line should be a brace
 				if (strstr(line, "{"))
 				{
 					file.getline(line, StringUtils::s_maxCharsPerLine);
+					lineCount++;
 
 					// Now properties of that object
 					while(!strstr(line, "}"))
 					{
 						AddProperty(currentObject, StringUtils::ExtractField(line, ":", 0), StringUtils::ExtractField(line, ":", 1));
 						file.getline(line, StringUtils::s_maxCharsPerLine);
+						lineCount++;
 					}
 				}
 				else // Bad formatting
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration.");
+					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
 					break;
 				}
 			}

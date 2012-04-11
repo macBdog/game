@@ -3,8 +3,10 @@
 #pragma once
 
 #include <iostream>
+#include <stdarg.h>
 
 #include "Singleton.h"
+#include "StringUtils.h"
 #include "Time.h"
 
 class Log : public Singleton<Log>
@@ -30,7 +32,7 @@ public:
         LC_COUNT
     };
 
-    inline void Write(LogLevel a_level, LogCategory a_category, const char * a_message) const
+    inline void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...) const
     {
         char levelBuf[128];
         char categoryBuf[128];
@@ -51,7 +53,24 @@ public:
             case LC_GAME:       sprintf(categoryBuf, "%s", "GAME"); break;
             default: break;
         }
-        printf("%u -> %s::%s: %s", Time::GetSystemTime(), categoryBuf, levelBuf, a_message);
+
+		// Create a preformatted error string
+		char errorString[StringUtils::s_maxCharsPerLine];
+		memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
+		sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
+
+		// Parse the variable number of arguments
+		char formatString[StringUtils::s_maxCharsPerLine];
+		memset(&formatString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
+
+		va_list formatArgs;
+		va_start(formatArgs, a_message);
+		vsprintf(formatString, a_message, formatArgs);
+
+		// Print out both together
+		printf("%s %s", errorString, formatString);
+
+		va_end(formatArgs);
     }
 };
 

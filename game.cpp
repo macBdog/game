@@ -92,8 +92,11 @@ int main(int argc, char *argv[])
     RenderManager::Get().Resize(1024, 768, 32);
 
 	// Render a test quad
+	char buf[StringUtils::s_maxCharsPerLine];
+	sprintf(buf, "%s%s", configFile->GetString("config", "texturePath"), "default.tga");
 	Texture * tex = new Texture();
-	tex->Load(configFile->GetString("gameOptions", "texturePath"));
+	tex->Load(buf);
+		
 	m_renderManager->AddQuad(RenderManager::eBatchNone, Vector(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, tex);
 
     // Game main loop
