@@ -40,14 +40,26 @@ public:
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
 
 	//\brief Drawing functions
-	void AddTri(eBatch a_batch, Vector a_p1, Vector a_p2, Vector a_p3, Colour a_colour);
 	void AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 private:
-	unsigned int m_viewWidth;
-	unsigned int m_viewHeight;
-	unsigned int m_bpp;
-	Colour m_clearColour;
+
+	//\brief Fixed size structure for queing render primitives
+	struct Quad
+	{
+		Vector m_verts[4];
+		TexCoord m_coords[4];
+		unsigned int m_textureId;
+	};
+
+	Quad * m_batch[eBatchCount];							// Pointer to a pool of memory for quads
+	unsigned int m_batchCount[eBatchCount];					// Number of primitives in each batch per frame
+	unsigned int m_viewWidth;								// Cache of arguments passed to init
+	unsigned int m_viewHeight;								// Cache of arguments passed to init
+	unsigned int m_bpp;										// Cache of arguments passed to init
+	Colour m_clearColour;									// Cache of arguments passed to init
+
+	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;
 };
 
 #endif // _ENGINE_RENDER_MANAGER

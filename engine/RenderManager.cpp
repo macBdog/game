@@ -3,6 +3,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "Log.h"
+#include "Texture.h"
+
 #include "RenderManager.h"
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
@@ -30,7 +33,21 @@ bool RenderManager::Init(Colour a_clearColour)
     // Really Nice Perspective Calculations
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-    return true;
+	// Storage for all the primitives
+	bool batchAlloc = true;
+	for (unsigned int i = 0; i < eBatchCount; ++i)
+	{
+		m_batch[i] = (Quad *)malloc(sizeof(Quad) * s_maxPrimitivesPerBatch);
+		batchAlloc &= m_batch[i] != NULL;
+	}
+
+	// Alert if memory allocation failed
+	if (!batchAlloc)
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "RenderManager failed to allocate batch memory!");
+	}
+
+    return batchAlloc;
 }
 
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)
@@ -62,16 +79,73 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 void RenderManager::DrawScene()
 {
     // Clear the color and depth buffers in preparation for drawing
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glLoadIdentity( );
+    glLoadIdentity();
+
+	for (unsigned int i = 0; i < eBatchCount; ++i)
+	{
+		Quad * q = m_batch[i];
+		for (unsigned int j = 0; j < m_batchCount[i]; ++j)
+		{
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glBindTexture(GL_TEXTURE_2D, q->m_textureId);
+			glBegin(GL_QUADS);
+
+			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
+			glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+
+			glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
+			glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
+
+			glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
+			glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
+
+			glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
+			glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+
+			glEnd();
+
+			q++;
+		}
+		m_batchCount[i] = 0;
+	}
+
 }
 
 void RenderManager::AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient)
 {
-	a_batch;
-	a_topLeft;
-	a_width;
-	a_height;
-	a_tex;
+	Quad * q = m_batch[a_batch];
+	q += m_batchCount[a_batch]++;
+
+	q->m_textureId = a_tex->GetId();
+	
+	// Setup verts for clockwise drawing
+	q->m_verts[0] = a_topLeft;
+	q->m_verts[1] = a_topLeft + a_width;
+	q->m_verts[2] = a_topLeft + a_width + a_height;
+	q->m_verts[3] = a_topLeft + a_height;
+
+	// Set texcoords based on orientation
+	switch(a_orient)
+	{
+		case Texture::eOrientationNormal:
+		{
+			break;
+		}
+		case Texture::eOrientationFlipVert:
+		{
+			break;
+		}
+		case Texture::eOrientationFlipHoriz:
+		{
+			break;
+		}
+		case Texture::eOrientationFlipBoth:
+		{
+			break;
+		}
+
+		default: break;
+	}
 }
