@@ -1,10 +1,12 @@
-#include "texture.h"
+#include "Texture.h"
 
 #include <GL/glu.h>
 #include <iostream>
 #include <fstream>
 
 #include "SDL.h"
+
+#include "Log.h"
 
 static const char tgaHeader[] = {
 		0x2a, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -69,6 +71,8 @@ bool Texture::Load(const char *a_tgaFilePath)
     
     glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, x, y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
 
+	m_textureId = textureID;
+
     free(textureData);
 
     return true;
@@ -88,9 +92,10 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
     char pix[4];
 
     fopen_s(&input, a_tgaFilePath, "rb");
-    if (input == NULL) {
-        printf("Texture file failed open: \"%s\"\n", a_tgaFilePath);
-        return (NULL);
+    if (input == NULL) 
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Texture file failed open: %s", a_tgaFilePath);
+        return NULL;
     }
 
     idLength = fgetc(input);

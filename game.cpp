@@ -89,15 +89,13 @@ int main(int argc, char *argv[])
 	// Subsystem startup
 	RenderManager * m_renderManager = new RenderManager();
     RenderManager::Get().Init(sc_colourBlack);
-    RenderManager::Get().Resize(1024, 768, 32);
+    RenderManager::Get().Resize(width, height, bpp);
 
 	// Render a test quad
 	char buf[StringUtils::s_maxCharsPerLine];
 	sprintf(buf, "%s%s", configFile->GetString("config", "texturePath"), "default.tga");
 	Texture * tex = new Texture();
 	tex->Load(buf);
-		
-	m_renderManager->AddQuad(RenderManager::eBatchNone, Vector(0.0f, 0.0f, 0.0f), 0.5f, 0.5f, tex);
 
     // Game main loop
     bool active = true;
@@ -110,7 +108,11 @@ int main(int argc, char *argv[])
             active = m_inputManager.Update(event);
         }
 
-        m_renderManager->DrawScene();
+		// Here is where systems would add their rendering
+		RenderManager::Get().AddQuad2D(RenderManager::eBatchNone, Vector(0.0f, 0.0f, -10.0f), 1.0f, 1.0f, tex);
+
+		// Drawing the scene will flush the batches
+        RenderManager::Get().DrawScene();
 
         // Cycle SDL surface
         SDL_GL_SwapBuffers();

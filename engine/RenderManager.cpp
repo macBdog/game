@@ -15,6 +15,9 @@ bool RenderManager::Init(Colour a_clearColour)
     // Set the clear colour
     m_clearColour = a_clearColour;
 
+	// Enable texture mapping
+	glEnable(GL_TEXTURE_2D);
+
     // Enable smooth shading
     glShadeModel(GL_SMOOTH);
 
@@ -39,6 +42,7 @@ bool RenderManager::Init(Colour a_clearColour)
 	{
 		m_batch[i] = (Quad *)malloc(sizeof(Quad) * s_maxPrimitivesPerBatch);
 		batchAlloc &= m_batch[i] != NULL;
+		m_batchCount[i] = 0;
 	}
 
 	// Alert if memory allocation failed
@@ -52,26 +56,29 @@ bool RenderManager::Init(Colour a_clearColour)
 
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)
 {
-    // Setup viewport ratio
+    // Setup viewport ratio avoiding a divide by zero
     if ( a_viewHeight == 0 )
-	a_viewHeight = 1;
-    float ratio = ( GLfloat )a_viewWidth / ( GLfloat )a_viewHeight;
+	{
+		a_viewHeight = 1;
+	}
+
+    float ratio = (GLfloat)a_viewWidth / (GLfloat)a_viewHeight;
 
     // Setup our viewport
-    glViewport( 0, 0, ( GLint )a_viewWidth, ( GLint )a_viewHeight );
+    glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
 
     // Change to the projection matrix and set our viewing volume
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity( );
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
 
     // Set our perspective
-    gluPerspective( 45.0f, ratio, 0.1f, 100.0f );
+    gluPerspective(45.0f, ratio, 0.1f, 100.0f);
 
     // Make sure we're chaning the model view and not the projection
-    glMatrixMode( GL_MODELVIEW );
+    glMatrixMode(GL_MODELVIEW);
 
     // Reset The View
-    glLoadIdentity( );
+    glLoadIdentity();
 
     return true;
 }
@@ -90,6 +97,7 @@ void RenderManager::DrawScene()
 		{
 			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 			glBindTexture(GL_TEXTURE_2D, q->m_textureId);
+	
 			glBegin(GL_QUADS);
 
 			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
@@ -113,36 +121,43 @@ void RenderManager::DrawScene()
 
 }
 
-void RenderManager::AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient)
+void RenderManager::AddQuad2D(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient)
 {
+	// Copy params to next queue item
 	Quad * q = m_batch[a_batch];
 	q += m_batchCount[a_batch]++;
-
 	q->m_textureId = a_tex->GetId();
 	
 	// Setup verts for clockwise drawing
 	q->m_verts[0] = a_topLeft;
-	q->m_verts[1] = a_topLeft + a_width;
-	q->m_verts[2] = a_topLeft + a_width + a_height;
-	q->m_verts[3] = a_topLeft + a_height;
+	q->m_verts[1] = Vector(a_topLeft.GetX() + a_width, a_topLeft.GetY(), a_topLeft.GetZ());
+	q->m_verts[2] = Vector(a_topLeft.GetX() + a_width, a_topLeft.GetY() - a_height, a_topLeft.GetZ());
+	q->m_verts[3] = Vector(a_topLeft.GetX(), a_topLeft.GetY() - a_height, a_topLeft.GetZ());
 
 	// Set texcoords based on orientation
 	switch(a_orient)
 	{
 		case Texture::eOrientationNormal:
 		{
+			q->m_coords[0] = TexCoord(0.0f, 1.0f);
+			q->m_coords[1] = TexCoord(1.0f, 1.0f);
+			q->m_coords[2] = TexCoord(1.0f, 0.0f);
+			q->m_coords[3] = TexCoord(0.0f, 0.0f);
 			break;
 		}
 		case Texture::eOrientationFlipVert:
 		{
+			// TODO
 			break;
 		}
 		case Texture::eOrientationFlipHoriz:
 		{
+			// TODO
 			break;
 		}
 		case Texture::eOrientationFlipBoth:
 		{
+			// TODO
 			break;
 		}
 

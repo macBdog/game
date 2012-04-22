@@ -68,7 +68,7 @@ public:
 		vsprintf(formatString, a_message, formatArgs);
 
 		// Print out both together
-		printf("%s %s", errorString, formatString);
+		printf("%s %s\n", errorString, formatString);
 
 		va_end(formatArgs);
     }

@@ -19,9 +19,12 @@ public:
 		eOrientationCount
 	};
 	
+	// Assigned texture IDs start from 0
+	Texture() : m_textureId(-1) {}
+
 	//\brief Load a TGA file into memory and store out the texture ID
 	bool Load(const char *a_tgaFilePath);
-	inline bool IsLoaded() { return m_textureId > 0; }
+	inline bool IsLoaded() { return m_textureId >= 0; }
 	inline unsigned int GetId() { return m_textureId; }
 
 private:

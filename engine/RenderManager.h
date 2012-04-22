@@ -18,7 +18,7 @@ public:
 		eBatchNone = 0,		//< It's valid to render in the none batch
 		eBatchWorld,		//< But it will be drawn over by the world
 		eBatchGui,			//< GUI covers the world
-		eBatchDebug,		//< Devbug text over everything
+		eBatchDebug,		//< Debug text over everything
 
 		eBatchCount,
 	};
@@ -40,7 +40,7 @@ public:
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
 
 	//\brief Drawing functions
-	void AddQuad(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
+	void AddQuad2D(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 private:
 

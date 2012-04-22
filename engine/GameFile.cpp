@@ -43,7 +43,7 @@ bool GameFile::Load(const char * a_filePath)
 					// Now properties of that object
 					while(!strstr(line, "}"))
 					{
-						AddProperty(currentObject, StringUtils::ExtractField(line, ":", 0), StringUtils::ExtractField(line, ":", 1));
+						AddProperty(currentObject, StringUtils::ExtractField(line, "=", 0), StringUtils::ExtractField(line, "=", 1));
 						file.getline(line, StringUtils::s_maxCharsPerLine);
 						lineCount++;
 					}
@@ -100,6 +100,15 @@ void GameFile::Reset()
 
 const char * GameFile::GetString(const char * a_object, const char * a_property)
 {
+	// First find the object
+	if (Object * parentObject = GetObject(a_object))
+	{
+		// Then the property
+		if (Property * prop = GetProperty(parentObject, a_property))
+		{
+			return (const char *)prop->m_data;
+		}
+	}
 	return NULL;
 }
 
@@ -108,6 +117,7 @@ int GameFile::GetInt(const char * a_object, const char * a_property)
 	// First find the object
 	if (Object * parentObject = GetObject(a_object))
 	{
+		// Then the property
 		if (Property * prop = GetProperty(parentObject, a_property))
 		{
 			return atoi((const char *)prop->m_data);
