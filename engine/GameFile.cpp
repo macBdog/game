@@ -25,6 +25,12 @@ bool GameFile::Load(const char * a_filePath)
 			file.getline(line, StringUtils::s_maxCharsPerLine);
 			lineCount++;
 			
+			// Parse any comment line
+			if (strstr(line, "//"))
+			{
+				continue;
+			}
+
 			// A line without any symbols means a new object
 			if (!strstr(line, "{") && 
 				!strstr(line, "}") &&
@@ -34,16 +40,28 @@ bool GameFile::Load(const char * a_filePath)
 				file.getline(line, StringUtils::s_maxCharsPerLine);
 				lineCount++;
 
+				// Parse any comment line
+				if (strstr(line, "//"))
+				{
+					continue;
+				}
+
 				// Next line should be a brace
 				if (strstr(line, "{"))
 				{
 					file.getline(line, StringUtils::s_maxCharsPerLine);
 					lineCount++;
 
+					// Parse any comment line
+					if (strstr(line, "//"))
+					{
+						continue;
+					}
+
 					// Now properties of that object
 					while(!strstr(line, "}"))
 					{
-						AddProperty(currentObject, StringUtils::ExtractField(line, "=", 0), StringUtils::ExtractField(line, "=", 1));
+						AddProperty(currentObject, StringUtils::ExtractPropertyName(line, ":"), StringUtils::ExtractValue(line, ":"));
 						file.getline(line, StringUtils::s_maxCharsPerLine);
 						lineCount++;
 					}

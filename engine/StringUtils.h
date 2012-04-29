@@ -18,10 +18,25 @@
 namespace StringUtils
 {
 	//\brief Reads from a_buffer looking for the a_fieldIndex instance of a_delim. "Name=Charles" would return "Charles"
+	//\param a_buffer pointer to a cstring to read from and parse
+	//\param a_delim pointer to a cstring containing the delimiter to search for
 	//\return a buffer containing a c string with everything after the delimeter and before the next delimeter
 	extern const char * ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex);
 
+	//\brief Reads from a_buffer looking for the first index of a_delim and returns everything up to that delimiter
+	//\param a_buffer pointer to a cstring to read from and parse
+	//\param a_delim pointer to a cstring containing the delimiter to search for
+	//\return a buffer containing a c string with everything before the delimeter
+	extern const char * ExtractPropertyName(const char *a_buffer, const char *a_delim);
+
+	//\brief Reads from a_buffer looking for the first index of a_delim and returns everything after that delimiter
+	//\param a_buffer pointer to a cstring to read from and parse
+	//\param a_delim pointer to a cstring containing the delimiter to search for
+	//\return a buffer containing a c string with everything after the delimeter
+	extern const char * ExtractValue(const char *a_buffer, const char *a_delim);
+
 	//\brief Removes whitespace characters \t \n from a_buffer and returns a modified buffer containing a c string
+	//\param a_buffer pointer to a cstring to read from and parse
 	extern const char * TrimString(const char *a_buffer);
 
 	//\brief Reads from a file until a newline or carriage return is found then returns a c string of the last read

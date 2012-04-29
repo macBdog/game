@@ -74,7 +74,50 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
 		return TrimString(retBuf);
 	}
 
+	// Failure case
 	return NULL;
+}
+
+const char * StringUtils::ExtractPropertyName(const char *a_buffer, const char *a_delim)
+{
+	// Early out for bad string or no delim
+	const char * delimLoc = strstr(a_buffer, a_delim);
+	if (a_buffer == NULL || 
+		strlen(a_buffer) == 0 || 
+		delimLoc == NULL)
+	{
+		return NULL;
+	}
+   
+    // Alloc a new string and return it
+	unsigned int propLength = delimLoc - a_buffer;
+	char * retBuf = (char*)malloc(sizeof(char)*propLength+1);
+	if (retBuf != NULL)
+	{
+		// Copy all chars up to delim and null terminate
+		memset(retBuf, 0, sizeof(char) * propLength);
+		memcpy(retBuf, a_buffer, propLength);
+		retBuf[propLength] = '\0';
+		return TrimString(retBuf);
+    }
+	
+	// Failure case
+	return NULL;
+}
+
+const char * StringUtils::ExtractValue(const char *a_buffer, const char *a_delim)
+{
+	// Early out for bad string or no delim
+	const char * delimLoc = strstr(a_buffer, a_delim);
+	if (a_buffer == NULL || 
+		strlen(a_buffer) == 0 || 
+		delimLoc == NULL)
+	{
+		return NULL;
+	}
+   
+	// Return everything after the delimeter
+	return TrimString(delimLoc+1);
 }
 
 const char * StringUtils::TrimString(const char * a_buffer) 
