@@ -8,6 +8,8 @@
 #include "../core/Colour.h"
 #include "../core/Vector.h"
 
+//\brief RenderManager separates rendering from the rest of the engine by wrapping all 
+//		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
 {
 public:

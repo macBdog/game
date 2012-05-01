@@ -8,6 +8,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "engine/FontManager.h"
 #include "engine/GameFile.h"
 #include "engine/InputManager.h"
 #include "engine/Log.h"
@@ -91,6 +92,9 @@ int main(int argc, char *argv[])
     RenderManager::Get().Init(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
 
+	FontManager * m_fontManager = new FontManager();
+	FontManager::Get().Init(configFile->GetString("config", "fontPath"));
+	
 	// Render a test quad
 	char buf[StringUtils::s_maxCharsPerLine];
 	sprintf(buf, "%s%s", configFile->GetString("config", "texturePath"), "default.tga");

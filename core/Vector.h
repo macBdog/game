@@ -43,15 +43,15 @@ private:
 
 };
 
-//\ brief Simple 2D Vector for use in texture coordinates
-class TexCoord
+//\brief Simple 2D vector class
+class Vector2D
 {
 public:
 
 	// Constructors
-	TexCoord() { x = 0; y = 0; }
-	TexCoord(float a_val) { x = a_val; y = a_val; }
-	TexCoord(float a_x, float a_y) { x = a_x; y = a_y; }
+	Vector2D() { x = 0; y = 0; }
+	Vector2D(float a_val) { x = a_val; y = a_val; }
+	Vector2D(float a_x, float a_y) { x = a_x; y = a_y; }
 
 	// Mutators
 	inline void SetX(float a_x) { x = a_x; }
@@ -59,8 +59,18 @@ public:
 	inline float GetX() { return x; }
 	inline float GetY() { return y; }
 
-private:
+protected:
 	float x, y;
+};
+
+//\ brief Simple 2D Vector specialised for use in texture coordinates
+class TexCoord : public Vector2D
+{
+public:
+
+	TexCoord(float a_x, float a_y) { x = a_x; y = a_y; }
+
+	inline float CalcBounds() { return x * y; }
 };
 
 #endif //_CORE_VECTOR_

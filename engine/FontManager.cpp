@@ -1,29 +1,46 @@
-#include "font.h"
-
 #include <vector>
 
 #include <windows.h>
 #include <GL/gl.h>
 
-#include "stringutils.h"
-#include "texture.h"
+#include "FileManager.h"
+#include "Stringutils.h"
+#include "Texture.h"
+
+#include "FontManager.h"
+
+const float FontManager::s_debugFontSize = 0.01f;	// Glyph height for debug drawing
 
 /*
 std::vector<fontInfo *> fonts;
-std::vector<fontString *> strings;
-std::vector<fontString3d *> strings3d;
+*/
 
-/* general string drawing variables 
-static GLfloat screenZ = -1.0f;
-static GLuint fontTex;
+template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
-void initFonts() {
-	loadFont("arial");
-	loadFont("blackmetalsans");
+bool FontManager::Init(const char * a_fontPath)
+{
+	// Populate a list of font configuration files
+	FileManager::FileList fontFiles;
+	FileManager::Get().FillFileList(a_fontPath, fontFiles, ".fnt");
+	FileManager::FileListNode * curNode = fontFiles.GetHead();
+
+	// Load each font in the directory
+	bool loadSuccess = true;
+	while(curNode != NULL)
+	{
+		loadSuccess &= LoadFont(curNode->GetData()->m_name);
+		curNode = curNode->GetNext();
+	}
+
+	// Clean up the list of fonts
+	FileManager::Get().EmptyFileList(fontFiles);
+
+	return loadSuccess;
 }
 
-void loadFont(const char * a_fontName)
+bool FontManager::LoadFont(const char * a_fontConfigPath)
 {
+	/*
 	FILE * fontFile;
 	char *data;
 	const int maxFontLineLength = 256;
@@ -79,8 +96,11 @@ void loadFont(const char * a_fontName)
 	fonts.push_back(newFont);
 
 	fclose(fontFile);
+	*/
+		return false;
 }
 
+/*
 void shutdownFonts()
 {
 	for (unsigned int i = 0; i < fonts.size(); ++i)

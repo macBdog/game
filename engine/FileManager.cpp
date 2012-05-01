@@ -7,8 +7,10 @@
 
 #include "FileManager.h"
 
+template<> FileManager * Singleton<FileManager>::s_instance = NULL;
+
 #ifndef WINDOWS
-bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT)
+bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {
 	WIN32_FIND_DATA findFileData;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -27,18 +29,18 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT)
 		return false;
 	}
 
+	// Now try getting the first file of the list
+	TCHAR szDir[MAX_PATH];
+	StringCchCopy(szDir, MAX_PATH, a_path);
+	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
+	hFind = FindFirstFile(a_path, &findFileData);
+
 	// Check path actually exists
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Trying to index invalid path %s", a_path);
 		return false;
 	} 
-
-	// Now try getting the first file of the list
-	TCHAR szDir[MAX_PATH];
-	StringCchCopy(szDir, MAX_PATH, a_path);
-	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
-	hFind = FindFirstFile(a_path, &findFileData);
 
 	// Could be an invalid path
 	if (hFind == INVALID_HANDLE_VALUE) 
@@ -49,25 +51,28 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT)
 	
 	do
 	{
-		// Allocate a new file and set its properties
-		LinkedListNode<FileInfo> * newFile = new LinkedListNode<FileInfo>();
-		newFile->SetData(new FileInfo());
-		sprintf(newFile->GetData()->m_name, "%s", findFileData.cFileName);
-		newFile->GetData()->m_sizeBytes = 0;
-		newFile->GetData()->m_isDir = findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-
-		// If not a directory set the size
-		if (!newFile->GetData()->m_isDir)
+		// Check substring parameter
+		if (!a_fileSubstring || strstr(findFileData.cFileName, a_fileSubstring))
 		{
-			LARGE_INTEGER fileSize;
-			fileSize.LowPart = findFileData.nFileSizeLow;
-			fileSize.HighPart = findFileData.nFileSizeHigh;
-			newFile->GetData()->m_sizeBytes = fileSize.QuadPart; 
+			// Allocate a new file and set its properties
+			LinkedListNode<FileInfo> * newFile = new LinkedListNode<FileInfo>();
+			newFile->SetData(new FileInfo());
+			sprintf(newFile->GetData()->m_name, "%s", findFileData.cFileName);
+			newFile->GetData()->m_sizeBytes = 0;
+			newFile->GetData()->m_isDir = findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+
+			// If not a directory set the size
+			if (!newFile->GetData()->m_isDir)
+			{
+				LARGE_INTEGER fileSize;
+				fileSize.LowPart = findFileData.nFileSizeLow;
+				fileSize.HighPart = findFileData.nFileSizeHigh;
+				newFile->GetData()->m_sizeBytes = fileSize.QuadPart; 
+			}
+
+			// Add to the file list
+			a_fileList_OUT.Insert(newFile);
 		}
-
-		// Add to the file list
-		a_fileList_OUT.Insert(newFile);
-
 	}
     while (FindNextFile(hFind, &findFileData) != 0);
  
