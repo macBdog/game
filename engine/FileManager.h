@@ -42,10 +42,10 @@ public:
 
 private:
 	// TODO: The file manager should cache off a function pointer for anything calling for
-	//		 a list of files. It should also cache off a checksum for file modification in
+	//		 a list of files. It should also generate a checksum for file modification in
 	//		 each managed path. At some update frequency the manager should recalculate
 	//		 the checksums of managed paths and call back to the system that ordered that
-	//		 managed path with a fresh filelisting.
-};
+	//		 managed path with a fresh file listing.
+}; 
 
 #endif // _ENGINE_FILE_MANAGER_

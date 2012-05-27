@@ -1,28 +1,34 @@
-#include <vector>
+#include <iostream>
+#include <fstream>
 
-#include <windows.h>
-#include <GL/gl.h>
-
-#include "FileManager.h"
-#include "Stringutils.h"
+//#include "FileManager.h"
+#include "Log.h"
 #include "Texture.h"
 
 #include "FontManager.h"
 
-const float FontManager::s_debugFontSize = 0.01f;	// Glyph height for debug drawing
-
-/*
-std::vector<fontInfo *> fonts;
-*/
+using namespace std;	//< For fstream operations
 
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
-bool FontManager::Init(const char * a_fontPath)
+const float FontManager::s_debugFontSize = 0.01f;
+
+bool FontManager::Startup(const char * a_fontPath)
 {
+	// Sanity check on input arg
+	if (a_fontPath == NULL || a_fontPath[0] == 0)
+	{
+		return false;
+	}
+
 	// Populate a list of font configuration files
 	FileManager::FileList fontFiles;
 	FileManager::Get().FillFileList(a_fontPath, fontFiles, ".fnt");
 	FileManager::FileListNode * curNode = fontFiles.GetHead();
+
+	// Cache off the font path as textures are relative to fonts
+	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
+	strncpy(m_fontPath, a_fontPath, strlen(a_fontPath));
 
 	// Load each font in the directory
 	bool loadSuccess = true;
@@ -38,66 +44,116 @@ bool FontManager::Init(const char * a_fontPath)
 	return loadSuccess;
 }
 
-bool FontManager::LoadFont(const char * a_fontConfigPath)
+bool FontManager::Shutdown()
 {
-	/*
-	FILE * fontFile;
-	char *data;
-	const int maxFontLineLength = 256;
-
-	data = (char *)malloc(maxFontLineLength * sizeof(char));
-	sprintf(data, "gui/fonts/%s.fnt", a_fontName);
-	fopen_s(&fontFile, data, "rt");
-	
-	// Check if the path is valid
-	if (fontFile == NULL) {
-		printf("GUI ERROR: The font file is missing.\n");
-		return;
-    }
-
-	// Init the font
-	fontInfo * newFont = new fontInfo;
-	sprintf(newFont->fontName, "%s", a_fontName);
-
-	// Get the number of chars to parse
-	int numChars = 0;
-	int sizeW = 0;
-	int sizeH = 0;
-	int lineHeight, base, pages;
-	greadstr(fontFile, data);	// info face="arial" size=32  
-	greadstr(fontFile, data);	sscanf_s(data, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
-												       &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
-	greadstr(fontFile, data);	// page id=0  
-	greadstr(fontFile, data);	sscanf_s(data, "chars count=%d", &numChars);
-
-	// Load the font texture
-	sprintf(data, "gui/fonts/%s.tga", a_fontName);
-	newFont->texture = loadTextureTGA(data);
-	newFont->sizeW = (float)sizeW;
-	newFont->sizeH = (float)sizeH;
-
-	// Go through each char in the file loading metadata
-	for (int i = 0; i < numChars; ++i)
+	FontListNode * next = m_fonts.GetHead();
+	while(next != NULL)
 	{
-		greadstr(fontFile, data);
-		int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
-		sscanf_s(data, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d", 
-						&charId,	 &x,	 &y,	 &width,	  &height,		&xoffset,	   &yoffset,	 &xadvance,		 &page,   &chnl);
-		newFont->chars[charId].x = (float)x;
-		newFont->chars[charId].y = (float)y;
-		newFont->chars[charId].width = (float)width;
-		newFont->chars[charId].height = (float)height;
-		newFont->chars[charId].xoffset = (float)xoffset;
-		newFont->chars[charId].yoffset = (float)yoffset;
-		newFont->chars[charId].xadvance = (float)xadvance;
+		// Cache off next pointer
+		FontListNode * cur = next;
+		next = cur->GetNext();
+
+		m_fonts.Remove(cur);
+		delete cur->GetData();
+		delete cur;
 	}
 
-	// Add to list
-	fonts.push_back(newFont);
+	return true;
+}
 
-	fclose(fontFile);
-	*/
+bool FontManager::LoadFont(const char * a_fontName)
+{
+	// Cstrings for reading filename
+	char line[StringUtils::s_maxCharsPerLine];
+	char fontFilePath[StringUtils::s_maxCharsPerLine];
+	char textureName[StringUtils::s_maxCharsPerLine];
+	char texturePath[StringUtils::s_maxCharsPerLine];
+	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&textureName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&texturePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	sprintf(fontFilePath, "%s%s", m_fontPath, a_fontName);
+
+	// File stream for font config file
+	ifstream file(fontFilePath);
+	unsigned int lineCount = 0;
+	
+	// Create a new font to be managed
+	FontListNode * newFontNode = new FontListNode();
+	newFontNode->SetData(new Font());
+	Font * newFont = newFontNode->GetData();
+
+	// Open the file and parse each line 
+	if (file.is_open())
+	{
+		// Font metadata
+		unsigned int numChars = 0;
+		unsigned int sizeW = 0;
+		unsigned int sizeH = 0;
+		unsigned int lineHeight, base, pages;
+
+		// Read till the file has more contents or a rule is broken
+		while (file.good())
+		{
+			// Get the number of chars to parse
+			file.getline(line, StringUtils::s_maxCharsPerLine);			// info face="fontname" etc
+		    char * fontName = strstr(line, "\"") + 1;
+			strncpy(newFont->m_fontName, fontName, strlen(fontName) - strlen(strstr(fontName, "\"")));
+			
+			file.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33			
+			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
+								   &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
+
+			file.getline(line, StringUtils::s_maxCharsPerLine);			// page id=0 file="arial.tga"
+			sprintf(textureName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "=", 2), true));
+
+			file.getline(line, StringUtils::s_maxCharsPerLine);			// chars count=x
+			sscanf_s(line, "chars count=%d", &numChars);
+			
+			// Load texture for font
+			newFont->m_texture = new Texture();
+			sprintf(texturePath, "%s%s", m_fontPath, textureName);
+			newFont->m_texture->Load(texturePath);
+			newFont->m_numChars = numChars;
+
+			// Go through each char in the file loading metadata
+			for (unsigned int i = 0; i < numChars; ++i)
+			{
+				file.getline(line, StringUtils::s_maxCharsPerLine);
+				int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
+				sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d", 
+								&charId,	 &x,	 &y,	 &width,	  &height,		&xoffset,	   &yoffset,	 &xadvance,		 &page,   &chnl);
+				newFont->m_chars[charId].m_x = (float)x;
+				newFont->m_chars[charId].m_y = (float)y;
+				newFont->m_chars[charId].m_width = (float)width;
+				newFont->m_chars[charId].m_height = (float)height;
+				newFont->m_chars[charId].m_xoffset = (float)xoffset;
+				newFont->m_chars[charId].m_yoffset = (float)yoffset;
+				newFont->m_chars[charId].m_xadvance = (float)xadvance;
+			}
+
+			// There is more info such as kerning here but we don't care about it
+			break;
+		}
+
+		file.close();
+
+		m_fonts.Insert(newFontNode);
+
+		return true;
+	}
+	else
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Could not find font file %s ", fontFilePath);
+
+		// Clean up the font that was allocated
+		delete newFontNode->GetData();
+		delete newFontNode;
+
 		return false;
+	}
+	
+	return false;
 }
 
 /*

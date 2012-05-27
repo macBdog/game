@@ -27,9 +27,11 @@ public:
 	
 	//\ No work done in the constructor, only Init
 	RenderManager() : m_clearColour(sc_colourBlack) {}
+	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Init(Colour a_clearColour);
+    bool Startup(Colour a_clearColour);
+	bool Shutdown();
 
 	//\brief Setup the viewport
     bool Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen = false);

@@ -37,7 +37,8 @@ namespace StringUtils
 
 	//\brief Removes whitespace characters \t \n from a_buffer and returns a modified buffer containing a c string
 	//\param a_buffer pointer to a cstring to read from and parse
-	extern const char * TrimString(const char *a_buffer);
+	//\param a_trimQuotes to optioanlly also strip all quote chars from the string
+	extern const char * TrimString(const char *a_buffer, bool a_trimQuotes = false);
 
 	//\brief Reads from a file until a newline or carriage return is found then returns a c string of the last read
 	extern const char * ReadLine(FILE *a_filePointer);

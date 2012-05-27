@@ -3,23 +3,28 @@
 #pragma once
 
 #include "../core/Colour.h"
+#include "../core/LinkedList.h"
 #include "../core/Vector.h"
 
 #include "Singleton.h"
+#include "StringUtils.h"
 #include "Texture.h"
+
+#include "FileManager.h"
 
 //\brief The font class is responsible for loading font configuration files,
 //		 font textures and submitting quads to the render manager.
 class FontManager : public Singleton<FontManager>
 {
 public:
-
 	//\ No work done in the constructor, only Init
 	FontManager() {}
+	~FontManager() { Shutdown(); }
 
 	//\brief Load all fonts in the supplied argument into memory ready for drawing
 	//\param a_fontPath pointer to cstring of the path to enumerate font files
-	bool Init(const char * a_fontPath);
+	bool Startup(const char * a_fontPath);
+	bool Shutdown();
 
 	//\brief Draw a string using the orthogonal gui render batch
 	//\param a_string pointer to cstring with the character to render
@@ -34,9 +39,10 @@ public:
 
 private:
 
-	static const unsigned int s_maxCharsPerFont = 256;	// No non-unicode support needed (yet)
+	static const float s_debugFontSize;					// Glyph height for debug drawing
+	static const unsigned int s_maxCharsPerFont = 256u;	// No non-unicode support needed (yet)
 
-	//\breif Spacing and positioning info about a character in a font
+	//\brief Spacing and positioning info about a character in a font
 	struct FontChar
 	{
 		float m_x;			//< X position in the texture file
@@ -48,35 +54,27 @@ private:
 		float m_xadvance;	//< How much spacing to put in front of the glyph
 	};
 
-	struct fontInfo
+	//\brief Info about a font and a group of all the character info
+	struct Font
 	{
-		char fontName[64];
-		FontChar m_chars[s_maxCharsPerFont];
-		unsigned int texture;
-		float sizeW;
-		float sizeH;
+		char		m_fontName[StringUtils::s_maxCharsPerLine];
+		FontChar	m_chars[s_maxCharsPerFont];
+		Texture *	m_texture;
+		float		m_size;
+		unsigned int m_numChars;
 	};
+
+	//\brief Alias to store a list of fonts for drawing
+	typedef LinkedListNode<Font> FontListNode;
+	typedef LinkedList<Font> FontList;
 
 	//\brief Load a font for use in drawing to the screen. Assumes a texture adjacent to config file.
 	//\param a_fontConfigFilePath path to the config file specifying glyph numbers and widths
+	//\return True if the load operation was completed successfully
 	bool LoadFont(const char * a_fontConfigFilePath);
-
-	/*
-	struct fontString
-	{
-		char text[256];
-		int fontIndex;
-		unsigned int size;
-		float X;
-		float Y;
-	};
-
-	struct fontString3d : fontString
-	{
-		float Z;
-	};*/
-
-	static const float s_debugFontSize;			// Glyph height for debug drawing
+	
+	char m_fontPath[StringUtils::s_maxCharsPerLine];	// Cache off path to fonts
+	FontList m_fonts;									// Storage for all fonts that are available for drawing
 };
 
 

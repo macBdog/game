@@ -10,7 +10,7 @@
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 
-bool RenderManager::Init(Colour a_clearColour)
+bool RenderManager::Startup(Colour a_clearColour)
 {
     // Set the clear colour
     m_clearColour = a_clearColour;
@@ -52,6 +52,18 @@ bool RenderManager::Init(Colour a_clearColour)
 	}
 
     return batchAlloc;
+}
+
+bool RenderManager::Shutdown()
+{
+	// Clean up storage for all primitives
+	for (unsigned int i = 0; i < eBatchCount; ++i)
+	{
+		free(m_batch[i]);
+		m_batchCount[i] = 0;
+	}
+
+	return true;
 }
 
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)

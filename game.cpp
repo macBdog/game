@@ -89,11 +89,11 @@ int main(int argc, char *argv[])
 	
 	// Subsystem startup
 	RenderManager * m_renderManager = new RenderManager();
-    RenderManager::Get().Init(sc_colourBlack);
+    RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
 
 	FontManager * m_fontManager = new FontManager();
-	FontManager::Get().Init(configFile->GetString("config", "fontPath"));
+	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 	
 	// Render a test quad
 	char buf[StringUtils::s_maxCharsPerLine];
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     bool active = true;
     while (active)
     {
-        // message processing loop
+        // Message processing loop
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {

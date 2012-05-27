@@ -120,7 +120,7 @@ const char * StringUtils::ExtractValue(const char *a_buffer, const char *a_delim
 	return TrimString(delimLoc+1);
 }
 
-const char * StringUtils::TrimString(const char * a_buffer) 
+const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes) 
 {
 	// Iterate through the string and remove bad characters
 	if (a_buffer != NULL)
@@ -139,9 +139,13 @@ const char * StringUtils::TrimString(const char * a_buffer)
 				// Remove all whitespace characters
 				if (a_buffer[i] != 10 && 
 					a_buffer[i] != 32 &&
-					a_buffer[i] != ';') 
+					a_buffer[i] != ';')
 				{
-					retBuf[nonNullChars++] = a_buffer[i];
+					// And quotes if requested
+					if (!(a_trimQuotes && a_buffer[i] == '"'))
+					{
+						retBuf[nonNullChars++] = a_buffer[i];
+					}
 				}
 			}
 

@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
+#include <string.h>
 
 #include "Log.h"
 
 #include "GameFile.h"
 
-using namespace std;	//< For fstream operations
+using namespace std;
 
 bool GameFile::Load(const char * a_filePath)
 {
@@ -24,12 +25,6 @@ bool GameFile::Load(const char * a_filePath)
 			file.getline(line, StringUtils::s_maxCharsPerLine);
 			lineCount++;
 			
-			// Parse any comment line
-			if (strstr(line, "//"))
-			{
-				continue;
-			}
-
 			// A line without any symbols means a new object
 			if (!strstr(line, "{") && 
 				!strstr(line, "}") &&
@@ -39,28 +34,16 @@ bool GameFile::Load(const char * a_filePath)
 				file.getline(line, StringUtils::s_maxCharsPerLine);
 				lineCount++;
 
-				// Parse any comment line
-				if (strstr(line, "//"))
-				{
-					continue;
-				}
-
 				// Next line should be a brace
 				if (strstr(line, "{"))
 				{
 					file.getline(line, StringUtils::s_maxCharsPerLine);
 					lineCount++;
 
-					// Parse any comment line
-					if (strstr(line, "//"))
-					{
-						continue;
-					}
-
 					// Now properties of that object
 					while(!strstr(line, "}"))
 					{
-						AddProperty(currentObject, StringUtils::ExtractPropertyName(line, ":"), StringUtils::ExtractValue(line, ":"));
+						AddProperty(currentObject, StringUtils::ExtractField(line, "=", 0), StringUtils::ExtractField(line, "=", 1));
 						file.getline(line, StringUtils::s_maxCharsPerLine);
 						lineCount++;
 					}
