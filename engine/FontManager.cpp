@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-//#include "FileManager.h"
 #include "Log.h"
+#include "RenderManager.h"
 #include "Texture.h"
 
 #include "FontManager.h"
@@ -156,197 +156,67 @@ bool FontManager::LoadFont(const char * a_fontName)
 	return false;
 }
 
-/*
-void shutdownFonts()
+bool FontManager::DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2D a_pos, Colour a_colour)
 {
-	for (unsigned int i = 0; i < fonts.size(); ++i)
+	FontListNode * curFont = m_fonts.GetHead();
+	while(curFont != NULL)
 	{
-		delete fonts.at(i);
-	}
-}
-
-void drawStringDefault(const char * text, unsigned int size, float X, float Y) 
-{
-	drawString(text, fonts.at(0)->fontName, size, X, Y);
-}
-
-void drawString(const char text[], const char * fontName, unsigned int size, float X, float Y) 
-{
-	// Choose the correct font 
-	fontString * newString = new fontString;
-
-	for (unsigned int i = 0; i < fonts.size(); ++i)
-	{
-		if (strcmp(fonts.at(i)->fontName, fontName) == 0)
+		if (strcmpi(curFont->GetData()->m_fontName, a_fontName) != NULL)
 		{
-			newString->fontIndex = i;
-			break;
-		}
-	}
+			// Draw each character in the string
+			Font * font = curFont->GetData();
+			RenderManager & renderMan = RenderManager::Get();
+			float xAdvance = 0.0f;
+			const float sizeMultiplier = (float)font->m_size / 8000.0f; // wtf is this
 
-	// Copy the rest of the string properties
-	strcpy(newString->text, text);
-	newString->X = X;
-	newString->Y = Y;
-	newString->size = size;
-	strings.push_back(newString);
-}
-
-void draw3dString(const char text[], const char * fontName, unsigned int size, float X, float Y, float Z) 
-{
-	// Choose the correct font 
-	fontString3d * newString = new fontString3d;
-
-	for (unsigned int i = 0; i < fonts.size(); ++i)
-	{
-		if (strcmp(fonts.at(i)->fontName, fontName) == 0)
-		{
-			newString->fontIndex = i;
-			break;
-		}
-	}
-
-	// Copy the rest of the string properties
-	strcpy(newString->text, text);
-	newString->X = X;
-	newString->Y = Y;
-	newString->Z = Z;
-	newString->size = size;
-	strings3d.push_back(newString);
-}
-
-void drawStrings()
-{
-	// For each of the strings
-	for (unsigned int i = 0; i < strings.size(); ++i)
-	{
-		// Select the correct font
-		const fontString * curString = strings.at(i);
-		const fontInfo * curFont = fonts.at(curString->fontIndex);
-
-		// Draw each character in the string
-		unsigned int textLength = strlen(curString->text);
-		float xAdvance = 0.0f;
-		const float sizeMultiplier = (float)curString->size / 8000.0f;
-
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, curFont->texture); 
-		glPushMatrix();
-			glTranslatef(curString->X, curString->Y+sizeMultiplier * 28.0f, 0.0f);
-
-		for (unsigned int j = 0; j < textLength; ++j)
-		{
-			// Space character
-			if (curString->text[j] == 32) {
-				xAdvance += sizeMultiplier * 15.0f;
-			}
-			else
+			unsigned int textLength = strlen(a_string);
+			for (unsigned int j = 0; j < textLength; ++j)
 			{
-				const fontChar & curChar = curFont->chars[curString->text[j]];
-				float texCoordX = curChar.x / curFont->sizeW;
-				float texCoordY = curChar.y / curFont->sizeH;
-				float texCoordWidth = curChar.width / curFont->sizeW;
-				float texCoordHeight = curChar.height / curFont->sizeH;
+				// Non space character
+				if (a_string[j] != ' ') 
+				{
+					const FontChar & curChar = font->m_chars[a_string[j]];
+					float texCoordX = curChar.m_x / font->m_size;
+					float texCoordY = curChar.m_y / font->m_size;
+					float texCoordWidth = curChar.m_width / font->m_size;
+					float texCoordHeight = curChar.m_height / font->m_size;
 
-				float width = curChar.width * sizeMultiplier;
-				float height = curChar.height * sizeMultiplier * ASPECT_RATIO;
-				float xoffset = curChar.xoffset * sizeMultiplier;
-				float yoffset = curChar.yoffset * sizeMultiplier * ASPECT_RATIO;
+					float width = curChar.m_width * sizeMultiplier;
+					float height = curChar.m_height * sizeMultiplier;/* * ASPECT_RATIO;*/
+					float xoffset = curChar.m_xoffset * sizeMultiplier;
+					float yoffset = curChar.m_yoffset * sizeMultiplier;/* * ASPECT_RATIO;*/
 
-				glPushMatrix();
-					glBegin(GL_QUADS);
-						glTexCoord2f(texCoordX,	texCoordY);										// top left
-						glVertex3f(xAdvance + xoffset,			0.0f - yoffset, 0.0f);	
+					renderMan.AddQuad2D(RenderManager::eBatchGui, a_pos.GetX() + xAdvance, width, sizeMultiplier, font->m_texture);
+					/*
+					glPushMatrix();
+						glBegin(GL_QUADS);
+							glTexCoord2f(texCoordX,	texCoordY);										// top left
+							glVertex3f(xAdvance + xoffset,			0.0f - yoffset, 0.0f);	
 
-						glTexCoord2f(texCoordX,					texCoordY + texCoordHeight);	// bottom left
-						glVertex3f(xAdvance + xoffset,			0.0f - yoffset - height, 0.0f);	
+							glTexCoord2f(texCoordX,					texCoordY + texCoordHeight);	// bottom left
+							glVertex3f(xAdvance + xoffset,			0.0f - yoffset - height, 0.0f);	
 
-						glTexCoord2f(texCoordX + texCoordWidth, texCoordY + texCoordHeight);	// bottom right
-						glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset - height, 0.0f);
+							glTexCoord2f(texCoordX + texCoordWidth, texCoordY + texCoordHeight);	// bottom right
+							glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset - height, 0.0f);
 						
-						glTexCoord2f(texCoordX + texCoordWidth, texCoordY);						// top right
-						glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset, 0.0f);
-					glEnd();
-				glPopMatrix();
-
-				xAdvance += (float)curChar.xadvance * sizeMultiplier;
+							glTexCoord2f(texCoordX + texCoordWidth, texCoordY);						// top right
+							glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset, 0.0f);
+						glEnd();
+					glPopMatrix();
+					*/
+					xAdvance += (float)curChar.m_xadvance * sizeMultiplier;
+				}
+				else // Just move the x advance along for a space
+				{
+					xAdvance += sizeMultiplier * 15.0f;
+				}
 			}
+		
+			return true;
 		}
-
-		glPopMatrix();
-
-		// Delete the string now it's finished with
-		delete curString;
+		curFont = curFont->GetNext();
 	}
 
-	strings.clear();
+	// Could not find the font to draw with
+	return false;
 }
-
-void draw3dStrings()
-{
-	// For each of the strings
-	for (unsigned int i = 0; i < strings3d.size(); ++i)
-	{
-		// Select the correct font
-		const fontString3d * curString = strings3d.at(i);
-		const fontInfo * curFont = fonts.at(curString->fontIndex);
-
-		// Draw each character in the string
-		unsigned int textLength = strlen(curString->text);
-		float xAdvance = 0.0f;
-		const float sizeMultiplier = (float)curString->size / 8000.0f;
-
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, curFont->texture); 
-		glPushMatrix();
-			glTranslatef(curString->X, curString->Y+sizeMultiplier * 28.0f, curString->Z);
-
-		for (unsigned int j = 0; j < textLength; ++j)
-		{
-			// Space character
-			if (curString->text[j] == 32) {
-				xAdvance += sizeMultiplier * 15.0f;
-			}
-			else
-			{
-				const fontChar & curChar = curFont->chars[curString->text[j]];
-				float texCoordX = curChar.x / curFont->sizeW;
-				float texCoordY = curChar.y / curFont->sizeH;
-				float texCoordWidth = curChar.width / curFont->sizeW;
-				float texCoordHeight = curChar.height / curFont->sizeH;
-
-				float width = curChar.width * sizeMultiplier;
-				float height = curChar.height * sizeMultiplier * ASPECT_RATIO;
-				float xoffset = curChar.xoffset * sizeMultiplier;
-				float yoffset = curChar.yoffset * sizeMultiplier * ASPECT_RATIO;
-
-				glPushMatrix();
-					glBegin(GL_QUADS);
-						glTexCoord2f(texCoordX,	texCoordY);										// top left
-						glVertex3f(xAdvance + xoffset,			0.0f - yoffset, 0.0f);	
-
-						glTexCoord2f(texCoordX,					texCoordY + texCoordHeight);	// bottom left
-						glVertex3f(xAdvance + xoffset,			0.0f - yoffset - height, 0.0f);	
-
-						glTexCoord2f(texCoordX + texCoordWidth, texCoordY + texCoordHeight);	// bottom right
-						glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset - height, 0.0f);
-						
-						glTexCoord2f(texCoordX + texCoordWidth, texCoordY);						// top right
-						glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset, 0.0f);
-					glEnd();
-				glPopMatrix();
-
-				xAdvance += (float)curChar.xadvance * sizeMultiplier;
-			}
-		}
-
-		glPopMatrix();
-
-		// Delete the string now it's finished with
-		delete curString;
-	}
-
-	strings3d.clear();
-}
-
-*/
