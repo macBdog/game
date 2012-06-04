@@ -9,6 +9,7 @@
 #include "RenderManager.h"
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
+const float RenderManager::s_renderDepth2D = -10.0f;
 
 bool RenderManager::Startup(Colour a_clearColour)
 {
@@ -133,28 +134,36 @@ void RenderManager::DrawScene()
 
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient)
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient)
+{
+	// Create a full tex size coord at top left
+	TexCoord texPos(0.0f, 0.0f);
+	TexCoord texSize(1.0f, 1.0f);
+	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient);
+}
+
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient)
 {
 	// Copy params to next queue item
 	Quad * q = m_batch[a_batch];
 	q += m_batchCount[a_batch]++;
 	q->m_textureId = a_tex->GetId();
 	
-	// Setup verts for clockwise drawing
-	q->m_verts[0] = a_topLeft;
-	q->m_verts[1] = Vector(a_topLeft.GetX() + a_width, a_topLeft.GetY(), a_topLeft.GetZ());
-	q->m_verts[2] = Vector(a_topLeft.GetX() + a_width, a_topLeft.GetY() - a_height, a_topLeft.GetZ());
-	q->m_verts[3] = Vector(a_topLeft.GetX(), a_topLeft.GetY() - a_height, a_topLeft.GetZ());
+	// Setup verts for clockwise drawing 
+	q->m_verts[0] = Vector(a_topLeft.GetX(), a_topLeft.GetY(), s_renderDepth2D);
+	q->m_verts[1] = Vector(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY(), s_renderDepth2D);
+	q->m_verts[2] = Vector(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY() - a_size.GetY(), s_renderDepth2D);
+	q->m_verts[3] = Vector(a_topLeft.GetX(), a_topLeft.GetY() - a_size.GetY(), s_renderDepth2D);
 
 	// Set texcoords based on orientation
 	switch(a_orient)
 	{
 		case Texture::eOrientationNormal:
 		{
-			q->m_coords[0] = TexCoord(0.0f, 1.0f);
-			q->m_coords[1] = TexCoord(1.0f, 1.0f);
-			q->m_coords[2] = TexCoord(1.0f, 0.0f);
-			q->m_coords[3] = TexCoord(0.0f, 0.0f);
+			q->m_coords[0] = texCoord + TexCoord(0.0f, texSize.GetY());
+			q->m_coords[1] = texCoord + TexCoord(texSize.GetX(), texSize.GetY());
+			q->m_coords[2] = texCoord + TexCoord(texSize.GetX(), 0.0f);
+			q->m_coords[3] = texCoord + TexCoord(0.0f, 0.0f);
 			break;
 		}
 		case Texture::eOrientationFlipVert:

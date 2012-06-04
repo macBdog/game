@@ -156,7 +156,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 	return false;
 }
 
-bool FontManager::DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2D a_pos, Colour a_colour)
+bool FontManager::DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2 a_pos, Colour a_colour)
 {
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
@@ -176,34 +176,19 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 				if (a_string[j] != ' ') 
 				{
 					const FontChar & curChar = font->m_chars[a_string[j]];
-					float texCoordX = curChar.m_x / font->m_size;
-					float texCoordY = curChar.m_y / font->m_size;
-					float texCoordWidth = curChar.m_width / font->m_size;
-					float texCoordHeight = curChar.m_height / font->m_size;
+					TexCoord texSize(curChar.m_width / font->m_size, curChar.m_height / font->m_size);
 
-					float width = curChar.m_width * sizeMultiplier;
-					float height = curChar.m_height * sizeMultiplier;/* * ASPECT_RATIO;*/
-					float xoffset = curChar.m_xoffset * sizeMultiplier;
-					float yoffset = curChar.m_yoffset * sizeMultiplier;/* * ASPECT_RATIO;*/
+					Vector2 charSize(curChar.m_width + curChar.m_xoffset, curChar.m_height + curChar.m_yoffset);
+					charSize *= sizeMultiplier;
 
-					renderMan.AddQuad2D(RenderManager::eBatchGui, a_pos.GetX() + xAdvance, width, sizeMultiplier, font->m_texture);
-					/*
-					glPushMatrix();
-						glBegin(GL_QUADS);
-							glTexCoord2f(texCoordX,	texCoordY);										// top left
-							glVertex3f(xAdvance + xoffset,			0.0f - yoffset, 0.0f);	
-
-							glTexCoord2f(texCoordX,					texCoordY + texCoordHeight);	// bottom left
-							glVertex3f(xAdvance + xoffset,			0.0f - yoffset - height, 0.0f);	
-
-							glTexCoord2f(texCoordX + texCoordWidth, texCoordY + texCoordHeight);	// bottom right
-							glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset - height, 0.0f);
-						
-							glTexCoord2f(texCoordX + texCoordWidth, texCoordY);						// top right
-							glVertex3f(xAdvance + xoffset + width,	0.0f - yoffset, 0.0f);
-						glEnd();
-					glPopMatrix();
-					*/
+					TexCoord texCoord(curChar.m_x / font->m_size, curChar.m_y / font->m_size);
+					renderMan.AddQuad2D(RenderManager::eBatchGui, 
+										a_pos.GetX() + xAdvance, 
+										charSize, 
+										font->m_texture,
+										texCoord,
+										texSize);
+					
 					xAdvance += (float)curChar.m_xadvance * sizeMultiplier;
 				}
 				else // Just move the x advance along for a space

@@ -30,11 +30,11 @@ public:
 	//\param a_string pointer to cstring with the character to render
 	//\param a_fontName name of the loaded font to render with, will fail if not present or unloaded
 	//\param a_size float of the height of character boxes, width is derived from this
-	//\param a_pos 2D screen space coords to draw the font at
+	//\param a_pos 2D screen space coords to draw the font at, from the top left
 	//\param a_colour The colour to tint the font texture to
 	//\return true if the glyph quads were submitted to the render manager
-	bool DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2D a_pos, Colour a_colour = sc_colourWhite);
-	bool DrawDebugString(const char * a_string, Vector2D a_pos, Colour a_colour = sc_colourWhite);
+	bool DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite);
+	bool DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite);
 	bool DrawString3D(const char * a_string, const char * a_fontName, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 
 private:

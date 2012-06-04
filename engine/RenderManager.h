@@ -44,9 +44,14 @@ public:
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
 
 	//\brief Drawing functions
-	void AddQuad2D(eBatch a_batch, Vector a_topLeft, float a_width, float a_height, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
+
+	//\brief Quad drawing function with manual texture coordinates
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 private:
+
+	static const float s_renderDepth2D;			// Z value for ortho rendered primitives
 
 	//\brief Fixed size structure for queing render primitives
 	struct Quad

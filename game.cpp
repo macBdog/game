@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         }
 
 		// Here is where systems would add their rendering
-		RenderManager::Get().AddQuad2D(RenderManager::eBatchNone, Vector(0.0f, 0.0f, -10.0f), 1.0f, 1.0f, tex);
+		RenderManager::Get().AddQuad2D(RenderManager::eBatchNone, Vector2(0.0f, 0.0f), Vector2(1.0f, 1.0f), tex);
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();

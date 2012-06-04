@@ -43,15 +43,15 @@ private:
 
 };
 
-//\brief Simple 2D vector class
-class Vector2D
+//\brief Simple 2 component vector class
+class Vector2
 {
 public:
 
 	// Constructors
-	Vector2D() { x = 0; y = 0; }
-	Vector2D(float a_val) { x = a_val; y = a_val; }
-	Vector2D(float a_x, float a_y) { x = a_x; y = a_y; }
+	Vector2() { x = 0; y = 0; }
+	Vector2(float a_val) { x = a_val; y = a_val; }
+	Vector2(float a_x, float a_y) { x = a_x; y = a_y; }
 
 	// Mutators
 	inline void SetX(float a_x) { x = a_x; }
@@ -59,18 +59,31 @@ public:
 	inline float GetX() { return x; }
 	inline float GetY() { return y; }
 
+	// Operator overloads
+	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }
+	Vector2 operator * (const float & a_scale) const { return Vector2(x * a_scale, y * a_scale); }
+	Vector2 operator + (const Vector2 & a_val) const { return Vector2(x + a_val.x, y + a_val.y); }
+	Vector2 operator - (const Vector2 & a_val) const { return Vector2(x - a_val.x, y - a_val.y); }
+	Vector2 operator *= (const float & a_scale) const { return Vector2(x + x*a_scale, y + y*a_scale); }
+
 protected:
 	float x, y;
 };
 
 //\ brief Simple 2D Vector specialised for use in texture coordinates
-class TexCoord : public Vector2D
+class TexCoord : public Vector2
 {
 public:
 
 	TexCoord(float a_x, float a_y) { x = a_x; y = a_y; }
 
 	inline float CalcBounds() { return x * y; }
+
+	// Operator overloads are not inherited by default
+	using Vector2::operator=;
+	using Vector2::operator*;
+	using Vector2::operator+;
+	using Vector2::operator-;
 };
 
 #endif //_CORE_VECTOR_
