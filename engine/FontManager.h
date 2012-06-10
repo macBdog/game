@@ -7,6 +7,7 @@
 #include "../core/Vector.h"
 
 #include "Singleton.h"
+#include "StringHash.h"
 #include "StringUtils.h"
 #include "Texture.h"
 
@@ -57,10 +58,9 @@ private:
 	//\brief Info about a font and a group of all the character info
 	struct Font
 	{
-		char		m_fontName[StringUtils::s_maxCharsPerLine];
+		StringHash	m_fontName;
 		FontChar	m_chars[s_maxCharsPerFont];
 		Texture *	m_texture;
-		float		m_size;
 		unsigned int m_numChars;
 	};
 

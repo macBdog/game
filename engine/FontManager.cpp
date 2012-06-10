@@ -98,8 +98,10 @@ bool FontManager::LoadFont(const char * a_fontName)
 			// Get the number of chars to parse
 			file.getline(line, StringUtils::s_maxCharsPerLine);			// info face="fontname" etc
 		    char * fontName = strstr(line, "\"") + 1;
-			strncpy(newFont->m_fontName, fontName, strlen(fontName) - strlen(strstr(fontName, "\"")));
-			
+			char shortFontName[StringUtils::s_maxCharsPerLine];
+			sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true));
+			newFont->m_fontName.SetCString(shortFontName);
+
 			file.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33			
 			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
 								   &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
@@ -161,13 +163,12 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
 	{
-		if (strcmpi(curFont->GetData()->m_fontName, a_fontName) != NULL)
+		if (curFont->GetData()->m_fontName == StringHash(a_fontName))
 		{
 			// Draw each character in the string
 			Font * font = curFont->GetData();
 			RenderManager & renderMan = RenderManager::Get();
 			float xAdvance = 0.0f;
-			const float sizeMultiplier = (float)font->m_size / 8000.0f; // wtf is this
 
 			unsigned int textLength = strlen(a_string);
 			for (unsigned int j = 0; j < textLength; ++j)
@@ -175,25 +176,29 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 				// Non space character
 				if (a_string[j] != ' ') 
 				{
-					const FontChar & curChar = font->m_chars[a_string[j]];
-					TexCoord texSize(curChar.m_width / font->m_size, curChar.m_height / font->m_size);
+					int charLetter = a_string[j];
+					const FontChar & curChar = font->m_chars[charLetter];
+					
+					// Change the 256 to the font dims from the file
+					float fontDimX = 256.0f;
+					float fontDimY = 256.0f;
 
-					Vector2 charSize(curChar.m_width + curChar.m_xoffset, curChar.m_height + curChar.m_yoffset);
-					charSize *= sizeMultiplier;
+					TexCoord texSize(curChar.m_width/fontDimX, curChar.m_height/fontDimY);
+					Vector2 charSize((curChar.m_width + curChar.m_xoffset)/fontDimX, (curChar.m_height + curChar.m_yoffset)/fontDimY);
+					TexCoord texCoord(curChar.m_x/fontDimX, curChar.m_y/fontDimY);
 
-					TexCoord texCoord(curChar.m_x / font->m_size, curChar.m_y / font->m_size);
 					renderMan.AddQuad2D(RenderManager::eBatchGui, 
-										a_pos.GetX() + xAdvance, 
+										Vector2(a_pos.GetX() + xAdvance, a_pos.GetY()), 
 										charSize, 
 										font->m_texture,
 										texCoord,
 										texSize);
 					
-					xAdvance += (float)curChar.m_xadvance * sizeMultiplier;
+					xAdvance += (float)curChar.m_xadvance / fontDimX;
 				}
 				else // Just move the x advance along for a space
 				{
-					xAdvance += sizeMultiplier * 15.0f;
+					xAdvance += 15.0f; //wtf here...
 				}
 			}
 		
@@ -203,5 +208,17 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 	}
 
 	// Could not find the font to draw with
+	return false;
+}
+
+
+bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour)
+{
+	// Use the first loaded font as the debug font
+	if (m_fonts.GetLength() > 0)
+	{
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 0.01f, a_pos, a_colour);
+	}
+
 	return false;
 }

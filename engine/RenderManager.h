@@ -14,7 +14,18 @@ class RenderManager : public Singleton<RenderManager>
 {
 public:
 
+	//\brief Render modes are used to change how the scene is rendered wholesale
+	enum eRenderMode
+	{
+		eRenderModeNone = 0,
+		eRenderModeWireframe,
+		eRenderModeFull,
+
+		eRenderModeCount,
+	};
+
 	//\brief A Batch is a way to specify rendering order
+	// CH:TODO Rename from batch, it's incorrect terminology
 	enum eBatch
 	{
 		eBatchNone = 0,		//< It's valid to render in the none batch
@@ -26,7 +37,8 @@ public:
 	};
 	
 	//\ No work done in the constructor, only Init
-	RenderManager() : m_clearColour(sc_colourBlack) {}
+	RenderManager() : m_clearColour(sc_colourBlack)
+					, m_renderMode(eRenderModeFull) {}
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
@@ -67,8 +79,12 @@ private:
 	unsigned int m_viewHeight;								// Cache of arguments passed to init
 	unsigned int m_bpp;										// Cache of arguments passed to init
 	Colour m_clearColour;									// Cache of arguments passed to init
+	eRenderMode m_renderMode;								// How the scene is to be rendered
 
-	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;
+	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		// Flat storage for quads
+	static const float s_nearClipPlane;									// Distance from the viewer to the near clipping plane (always positive) 
+	static const float s_farClipPlane;									// Distance from the viewer to the far clipping plane (always positive).
+	static const float s_fovAngleY;										// Field of view angle, in degrees, in the y direction.
 };
 
 #endif // _ENGINE_RENDER_MANAGER

@@ -10,6 +10,9 @@
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_renderDepth2D = -10.0f;
+const float RenderManager::s_nearClipPlane = 0.5f;
+const float RenderManager::s_farClipPlane = 200.0f;
+const float RenderManager::s_fovAngleY = 50.0f;
 
 bool RenderManager::Startup(Colour a_clearColour)
 {
@@ -28,14 +31,22 @@ bool RenderManager::Startup(Colour a_clearColour)
     // Depth buffer setup
     glClearDepth(1.0f);
 
-    // Enables Depth Testing
+	// Used for debug render mode
+	glLineWidth(1.0f);
+	glPointSize(1.0f);
+
+    // Depth testing and alpha blending
     glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // The Type Of Depth Test To Do
     glDepthFunc(GL_LEQUAL);
 
     // Really Nice Perspective Calculations
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
+	glEnable(GL_COLOR_MATERIAL);
 
 	// Storage for all the primitives
 	bool batchAlloc = true;
@@ -103,8 +114,39 @@ void RenderManager::DrawScene()
 
     glLoadIdentity();
 
+	float aspect = (float)m_viewWidth / (float)m_viewHeight;
+
 	for (unsigned int i = 0; i < eBatchCount; ++i)
 	{
+		// Switch render mode for each batch
+		switch ((eBatch)i)
+		{
+			case eBatchWorld:
+			{
+				//glEnable(GL_DEPTH_TEST);
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				gluPerspective(s_fovAngleY, aspect, s_nearClipPlane, s_farClipPlane);
+				glMatrixMode(GL_MODELVIEW);
+				break;
+			}
+			case eBatchGui:
+			case eBatchDebug:
+			{
+				//glDisable(GL_DEPTH_TEST);
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
+				glMatrixMode(GL_MODELVIEW);
+				break;
+			}
+			default: break;
+		}
+
+		// This may not be necessary but its a cheap catch all
+		glLoadIdentity();
+
+		// Submit the quad
 		Quad * q = m_batch[i];
 		for (unsigned int j = 0; j < m_batchCount[i]; ++j)
 		{
