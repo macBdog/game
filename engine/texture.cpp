@@ -226,8 +226,9 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
         }
     }
 
-    // If we need to flip it vertical then do so, is this for texture compression??
-    if (!(imgDesc & 0x20)) {
+    // If we need to flip to compensate for texture compression
+	if (isRLE == 0) 
+	{
         scanLine = (char *)malloc((a_x)*(bypp));
         for (loop = 0; loop < (a_y)/2; ++loop) {
             memcpy(scanLine, output+(loop*bypp*(a_x)), (a_x)*bypp);

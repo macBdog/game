@@ -202,10 +202,10 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	{
 		case Texture::eOrientationNormal:
 		{
-			q->m_coords[0] = texCoord + TexCoord(0.0f, texSize.GetY());
-			q->m_coords[1] = texCoord + TexCoord(texSize.GetX(), texSize.GetY());
-			q->m_coords[2] = texCoord + TexCoord(texSize.GetX(), 0.0f);
-			q->m_coords[3] = texCoord + TexCoord(0.0f, 0.0f);
+			q->m_coords[0] = texCoord + TexCoord(0.0f,						1.0f);
+			q->m_coords[1] = texCoord + TexCoord(texSize.GetX(),			1.0f);
+			q->m_coords[2] = texCoord + TexCoord(texSize.GetX(),			1.0f - texSize.GetY());
+			q->m_coords[3] = texCoord + TexCoord(0.0f,						1.0f - texSize.GetY());
 			break;
 		}
 		case Texture::eOrientationFlipVert:

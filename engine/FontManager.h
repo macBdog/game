@@ -62,6 +62,8 @@ private:
 		FontChar	m_chars[s_maxCharsPerFont];
 		Texture *	m_texture;
 		unsigned int m_numChars;
+		unsigned int m_sizeX;
+		unsigned int m_sizeY;
 	};
 
 	//\brief Alias to store a list of fonts for drawing

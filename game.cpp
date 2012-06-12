@@ -94,12 +94,6 @@ int main(int argc, char *argv[])
 
 	FontManager * m_fontManager = new FontManager();
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
-	
-	// Get texture for a  quad
-	char buf[StringUtils::s_maxCharsPerLine];
-	sprintf(buf, "%s%s", configFile->GetString("config", "texturePath"), "default.tga");
-	Texture * tex = new Texture();
-	tex->Load(buf);
 
     // Game main loop
     bool active = true;
@@ -113,8 +107,7 @@ int main(int argc, char *argv[])
         }
 
 		// Here is where systems would add their rendering
-		RenderManager::Get().AddQuad2D(RenderManager::eBatchDebug, Vector2(0.75f, 0.0f), Vector2(0.5f, 0.5f), tex);
-		FontManager::Get().DrawDebugString("Hello World!", Vector2(0.0f, 0.0f));
+		FontManager::Get().DrawDebugString("hello world", Vector2(0.0f, 0.0f));
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();

@@ -59,6 +59,8 @@ public:
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 	//\brief Quad drawing function with manual texture coordinates
+	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
+	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal);
 
 private:

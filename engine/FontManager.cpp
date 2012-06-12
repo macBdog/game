@@ -117,6 +117,8 @@ bool FontManager::LoadFont(const char * a_fontName)
 			sprintf(texturePath, "%s%s", m_fontPath, textureName);
 			newFont->m_texture->Load(texturePath);
 			newFont->m_numChars = numChars;
+			newFont->m_sizeX = sizeW;
+			newFont->m_sizeY = sizeH;
 
 			// Go through each char in the file loading metadata
 			for (unsigned int i = 0; i < numChars; ++i)
@@ -173,32 +175,26 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 			unsigned int textLength = strlen(a_string);
 			for (unsigned int j = 0; j < textLength; ++j)
 			{
-				// Non space character
-				if (a_string[j] != ' ') 
+				// Safety check for unexported characters
+				const FontChar & curChar = font->m_chars[(int)a_string[j]];
+				if (curChar.m_width > 0 || curChar.m_height > 0)
 				{
-					int charLetter = a_string[j];
-					const FontChar & curChar = font->m_chars[charLetter];
-					
-					// Change the 256 to the font dims from the file
-					float fontDimX = 256.0f;
-					float fontDimY = 256.0f;
+					// Do not add a quad for a space
+					if (a_string[j] != ' ') 
+					{
+						TexCoord texSize(curChar.m_width/font->m_sizeX, curChar.m_height/font->m_sizeY);
+						Vector2 charSize((curChar.m_width / font->m_sizeX) * a_size, (curChar.m_height / font->m_sizeY) * a_size);
+						TexCoord texCoord(curChar.m_x/font->m_sizeX, curChar.m_y/font->m_sizeY);
 
-					TexCoord texSize(curChar.m_width/fontDimX, curChar.m_height/fontDimY);
-					Vector2 charSize((curChar.m_width + curChar.m_xoffset)/fontDimX, (curChar.m_height + curChar.m_yoffset)/fontDimY);
-					TexCoord texCoord(curChar.m_x/fontDimX, curChar.m_y/fontDimY);
-
-					renderMan.AddQuad2D(RenderManager::eBatchGui, 
-										Vector2(a_pos.GetX() + xAdvance, a_pos.GetY()), 
-										charSize, 
-										font->m_texture,
-										texCoord,
-										texSize);
-					
-					xAdvance += (float)curChar.m_xadvance / fontDimX;
+						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
+						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
+						renderMan.AddQuad2D(RenderManager::eBatchGui, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize);
+					}
+					xAdvance += (float)((curChar.m_xadvance / font->m_sizeX)*a_size);
 				}
-				else // Just move the x advance along for a space
+				else
 				{
-					xAdvance += 15.0f; //wtf here...
+					//Log::Get().LogOnce(rendering, "Unexported font glyph for character %s", a_string[j]
 				}
 			}
 		
@@ -217,7 +213,7 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 0.01f, a_pos, a_colour);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 2.0f, a_pos, a_colour);
 	}
 
 	return false;
