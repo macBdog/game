@@ -86,7 +86,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		a_viewHeight = 1;
 	}
 
-    float ratio = (GLfloat)a_viewWidth / (GLfloat)a_viewHeight;
+	m_aspect = (float)m_viewWidth / (float)m_viewHeight;
 
     // Setup our viewport
     glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
@@ -96,7 +96,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
     glLoadIdentity();
 
     // Set our perspective
-    gluPerspective(45.0f, ratio, 0.1f, 100.0f);
+    gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
 
     // Make sure we're chaning the model view and not the projection
     glMatrixMode(GL_MODELVIEW);
@@ -114,8 +114,6 @@ void RenderManager::DrawScene()
 
     glLoadIdentity();
 
-	float aspect = (float)m_viewWidth / (float)m_viewHeight;
-
 	for (unsigned int i = 0; i < eBatchCount; ++i)
 	{
 		// Switch render mode for each batch
@@ -126,7 +124,7 @@ void RenderManager::DrawScene()
 				//glEnable(GL_DEPTH_TEST);
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
-				gluPerspective(s_fovAngleY, aspect, s_nearClipPlane, s_farClipPlane);
+				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
 				glMatrixMode(GL_MODELVIEW);
 				break;
 			}
@@ -150,7 +148,7 @@ void RenderManager::DrawScene()
 		Quad * q = m_batch[i];
 		for (unsigned int j = 0; j < m_batchCount[i]; ++j)
 		{
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
 			glBindTexture(GL_TEXTURE_2D, q->m_textureId);
 	
 			glBegin(GL_QUADS);
@@ -176,20 +174,21 @@ void RenderManager::DrawScene()
 
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient)
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient, Colour a_tint)
 {
 	// Create a full tex size coord at top left
 	TexCoord texPos(0.0f, 0.0f);
 	TexCoord texSize(1.0f, 1.0f);
-	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient);
+	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient, a_tint);
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient)
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient, Colour a_tint)
 {
 	// Copy params to next queue item
 	Quad * q = m_batch[a_batch];
 	q += m_batchCount[a_batch]++;
 	q->m_textureId = a_tex->GetId();
+	q->m_colour = a_tint;
 	
 	// Setup verts for clockwise drawing 
 	q->m_verts[0] = Vector(a_topLeft.GetX(), a_topLeft.GetY(), s_renderDepth2D);
@@ -202,10 +201,10 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	{
 		case Texture::eOrientationNormal:
 		{
-			q->m_coords[0] = texCoord + TexCoord(0.0f,						1.0f);
-			q->m_coords[1] = texCoord + TexCoord(texSize.GetX(),			1.0f);
-			q->m_coords[2] = texCoord + TexCoord(texSize.GetX(),			1.0f - texSize.GetY());
-			q->m_coords[3] = texCoord + TexCoord(0.0f,						1.0f - texSize.GetY());
+			q->m_coords[0] = TexCoord(texCoord.GetX(),					1.0f - texCoord.GetY());
+			q->m_coords[1] = TexCoord(texCoord.GetX() + texSize.GetX(),	1.0f - texCoord.GetY());
+			q->m_coords[2] = TexCoord(texCoord.GetX() + texSize.GetX(),	1.0f - texSize.GetY() - texCoord.GetY());
+			q->m_coords[3] = TexCoord(texCoord.GetX(),					1.0f - texSize.GetY() - texCoord.GetY());
 			break;
 		}
 		case Texture::eOrientationFlipVert:

@@ -42,5 +42,6 @@ static const Colour sc_colourBlack          = Colour(0.0f, 0.0f, 0.0f, 1.0f);
 static const Colour sc_colourRed            = Colour(1.0f, 0.0f, 0.0f, 1.0f);
 static const Colour sc_colourGreen          = Colour(0.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourBlue           = Colour(0.0f, 0.0f, 1.0f, 1.0f);
+static const Colour sc_colourPurple         = Colour(1.0f, 0.0f, 1.0f, 1.0f);
 
 #endif //_CORE_COLOUR_

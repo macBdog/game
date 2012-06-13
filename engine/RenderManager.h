@@ -38,7 +38,8 @@ public:
 	
 	//\ No work done in the constructor, only Init
 	RenderManager() : m_clearColour(sc_colourBlack)
-					, m_renderMode(eRenderModeFull) {}
+					, m_renderMode(eRenderModeFull)
+					, m_aspect(1.0f) {}
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
@@ -54,14 +55,15 @@ public:
 	//\brief Accessors for the viewport dimensions
 	inline unsigned int GetViewWidth() { return m_viewWidth; }
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
+	inline float GetViewAspect() { return m_aspect; }
 
 	//\brief Drawing functions
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal);
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
 
 	//\brief Quad drawing function with manual texture coordinates
 	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal);
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
 
 private:
 
@@ -73,6 +75,7 @@ private:
 		Vector m_verts[4];
 		TexCoord m_coords[4];
 		unsigned int m_textureId;
+		Colour m_colour;
 	};
 
 	Quad * m_batch[eBatchCount];							// Pointer to a pool of memory for quads
@@ -80,6 +83,7 @@ private:
 	unsigned int m_viewWidth;								// Cache of arguments passed to init
 	unsigned int m_viewHeight;								// Cache of arguments passed to init
 	unsigned int m_bpp;										// Cache of arguments passed to init
+	float		 m_aspect;									// Calculated ratio of width to height
 	Colour m_clearColour;									// Cache of arguments passed to init
 	eRenderMode m_renderMode;								// How the scene is to be rendered
 

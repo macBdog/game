@@ -68,6 +68,9 @@ bool GameFile::Load(const char * a_filePath)
 				else // Bad formatting
 				{
 					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
+					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
+
+					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
 					break;
 				}
 			}

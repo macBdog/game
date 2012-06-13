@@ -188,7 +188,7 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						renderMan.AddQuad2D(RenderManager::eBatchGui, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize);
+						renderMan.AddQuad2D(RenderManager::eBatchGui, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize, Texture::eOrientationNormal, a_colour);
 					}
 					xAdvance += (float)((curChar.m_xadvance / font->m_sizeX)*a_size);
 				}
@@ -213,7 +213,7 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 2.0f, a_pos, a_colour);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 0.75f, a_pos, a_colour);
 	}
 
 	return false;

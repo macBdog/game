@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
             active = m_inputManager.Update(event);
         }
 
-		// Here is where systems would add their rendering
-		FontManager::Get().DrawDebugString("hello world", Vector2(0.0f, 0.0f));
+		// Refresh log drawing on screen
+		Log::Get().Update(0.01f);
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();

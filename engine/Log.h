@@ -5,6 +5,10 @@
 #include <iostream>
 #include <stdarg.h>
 
+#include "../core/Colour.h"
+#include "../core/LinkedList.h"
+
+#include "FontManager.h"
 #include "Singleton.h"
 #include "StringUtils.h"
 #include "Time.h"
@@ -13,8 +17,7 @@ class Log : public Singleton<Log>
 {
 public:
 
-    Log() {};
-
+	//\brief The importance of the entry being logged
     enum LogLevel
     {
         LL_INFO = 0,
@@ -24,6 +27,7 @@ public:
         LL_COUNT
     };
 
+	//\brief What part of the system logged the entry
     enum LogCategory
     {
         LC_CORE = 0,
@@ -32,46 +36,47 @@ public:
         LC_COUNT
     };
 
-    inline void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...) const
-    {
-        char levelBuf[128];
-        char categoryBuf[128];
-        memset(levelBuf, 0, sizeof(char)*128);
-        memset(categoryBuf, 0, sizeof(char)*128);
+	// Log does nothing on startup but needs to cleanup
+	Log() {};
+	~Log() { Shutdown(); }
 
-        switch (a_level)
-        {
-            case LL_INFO:       sprintf(levelBuf, "%s", "INFO"); break;
-            case LL_WARNING:    sprintf(levelBuf, "%s", "WARNING"); break;
-            case LL_ERROR:      sprintf(levelBuf, "%s", "ERROR"); break;
-            default: break;
-        }
+	//\brief Clean up any allocated memory for log lines still being displayed
+	//\return true if all cleanup tasks were successful
+	bool Shutdown();
 
-        switch (a_category)
-        {
-            case LC_CORE:       sprintf(categoryBuf, "%s", "CORE"); break;
-            case LC_GAME:       sprintf(categoryBuf, "%s", "GAME"); break;
-            default: break;
-        }
+	//\brief Create a log entry that is written to standard out and displayed on screen
+    void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 
-		// Create a preformatted error string
-		char errorString[StringUtils::s_maxCharsPerLine];
-		memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
-		sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
+	//\brief Update will draw all log entries that need to be displayed
+	//\param a_dt float of the time that has passed since the last update call
+	void Update(float a_dt);
+ 
+private:
+	
+	//\brief A log display entry needs it's own properties as it's drawn per line
+	struct LogDisplayEntry
+	{
+		//\brief Set up the basic properties of a log display message
+		LogDisplayEntry(const char * a_message, LogLevel a_level)
+		{
+			strncpy(m_message, a_message, strlen(a_message));
+			m_lifeTime = s_logDisplayTime[a_level];
+			m_colour = s_logDisplayColour[a_level];
+		}
 
-		// Parse the variable number of arguments
-		char formatString[StringUtils::s_maxCharsPerLine];
-		memset(&formatString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
+		char m_message[StringUtils::s_maxCharsPerLine];		// What text to display on screen
+		Colour m_colour;
+		float m_lifeTime;									// How long to display this line
+	};
 
-		va_list formatArgs;
-		va_start(formatArgs, a_message);
-		vsprintf(formatString, a_message, formatArgs);
+	//\brief Shortcuts for creating and mainting a list of display entries
+	typedef LinkedListNode<LogDisplayEntry> LogDisplayNode;
+	typedef LinkedList<LogDisplayEntry> LogDisplayList;
 
-		// Print out both together
-		printf("%s %s\n", errorString, formatString);
+	const static float	s_logDisplayTime[LL_COUNT];		// How long to display each log category on screen
+	const static Colour s_logDisplayColour[LL_COUNT];	// What colours to display each log category in
 
-		va_end(formatArgs);
-    }
+	LogDisplayList m_displayList;	// All log entries that are being displayed at a time
 };
 
 #endif // _CORE_SYSTEM_LOG_
