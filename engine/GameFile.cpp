@@ -46,8 +46,10 @@ bool GameFile::Load(const char * a_filePath)
 				}
 
 				// Next line should be a brace
+				unsigned int braceCount = 0;
 				if (strstr(line, "{"))
 				{
+					braceCount++;
 					file.getline(line, StringUtils::s_maxCharsPerLine);
 					lineCount++;
 
@@ -64,19 +66,17 @@ bool GameFile::Load(const char * a_filePath)
 						file.getline(line, StringUtils::s_maxCharsPerLine);
 						lineCount++;
 					}
+					braceCount--;
 				}
-				else // Bad formatting
+				else if (braceCount > 0) // Mismatched number of braces
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
-					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
-
 					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
 					break;
 				}
 			}
 			else // Bad formatting
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting and object declaration.");
+				Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an object declaration.");
 			}
 		}
 

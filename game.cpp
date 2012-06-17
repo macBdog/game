@@ -96,9 +96,18 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 
     // Game main loop
+	unsigned int lastFrameTime = 0;
+	float lastFrameTimeSec = 0.0f;
+	unsigned int frameCount = 0;
+	unsigned int lastFps = 0;
+	float fps = 0.0f;
+
     bool active = true;
     while (active)
     {
+		// Start counting time
+		unsigned int startFrame = Time::GetSystemTime();
+
         // Message processing loop
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -107,13 +116,23 @@ int main(int argc, char *argv[])
         }
 
 		// Refresh log drawing on screen
-		Log::Get().Update(0.01f);
+		Log::Get().Update(lastFrameTimeSec);
+		
+		// Draw FPS on screen
+		char buf[32];
+		sprintf(buf, "FPS: %u", lastFps);
+		FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();
 
         // Cycle SDL surface
         SDL_GL_SwapBuffers();
+
+		// Finished a frame, count time and calc FPS
+		lastFrameTime = Time::GetSystemTime() - startFrame;
+		lastFrameTimeSec = lastFrameTime / 1000.0f;
+		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
 
     Log::Get().Write(Log::LL_INFO, Log::LC_CORE, "Exited cleanly");

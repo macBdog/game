@@ -1,5 +1,5 @@
 WHAT IS THE CURRENT SHORT TERM GOAL: Implement directory listening for resource auto refresh on all textures.
-BUGS: Fonts have incorrect aspect, error raised by GameFile::Load on correct syntax, BMFont load issue.
+BUGS: Textures created wiht BMFont don't load or display correctly.
 
 What is this project?
 

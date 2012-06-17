@@ -178,22 +178,25 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 				// Safety check for unexported characters
 				const FontChar & curChar = font->m_chars[(int)a_string[j]];
 				if (curChar.m_width > 0 || curChar.m_height > 0)
-				{
+				{ 
+					Vector2 sizeRatio(a_size / font->m_sizeX / renderMan.GetViewAspect(), a_size / font->m_sizeY);
+					Vector2 charSize(curChar.m_width * sizeRatio.GetX() , curChar.m_height * sizeRatio.GetY());
+
 					// Do not add a quad for a space
 					if (a_string[j] != ' ') 
 					{
 						TexCoord texSize(curChar.m_width/font->m_sizeX, curChar.m_height/font->m_sizeY);
-						Vector2 charSize((curChar.m_width / font->m_sizeX) * a_size, (curChar.m_height / font->m_sizeY) * a_size);
 						TexCoord texCoord(curChar.m_x/font->m_sizeX, curChar.m_y/font->m_sizeY);
 
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
 						renderMan.AddQuad2D(RenderManager::eBatchGui, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize, Texture::eOrientationNormal, a_colour);
 					}
-					xAdvance += (float)((curChar.m_xadvance / font->m_sizeX)*a_size);
+					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}
 				else
 				{
+					// CH:TODO Log once functionality
 					//Log::Get().LogOnce(rendering, "Unexported font glyph for character %s", a_string[j]
 				}
 			}
@@ -213,7 +216,7 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 0.75f, a_pos, a_colour);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 1.0f, a_pos, a_colour);
 	}
 
 	return false;

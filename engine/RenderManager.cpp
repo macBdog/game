@@ -86,6 +86,8 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		a_viewHeight = 1;
 	}
 
+	m_viewWidth = a_viewWidth;
+	m_viewHeight = a_viewHeight;
 	m_aspect = (float)m_viewWidth / (float)m_viewHeight;
 
     // Setup our viewport
