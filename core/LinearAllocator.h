@@ -6,20 +6,20 @@
 class LinearAllocator
 {
 public:
-	/*
-	cLinearAllocator(int a_maxSize)
-		: m_memory(NULL)
-		, m_memorySize(a_maxSize)
+	
+	LinearAllocator(int a_maxSizeBytes)
+		: m_memory(0)
+		, m_memorySize(a_maxSizeBytes)
 		, m_currentOffset(0)
 	{
 		// TODO setup m_memory here
 	}
 
-	inline void * Allocate(uint32_t a_allocationSize)
+	inline void * Allocate(unsigned int a_allocationSizeBytes)
 	{
-		if (a_allocationSize > 0)
+		if (a_allocationSizeBytes > 0)
 		{
-			uint32_t newOffset = m_currentOffset + a_allocationSize;
+			unsigned int newOffset = m_currentOffset + a_allocationSizeBytes;
 			if (newOffset <= m_memorySize)
 			{
 				// Create pointer to new section of memory
@@ -33,13 +33,16 @@ public:
 		}
 
 		// Out of memory or allocator not large enough
-		return NULL;
+		return 0;
 	}
+
+	inline unsigned int GetAllocationSizeBytes() { return m_memorySize; }
+	inline float GetAllocationRatio() { return m_memorySize > 0 ? m_currentOffset / m_memorySize : 0.0f; }
 private:
 
-	uint8_t * m_memory;			///< 1 byte pointer to our chunk of memory
-	uint32_t m_memorySize;		///< Total memory size in bytes
-	uint32_t m_currentOffset;		///< How far through allocation we are in bytes*/
+	unsigned int * m_memory;			///< 1 byte pointer to our chunk of memory
+	unsigned int m_memorySize;			///< Total memory size in bytes
+	unsigned int m_currentOffset;		///< How far through allocation we are in bytes*/
 
 };
 
