@@ -2,6 +2,7 @@
 #define _ENGINE_GUI_
 #pragma once
 
+#include "../core/Colour.h"
 #include "../core/Vector.h"
 
 #include "GameFile.h"
@@ -83,6 +84,7 @@ namespace Gui
 
 	  WidgetVector m_size;
 	  WidgetVector m_pos;
+	  Colour m_colour;			// What the base colour of the widget is
 	  Selection m_selection;	// If the widget is being rolled over etc
 	  Texture * m_texture;		// What to draw
 	  Widget * m_container;		// What this widget should be relative to

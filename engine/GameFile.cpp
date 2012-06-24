@@ -70,13 +70,13 @@ bool GameFile::Load(const char * a_filePath)
 				}
 				else if (braceCount > 0) // Mismatched number of braces
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
 					break;
 				}
 			}
 			else // Bad formatting
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Bad game file format, expecting an object declaration.");
+				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an object declaration.");
 			}
 		}
 
@@ -85,7 +85,7 @@ bool GameFile::Load(const char * a_filePath)
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Could not open config file at the path provided.");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open config file at the path provided.");
 		return false;
 	}
 }

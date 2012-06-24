@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Unable to init SDL");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to init SDL");
         return 1;
     }
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
 
-    Log::Get().Write(Log::LL_INFO, Log::LC_CORE, "Exited cleanly");
+    Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Exited cleanly");
 
     return 0;
 }

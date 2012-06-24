@@ -60,7 +60,7 @@ bool RenderManager::Startup(Colour a_clearColour)
 	// Alert if memory allocation failed
 	if (!batchAlloc)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "RenderManager failed to allocate batch memory!");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "RenderManager failed to allocate batch memory!");
 	}
 
     return batchAlloc;

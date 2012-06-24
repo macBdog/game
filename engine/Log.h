@@ -30,7 +30,7 @@ public:
 	//\brief What part of the system logged the entry
     enum LogCategory
     {
-        LC_CORE = 0,
+        LC_ENGINE = 0,
         LC_GAME,
 
         LC_COUNT

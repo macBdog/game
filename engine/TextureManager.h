@@ -1,6 +1,7 @@
 #ifndef _ENGINE_TEXTURE_MANAGER_H_
-#define _ENGINE_TEXTURE_H_
+#define _ENGINE_TEXTURE_MANAGER_H_
 
+#include "../core/HashMap.h"
 #include "../core/LinearAllocator.h"
 
 #include "Singleton.h"
@@ -27,16 +28,23 @@ public:
 		eCategoryCount
 	};
 	
+	TextureManager() { Startup(); }
+	~TextureManager() { Shutdown(); }
+
+	//brief Initialise memory pools on startup, cleanup textures on shutdown
+	bool Startup();
+	bool Shutdown();
+
 	//\brief Get or load a TGA file into texture memory
 	//\param a_tgaPath cstring to identify the texture by
 	//\return texture ID of the identified texture
-	int GetTexture(const char *a_tgaPath, eTextureCategory a_cat);
+	Texture * GetTexture(const char *a_tgaPath, eTextureCategory a_cat);
 
 	//\brief Functions to check if a texture has already been loaded
 	//\param a_tgaPathHash is the identified for the texture
-	//\return -1 if the texture is already loaded otherwise return the texture ID
-	int IsTextureLoaded(unsigned int a_tgaPathHash);
-	inline int IsTextureLoaded(const char *a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
+	//\return -1 the category that the texture is loaded into, none if not loaded
+	eTextureCategory IsTextureLoaded(unsigned int a_tgaPathHash);
+	inline eTextureCategory IsTextureLoaded(const char *a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
 
 	//\brief Reload a single texture without changing the IDs
 	//\param a_cat the category the texture is found in. If not supplied, an exhaustive search is performed
@@ -50,14 +58,10 @@ public:
 	
 private:
 
-	//\brief Handle to a texture's address in memory and it's identifier
-	struct TextureHandle
-	{
-		unsigned int m_texturePathHash;
-	};
+	static const unsigned int s_texurePoolSize[eCategoryCount];		// How much memory is assigned for each category
 
-	//\brief Memory pool for each texture category
-	LinearAllocator m_texturePool[eCategoryCount];
+	LinearAllocator<Texture> m_texturePool[eCategoryCount];			// Memory pool for each texture category
+	HashMap<unsigned int, Texture *> m_textureMap[eCategoryCount];	// List of textures for each category
 };
 
 #endif /* _ENGINE_TEXTURE_MANAGER_H_ */

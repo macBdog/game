@@ -50,7 +50,7 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 
     switch (a_category)
     {
-        case LC_CORE:       sprintf(categoryBuf, "%s", "CORE"); break;
+        case LC_ENGINE:       sprintf(categoryBuf, "%s", "ENGINE"); break;
         case LC_GAME:       sprintf(categoryBuf, "%s", "GAME"); break;
         default: break;
     }
