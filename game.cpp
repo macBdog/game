@@ -10,6 +10,7 @@
 
 #include "engine/FontManager.h"
 #include "engine/GameFile.h"
+#include "engine/Gui.h"
 #include "engine/InputManager.h"
 #include "engine/Log.h"
 #include "engine/RenderManager.h"
@@ -88,12 +89,11 @@ int main(int argc, char *argv[])
     }
 	
 	// Subsystem startup
-	RenderManager * m_renderManager = new RenderManager();
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
 
-	FontManager * m_fontManager = new FontManager();
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
+	Gui::GuiManager::Get().Startup(configFile->GetString("config", "guiPath"));
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -114,11 +114,14 @@ int main(int argc, char *argv[])
         {
             active = m_inputManager.Update(event);
         }
-
-		// Refresh log drawing on screen
-		Log::Get().Update(lastFrameTimeSec);
 		
-		// Draw FPS on screen
+		// Draw the Gui
+		Gui::GuiManager::Get().Update(lastFrameTimeSec);
+
+		// Draw log entries on top of the gui
+		Log::Get().Update(lastFrameTimeSec);
+
+		// Draw FPS on top of everything
 		char buf[32];
 		sprintf(buf, "FPS: %u", lastFps);
 		FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));

@@ -38,8 +38,8 @@ namespace Gui
 	enum Selection
 	{
 	  Unselected = 0,	// Drawn without tint
-	  Rollover,		// Indicating possible selection
-	  Selected,		// Showing element selection
+	  Rollover,			// Indicating possible selection
+	  Selected,			// Showing element selection
 	  EditRollover,		// Showing the element will be selected for editing
 	  EditSelected,		// Indicating edits will affect this element
 
@@ -82,18 +82,20 @@ namespace Gui
 
 	private:
 
-	  WidgetVector m_size;
-	  WidgetVector m_pos;
+	  WidgetVector m_size;		// How much of the parent container the element takes up
+	  WidgetVector m_pos;		// Where in the parent container the element resides
 	  Colour m_colour;			// What the base colour of the widget is
 	  Selection m_selection;	// If the widget is being rolled over etc
 	  Texture * m_texture;		// What to draw
-	  Widget * m_container;		// What this widget should be relative to
+	  Widget * m_nextWidget;	// Conitguous widgets are stored as a linked list
+	  Widget * m_childWidget;	// And each widget can have multiple children
 	};
 
 	class GuiManager : public Singleton<GuiManager>
 	{
 	public:
 
+		//\brief Each widget type has a distinct behavior 
 		enum eWidgetType
 		{
 			eWidgetTypeCursor = 0,
@@ -105,12 +107,24 @@ namespace Gui
 			eWidgetTypeCount,
 		};
 
+		bool Startup(const char * a_guiPath);
+		bool Shutdown();
+
+		//\brief Draw all visible widgets
+		//\param a_dt is the time since the last frame was drawn
+		bool Update(float a_dt);
+
+		void SetMousePos(Vector2 a_pos);
+
 		bool CreateWidget(eWidgetType a_type);
 		bool LoadWidgets(GameFile *a_inputFile);
 		bool SaveWidgets(GameFile *a_outputFile);
 
 	private:
 
+		GameFile m_configFile;	// Base gui config file
+		Widget m_screen;		// The parent of all widget that are created
+		Widget m_cursor;		// A special widget for the mouse position
 	};
 }
 

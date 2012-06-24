@@ -3,7 +3,7 @@
 
 #include "Log.h"
 #include "RenderManager.h"
-#include "Texture.h"
+#include "TextureManager.h"
 
 #include "FontManager.h"
 
@@ -113,9 +113,8 @@ bool FontManager::LoadFont(const char * a_fontName)
 			sscanf_s(line, "chars count=%d", &numChars);
 			
 			// Load texture for font
-			newFont->m_texture = new Texture();
 			sprintf(texturePath, "%s%s", m_fontPath, textureName);
-			newFont->m_texture->Load(texturePath);
+			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureManager::eCategoryGui);
 			newFont->m_numChars = numChars;
 			newFont->m_sizeX = sizeW;
 			newFont->m_sizeY = sizeH;
@@ -148,7 +147,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_CORE, "Could not find font file %s ", fontFilePath);
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not find font file %s ", fontFilePath);
 
 		// Clean up the font that was allocated
 		delete newFontNode->GetData();
