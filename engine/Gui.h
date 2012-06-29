@@ -53,7 +53,8 @@ namespace Gui
 	{
 	public: 
 
-	  void SetCoordType(CoordType a_type) { m_type = a_type; }
+		void SetCoordType(CoordType a_type) { m_type = a_type; }
+		inline Vector2 GetVector() { return Vector2(x, y); }
 
 	  	// Operator overloads are not inherited by default
 		using Vector2::operator=;
