@@ -18,10 +18,7 @@
 
 int main(int argc, char *argv[])
 {
-	// Startup logging first so any initialisation errors are reported
-	Log * m_log = new Log();
-
-	// Single parameter to the executable is the main confi file
+	// Single parameter to the executable is the main config file
 	char configFilePath[StringUtils::s_maxCharsPerLine];
 	memset(&configFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	if (argc > 1)
@@ -75,14 +72,21 @@ int main(int argc, char *argv[])
     // Sets up OpenGL double buffering
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-    // Create a new window
+	// Set fullscreen from config
+	bool fullScreen = configFile->GetBool("config", "fullscreen");
+	if (fullScreen)
+	{
+		videoFlags |= SDL_FULLSCREEN;
+	}
+
+	// Create a new window
 	int width = configFile->GetInt("config", "width");
 	int height = configFile->GetInt("config", "height");
 	int bpp = configFile->GetInt("config", "bpp");
     SDL_Surface* screen = SDL_SetVideoMode(width, height, bpp, videoFlags);
     if ( !screen )
     {
-        printf("Unable to set video: %s\n", SDL_GetError());
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to set video: %s\n", SDL_GetError());
         return 1;
     }
 	
@@ -93,9 +97,9 @@ int main(int argc, char *argv[])
 	// Subsystem startup
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
-
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 	Gui::GuiManager::Get().Startup(configFile->GetString("config", "guiPath"));
+	InputManager::Get().Init(fullScreen);
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
