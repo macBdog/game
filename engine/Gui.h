@@ -7,6 +7,7 @@
 
 #include "GameFile.h"
 #include "Singleton.h"
+#include "Texture.h"
 
 //\brief Gui handles creation and drawing of 2D interactive elements to form
 //		 a menu system for the game. It's rudimentary compared to some examples
@@ -108,6 +109,7 @@ namespace Gui
 			eWidgetTypeCount,
 		};
 
+		//\brief Load up resources from the gui config file
 		bool Startup(const char * a_guiPath);
 		bool Shutdown();
 
@@ -115,8 +117,10 @@ namespace Gui
 		//\param a_dt is the time since the last frame was drawn
 		bool Update(float a_dt);
 
-		void SetMousePos(Vector2 a_pos);
+		//\brief Accessors for special gui elements
+		void SetMousePos(float a_x, float a_y);
 
+		//\brief TODO stubbed out but will load widgets from some file
 		bool CreateWidget(eWidgetType a_type);
 		bool LoadWidgets(GameFile *a_inputFile);
 		bool SaveWidgets(GameFile *a_outputFile);

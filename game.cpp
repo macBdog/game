@@ -16,8 +16,6 @@
 #include "engine/RenderManager.h"
 #include "engine/StringUtils.h"
 
-InputManager m_inputManager;
-
 int main(int argc, char *argv[])
 {
 	// Startup logging first so any initialisation errors are reported
@@ -88,6 +86,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 	
+	// Hide the mouse cursor
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_WM_GrabInput(SDL_GRAB_ON);
+
 	// Subsystem startup
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
@@ -112,9 +114,9 @@ int main(int argc, char *argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            active = m_inputManager.Update(event);
+            active = InputManager::Get().Update(event);
         }
-		
+
 		// Draw the Gui
 		Gui::GuiManager::Get().Update(lastFrameTimeSec);
 

@@ -4,7 +4,9 @@
 
 #include <SDL.h>
 
-class InputManager
+#include "Singleton.h"
+
+class InputManager : public Singleton<InputManager>
 {
 
 public:

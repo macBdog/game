@@ -111,6 +111,20 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 
 void RenderManager::DrawScene()
 {
+	// Handle different rendering modes
+	switch (m_renderMode)
+	{
+		case eRenderModeNone:
+		{
+			return;
+		}
+		case eRenderModeWireframe:
+		{
+			// TODO
+		}
+		default: break;
+	}
+
     // Clear the color and depth buffers in preparation for drawing
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -186,6 +200,13 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 
 void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient, Colour a_tint)
 {
+	// Don't add more primitives than have been allocated for
+	if (m_batchCount[a_batch] >= s_maxPrimitivesPerBatch)
+	{
+		//Log::Get().LogOnce(rendering, "Too many primitives added for batch %d", a_batch
+		return;
+	}
+
 	// Copy params to next queue item
 	Quad * q = m_batch[a_batch];
 	q += m_batchCount[a_batch]++;

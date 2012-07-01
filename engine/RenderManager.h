@@ -52,9 +52,14 @@ public:
 	//\brief Dump everything to the buffer 
 	void DrawScene();
 
+	//\brief Change the render mode
+	//\param a_renderMode the new mode to set
+	inline void SetRenderMode(eRenderMode a_renderMode) { m_renderMode = a_renderMode; }
+
 	//\brief Accessors for the viewport dimensions
 	inline unsigned int GetViewWidth() { return m_viewWidth; }
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
+	inline unsigned int GetViewDepth() { return m_bpp; }
 	inline float GetViewAspect() { return m_aspect; }
 
 	//\brief Drawing functions

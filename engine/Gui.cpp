@@ -26,7 +26,7 @@ bool Gui::GuiManager::Startup(const char * a_guiPath)
 	sprintf(fileName, "%s%s", a_guiPath, m_configFile.GetString("config", "mouseCursorTexture"));
 	m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
 	m_cursor.SetPos(Vector2(0.0f, 0.0f));
-	m_cursor.SetSize(Vector2(0.05f, 0.05f));
+	m_cursor.SetSize(Vector2(0.08f / RenderManager::Get().GetViewAspect(), 0.08f));
 
 	return true;
 }
@@ -37,4 +37,13 @@ bool Gui::GuiManager::Update(float a_dt)
 	m_cursor.Draw();
 
 	return true;
+}
+
+void Gui::GuiManager::SetMousePos(float a_x, float a_y) 
+{ 
+	// Calculate position relative to the screen size
+	RenderManager & renderMan = RenderManager::Get();
+	float relX = a_x / renderMan.GetViewWidth();
+	float relY = a_y / renderMan.GetViewHeight();
+	m_cursor.SetPos(Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f)); 
 }
