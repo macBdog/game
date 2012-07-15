@@ -159,12 +159,12 @@ bool FontManager::LoadFont(const char * a_fontName)
 	return false;
 }
 
-bool FontManager::DrawString(const char * a_string, const char * a_fontName, float a_size, Vector2 a_pos, Colour a_colour)
+bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour)
 {
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
 	{
-		if (curFont->GetData()->m_fontName == StringHash(a_fontName))
+		if (curFont->GetData()->m_fontName == *a_fontName)
 		{
 			// Draw each character in the string
 			Font * font = curFont->GetData();
@@ -199,7 +199,6 @@ bool FontManager::DrawString(const char * a_string, const char * a_fontName, flo
 					//Log::Get().LogOnce(rendering, "Unexported font glyph for character %s", a_string[j]
 				}
 			}
-		
 			return true;
 		}
 		curFont = curFont->GetNext();
@@ -215,8 +214,22 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetCString(), 1.0f, a_pos, a_colour);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, a_pos, a_colour);
 	}
 
 	return false;
+}
+
+StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
+{
+	FontListNode * curFont = m_fonts.GetHead();
+	while(curFont != NULL)
+	{
+		if (curFont->GetData()->m_fontName == StringHash(a_fontName))
+		{
+			return &curFont->GetData()->m_fontName;
+		}
+	}
+
+	return NULL;
 }

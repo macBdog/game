@@ -165,23 +165,31 @@ void RenderManager::DrawScene()
 		for (unsigned int j = 0; j < m_batchCount[i]; ++j)
 		{
 			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
-			glBindTexture(GL_TEXTURE_2D, q->m_textureId);
+
+			if (q->m_textureId >= 0)
+			{
+				glBindTexture(GL_TEXTURE_2D, q->m_textureId);
 	
-			glBegin(GL_QUADS);
+				glBegin(GL_QUADS);
 
-			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
-			glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+				glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
+				glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
 
-			glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
-			glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
+				glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
+				glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
 
-			glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
-			glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
+				glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
+				glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
 
-			glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
-			glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+				glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
+				glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
 
-			glEnd();
+				glEnd();
+			}
+			else // No texture version
+			{
+
+			}
 
 			q++;
 		}
@@ -210,7 +218,14 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	// Copy params to next queue item
 	Quad * q = m_batch[a_batch];
 	q += m_batchCount[a_batch]++;
-	q->m_textureId = a_tex->GetId();
+	if (a_tex)
+	{
+		q->m_textureId = a_tex->GetId();
+	}
+	else
+	{
+		q->m_textureId = -1;
+	}
 	q->m_colour = a_tint;
 	
 	// Setup verts for clockwise drawing 

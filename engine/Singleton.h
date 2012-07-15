@@ -2,6 +2,8 @@
 #define _ENGINE_SINGLETON_H__
 #pragma once
 
+#include <cstdio>
+
 template<class T>
 class Singleton
 {

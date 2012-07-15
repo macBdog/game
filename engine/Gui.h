@@ -7,6 +7,7 @@
 
 #include "GameFile.h"
 #include "Singleton.h"
+#include "StringHash.h"
 #include "Texture.h"
 
 //\brief Gui handles creation and drawing of 2D interactive elements to form
@@ -50,7 +51,7 @@ namespace Gui
 	//\brief A widget vector is a 2D vector with the additional properties
 	//       of different coordinate types to deal with widescreen resolutions
 	//       and alignment types to create layouts that work in all screen sizes
-	class WidgetVector : Vector2
+	class WidgetVector : public Vector2
 	{
 	public: 
 
@@ -73,24 +74,40 @@ namespace Gui
 	{
 
 	public:
+		Widget()
+			: m_fontName(NULL)
+			, m_selectFlags(0)
+			, m_active(true)
+			, m_texture(NULL)
+			, m_nextWidget(NULL)
+			, m_childWidget(NULL)
+		{}
+		
+		//\brief Base implementation will tint for selection
+		virtual void Draw();
 
-	  //\brief Base implementation will tint for selection
-	  virtual void Draw();
-
-	  //\brief Basic property accessors should remain unchanged for all instances of this class
-	  void SetTexture(Texture * a_tex) { m_texture = a_tex; }
-	  void SetPos(Vector2 a_pixelPos, CoordType a_type = CoordTypeAbsolute) { m_pos = a_pixelPos; m_pos.SetCoordType(a_type); }
-	  void SetSize(Vector2 a_relPos, CoordType a_type = CoordTypeAbsolute) { m_size = a_relPos, m_size.SetCoordType(a_type); }
+		//\brief Basic property accessors should remain unchanged for all instances of this class
+		inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
+		inline void SetPos(Vector2 a_pixelPos, CoordType a_type = CoordTypeAbsolute) { m_pos = a_pixelPos; m_pos.SetCoordType(a_type); }
+		inline void SetSize(Vector2 a_relPos, CoordType a_type = CoordTypeAbsolute) { m_size = a_relPos, m_size.SetCoordType(a_type); }
+		inline void SetColour(Colour a_colour) { m_colour = a_colour; }
+		inline void SetActive(bool a_active = true) { m_active = a_active; }
+		inline void SetFontName(StringHash * a_fontName) { m_fontName = a_fontName; }
+		inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 
 	private:
 
-	  WidgetVector m_size;		// How much of the parent container the element takes up
-	  WidgetVector m_pos;		// Where in the parent container the element resides
-	  Colour m_colour;			// What the base colour of the widget is
-	  Selection m_selection;	// If the widget is being rolled over etc
-	  Texture * m_texture;		// What to draw
-	  Widget * m_nextWidget;	// Conitguous widgets are stored as a linked list
-	  Widget * m_childWidget;	// And each widget can have multiple children
+		WidgetVector m_size;		// How much of the parent container the element takes up
+		WidgetVector m_pos;			// Where in the parent container the element resides
+		Colour m_colour;			// What the base colour of the widget is, will tint texture
+		Selection m_selection;		// If the widget is being rolled over etc
+		bool m_active;				// If the widget should be drawn and reactive
+		StringHash * m_fontName;	// Pointer to a stringhash containing the name of the font to render with
+		Texture * m_texture;		// What to draw
+		Widget * m_nextWidget;		// Conitiguous widgets are stored as a linked list
+		Widget * m_childWidget;		// And each widget can have multiple children
+		unsigned int m_selectFlags;	// What kind of selection this widget supports
+		char m_name[StringUtils::s_maxCharsPerName];	// Display name or label
 	};
 
 	class GuiManager : public Singleton<GuiManager>
@@ -116,9 +133,6 @@ namespace Gui
 		//\brief Draw all visible widgets
 		//\param a_dt is the time since the last frame was drawn
 		bool Update(float a_dt);
-
-		//\brief Accessors for special gui elements
-		void SetMousePos(float a_x, float a_y);
 
 		//\brief TODO stubbed out but will load widgets from some file
 		bool CreateWidget(eWidgetType a_type);

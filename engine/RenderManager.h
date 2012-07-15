@@ -79,7 +79,7 @@ private:
 	{
 		Vector m_verts[4];
 		TexCoord m_coords[4];
-		unsigned int m_textureId;
+		int m_textureId;
 		Colour m_colour;
 	};
 

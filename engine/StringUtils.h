@@ -44,6 +44,7 @@ namespace StringUtils
 	extern const char * ReadLine(FILE *a_filePointer);
 
 	static const unsigned int s_maxCharsPerLine = 256u;		// Maximum number of chars that can be read before a cr
+	static const unsigned int s_maxCharsPerName = 64u;		// Maximum number of chars for a simple name
 }
 
 #endif /* _ENGINE_STRINGUTILS_H_ */

@@ -39,6 +39,7 @@ private:
 // Statics for commonly referenced debug colours
 static const Colour sc_colourWhite			= Colour(1.0f, 1.0f, 1.0f, 1.0f);
 static const Colour sc_colourBlack          = Colour(0.0f, 0.0f, 0.0f, 1.0f);
+static const Colour sc_colourGrey			= Colour(0.5f, 0.5f, 0.5f, 1.0f);
 static const Colour sc_colourRed            = Colour(1.0f, 0.0f, 0.0f, 1.0f);
 static const Colour sc_colourGreen          = Colour(0.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourBlue           = Colour(0.0f, 0.0f, 1.0f, 1.0f);

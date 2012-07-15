@@ -5,9 +5,7 @@
 
 #include <SDL.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
+#include "engine/DebugMenu.h"
 #include "engine/FontManager.h"
 #include "engine/GameFile.h"
 #include "engine/Gui.h"
@@ -99,7 +97,7 @@ int main(int argc, char *argv[])
     RenderManager::Get().Resize(width, height, bpp);
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 	Gui::GuiManager::Get().Startup(configFile->GetString("config", "guiPath"));
-	InputManager::Get().Init(fullScreen);
+	InputManager::Get().Startup(fullScreen);
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -123,6 +121,9 @@ int main(int argc, char *argv[])
 
 		// Draw the Gui
 		Gui::GuiManager::Get().Update(lastFrameTimeSec);
+
+		// Draw the debug menu
+		DebugMenu::Get().Update(lastFrameTimeSec);
 
 		// Draw log entries on top of the gui
 		Log::Get().Update(lastFrameTimeSec);

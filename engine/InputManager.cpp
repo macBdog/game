@@ -8,19 +8,37 @@ template<> InputManager * Singleton<InputManager>::s_instance = NULL;
 InputManager::InputManager()
 	: m_focus(true)
 	, m_fullScreen(false)
+	, m_mousePos(0.0f)
 {
 
 }
 
 InputManager::~InputManager()
 {
-
+	Shutdown();
 }
 
-bool InputManager::Init(bool a_fullScreen)
+bool InputManager::Startup(bool a_fullScreen)
 {
 	m_fullScreen = a_fullScreen;
     return true;
+}
+
+bool InputManager::Shutdown()
+{
+	InputEventNode * next = m_events.GetHead();
+	while(next != NULL)
+	{
+		// Cache off next pointer
+		InputEventNode * cur = next;
+		next = cur->GetNext();
+
+		m_events.Remove(cur);
+		delete cur->GetData();
+		delete cur;
+	}
+
+	return true;
 }
 
 bool InputManager::Update(const SDL_Event & a_event)
@@ -69,7 +87,8 @@ bool InputManager::Update(const SDL_Event & a_event)
 		// Mouse events
 		case SDL_MOUSEMOTION:
 		{
-			guiMan.SetMousePos(a_event.motion.x, a_event.motion.y);
+			m_mousePos.SetX(a_event.motion.x);
+			m_mousePos.SetY(a_event.motion.y);
 			break;
 		}
 		case SDL_MOUSEBUTTONDOWN:
@@ -79,6 +98,20 @@ bool InputManager::Update(const SDL_Event & a_event)
 			{
 				SetFocus(true);
 			}
+			break;
+		}
+		case SDL_MOUSEBUTTONUP:
+		{
+			// Convert SDL button to internal enum
+			eMouseButton but = eMouseButtonLeft;
+			switch (a_event.button.button)
+			{
+				case SDL_BUTTON_LEFT:	but = eMouseButtonLeft; break;
+				case SDL_BUTTON_MIDDLE: but = eMouseButtonMiddle; break;
+				case SDL_BUTTON_RIGHT:  but = eMouseButtonRight; break;
+				default: break;
+			}
+			ProcessMouseUp(but);
 			break;
 		}
         default: break;
@@ -106,3 +139,45 @@ void InputManager::SetFocus(bool a_focus)
 	}
 }
 
+Vector2 InputManager::GetMousePosRelative()
+{
+	// Convert from screen space to container space
+	RenderManager & renderMan = RenderManager::Get();
+	float relX = m_mousePos.GetX() / renderMan.GetViewWidth();
+	float relY = m_mousePos.GetY() / renderMan.GetViewHeight();
+	return Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f); 
+}
+
+void InputManager::RegisterMouseCallback(DebugMenu * a_debugMenu, eMouseButton a_button, eInputType a_type, bool a_oneShot)
+{
+	// Add an event to the list of items to be processed
+	InputEventNode * newInputNode = new InputEventNode();
+	newInputNode->SetData(new InputEvent());
+	InputEvent * newInput = newInputNode->GetData();
+
+	newInput->m_callback.SetCallback(a_debugMenu, &DebugMenu::OnMenuItemMouseUp);
+	newInput->m_src.m_mouseButton = a_button;
+	newInput->m_type = a_type;
+	newInput->m_oneShot = a_oneShot;
+
+	m_events.Insert(newInputNode);
+}
+
+bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
+{
+	InputEventNode * curEvent = m_events.GetHead();
+	while(curEvent != NULL)
+	{
+		InputEvent * ev = curEvent->GetData();
+		if (ev->m_type == eInputTypeMouseUp && 
+			ev->m_src.m_mouseButton == a_button)
+		{
+			ev->m_callback.Execute();
+			return true;
+		}
+
+		curEvent = curEvent->GetNext();
+	}
+
+	return false;
+}
