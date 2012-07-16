@@ -47,9 +47,9 @@ private:
 			, m_next(NULL)
 		{}
 
-		Gui::Widget m_widget;		// The widget itself for drawing and interaction
-		Gui::Widget * m_firstChild;	// The first child gui element
-		Gui::Widget * m_next;		// The next sibling in the linked list of children
+		Widget m_widget;		// The widget itself for drawing and interaction
+		Widget * m_firstChild;	// The first child gui element
+		Widget * m_next;		// The next sibling in the linked list of children
 	};
 
 	unsigned int m_numMenuItems;	// How many items in total the debug menu displays
