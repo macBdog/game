@@ -22,14 +22,14 @@ public:
 	inline float GetB() { return b; }
 	inline float GetA() { return a; }
 
-	// Operator overloads
-	/* TODO!
-	Colour operator + (const Colour & a_val) const { return Colour(x + a_val.x, y + a_val.y, z + a_val.z); }
-	Colour operator - (const Colour & a_val) const { return Colour(x - a_val.x, y - a_val.y, z - a_val.z); }
-	Colour operator * (float a_scale) const { return Colour(x * a_scale, y * a_scale, z * a_scale); }
-	Colour operator * (const Colour & a_val) const { return Colour(x * a_val.x, y * a_val.y, z * a_val.z); }
-	bool operator == (const Colour & a_compare) const { return x == a_compare.x && y == a_compare.y && z == a_compare.z; }
-	*/
+	//\brief Standard arithmatic operator overloads
+	Colour operator + (const Colour & a_val) const { return Colour(r + a_val.r, g + a_val.g, b + a_val.b, a + a_val.a); }
+	Colour operator - (const Colour & a_val) const { return Colour(r - a_val.r, g - a_val.g, b - a_val.b, a - a_val.a); }
+	Colour operator * (float a_scale) const { return Colour(r * a_scale, g * a_scale, b * a_scale, a * a_scale); }
+	Colour operator * (const Colour & a_val) const { return Colour(r * a_val.r, g * a_val.g, b * a_val.b, a * a_val.a); }
+	bool operator == (const Colour & a_compare) const { return r == a_compare.r && g == a_compare.g && b == a_compare.b && a == a_compare.a; }
+	void operator += (const Colour & a_val) { r += a_val.r; g += a_val.g; b += a_val.b; a += a_val.a; }
+	void operator -= (const Colour & a_val) { r -= a_val.r; g -= a_val.g; b -= a_val.b; a -= a_val.a; }
 
 private:
 	float r, g, b, a;

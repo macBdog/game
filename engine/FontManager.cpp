@@ -161,10 +161,15 @@ bool FontManager::LoadFont(const char * a_fontName)
 
 bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour)
 {
+	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour);
+}
+
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour)
+{
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
 	{
-		if (curFont->GetData()->m_fontName == *a_fontName)
+		if (curFont->GetData()->m_fontName == a_fontNameHash)
 		{
 			// Draw each character in the string
 			Font * font = curFont->GetData();

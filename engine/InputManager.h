@@ -4,7 +4,7 @@
 
 #include <SDL.h>
 
-#include "../core/Callback.h"
+#include "../core/Delegate.h"
 #include "../core/LinkedList.h"
 #include "../core/Vector.h"
 
@@ -30,7 +30,7 @@ public:
 		eInputTypeCount,
 	};
 
-	//\brief Easy to use mouse button constants..  rather than SDLs numbered buttons
+	//\brief Easy to use mouse button constants, independant from SDLs numbered buttons
 	enum eMouseButton
 	{
 		eMouseButtonNone = -1,
@@ -61,11 +61,26 @@ public:
 	Vector2 GetMousePosRelative();
 
 	//\brief Register a function pointer to be called when the app receives a mouse event
-	//\param a_callback is the pointer to the address of the function to call
+	//\param a_callback is the object that contains the member function to call back
 	//\param a_button is the button that is being depressed or released
 	//\param a_type defaults to mouse up but can be changed to to down or motion
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
-	void RegisterMouseCallback(DebugMenu * a_debugMenu, eMouseButton a_button, eInputType a_type = eInputTypeMouseUp, bool a_oneShot = false);
+	template <typename TObj, typename TMethod>
+	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, eMouseButton a_button, eInputType a_type = eInputTypeMouseUp, bool a_oneShot = false)
+	{
+		// Add an event to the list of items to be processed
+		InputEventNode * newInputNode = new InputEventNode();
+		newInputNode->SetData(new InputEvent());
+	
+		// Set data for the new event
+		InputEvent * newInput = newInputNode->GetData();
+		newInput->m_src.m_mouseButton = a_button;
+		newInput->m_type = a_type;
+		newInput->m_oneShot = a_oneShot;
+		newInput->m_delegate.SetCallback(a_callerObject, a_callback);
+		m_events.Insert(newInputNode);
+	}
+
 	void RegisterKeyCallback(void * a_callback, char a_key, eInputType a_type = eInputTypeKeyUp, bool a_oneShot = false);
 
 private:
@@ -80,10 +95,10 @@ private:
 	//\brief Storage for an input event and it's callback
 	struct InputEvent
 	{
-		InputSource m_src;			// What event happened
-		Callback<DebugMenu>    m_callback;		// What to do when it happens
-		eInputType	m_type;			// What type of event to respond to
-		bool		m_oneShot;		// If the event should only be responded to once
+		InputSource m_src;					// What event happened
+		Delegate<bool, bool> m_delegate;	// Pointer to object to call when it happens
+		eInputType	m_type;					// What type of event to respond to
+		bool		m_oneShot;				// If the event should only be responded to once
 	};
 
 	//\brief Input handling helper functions are split up so there is no one huge

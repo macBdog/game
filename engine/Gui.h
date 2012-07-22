@@ -10,32 +10,40 @@
 //		 a menu system for the game. It's rudimentary compared to some examples
 //		 out there but it's still possible to create a very charming UI easily
 //		 and quickly without leaving the game interface.
-
-namespace Gui
+class Gui : public Singleton<Gui>
 {
-	class GuiManager : public Singleton<GuiManager>
-	{
-	public:
+public:
 
-		//\brief Load up resources from the gui config file
-		bool Startup(const char * a_guiPath);
-		bool Shutdown();
+	//\brief Load up resources from the gui config file
+	bool Startup(const char * a_guiPath);
+	bool Shutdown();
 
-		//\brief Draw all visible widgets
-		//\param a_dt is the time since the last frame was drawn
-		bool Update(float a_dt);
+	//\brief Draw all visible widgets
+	//\param a_dt is the time since the last frame was drawn
+	bool Update(float a_dt);
 
-		//\brief TODO stubbed out but will load widgets from some file
-		bool CreateWidget(Widget::eWidgetType a_type);
-		bool LoadWidgets(GameFile *a_inputFile);
-		bool SaveWidgets(GameFile *a_outputFile);
+	//\brief Widget lifecycle functions
+	//return A pointer to the newly created widget if succesfull otherwise NULL
+	Widget * CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive = true);
+	bool LoadWidgets(GameFile *a_inputFile);
+	bool SaveWidgets(GameFile *a_outputFile);
 
-	private:
+	//brief Called when an input device is used
+	bool MouseInputHandler(bool active = false);
+	bool KeyInputHandler();
 
-		GameFile m_configFile;	// Base gui config file
-		Widget m_screen;		// The parent of all widget that are created
-		Widget m_cursor;		// A special widget for the mouse position
-	};
-}
+	//\brief Utility function to get the base container for all objects
+	inline Widget * GetScreenWidget() { return &m_screen; }
+
+private:
+
+	//\brief Helper function to update selection status of all widgets based on mouse pos
+	void UpdateSelection();
+
+	GameFile m_configFile;	// Base gui config file
+	Widget m_screen;		// The parent of all widget that are created
+	Widget m_cursor;		// A special widget for the mouse position
+};
+
 
 #endif // _ENGINE_GUI_

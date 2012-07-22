@@ -1,3 +1,5 @@
+#include "StringUtils.h"
+
 #include "StringHash.h"
 
 const unsigned int StringHash::s_stdCRCTable[256] = { 
@@ -52,7 +54,7 @@ unsigned int StringHash::GenerateCRC(const char * a_string, bool a_convertToLowe
 	{
 		if (a_convertToLower)
 		{
-			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ ConvertToLower(*buffer)];
+			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ StringUtils::ConvertToLower(*buffer)];
 			buffer++;
 		}
 		else

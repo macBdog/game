@@ -2,43 +2,39 @@
 #define _CORE_CALLBACK_
 #pragma once
 
-//\brief Pure virtual base class so any class can instance this and still have Execute called
+//\brief Abstract base class so any class can instance this and still have Execute called
+template <typename TReturnType, typename TParam>
 class CallbackBase
 {
 public:
-	virtual void Execute() const  = 0;				// No parameter version
-	//virtual void Execute(int a_param) const = 0;	// Single int param version
+	
+	virtual TReturnType Execute(TParam a_param) = 0;
 };
 
-//\brief Templated version of callback providing access to execute for all subclasses
-template <class T>
-class Callback : public CallbackBase
+//\brief Templated version of callback providing access to execute for all subclasses and params
+template <typename TReturnType, typename TParam, typename TObj, typename TMethod>
+class Callback : public CallbackBase<TReturnType, TParam>
 {
 public:
-	
-	typedef void (T::*FunctionPointer)();			// Single parameter points to instance of class
-	// typedef void (T::*FunctionPointer)(int a_param)	// Single param version
 
-	Callback() : m_funcPointer(0) {}
+	//\brief No default ctor, must Set the instance of the this pointer and the function to call
+	Callback(void * a_object, TMethod a_method)
+	{
+		m_object = a_object;
+		m_method = a_method;
+	}
 
 	//\brief Call the function pointer on the instance of the callback
-	virtual void Execute() const
+	virtual TReturnType Execute(TParam a_param)
 	{
-		if (m_funcPointer)
-		{
-			(m_thisPointer->*m_funcPointer)();
-		}
+		TObj * obj = static_cast<TObj *>(m_object);
+		return (obj->*m_method)(a_param);
 	}
 
-	//\brief Set the instance of the this pointer and the function to call
-	void SetCallback(T * a_thisPointer, FunctionPointer a_funcPointer)
-	{
-		m_thisPointer = a_thisPointer;
-		m_funcPointer = a_funcPointer;
-	}
+private:
 
-	T * m_thisPointer;				// Storage for the pointer to the class instance
-	FunctionPointer m_funcPointer;	// Storage to the function to call on the class
+	void * m_object;		// The object that the method is run on 
+	TMethod m_method;		// The method to call on the object
 };
 
 #endif //_CORE_CALLBACK_

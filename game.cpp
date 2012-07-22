@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
-	Gui::GuiManager::Get().Startup(configFile->GetString("config", "guiPath"));
+	Gui::Get().Startup(configFile->GetString("config", "guiPath"));
 	InputManager::Get().Startup(fullScreen);
 
     // Game main loop
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         }
 
 		// Draw the Gui
-		Gui::GuiManager::Get().Update(lastFrameTimeSec);
+		Gui::Get().Update(lastFrameTimeSec);
 
 		// Draw the debug menu
 		DebugMenu::Get().Update(lastFrameTimeSec);

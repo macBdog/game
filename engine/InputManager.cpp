@@ -1,6 +1,5 @@
 #include "InputManager.h"
 
-#include "Gui.h"
 #include "RenderManager.h"
 
 template<> InputManager * Singleton<InputManager>::s_instance = NULL;
@@ -45,7 +44,6 @@ bool InputManager::Update(const SDL_Event & a_event)
 {
 	// Cache off rendermanager as it gets used plenty here
 	RenderManager & renderMan = RenderManager::Get();
-	Gui::GuiManager & guiMan = Gui::GuiManager::Get();
 
 	// Deal with each different event type
     switch (a_event.type)
@@ -148,21 +146,6 @@ Vector2 InputManager::GetMousePosRelative()
 	return Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f); 
 }
 
-void InputManager::RegisterMouseCallback(DebugMenu * a_debugMenu, eMouseButton a_button, eInputType a_type, bool a_oneShot)
-{
-	// Add an event to the list of items to be processed
-	InputEventNode * newInputNode = new InputEventNode();
-	newInputNode->SetData(new InputEvent());
-	InputEvent * newInput = newInputNode->GetData();
-
-	newInput->m_callback.SetCallback(a_debugMenu, &DebugMenu::OnMenuItemMouseUp);
-	newInput->m_src.m_mouseButton = a_button;
-	newInput->m_type = a_type;
-	newInput->m_oneShot = a_oneShot;
-
-	m_events.Insert(newInputNode);
-}
-
 bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 {
 	InputEventNode * curEvent = m_events.GetHead();
@@ -172,7 +155,7 @@ bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 		if (ev->m_type == eInputTypeMouseUp && 
 			ev->m_src.m_mouseButton == a_button)
 		{
-			ev->m_callback.Execute();
+			ev->m_delegate.Execute(true);
 			return true;
 		}
 

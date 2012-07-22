@@ -9,21 +9,19 @@
 #include "Singleton.h"
 #include "Gui.h"
 
+class Widget;
+
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
 //		 create and configure gui elements, game objects and control engine settings.
-
 class DebugMenu : public Singleton<DebugMenu>
 {
 public:
 
-	DebugMenu() 
-		: m_numMenuItems(0)
-	{
-		Startup();
-	}
+	//\brief Ctor calls startup
+	DebugMenu();
 
 	//\brief Startup registers input callbacks for mouse clicks
-	void Startup();
+	bool Startup();
 
 	//\brief Update will draw all debug menu items
 	//\param a_dt float of time since the last frame in seconds
@@ -31,32 +29,19 @@ public:
 
 	//\brief Callback handler for when a debug menu item is clicked
 	//\param A pointer to the widget that was interacted with
-	void OnMenuItemMouseUp(/*Gui::Widget * a_widget*/);
+	bool OnMenuItemMouseUp(Widget * a_widget);
 
 	//\brief Callback handler for when a debug menu item is rolled over
 	//\param A pointer to the widget that was interacted with
-	void OnMenuItemMouseOver(/*Gui::Widget * a_widget*/);
+	bool OnMenuItemMouseOver(Widget * a_widget);
+
+	//\param Listener function to activate the debug menu
+	//\param a_active if the menu should be shown or hidden
+	bool OnActivate(bool a_active);
 
 private:
 
-	//\brief A menu item is a button that can be hovered over to display child buttons
-	struct MenuItem
-	{
-		MenuItem()					// Ctor nulls out linked list pointers to children
-			: m_firstChild(NULL)
-			, m_next(NULL)
-		{}
-
-		Widget m_widget;		// The widget itself for drawing and interaction
-		Widget * m_firstChild;	// The first child gui element
-		Widget * m_next;		// The next sibling in the linked list of children
-	};
-
-	unsigned int m_numMenuItems;	// How many items in total the debug menu displays
-
-	MenuItem m_creationMenu;		// There are four root debug menu items: creating gameobjects
-	MenuItem m_settingsMenu;		// Engine settings such as rendering and sound
-	MenuItem m_game;				// And a user defined game debug meny configured through script
+	Widget * m_debugMenuRoot;		// Pointer to a widget that we create on startup
 };
 
 #endif //_ENGINE_DEBUG_MENU_

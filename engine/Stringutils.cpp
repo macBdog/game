@@ -185,3 +185,9 @@ const char * StringUtils::ReadLine(FILE *a_filePointer)
    
 	return retBuf;										
 }
+
+extern unsigned char StringUtils::ConvertToLower(unsigned char a_char)
+{
+	// TODO!
+	return a_char;
+}

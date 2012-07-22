@@ -43,6 +43,11 @@ namespace StringUtils
 	//\brief Reads from a file until a newline or carriage return is found then returns a c string of the last read
 	extern const char * ReadLine(FILE *a_filePointer);
 
+	//\brief Convert a character to it's lower case equivalent
+	//\param a_char the character to downcase
+	//\return the lower case equivalent char
+	extern unsigned char ConvertToLower(unsigned char a_char);
+
 	static const unsigned int s_maxCharsPerLine = 256u;		// Maximum number of chars that can be read before a cr
 	static const unsigned int s_maxCharsPerName = 64u;		// Maximum number of chars for a simple name
 }

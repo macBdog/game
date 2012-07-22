@@ -166,6 +166,7 @@ void RenderManager::DrawScene()
 		{
 			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
 
+			// Draw a quad with a texture
 			if (q->m_textureId >= 0)
 			{
 				glBindTexture(GL_TEXTURE_2D, q->m_textureId);
@@ -188,7 +189,16 @@ void RenderManager::DrawScene()
 			}
 			else // No texture version
 			{
+				glDisable(GL_TEXTURE_2D);
 
+				glBegin(GL_QUADS);
+				glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+				glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
+				glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
+				glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+				glEnd();
+
+				glEnable(GL_TEXTURE_2D);
 			}
 
 			q++;
@@ -213,6 +223,12 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	{
 		//Log::Get().LogOnce(rendering, "Too many primitives added for batch %d", a_batch
 		return;
+	}
+
+	// Warn about no texture
+	if (a_tex == NULL)
+	{
+		//Log::Get().LogOnce(LC_WARNING, rendering, "Quad submitted without a texture);
 	}
 
 	// Copy params to next queue item
