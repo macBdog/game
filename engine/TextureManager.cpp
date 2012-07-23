@@ -1,3 +1,4 @@
+#include "FileManager.h"
 #include "Log.h"
 
 #include "TextureManager.h"
@@ -13,8 +14,20 @@ const unsigned int TextureManager::s_texurePoolSize[eCategoryCount] =
 	32768		// 32 for world
 };
 
+const float TextureManager::s_updateFreq = 1.0f;
+
+TextureManager::TextureManager(float a_updateFreq)
+	: m_updateFreq(a_updateFreq)
+	, m_updateTimer(0.0f)
+{
+	Startup();
+}
+
 bool TextureManager::Startup()
 {
+	// Reset update timer in case we have been shutdown the re started
+	 m_updateTimer = 0;
+
 	// Init a pool of memory for each category
 	for (unsigned int i = 0; i < eCategoryCount; ++i)
 	{
@@ -38,6 +51,37 @@ bool TextureManager::Shutdown()
 	return true;
 }
 
+bool TextureManager::Update(float a_dt)
+{
+	if (m_updateTimer < m_updateFreq)
+	{
+		m_updateTimer += a_dt;
+		return false;
+	}
+	else // Due for an update, scan all textures
+	{
+		m_updateTimer = 0.0f;
+		bool textureReloaded = false;
+		// For each texture category
+		for (unsigned int i = 0; i < eCategoryCount; ++i)
+		{
+			// Each texture in the category gets tested
+			ManagedTexture * curTex = NULL;
+			while ( m_textureMap[i].GetNext(curTex) && curTex != NULL)
+			{
+				unsigned int curTimeStamp = FileManager::Get().GetFileTimeStamp(curTex->m_path);
+				if (curTimeStamp > curTex->m_timeStamp)
+				{
+					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in %s, reloading.", curTex->m_path);
+					textureReloaded = curTex->m_texture.Load(curTex->m_path);
+					curTex->m_timeStamp = curTimeStamp;
+				}
+			}
+		}
+		return textureReloaded;
+	}
+}
+
 Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_cat)
 {
 	// Get the identifier for the new texture
@@ -49,16 +93,18 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	if (a_loadedCat != eCategoryNone)
 	{
 		// Just returned the cached copy
-		Texture * foundTex = NULL;
+		ManagedTexture * foundTex = NULL;
 		m_textureMap[a_loadedCat].Get(texId, foundTex);
-		return foundTex;
+		return &foundTex->m_texture;
 	}
-	else if (Texture * newTex = m_texturePool[a_cat].Allocate(sizeof(Texture)))
+	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(Texture)))
 	{
 		// Insert the newly allocated texture
-		newTex->Load(a_tgaPath);
+		newTex->m_texture.Load(a_tgaPath);
+		newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(a_tgaPath);
+		sprintf(newTex->m_path, "%s", a_tgaPath);
 		m_textureMap[a_cat].Insert(texId, newTex);
-		return newTex;
+		return &newTex->m_texture;
 	}
 	else // Report the error
 	{
@@ -73,7 +119,7 @@ TextureManager::eTextureCategory TextureManager::IsTextureLoaded(unsigned int a_
 	// Look through each category for the target texture
 	for (unsigned int i = 0; i < eCategoryCount; ++i)
 	{
-		Texture * foundTex = NULL;
+		ManagedTexture * foundTex = NULL;
 		if (m_textureMap[i].Get(a_tgaPathHash, foundTex))
 		{
 			return (eTextureCategory)i;

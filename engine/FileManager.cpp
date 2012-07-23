@@ -120,3 +120,28 @@ void FileManager::EmptyFileList(FileList & a_fileList_OUT)
 		delete cur;
 	}
 }
+
+unsigned int FileManager::GetFileTimeStamp(const char * a_path) const
+{
+	// Check there is actually a path supplied
+	if (a_path == NULL || !a_path[0])
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Trying to index an invalid path.");
+		return false;
+	}
+
+	// Use the GetFileAttributes function to reckon date stamp
+	WIN32_FILE_ATTRIBUTE_DATA lpFileInformation;
+	if (GetFileAttributesEx(a_path, GetFileExInfoStandard, &lpFileInformation))
+	{
+		SYSTEMTIME times, stLocal;
+		FileTimeToSystemTime(&lpFileInformation.ftLastWriteTime, &times);
+		SystemTimeToTzSpecificLocalTime(NULL, &times, &stLocal);
+		return stLocal.wDay*24*60*60 + stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;
+	}
+	else
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "File modification date NOT retreived for: %s.", a_path);
+		return 0;
+	}
+}

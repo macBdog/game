@@ -13,6 +13,7 @@
 #include "engine/Log.h"
 #include "engine/RenderManager.h"
 #include "engine/StringUtils.h"
+#include "engine/TextureManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -124,6 +125,9 @@ int main(int argc, char *argv[])
 
 		// Draw the debug menu
 		DebugMenu::Get().Update(lastFrameTimeSec);
+
+		// Update the texture manager so it can do it's auto refresh of textures
+		TextureManager::Get().Update(lastFrameTimeSec);
 
 		// Draw log entries on top of the gui
 		Log::Get().Update(lastFrameTimeSec);

@@ -6,6 +6,7 @@
 
 #include "Singleton.h"
 #include "StringHash.h"
+#include "StringUtils.h"
 #include "Texture.h"
 
 //\brief TextureManager keeps track of all textures in the game and the memory
@@ -28,12 +29,17 @@ public:
 		eCategoryCount
 	};
 	
-	TextureManager() { Startup(); }
+	//\brief Ctor calls through to startup
+	TextureManager(float a_updateFreq = s_updateFreq);
 	~TextureManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup textures on shutdown
 	bool Startup();
 	bool Shutdown();
+
+	//\brief Update will poll for texture changes and reload any textures that have a newer version than on disk
+	//\return true if a texture was old and needed to be reloaded
+	bool Update(float a_dt);
 
 	//\brief Get or load a TGA file into texture memory
 	//\param a_tgaPath cstring to identify the texture by
@@ -59,9 +65,23 @@ public:
 private:
 
 	static const unsigned int s_texurePoolSize[eCategoryCount];		// How much memory is assigned for each category
+	static const float s_updateFreq;								// How often the texture manager should check for updates
 
-	LinearAllocator<Texture> m_texturePool[eCategoryCount];			// Memory pool for each texture category
-	HashMap<unsigned int, Texture *> m_textureMap[eCategoryCount];	// List of textures for each category
+	//\brief A managed texture contains the actual texture data as well as extra information
+	//		 that enables it to be version checked and hot reloaded 
+	struct ManagedTexture
+	{
+		Texture  m_texture;											// The actual texture
+		unsigned int m_timeStamp;									// Datestamp for checking a newer version
+		char m_path[StringUtils::s_maxCharsPerLine];				// The full path for reloading
+	};
+
+	typedef HashMap<unsigned int, ManagedTexture *> TextureMap;
+
+	LinearAllocator<ManagedTexture> m_texturePool[eCategoryCount];	// Memory pool for each texture category
+	TextureMap m_textureMap[eCategoryCount];						// List of textures for each category
+	float m_updateFreq;												// How often the texture manager should check for changes
+	float m_updateTimer;											// If we are due for a scan and update of textures
 };
 
 #endif /* _ENGINE_TEXTURE_MANAGER_H_ */

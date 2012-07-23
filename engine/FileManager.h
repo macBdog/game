@@ -40,6 +40,11 @@ public:
 	bool FillManagedFileList(void * a_modifiedCallback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = NULL);
 	void EmptyManagedFileList(FileList & a_fileList_OUT);
 
+	//\brief Utility function to return a file's time stamp, is RELATIVE to each day.
+	//\param a_path the path to the file to be interrogated
+	//\return an unsigned int equivalent to the file's last modification time, 0 for file not found
+	unsigned int GetFileTimeStamp(const char * a_path) const;
+
 private:
 	// TODO: The file manager should cache off a function pointer for anything calling for
 	//		 a list of files. It should also generate a checksum for file modification in

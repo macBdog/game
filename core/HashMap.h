@@ -11,6 +11,8 @@ class HashMap
 {
 public:
 
+	HashMap() : m_iteratorValid(false) {}
+
 	//\brief Search for an element in the map
 	//\param a_key the identifier for the item to look for
 	//\param a_value_OUT is a ref to and itme to populate if found
@@ -38,9 +40,45 @@ public:
 		m_map.insert(toInsert); 
 	}
 
+	//\brief Iterator like functionality
+	bool GetNext(T & a_value_OUT)
+	{
+		// Early out for no objects
+		if (m_map.size() == 0)
+		{
+			return false;
+		}
+
+		// Unititialised iterator
+		if (!m_iteratorValid)
+		{
+			m_mapIt = m_map.begin();
+			a_value_OUT = m_mapIt->second;
+			m_iteratorValid = true;
+			return true;
+		}
+		else // Elements after the first
+		{
+			++m_mapIt;
+			if (m_mapIt != m_map.end())
+			{
+				a_value_OUT = m_mapIt->second;
+				return true;
+			}
+			else // Reached the end
+			{
+				// Invalidate to be sure the next iteration fails
+				m_iteratorValid = false;
+				return false;
+			}
+		}
+	}
+
 private:
 
-	std::unordered_map<Key, T> m_map;
+	typename std::unordered_map<Key, T> m_map;						// The underlying evil STL map
+	typename std::unordered_map<Key, T>::const_iterator m_mapIt;		// Iterator to a map, prefix with typename because we are inside a template class
+	bool m_iteratorValid;
 };
 
 #endif //_CORE_HASH_MAP
