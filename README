@@ -1,5 +1,5 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Implement directory listening for resource auto refresh on all textures.
-BUGS: Textures created wiht BMFont don't load or display correctly.
+WHAT IS THE CURRENT SHORT TERM GOAL: GUI object creation on the fly through the debug menu.
+BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 
 What is this project?
 
