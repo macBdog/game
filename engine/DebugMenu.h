@@ -42,6 +42,9 @@ public:
 private:
 
 	Widget * m_debugMenuRoot;		// Pointer to a widget that we create on startup
+	Widget * m_debugMenuCancel;
+	Widget * m_debugMenuCreateWidget;
+	Widget * m_debugMenuCreateGameObject;
 };
 
 #endif //_ENGINE_DEBUG_MENU_

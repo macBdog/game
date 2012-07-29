@@ -37,7 +37,7 @@ public:
     };
 
 	// Log does nothing on startup but needs to cleanup
-	Log() {};
+	Log() : m_renderToScreen(true) {};
 	~Log() { Shutdown(); }
 
 	//\brief Clean up any allocated memory for log lines still being displayed
@@ -45,11 +45,16 @@ public:
 	bool Shutdown();
 
 	//\brief Create a log entry that is written to standard out and displayed on screen
-    void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
+	void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
+	// void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 
 	//\brief Update will draw all log entries that need to be displayed
 	//\param a_dt float of the time that has passed since the last update call
 	void Update(float a_dt);
+
+	//\brief Controls for turning log rendering on and off, useful for errors related to rendering
+	inline void DisableRendering() { m_renderToScreen = false; }
+	inline void EnableRendering() { m_renderToScreen = true; }
  
 private:
 	
@@ -77,6 +82,7 @@ private:
 	const static Colour s_logDisplayColour[LL_COUNT];	// What colours to display each log category in
 
 	LogDisplayList m_displayList;	// All log entries that are being displayed at a time
+	bool m_renderToScreen;			// If log entries should be rendered to the screen
 };
 
 #endif // _CORE_SYSTEM_LOG_

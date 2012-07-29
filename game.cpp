@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
 		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
 
+	// Singletons are shutdown by their destructors
     Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Exited cleanly");
 
     return 0;

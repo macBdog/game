@@ -18,9 +18,9 @@ public:
 	inline void SetX(float a_x) { x = a_x; }
 	inline void SetY(float a_y) { y = a_y; }
 	inline void SetZ(float a_z) { z = a_z; }
-	inline float GetX() { return x; }
-	inline float GetY() { return y; }
-	inline float GetZ() { return z; }
+	inline float GetX() const { return x; }
+	inline float GetY() const { return y; }
+	inline float GetZ() const { return z; }
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y + z*z; }
@@ -56,8 +56,8 @@ public:
 	// Mutators
 	inline void SetX(float a_x) { x = a_x; }
 	inline void SetY(float a_y) { y = a_y; }
-	inline float GetX() { return x; }
-	inline float GetY() { return y; }
+	inline float GetX() const { return x; }
+	inline float GetY() const { return y; }
 
 	// Operator overloads
 	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }

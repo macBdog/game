@@ -76,9 +76,12 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	va_end(formatArgs);
 
 	// Also add to the list which is diaplyed on screen
-	LogDisplayNode * newLogEntry = new LogDisplayNode();
-	newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
-	m_displayList.Insert(newLogEntry);
+	if (m_renderToScreen)
+	{
+		LogDisplayNode * newLogEntry = new LogDisplayNode();
+		newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
+		m_displayList.Insert(newLogEntry);
+	}
 }
 
 void Log::Update(float a_dt)

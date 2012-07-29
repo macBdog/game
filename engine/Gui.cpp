@@ -15,6 +15,9 @@ bool Gui::Startup(const char * a_guiPath)
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
 	m_configFile.Load(fileName);
 
+	// Setup the screen root element
+	m_screen.SetName("screen");
+
 	// Setup the mouse cursor element
 	sprintf(fileName, "%s%s", a_guiPath, m_configFile.GetString("config", "mouseCursorTexture"));
 	m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
@@ -26,6 +29,13 @@ bool Gui::Startup(const char * a_guiPath)
 	InputManager & inMan = InputManager::Get();
 	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonLeft);
 
+	return true;
+}
+
+bool Gui::Shutdown()
+{
+	// Clean up all widgets and family
+	DestroyWidget(m_screen.GetChild());
 	return true;
 }
 
@@ -55,34 +65,49 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	newWidget->SetFontName(a_def.m_fontNameHash);
 	newWidget->SetSelectFlags(a_def.m_selectFlags);
 	newWidget->SetActive(a_startActive);
-	a_parent->AddChild(newWidget);
+
+	// If parent has children
+	if (a_parent->GetChild() != NULL)
+	{
+		a_parent->GetChild()->AddSibling(newWidget);
+	}
+	else // Add element as first child 
+	{
+		a_parent->AddChild(newWidget);
+	}
 
 	return newWidget;
+}
+
+void Gui::DestroyWidget(Widget * a_widget)
+{
+	// Activate sibling widgets
+	Widget * curWidget = a_widget->GetNext();
+	while (curWidget != NULL)
+	{
+		Widget * next = curWidget->GetNext();
+		delete curWidget;
+		curWidget = next;
+	}
+
+	// Activate any child widgets
+	curWidget = a_widget->GetChild();
+	while (curWidget != NULL)
+	{
+		Widget * next = curWidget->GetChild();
+		delete curWidget;
+		curWidget = next;
+	}
 }
 
 bool Gui::MouseInputHandler(bool active)
 {
 	// The mouse was clicked, check if any elements were rolled over
-	Widget * curWidget = m_screen.GetChild();
-	while (curWidget != NULL)
-	{
-		if (curWidget->IsActive() && curWidget->IsSelected())
-		{
-			curWidget->Activate();
-			return true;
-		}
-		curWidget = curWidget->GetNext();
-	}
-
-	return false;
+	return m_screen.DoActivation();
 }
 
 void Gui::UpdateSelection()
 {
-	Widget * curWidget = m_screen.GetChild();
-	while (curWidget != NULL)
-	{
-		curWidget->UpdateSelection(m_cursor.GetPos());
-		curWidget = curWidget->GetNext();
-	}
+	// Any childrend of the root element will be updated
+	m_screen.UpdateSelection(m_cursor.GetPos());
 }

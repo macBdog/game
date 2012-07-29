@@ -11,6 +11,7 @@
 //		 XML. There are no types, the data is stored as chars and converted
 //		 On the fly. It looks like this:
 //		
+//		 // A comment
 //		 Object
 //		 {
 //		   Property: value;

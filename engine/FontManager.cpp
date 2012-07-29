@@ -221,6 +221,10 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	{
 		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, a_pos, a_colour);
 	}
+	else // Not fonts loaded
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw error message on the screen.", false);
+	}
 
 	return false;
 }

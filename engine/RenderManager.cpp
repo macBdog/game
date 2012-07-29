@@ -191,11 +191,28 @@ void RenderManager::DrawScene()
 			{
 				glDisable(GL_TEXTURE_2D);
 
+				// Outline
+				for (unsigned int i = 0; i < 3; ++i)
+				{
+					glBegin(GL_LINES);
+					glVertex3f(q->m_verts[i].GetX(), q->m_verts[i].GetY(), q->m_verts[i].GetZ());
+					glVertex3f(q->m_verts[i+1].GetX(), q->m_verts[i+1].GetY(), q->m_verts[i+1].GetZ());
+					glEnd();
+				}
+				glBegin(GL_LINES);
+					glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+					glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+				glEnd();
+
+				// Attenuate the fill colour
+				glColor4f(q->m_colour.GetR()*0.25f, q->m_colour.GetG()*0.25f, q->m_colour.GetB()*0.25f, q->m_colour.GetA()*0.25f);
+
+				// Fill colour
 				glBegin(GL_QUADS);
-				glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
-				glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
-				glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
-				glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+				for (unsigned int i = 0; i < 4; ++i)
+				{
+					glVertex3f(q->m_verts[i].GetX(), q->m_verts[i].GetY(), q->m_verts[i].GetZ());
+				}
 				glEnd();
 
 				glEnable(GL_TEXTURE_2D);

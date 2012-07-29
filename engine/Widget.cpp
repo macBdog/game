@@ -33,18 +33,28 @@ void Widget::Draw()
 		// Draw gui label
 		if (m_fontNameHash > 0)
 		{
-			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector());
+			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), selectColour);
 		}
 	}
 
-	// Draw any children
-	if (m_childWidget)
+	// Draw any sibling widgets
+	Widget * curWidget = GetNext();
+	while (curWidget != NULL)
 	{
-		m_childWidget->Draw();
+		curWidget->Draw();
+		curWidget = curWidget->GetNext();
+	}
+
+	// Draw any child widgets
+	curWidget = GetChild();
+	while (curWidget != NULL)
+	{
+		curWidget->Draw();
+		curWidget = curWidget->GetChild();
 	}
 }
 
-bool Widget::UpdateSelection(WidgetVector a_pos)
+void Widget::UpdateSelection(WidgetVector a_pos)
 {
 	// Check if the position is inside the widget
 	if (a_pos.GetX() >= m_pos.GetX() && a_pos.GetX() <= m_pos.GetX() + m_size.GetX() && 
@@ -54,12 +64,54 @@ bool Widget::UpdateSelection(WidgetVector a_pos)
 		if ((m_selectFlags & eSelectionRollover) > 0)
 		{
 			m_selection = eSelectionRollover;
-			return true;
 		}
 	}
+	else // Selection position not inside bounds
+	{
+		m_selection = eSelectionNone;
+	}
 
-	m_selection = eSelectionNone;
-	return false;
+	// Update selection on any sibling widgets
+	Widget * curWidget = GetNext();
+	while (curWidget != NULL)
+	{
+		curWidget->UpdateSelection(a_pos);
+		curWidget = curWidget->GetNext();
+	}
+
+	// Draw any child widgets
+	curWidget = GetChild();
+	while (curWidget != NULL)
+	{
+		curWidget->UpdateSelection(a_pos);
+		curWidget = curWidget->GetChild();
+	}
+}
+
+bool Widget::DoActivation()
+{
+	// Check if the position is inside the widget
+	bool activated = false;
+	if (IsSelected())
+	{
+		// Perform whatever the widget's function is
+		Activate();
+		activated = true;
+	}
+
+	// Activate only the next sibling widget
+	if (Widget * curWidget = GetNext())
+	{
+		activated &= curWidget->DoActivation();
+	}
+
+	// Activate any child widgets
+	if (Widget * curWidget = GetChild())
+	{
+		activated &= curWidget->DoActivation();
+	}
+
+	return activated;
 }
 
 bool Widget::IsSelected(eSelectionFlags a_selectMode)
@@ -109,7 +161,7 @@ void Widget::AddSibling(Widget * a_sibling)
 			// Check for the end of the list
 			if (nextChild->GetNext() == NULL)
 			{
-				nextChild->AddSibling(a_sibling);
+				nextChild->m_nextWidget = a_sibling;
 				return;
 			}
 			else

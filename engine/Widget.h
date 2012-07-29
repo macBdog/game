@@ -19,24 +19,28 @@ public:
 	//brief Corordinate types allow element positioning relative to other elements
 	enum eCoordType
 	{
-	  CoordTypeRelative = 0,	// -1.0 to 1.0 means the edge of the container 
-	  CoordTypeAbsolute, 		// 1.0 means 1 pixel from the edge of the container
+	  eCoordTypeRelative = 0,	// -1.0 to 1.0 means the edge of the container 
+	  eCoordTypeAbsolute, 		// 1.0 means 1 pixel from the edge of the container
 
-	  CoordTypeCount
+	  eCoordTypeCount
 	};
 
-	//\brief Two float ctor for convenience
-	inline WidgetVector() { x = 0.0f; y = 0.0f; }
-	inline WidgetVector(float a_x, float a_y) { x = a_x; y = a_y; }
+	//\brief Two float ctor for convenience, default to absolute positioning
+	inline WidgetVector() { x = 0.0f; y = 0.0f; m_type = eCoordTypeAbsolute; }
+	inline WidgetVector(float a_x, float a_y) { x = a_x; y = a_y; m_type = eCoordTypeAbsolute; }
 
 	void SetCoordType(eCoordType a_type) { m_type = a_type; }
 	inline Vector2 GetVector() { return Vector2(x, y); }
 
 	// Operator overloads are not inherited by default
-	using Vector2::operator=;
-	using Vector2::operator*;
-	using Vector2::operator+;
-	using Vector2::operator-;
+	void operator = (const Vector2 & a_val) { x = a_val.GetX(); y = a_val.GetY(); }
+	const WidgetVector operator * (const WidgetVector & a_val) { return WidgetVector(a_val.x * x, a_val.y * y); }
+	const WidgetVector operator * (const float & a_val) { return WidgetVector(a_val * x, a_val * y); }
+	const WidgetVector operator + (const WidgetVector & a_val) { return WidgetVector(a_val.x + x, a_val.y + y); }
+	const WidgetVector operator - (const WidgetVector & a_val) { return WidgetVector(a_val.x - x, a_val.y - y); }
+	using Vector2::operator +;
+	using Vector2::operator -;
+	using Vector2::operator *;
 
 private:
 
@@ -109,9 +113,12 @@ public:
 	//\brief Base implementation will tint for selection
 	virtual void Draw();
 
-	//\brief Update selection flags for the widget based on a position
+	//\brief Update selection flags for the widget and family based on a position
 	//\param a_pos is the position to update from, usually the mouse pos
-	bool UpdateSelection(WidgetVector a_pos);
+	void UpdateSelection(WidgetVector a_pos);
+
+	//\brief Activate callback for widget and family based on selection flags
+	bool DoActivation();
 
 	//\brief Find out if the widget is currently selected
 	//\param a_selectMode is the kind of selection to check for
@@ -131,8 +138,8 @@ public:
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
-	inline void SetPos(Vector2 a_pixelPos, WidgetVector::eCoordType a_type = WidgetVector::CoordTypeAbsolute) { m_pos = a_pixelPos; m_pos.SetCoordType(a_type); }
-	inline void SetSize(Vector2 a_relPos, WidgetVector::eCoordType a_type = WidgetVector::CoordTypeAbsolute) { m_size = a_relPos, m_size.SetCoordType(a_type); }
+	inline void SetPos(Vector2 a_pixelPos, WidgetVector::eCoordType a_type = WidgetVector::eCoordTypeAbsolute) { m_pos = a_pixelPos; m_pos.SetCoordType(a_type); }
+	inline void SetSize(Vector2 a_relPos, WidgetVector::eCoordType a_type = WidgetVector::eCoordTypeAbsolute) { m_size = a_relPos, m_size.SetCoordType(a_type); }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
@@ -141,6 +148,7 @@ public:
 
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
+	inline const char * GetName() { return m_name; }
 
 	//\brief Execute the callback if defined
 	inline void Activate() { m_action.Execute(this); }
@@ -160,18 +168,18 @@ private:
 	static const Colour sc_editRolloverColour;
 	static const Colour sc_editSelectedColour;
 
-	WidgetVector m_size;			// How much of the parent container the element takes up
-	WidgetVector m_pos;				// Where in the parent container the element resides
-	Colour m_colour;				// What the base colour of the widget is, will tint texture
-	bool m_active;					// If the widget should be drawn and reactive
-	unsigned int m_fontNameHash;	// Hash of the name of the font to render with
-	Texture * m_texture;			// What to draw
-	Widget * m_nextWidget;			// Conitiguous widgets are stored as a linked list
-	Widget * m_childWidget;			// And each widget can have multiple children
-	unsigned int m_selectFlags;		// Bit mask of kind of selection this widget supports
-	eSelectionFlags m_selection;	// The current type of selection that that is current applied to the widget
-	char m_name[StringUtils::s_maxCharsPerName];	// Display name or label
+	WidgetVector m_size;				// How much of the parent container the element takes up
+	WidgetVector m_pos;					// Where in the parent container the element resides
+	Colour m_colour;					// What the base colour of the widget is, will tint texture
+	bool m_active;						// If the widget should be drawn and reactive
+	unsigned int m_fontNameHash;		// Hash of the name of the font to render with
+	Texture * m_texture;				// What to draw
+	Widget * m_nextWidget;				// Conitiguous widgets are stored as a linked list
+	Widget * m_childWidget;				// And each widget can have multiple children
+	unsigned int m_selectFlags;			// Bit mask of kind of selection this widget supports
+	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
+	char m_name[StringUtils::s_maxCharsPerName];	// Display name or label
 };
 
 
