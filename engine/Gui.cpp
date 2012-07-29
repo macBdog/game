@@ -17,6 +17,7 @@ bool Gui::Startup(const char * a_guiPath)
 
 	// Setup the screen root element
 	m_screen.SetName("screen");
+	m_screen.SetActive(false);
 
 	// Setup the mouse cursor element
 	sprintf(fileName, "%s%s", a_guiPath, m_configFile.GetString("config", "mouseCursorTexture"));
@@ -51,7 +52,10 @@ bool Gui::Update(float a_dt)
 	m_screen.Draw();
 
 	// Draw mouse cursor over the top of the gui
-	m_cursor.Draw();
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		m_cursor.Draw();
+	}
 	return true;
 }
 

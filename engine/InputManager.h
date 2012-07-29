@@ -81,14 +81,33 @@ public:
 		m_events.Insert(newInputNode);
 	}
 
-	void RegisterKeyCallback(void * a_callback, char a_key, eInputType a_type = eInputTypeKeyUp, bool a_oneShot = false);
+	//\brief Register a function pointer to be called when the app receives a keyboard event
+	//\param a_callback is the object that contains the member function to call back
+	//\param a_key is the keyboard key that is being depressed or released
+	//\param a_type defaults to mouse up but can be changed to to down or motion
+	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
+	template <typename TObj, typename TMethod>
+	void RegisterKeyCallback(TObj * a_callerObject, TMethod a_callback, SDLKey a_key, eInputType a_type = eInputTypeKeyDown, bool a_oneShot = false)
+	{
+		// Add an event to the list of items to be processed
+		InputEventNode * newInputNode = new InputEventNode();
+		newInputNode->SetData(new InputEvent());
+	
+		// Set data for the new event
+		InputEvent * newInput = newInputNode->GetData();
+		newInput->m_src.m_key = a_key;
+		newInput->m_type = a_type;
+		newInput->m_oneShot = a_oneShot;
+		newInput->m_delegate.SetCallback(a_callerObject, a_callback);
+		m_events.Insert(newInputNode);
+	}
 
 private:
 
-	//\brief An input event can come from a number of sources but only one at once
+	//\brief An input event can come from a number of sources but only one at once hence the union
 	union InputSource
 	{
-		char m_key;					// A keyboard button
+		SDLKey m_key;				// A keyboard button
 		eMouseButton m_mouseButton;	// A mouse click
 	};
 
@@ -103,8 +122,8 @@ private:
 
 	//\brief Input handling helper functions are split up so there is no one huge
 	//		 switch statement going on. All these just process SDL input
-    bool ProcessKeyDown(char a_key);
-    bool ProcessKeyUp(char a_key);
+    bool ProcessKeyDown(SDLKey a_key);
+    bool ProcessKeyUp(SDLKey a_key);
 	bool ProcessMouseDown(eMouseButton a_button);
 	bool ProcessMouseUp(eMouseButton a_button);
     bool ProcessMouseMove();

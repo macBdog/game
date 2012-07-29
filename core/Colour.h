@@ -40,6 +40,7 @@ private:
 static const Colour sc_colourWhite			= Colour(1.0f, 1.0f, 1.0f, 1.0f);
 static const Colour sc_colourBlack          = Colour(0.0f, 0.0f, 0.0f, 1.0f);
 static const Colour sc_colourGrey			= Colour(0.5f, 0.5f, 0.5f, 1.0f);
+static const Colour sc_colourGreyAlpha		= Colour(0.25f, 0.25f, 0.25f, 0.5f);
 static const Colour sc_colourRed            = Colour(1.0f, 0.0f, 0.0f, 1.0f);
 static const Colour sc_colourGreen          = Colour(0.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourBlue           = Colour(0.0f, 0.0f, 1.0f, 1.0f);

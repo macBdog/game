@@ -97,6 +97,7 @@ public:
 		, m_texture(NULL)
 		, m_nextWidget(NULL)
 		, m_childWidget(NULL)
+		, m_debugRender(false)
 	{}
 
 	//\brief Used for passing around a definition to create a widget without
@@ -145,6 +146,7 @@ public:
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
+	inline void SetDebugWidget() { m_debugRender = true; }
 
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
@@ -180,6 +182,7 @@ private:
 	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
 	char m_name[StringUtils::s_maxCharsPerName];	// Display name or label
+	bool m_debugRender;					// If the widget should be rendered using the debug batch
 };
 
 

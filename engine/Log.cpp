@@ -40,22 +40,8 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
     memset(levelBuf, 0, sizeof(char)*128);
     memset(categoryBuf, 0, sizeof(char)*128);
 
-    switch (a_level)
-    {
-        case LL_INFO:       sprintf(levelBuf, "%s", "INFO"); break;
-        case LL_WARNING:    sprintf(levelBuf, "%s", "WARNING"); break;
-        case LL_ERROR:      sprintf(levelBuf, "%s", "ERROR"); break;
-        default: break;
-    }
-
-    switch (a_category)
-    {
-        case LC_ENGINE:       sprintf(categoryBuf, "%s", "ENGINE"); break;
-        case LC_GAME:       sprintf(categoryBuf, "%s", "GAME"); break;
-        default: break;
-    }
-
 	// Create a preformatted error string
+	PrependLogDetails(a_level, a_category, &levelBuf[0]);
 	char errorString[StringUtils::s_maxCharsPerLine];
 	memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
 	sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
@@ -84,6 +70,50 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	}
 }
 
+void Log::WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
+{
+	// Add message to write once list
+	unsigned int msgHash = StringHash::GenerateCRC(a_message, false);
+	unsigned int unused;
+	if (!m_writeOnceList.Get(msgHash, unused))
+	{
+		m_writeOnceList.Insert(msgHash, msgHash);
+
+		char levelBuf[128];
+		char categoryBuf[128];
+		memset(levelBuf, 0, sizeof(char)*128);
+		memset(categoryBuf, 0, sizeof(char)*128);
+
+		// Create a preformatted error string
+		PrependLogDetails(a_level, a_category, &levelBuf[0]);
+		char errorString[StringUtils::s_maxCharsPerLine];
+		memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
+		sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
+
+		// Parse the variable number of arguments
+		char formatString[StringUtils::s_maxCharsPerLine];
+		memset(&formatString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
+
+		// Grab all the log arguments passed in the elipsis
+		va_list formatArgs;
+		va_start(formatArgs, a_message);
+		vsprintf(formatString, a_message, formatArgs);
+
+		// Print out both together to standard out
+		char finalString[StringUtils::s_maxCharsPerLine];
+		sprintf(finalString, "%s %s\n", errorString, formatString);
+		printf("%s", finalString);
+		va_end(formatArgs);
+
+		// Also add to the list which is diaplyed on screen
+		if (m_renderToScreen)
+		{
+			LogDisplayNode * newLogEntry = new LogDisplayNode();
+			newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
+			m_displayList.Insert(newLogEntry);
+		}
+	}
+}
 void Log::Update(float a_dt)
 {
 	// Walk through the list printing out debug lists

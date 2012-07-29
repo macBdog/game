@@ -11,7 +11,11 @@
 template<> DebugMenu * Singleton<DebugMenu>::s_instance = NULL;
 
 DebugMenu::DebugMenu()
-: m_debugMenuRoot(NULL)
+: m_enabled(false) 
+, m_debugMenuRoot(NULL)
+, m_debugMenuCancel(NULL)
+, m_debugMenuCreateWidget(NULL)
+, m_debugMenuCreateGameObject(NULL)
 {
 	if (!Startup())
 	{
@@ -21,8 +25,12 @@ DebugMenu::DebugMenu()
 
 bool DebugMenu::Startup()
 {
+	// Add a ketboard listener so the debug menu can be enabled
+	InputManager & inMan = InputManager::Get();
+	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
+
 	// Add a listener so the debug menu can be activated
-	InputManager::Get().RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
 	Gui & gui = Gui::Get();
 
 	// Create the root of all debug menu items
@@ -33,18 +41,22 @@ bool DebugMenu::Startup()
 	curItem.m_selectFlags = Widget::eSelectionRollover;
 	curItem.m_name = "Create!";
 	m_debugMenuRoot = gui.CreateWidget(curItem, Gui::Get().GetScreenWidget(), false);
+	m_debugMenuRoot->SetDebugWidget();
 
 	curItem.m_colour = sc_colourPurple;
 	curItem.m_name = "Widget";
 	m_debugMenuCreateWidget = gui.CreateWidget(curItem, m_debugMenuRoot, false);
+	m_debugMenuCreateWidget->SetDebugWidget();
 
 	curItem.m_colour = sc_colourBlue;
 	curItem.m_name = "GameObject";
 	m_debugMenuCreateGameObject = gui.CreateWidget(curItem, m_debugMenuRoot, false);
+	m_debugMenuCreateGameObject->SetDebugWidget();
 
 	curItem.m_colour = sc_colourGrey;
 	curItem.m_name = "Cancel";
 	m_debugMenuCancel = gui.CreateWidget(curItem, m_debugMenuRoot, false);
+	m_debugMenuCancel->SetDebugWidget();
 
 	// Set callback so the debug menu child elements are shown
 	if (m_debugMenuRoot == NULL ||
@@ -67,11 +79,17 @@ bool DebugMenu::Startup()
 
 void DebugMenu::Update(float a_dt)
 {
-
+	Draw();
 }
 
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 {
+	// Do nothing if the debug menu isn't enabled
+	if (!m_enabled)
+	{
+		return false;
+	}
+	
 	// Check the widget that was activated matches and we don't have other menus up
 	if (a_widget == m_debugMenuRoot)
 	{
@@ -114,6 +132,12 @@ bool DebugMenu::OnMenuItemMouseOver(Widget * a_widget)
 
 bool DebugMenu::OnActivate(bool a_active)
 {
+	// Do nothing if the debug menu isn't enabled
+	if (!m_enabled)
+	{
+		return false;
+	}
+
 	// Set the creation root element to visible if it isn't already
 	if (!m_debugMenuRoot->IsActive())
 	{
@@ -123,4 +147,32 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	return true;
+}
+
+bool DebugMenu::OnEnable(bool a_toggle)
+{
+	m_enabled = !m_enabled;
+	return m_enabled;
+}
+
+void DebugMenu::Draw()
+{
+	// Draw nothing if the debug menu isn't enabled
+	if (!m_enabled)
+	{
+		return;
+	}
+
+	RenderManager & renMan = RenderManager::Get();
+	FontManager & fontMan = FontManager::Get();
+
+	// Draw gridlines
+	renMan.AddLine2D(Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
+	renMan.AddLine2D(Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+	
+	// Show mouse pos at cursor
+	char mouseBuf[16];
+	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+	sprintf(mouseBuf, "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
+	fontMan.DrawDebugString(mouseBuf, mousePos, sc_colourGrey);
 }

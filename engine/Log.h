@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #include "../core/Colour.h"
+#include "../core/HashMap.h"
 #include "../core/LinkedList.h"
 
 #include "FontManager.h"
@@ -46,7 +47,7 @@ public:
 
 	//\brief Create a log entry that is written to standard out and displayed on screen
 	void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
-	// void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
+	void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 
 	//\brief Update will draw all log entries that need to be displayed
 	//\param a_dt float of the time that has passed since the last update call
@@ -74,15 +75,35 @@ private:
 		float m_lifeTime;									// How long to display this line
 	};
 
+	//\brief Utility function to stringify log constants
+	static void PrependLogDetails(LogLevel a_level, LogCategory a_category, char * a_string_OUT)
+	{
+		switch (a_level)
+		{
+			case LL_INFO:       sprintf(a_string_OUT, "%s", "INFO"); break;
+			case LL_WARNING:    sprintf(a_string_OUT, "%s", "WARNING"); break;
+			case LL_ERROR:      sprintf(a_string_OUT, "%s", "ERROR"); break;
+			default: break;
+		}
+
+		switch (a_category)
+		{
+			case LC_ENGINE:     sprintf(a_string_OUT, "%s", "ENGINE"); break;
+			case LC_GAME:       sprintf(a_string_OUT, "%s", "GAME"); break;
+			default: break;
+		}
+	}
+
 	//\brief Shortcuts for creating and mainting a list of display entries
 	typedef LinkedListNode<LogDisplayEntry> LogDisplayNode;
 	typedef LinkedList<LogDisplayEntry> LogDisplayList;
 
-	const static float	s_logDisplayTime[LL_COUNT];		// How long to display each log category on screen
-	const static Colour s_logDisplayColour[LL_COUNT];	// What colours to display each log category in
+	const static float	s_logDisplayTime[LL_COUNT];			// How long to display each log category on screen
+	const static Colour s_logDisplayColour[LL_COUNT];		// What colours to display each log category in
 
-	LogDisplayList m_displayList;	// All log entries that are being displayed at a time
-	bool m_renderToScreen;			// If log entries should be rendered to the screen
+	LogDisplayList m_displayList;							// All log entries that are being displayed at a time
+	HashMap<unsigned int, unsigned int> m_writeOnceList;	// When a message is logged only once, it's hash is added to this map
+	bool m_renderToScreen;									// If log entries should be rendered to the screen
 };
 
 #endif // _CORE_SYSTEM_LOG_

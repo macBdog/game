@@ -25,6 +25,7 @@ bool InputManager::Startup(bool a_fullScreen)
 
 bool InputManager::Shutdown()
 {
+	// Clean up any registered events
 	InputEventNode * next = m_events.GetHead();
 	while(next != NULL)
 	{
@@ -80,6 +81,12 @@ bool InputManager::Update(const SDL_Event & a_event)
             {
 				SetFocus(false);
             }
+			ProcessKeyDown(a_event.key.keysym.sym);
+            break;
+        }
+		case SDL_KEYUP:
+        {
+			ProcessKeyUp(a_event.key.keysym.sym);
             break;
         }
 		// Mouse events
@@ -151,11 +158,73 @@ bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
 	{
+		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
 		if (ev->m_type == eInputTypeMouseUp && 
 			ev->m_src.m_mouseButton == a_button)
 		{
 			ev->m_delegate.Execute(true);
+
+			// Remove event if set to one shot
+			if (ev->m_oneShot)
+			{
+				// TODO!
+				// UnregisterEvent(ev);
+			}
+			return true;
+		}
+
+		curEvent = curEvent->GetNext();
+	}
+
+	return false;
+}
+
+bool InputManager::ProcessKeyUp(SDLKey a_key)
+{
+	InputEventNode * curEvent = m_events.GetHead();
+	while(curEvent != NULL)
+	{
+		// Check the details of the event
+		InputEvent * ev = curEvent->GetData();
+		if (ev->m_type == eInputTypeKeyUp && 
+			ev->m_src.m_key == a_key)
+		{
+			ev->m_delegate.Execute(true);
+
+			// Remove event if set to one shot
+			if (ev->m_oneShot)
+			{
+				// TODO!
+				// UnregisterEvent(ev);
+			}
+			return true;
+		}
+
+		curEvent = curEvent->GetNext();
+	}
+
+	return false;
+}
+
+bool InputManager::ProcessKeyDown(SDLKey a_key)
+{
+	InputEventNode * curEvent = m_events.GetHead();
+	while(curEvent != NULL)
+	{
+		// Check the details of the event
+		InputEvent * ev = curEvent->GetData();
+		if (ev->m_type == eInputTypeKeyDown && 
+			ev->m_src.m_key == a_key)
+		{
+			ev->m_delegate.Execute(true);
+
+			// Remove event if set to one shot
+			if (ev->m_oneShot)
+			{
+				// TODO!
+				// UnregisterEvent(ev);
+			}
 			return true;
 		}
 

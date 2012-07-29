@@ -57,10 +57,15 @@ bool RenderManager::Startup(Colour a_clearColour)
 		m_batchCount[i] = 0;
 	}
 
+	// Storage for lines
+	m_lines = (Line *)malloc(sizeof(Line) * s_maxLines);
+	batchAlloc &= m_lines != NULL;
+	m_lineCount = 0;
+
 	// Alert if memory allocation failed
 	if (!batchAlloc)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "RenderManager failed to allocate batch memory!");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "RenderManager failed to allocate batch/primitive memory!");
 	}
 
     return batchAlloc;
@@ -116,6 +121,12 @@ void RenderManager::DrawScene()
 	{
 		case eRenderModeNone:
 		{
+			// Clear the queues as the rest of the system will continue to add primitives
+			for (unsigned int i = 0; i < eBatchCount; ++i)
+			{
+				m_batchCount[i] = 0;
+			}
+			m_lineCount = 0;
 			return;
 		}
 		case eRenderModeWireframe:
@@ -130,6 +141,7 @@ void RenderManager::DrawScene()
 
     glLoadIdentity();
 
+	// Draw quads for each batch
 	for (unsigned int i = 0; i < eBatchCount; ++i)
 	{
 		// Switch render mode for each batch
@@ -159,6 +171,24 @@ void RenderManager::DrawScene()
 
 		// This may not be necessary but its a cheap catch all
 		glLoadIdentity();
+
+		// Draw lines as part of the debug batch
+		if ((eBatch)i == eBatchDebug)
+		{
+			glDisable(GL_TEXTURE_2D);
+			Line * l = m_lines;
+			for (unsigned int j = 0; j < m_lineCount; ++j)
+			{
+				glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
+				glBegin(GL_LINES);
+				glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
+				glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
+				glEnd();
+				++l;
+			}
+			m_lineCount = 0;
+			glEnable(GL_TEXTURE_2D);
+		}
 
 		// Submit the quad
 		Quad * q = m_batch[i];
@@ -225,6 +255,26 @@ void RenderManager::DrawScene()
 
 }
 
+void RenderManager::AddLine2D(Vector2 a_point1, Vector2 a_point2, Colour a_tint)
+{
+	// Don't add more primitives than have been allocated for
+	if (m_lineCount >= s_maxLines)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many line primitives added, max is %d", m_lineCount);
+		return;
+	}
+
+	// Copy params to next queue item
+	Line * l = m_lines;
+	l += m_lineCount++;
+
+	l->m_colour = a_tint;
+	
+	// Setup verts 
+	l->m_verts[0] = Vector(a_point1.GetX(), a_point1.GetY(), s_renderDepth2D);
+	l->m_verts[1] = Vector(a_point2.GetX(), a_point2.GetY(), s_renderDepth2D);
+}
+
 void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient, Colour a_tint)
 {
 	// Create a full tex size coord at top left
@@ -238,14 +288,14 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	// Don't add more primitives than have been allocated for
 	if (m_batchCount[a_batch] >= s_maxPrimitivesPerBatch)
 	{
-		//Log::Get().LogOnce(rendering, "Too many primitives added for batch %d", a_batch
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many primitives added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
 		return;
 	}
 
 	// Warn about no texture
-	if (a_tex == NULL)
+	if (a_batch != eBatchDebug && a_tex == NULL)
 	{
-		//Log::Get().LogOnce(LC_WARNING, rendering, "Quad submitted without a texture);
+		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Quad submitted without a texture");
 	}
 
 	// Copy params to next queue item

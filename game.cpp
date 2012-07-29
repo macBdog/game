@@ -133,9 +133,12 @@ int main(int argc, char *argv[])
 		Log::Get().Update(lastFrameTimeSec);
 
 		// Draw FPS on top of everything
-		char buf[32];
-		sprintf(buf, "FPS: %u", lastFps);
-		FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));
+		if (DebugMenu::Get().IsDebugMenuEnabled())
+		{
+			char buf[32];
+			sprintf(buf, "FPS: %u", lastFps);
+			FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));
+		}
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();

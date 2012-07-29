@@ -21,13 +21,14 @@ void Widget::Draw()
 		}
 
 		// Draw the quad in various states of activation
+		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
-			RenderManager::Get().AddQuad2D(RenderManager::eBatchGui, m_pos.GetVector(), m_size.GetVector(), m_texture);
+			RenderManager::Get().AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture);
 		}
 		else // No texture version
 		{
-			RenderManager::Get().AddQuad2D(RenderManager::eBatchGui, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
+			RenderManager::Get().AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
 		}
 
 		// Draw gui label

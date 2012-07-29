@@ -35,12 +35,21 @@ public:
 	//\param A pointer to the widget that was interacted with
 	bool OnMenuItemMouseOver(Widget * a_widget);
 
-	//\param Listener function to activate the debug menu
+	//\brief Listener function to show the debug menu
 	//\param a_active if the menu should be shown or hidden
 	bool OnActivate(bool a_active);
 
-private:
+	//\brief Listener function to enable debug menu functions
+	//\param a_toggle if the debug menu should stay enabled
+	bool OnEnable(bool a_toggle);
+	bool IsDebugMenuEnabled() const { return m_enabled; }
 
+private:
+	
+	//\brief All debug menu visuals are drawn here, called from Update()
+	void Draw();
+
+	bool m_enabled;
 	Widget * m_debugMenuRoot;		// Pointer to a widget that we create on startup
 	Widget * m_debugMenuCancel;
 	Widget * m_debugMenuCreateWidget;
