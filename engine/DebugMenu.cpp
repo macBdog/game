@@ -10,12 +10,28 @@
 
 template<> DebugMenu * Singleton<DebugMenu>::s_instance = NULL;
 
+// Cursor definitions
+const float DebugMenu::sc_cursorSize = 0.075f;
+Vector2 DebugMenu::sc_vectorCursor[4] = 
+{ 
+	Vector2(0.0f, 0.0f),
+	Vector2(sc_cursorSize, -sc_cursorSize),
+	Vector2(sc_cursorSize*0.3f, -sc_cursorSize*0.7f),
+	Vector2(0.0f, -sc_cursorSize)
+};
+
 DebugMenu::DebugMenu()
 : m_enabled(false) 
-, m_debugMenuRoot(NULL)
-, m_debugMenuCancel(NULL)
-, m_debugMenuCreateWidget(NULL)
-, m_debugMenuCreateGameObject(NULL)
+, m_widgetToEdit(NULL)
+, m_btnCreateRoot(NULL)
+, m_btnCancel(NULL)
+, m_btnCreateWidget(NULL)
+, m_btnCreateGameObject(NULL)
+, m_btnChangeRoot(NULL)
+, m_btnChangePos(NULL)
+, m_btnChangeShape(NULL)
+, m_btnChangeType(NULL)
+, m_btnChangeTexture(NULL)
 {
 	if (!Startup())
 	{
@@ -31,49 +47,25 @@ bool DebugMenu::Startup()
 
 	// Add a listener so the debug menu can be activated
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
 	Gui & gui = Gui::Get();
 
 	// Create the root of all debug menu items
-	Widget::WidgetDef curItem;
-	curItem.m_colour = sc_colourRed;
-	curItem.m_size = WidgetVector(0.2f, 0.1f);
-	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
-	curItem.m_selectFlags = Widget::eSelectionRollover;
-	curItem.m_name = "Create!";
-	m_debugMenuRoot = gui.CreateWidget(curItem, Gui::Get().GetScreenWidget(), false);
-	m_debugMenuRoot->SetDebugWidget();
+	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetRootWidget());
+	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
+	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
+	m_btnCreateGameObject = CreateButton("GameObject", sc_colourBlue, m_btnCreateRoot);
+	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetRootWidget());
+	m_btnChangePos = CreateButton("Position", sc_colourPurple, m_btnChangeRoot);
+	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
+	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
+	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
 
-	curItem.m_colour = sc_colourPurple;
-	curItem.m_name = "Widget";
-	m_debugMenuCreateWidget = gui.CreateWidget(curItem, m_debugMenuRoot, false);
-	m_debugMenuCreateWidget->SetDebugWidget();
-
-	curItem.m_colour = sc_colourBlue;
-	curItem.m_name = "GameObject";
-	m_debugMenuCreateGameObject = gui.CreateWidget(curItem, m_debugMenuRoot, false);
-	m_debugMenuCreateGameObject->SetDebugWidget();
-
-	curItem.m_colour = sc_colourGrey;
-	curItem.m_name = "Cancel";
-	m_debugMenuCancel = gui.CreateWidget(curItem, m_debugMenuRoot, false);
-	m_debugMenuCancel->SetDebugWidget();
-
-	// Set callback so the debug menu child elements are shown
-	if (m_debugMenuRoot == NULL ||
-		m_debugMenuCancel == NULL ||
-		m_debugMenuCreateWidget == NULL ||
-		m_debugMenuCreateGameObject == NULL)
+	// Process vector cursors for display aspect
+	for (unsigned int i = 0; i < 4; ++i)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Debug menu failed to start up correctly.");
-		return false;
+		sc_vectorCursor[i].SetY(sc_vectorCursor[i].GetY() * RenderManager::Get().GetViewAspect());
 	}
-
-	// All debug menu items share a handler
-	m_debugMenuRoot->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
-	m_debugMenuCancel->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
-	m_debugMenuCreateWidget->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
-	m_debugMenuCreateGameObject->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
-
 	return true;
 }
 
@@ -85,41 +77,72 @@ void DebugMenu::Update(float a_dt)
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 {
 	// Do nothing if the debug menu isn't enabled
-	if (!m_enabled)
+	if (!m_enabled || (m_widgetToEdit != NULL && !m_btnChangeRoot->IsActive()))
 	{
 		return false;
 	}
 	
 	// Check the widget that was activated matches and we don't have other menus up
-	if (a_widget == m_debugMenuRoot)
+	Gui & gui = Gui::Get();
+	if (a_widget == m_btnCreateRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_debugMenuRoot->GetPos() + WidgetVector(m_debugMenuRoot->GetSize().GetX(), -m_debugMenuRoot->GetSize().GetY());
-		WidgetVector height = m_debugMenuRoot->GetSize();
+		WidgetVector right = m_btnCreateRoot->GetPos() + WidgetVector(m_btnCreateRoot->GetSize().GetX(), -m_btnCreateRoot->GetSize().GetY());
+		WidgetVector height = m_btnCreateRoot->GetSize();
 		height.SetX(0.0f);
-		m_debugMenuCreateWidget->SetPos(right);
-		m_debugMenuCreateGameObject->SetPos(right + height);
-		height.SetY(height.GetY() - m_debugMenuRoot->GetSize().GetY() * 2.0f);
-		m_debugMenuCancel->SetPos(right + height);
-		m_debugMenuCancel->SetActive(true);
-		m_debugMenuCreateWidget->SetActive(true);
-		m_debugMenuCreateGameObject->SetActive(true);
+		m_btnCreateWidget->SetPos(right);
+		m_btnCreateGameObject->SetPos(right + height);
+		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
+		m_btnCancel->SetPos(right + height);
+		
+		ShowCreateMenu(true);
 		return true;
 	}
-	else if (a_widget == m_debugMenuCreateWidget)
+	else if (a_widget == m_btnCreateWidget)
 	{
-		Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "TODO! Create new GUI widget.");
+		// Make a new widget
+		Widget::WidgetDef curItem;
+		curItem.m_colour = sc_colourWhite;
+		curItem.m_size = WidgetVector(0.35f, 0.35f);
+		curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+		curItem.m_selectFlags = Widget::eSelectionRollover;
+		curItem.m_name = "NEW_WIDGET";
+		Widget * newWidget = Gui::Get().CreateWidget(curItem, gui.GetRootWidget());
+		newWidget->SetPos(InputManager::Get().GetMousePosRelative());
+		
+		// Cancel menu display
+		ShowCreateMenu(false);
 	}
-	else if (a_widget == m_debugMenuCreateGameObject)
+	else if (a_widget == m_btnCreateGameObject)
 	{
 		Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "TODO! Create new game object.");
 	}
-	else // Cancel all menu display
+	else if (a_widget == m_btnCancel)
 	{
-		m_debugMenuRoot->SetActive(false);
-		m_debugMenuCancel->SetActive(false);
-		m_debugMenuCreateWidget->SetActive(false);
-		m_debugMenuCreateGameObject->SetActive(false);
+		// Cancel all menu display
+		ShowCreateMenu(false);
+		ShowChangeMenu(false);
+	}
+	else if (a_widget == m_btnChangeRoot)
+	{
+		// Show menu options on the right of the menu
+		WidgetVector right = m_btnChangeRoot->GetPos() + WidgetVector(m_btnChangeRoot->GetSize().GetX(), -m_btnChangeRoot->GetSize().GetY());
+		WidgetVector height = m_btnChangeRoot->GetSize();
+		height.SetX(0.0f);
+		m_btnChangePos->SetPos(right);
+		m_btnChangeShape->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY() * 2.0f);
+		m_btnChangeType->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY());
+		m_btnChangeTexture->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY());
+		m_btnCancel->SetPos(right + height);
+
+		ShowChangeMenu(true);
+		return true;
 	}
 	return false;
 }
@@ -139,14 +162,26 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	// Set the creation root element to visible if it isn't already
-	if (!m_debugMenuRoot->IsActive())
+	if (m_widgetToEdit != NULL)
+	{
+		m_btnChangeRoot->SetPos(WidgetVector(m_widgetToEdit->GetPos().GetX() + m_widgetToEdit->GetSize().GetX(), m_widgetToEdit->GetPos().GetY()));
+		m_btnChangeRoot->SetActive(a_active);
+	}
+	else if (!m_btnCreateRoot->IsActive())
 	{
 		InputManager & inMan = InputManager::Get();
-		m_debugMenuRoot->SetPos(inMan.GetMousePosRelative());
-		m_debugMenuRoot->SetActive(a_active);
+		m_btnCreateRoot->SetPos(inMan.GetMousePosRelative());
+		m_btnCreateRoot->SetActive(a_active);
 	}
 
 	return true;
+}
+
+bool DebugMenu::OnSelect(bool a_active)
+{
+	m_widgetToEdit = Gui::Get().GetSelectedWidget();
+
+	return m_widgetToEdit != NULL;
 }
 
 bool DebugMenu::OnEnable(bool a_toggle)
@@ -174,5 +209,53 @@ void DebugMenu::Draw()
 	char mouseBuf[16];
 	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 	sprintf(mouseBuf, "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
-	fontMan.DrawDebugString(mouseBuf, mousePos, sc_colourGrey);
+	Vector2 displayPos(mousePos.GetX() + sc_cursorSize, mousePos.GetY() - sc_cursorSize);
+	fontMan.DrawDebugString(mouseBuf, displayPos, sc_colourGreen);
+
+	// Draw mouse cursor
+	for (int i = 0; i < 3; ++i)
+	{
+		renMan.AddLine2D(mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
+	}
+	renMan.AddLine2D(mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+
+	// Draw selection round widget to edit
+	if (m_widgetToEdit != NULL)
+	{
+		renMan.AddQuad2D(RenderManager::eBatchDebug, m_widgetToEdit->GetPos(), m_widgetToEdit->GetSize(), NULL, Texture::eOrientationNormal, sc_colourRed);
+	}
+}
+
+Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)
+{
+	Widget::WidgetDef curItem;
+	curItem.m_size = WidgetVector(0.2f, 0.1f);
+	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+	curItem.m_selectFlags = Widget::eSelectionRollover;
+	curItem.m_colour = a_colour;
+	curItem.m_name = a_name;
+	
+	Widget * newWidget = Gui::Get().CreateWidget(curItem, a_parent, false);
+	newWidget->SetDebugWidget();
+	newWidget->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
+
+	return newWidget;
+}
+
+void DebugMenu::ShowCreateMenu(bool a_show)
+{
+	m_btnCreateRoot->SetActive(a_show);
+	m_btnCancel->SetActive(a_show);
+	m_btnCreateWidget->SetActive(a_show);
+	m_btnCreateGameObject->SetActive(a_show);
+}
+
+void DebugMenu::ShowChangeMenu(bool a_show)
+{
+	m_btnCancel->SetActive(a_show);
+	m_btnChangeRoot->SetActive(a_show);
+	m_btnChangePos->SetActive(a_show);
+	m_btnChangeShape->SetActive(a_show);
+	m_btnChangeType->SetActive(a_show);
+	m_btnChangeTexture->SetActive(a_show);
 }

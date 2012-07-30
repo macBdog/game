@@ -16,8 +16,8 @@ bool Gui::Startup(const char * a_guiPath)
 	m_configFile.Load(fileName);
 
 	// Setup the screen root element
-	m_screen.SetName("screen");
-	m_screen.SetActive(false);
+	m_root.SetName("ROOT");
+	m_root.SetActive(false);
 
 	// Setup the mouse cursor element
 	sprintf(fileName, "%s%s", a_guiPath, m_configFile.GetString("config", "mouseCursorTexture"));
@@ -29,6 +29,7 @@ bool Gui::Startup(const char * a_guiPath)
 	// Setup input callbacks for handling events, left mouse buttons activate gui elements
 	InputManager & inMan = InputManager::Get();
 	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonLeft);
+	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonRight);
 
 	return true;
 }
@@ -36,7 +37,7 @@ bool Gui::Startup(const char * a_guiPath)
 bool Gui::Shutdown()
 {
 	// Clean up all widgets and family
-	DestroyWidget(m_screen.GetChild());
+	DestroyWidget(m_root.GetChild());
 	return true;
 }
 
@@ -48,8 +49,8 @@ bool Gui::Update(float a_dt)
 	// Process mouse position for selection of widgets
 	UpdateSelection();
 
-	// Draw the screen and all children (which should be everything)
-	m_screen.Draw();
+	// Draw the parent and all children (which should be everything)
+	m_root.Draw();
 
 	// Draw mouse cursor over the top of the gui
 	if (!DebugMenu::Get().IsDebugMenuEnabled())
@@ -61,6 +62,13 @@ bool Gui::Update(float a_dt)
 
 Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive)
 {
+	// Check for a valid parent
+	if (a_parent == NULL) 
+	{	
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Widget creation failed due to an invalid parent.");
+		return NULL;
+	}
+
 	// Copy properties over to the managed element
 	Widget * newWidget = new Widget();
 	newWidget->SetName(a_def.m_name);
@@ -107,11 +115,40 @@ void Gui::DestroyWidget(Widget * a_widget)
 bool Gui::MouseInputHandler(bool active)
 {
 	// The mouse was clicked, check if any elements were rolled over
-	return m_screen.DoActivation();
+	return m_root.DoActivation();
+}
+
+Widget * Gui::GetSelectedWidget()
+{
+	Widget * selected = NULL;
+	Widget * curChild = m_root.GetChild();
+	while (curChild != NULL)
+	{
+		Widget * curSibling = curChild->GetNext();
+		while (curSibling != NULL)
+		{
+			if (curSibling->IsSelected() && !curSibling->IsDebugWidget())
+			{
+				selected = curSibling;
+				break;
+			}
+			curSibling = curSibling->GetNext();
+		}
+
+		if (curChild->IsSelected() && !curChild->IsDebugWidget())
+		{
+			selected = curChild;
+			break;
+		}
+
+		curChild = curChild->GetChild();
+	}
+
+	return selected;
 }
 
 void Gui::UpdateSelection()
 {
 	// Any childrend of the root element will be updated
-	m_screen.UpdateSelection(m_cursor.GetPos());
+	m_root.UpdateSelection(m_cursor.GetPos());
 }

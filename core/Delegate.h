@@ -23,6 +23,9 @@ public:
 			m_callback = new Callback<TReturnType, TParam, TObj, TMethod>(a_object, a_method);
 		}
 	}
+
+	//\brief Test if the delegate has been set up
+	inline bool IsSet() { return m_callback == NULL; }
 	
 	// Cleanup allocation
 	~Delegate()

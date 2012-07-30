@@ -38,7 +38,8 @@ public:
 	bool KeyInputHandler();
 
 	//\brief Utility function to get the base container for all objects
-	inline Widget * GetScreenWidget() { return &m_screen; }
+	inline Widget * GetRootWidget() { return &m_root; }
+	Widget * GetSelectedWidget();
 
 private:
 
@@ -46,7 +47,7 @@ private:
 	void UpdateSelection();
 
 	GameFile m_configFile;	// Base gui config file
-	Widget m_screen;		// The parent of all widget that are created
+	Widget m_root;			// The parent of all widget that are created
 	Widget m_cursor;		// A special widget for the mouse position
 };
 

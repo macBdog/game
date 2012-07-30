@@ -235,7 +235,7 @@ void RenderManager::DrawScene()
 				glEnd();
 
 				// Attenuate the fill colour
-				glColor4f(q->m_colour.GetR()*0.25f, q->m_colour.GetG()*0.25f, q->m_colour.GetB()*0.25f, q->m_colour.GetA()*0.25f);
+				glColor4f(q->m_colour.GetR()*0.25f, q->m_colour.GetG()*0.25f, q->m_colour.GetB()*0.25f, q->m_colour.GetA()*0.35f);
 
 				// Fill colour
 				glBegin(GL_QUADS);

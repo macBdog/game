@@ -126,6 +126,7 @@ public:
 	//\return true if the element is selected
 	bool IsSelected(eSelectionFlags a_selectMode = eSelectionRollover);
 	inline bool IsActive() { return m_active; }
+	inline bool IsDebugWidget() { return m_debugRender; }
 
 	//\brief Append a child widget pointer onto this widget creating a hierachy
 	//\param a_child is a pointer to the allocated widget to append
@@ -153,7 +154,7 @@ public:
 	inline const char * GetName() { return m_name; }
 
 	//\brief Execute the callback if defined
-	inline void Activate() { m_action.Execute(this); }
+	void Activate();
 
 	// Templated function so any part of the engine can be a widget action listener
 	template <class TObj, typename TMethod>

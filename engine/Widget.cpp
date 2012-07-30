@@ -10,7 +10,7 @@ const Colour Widget::sc_rolloverColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 
 void Widget::Draw()
 {
-	if (m_active)
+	if (m_active && !(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled()))
 	{
 		// Determine colour from selection
 		Colour selectColour = m_colour;
@@ -57,6 +57,13 @@ void Widget::Draw()
 
 void Widget::UpdateSelection(WidgetVector a_pos)
 {
+	// Don't select debug menu elements if we aren't in debug mode
+	if (IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		m_selection = eSelectionNone;
+		return;
+	}
+
 	// Check if the position is inside the widget
 	if (a_pos.GetX() >= m_pos.GetX() && a_pos.GetX() <= m_pos.GetX() + m_size.GetX() && 
 		a_pos.GetY() <= m_pos.GetY() && a_pos.GetY() >= m_pos.GetY() - m_size.GetY())
@@ -91,6 +98,12 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 
 bool Widget::DoActivation()
 {
+	// Don't activate debug menu elements if we aren't in debug mode
+	if (IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return false;
+	}
+
 	// Check if the position is inside the widget
 	bool activated = false;
 	if (IsSelected())
@@ -170,5 +183,18 @@ void Widget::AddSibling(Widget * a_sibling)
 				nextChild = nextChild->GetNext();
 			}
 		}
+	}
+}
+
+void Widget::Activate() 
+{ 
+	// Check then call the callback
+	if (!m_action.IsSet())
+	{
+		m_action.Execute(this);
+	}
+	else
+	{
+		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Widget named %s does not have an action set.", GetName());
 	}
 }

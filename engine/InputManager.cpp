@@ -155,6 +155,7 @@ Vector2 InputManager::GetMousePosRelative()
 
 bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 {
+	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
 	{
@@ -171,17 +172,18 @@ bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 				// TODO!
 				// UnregisterEvent(ev);
 			}
-			return true;
+			foundEvent = true;
 		}
 
 		curEvent = curEvent->GetNext();
 	}
 
-	return false;
+	return foundEvent;
 }
 
 bool InputManager::ProcessKeyUp(SDLKey a_key)
 {
+	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
 	{
@@ -198,13 +200,13 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 				// TODO!
 				// UnregisterEvent(ev);
 			}
-			return true;
+			foundEvent = true;
 		}
 
 		curEvent = curEvent->GetNext();
 	}
 
-	return false;
+	return foundEvent;
 }
 
 bool InputManager::ProcessKeyDown(SDLKey a_key)
