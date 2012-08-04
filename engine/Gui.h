@@ -37,9 +37,12 @@ public:
 	bool MouseInputHandler(bool active = false);
 	bool KeyInputHandler();
 
-	//\brief Utility function to get the base container for all objects
+	//\brief Utility function to get the base container for all real objects
+	inline Widget * GetDebugRoot() { return &m_debugRoot; }
 	inline Widget * GetRootWidget() { return &m_root; }
-	Widget * GetSelectedWidget();
+
+	//brief Return the top widget with different selection flags
+	Widget * GetActiveWidget();
 
 private:
 
@@ -47,6 +50,9 @@ private:
 	void UpdateSelection();
 
 	GameFile m_configFile;	// Base gui config file
+	Widget m_debugRoot;		// All debug menu elements are children of this
+
+	// TODO: These should both be data driven
 	Widget m_root;			// The parent of all widget that are created
 	Widget m_cursor;		// A special widget for the mouse position
 };

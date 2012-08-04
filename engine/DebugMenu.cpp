@@ -51,11 +51,11 @@ bool DebugMenu::Startup()
 	Gui & gui = Gui::Get();
 
 	// Create the root of all debug menu items
-	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetRootWidget());
+	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
 	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
 	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
 	m_btnCreateGameObject = CreateButton("GameObject", sc_colourBlue, m_btnCreateRoot);
-	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetRootWidget());
+	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetDebugRoot());
 	m_btnChangePos = CreateButton("Position", sc_colourPurple, m_btnChangeRoot);
 	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
 	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
@@ -77,7 +77,7 @@ void DebugMenu::Update(float a_dt)
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 {
 	// Do nothing if the debug menu isn't enabled
-	if (!m_enabled || (m_widgetToEdit != NULL && !m_btnChangeRoot->IsActive()))
+	if (!IsDebugMenuEnabled())
 	{
 		return false;
 	}
@@ -107,7 +107,10 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
 		curItem.m_selectFlags = Widget::eSelectionRollover;
 		curItem.m_name = "NEW_WIDGET";
-		Widget * newWidget = Gui::Get().CreateWidget(curItem, gui.GetRootWidget());
+
+		// TODO: The parent of this should be the screen that is currently being worked in
+		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetRootWidget();
+		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
 		newWidget->SetPos(InputManager::Get().GetMousePosRelative());
 		
 		// Cancel menu display
@@ -162,14 +165,17 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	// Set the creation root element to visible if it isn't already
+	InputManager & inMan = InputManager::Get();
 	if (m_widgetToEdit != NULL)
 	{
-		m_btnChangeRoot->SetPos(WidgetVector(m_widgetToEdit->GetPos().GetX() + m_widgetToEdit->GetSize().GetX(), m_widgetToEdit->GetPos().GetY()));
-		m_btnChangeRoot->SetActive(a_active);
+		if (!IsDebugMenuActive())
+		{
+			m_btnChangeRoot->SetPos(inMan.GetMousePosRelative());
+			m_btnChangeRoot->SetActive(a_active);
+		}
 	}
 	else if (!m_btnCreateRoot->IsActive())
 	{
-		InputManager & inMan = InputManager::Get();
 		m_btnCreateRoot->SetPos(inMan.GetMousePosRelative());
 		m_btnCreateRoot->SetActive(a_active);
 	}
@@ -179,9 +185,25 @@ bool DebugMenu::OnActivate(bool a_active)
 
 bool DebugMenu::OnSelect(bool a_active)
 {
-	m_widgetToEdit = Gui::Get().GetSelectedWidget();
+	// Cancle previous selection
+	if (!IsDebugMenuActive())
+	{
+		if (m_widgetToEdit != NULL)
+		{
+			m_widgetToEdit->SetSelection(Widget::eSelectionNone);
+			m_widgetToEdit = NULL;
+		}
+	}
 
-	return m_widgetToEdit != NULL;
+	// Find the first widget that is rolled over in edit mode
+	if (Widget * newEditedWidget = Gui::Get().GetActiveWidget())
+	{
+		m_widgetToEdit = newEditedWidget;
+		m_widgetToEdit->SetSelection(Widget::eSelectionEditSelected);
+		return true;
+	}
+
+	return false;
 }
 
 bool DebugMenu::OnEnable(bool a_toggle)
@@ -218,12 +240,6 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
-
-	// Draw selection round widget to edit
-	if (m_widgetToEdit != NULL)
-	{
-		renMan.AddQuad2D(RenderManager::eBatchDebug, m_widgetToEdit->GetPos(), m_widgetToEdit->GetSize(), NULL, Texture::eOrientationNormal, sc_colourRed);
-	}
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)

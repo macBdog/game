@@ -6,7 +6,10 @@
 
 #include "Widget.h"
 
-const Colour Widget::sc_rolloverColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
+const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
+const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
+const Colour Widget::sc_editRolloverColour = Colour(0.55f, 0.25f, 0.25f, 0.5f);
+const Colour Widget::sc_editSelectedColour = Colour(1.0f, 0.15f, 1.0f, 0.75f);
 
 void Widget::Draw()
 {
@@ -16,7 +19,10 @@ void Widget::Draw()
 		Colour selectColour = m_colour;
 		switch (m_selection)
 		{
-			case eSelectionRollover: selectColour += sc_rolloverColour; break;
+			case eSelectionRollover:		selectColour += sc_rolloverColour;		break;
+			case eSelectionEditRollover:	selectColour += sc_editRolloverColour;	break;
+			case eSelectionSelected:		selectColour += sc_selectedColour;		break;
+			case eSelectionEditSelected:	selectColour += sc_editSelectedColour;	break;
 			default: break;
 		}
 
@@ -31,10 +37,10 @@ void Widget::Draw()
 			RenderManager::Get().AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
 		}
 
-		// Draw gui label
+		// Draw gui label on top of the widget
 		if (m_fontNameHash > 0)
 		{
-			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), selectColour);
+			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, IsDebugWidget() ? RenderManager::eBatchDebug : RenderManager::eBatchGui);
 		}
 	}
 
@@ -71,12 +77,27 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		// Check selection flags
 		if ((m_selectFlags & eSelectionRollover) > 0)
 		{
-			m_selection = eSelectionRollover;
+			if (DebugMenu::Get().IsDebugMenuEnabled())
+			{
+				if (m_selection <= eSelectionEditRollover)
+				{
+					m_selection = eSelectionEditRollover;
+				}
+			}
+			else
+			{
+				m_selection = eSelectionRollover;
+			}
 		}
 	}
 	else // Selection position not inside bounds
 	{
-		m_selection = eSelectionNone;
+		// Don't unselect a selection by mouseover
+		if (m_selection != eSelectionSelected && 
+			m_selection != eSelectionEditSelected)
+		{
+			m_selection = eSelectionNone;
+		}
 	}
 
 	// Update selection on any sibling widgets
@@ -105,12 +126,21 @@ bool Widget::DoActivation()
 	}
 
 	// Check if the position is inside the widget
+	DebugMenu & debug = DebugMenu::Get();
 	bool activated = false;
-	if (IsSelected())
+	eSelectionFlags flags = debug.IsDebugMenuEnabled() ? eSelectionEditRollover : eSelectionRollover;
+	if (IsSelected(flags))
 	{
-		// Perform whatever the widget's function is
-		Activate();
-		activated = true;
+		if (!IsDebugWidget() && debug.IsDebugMenuEnabled())
+		{
+			// Do nothing, potentially test the action but not execute 
+		} 
+		else
+		{
+			// Perform whatever the widget's function is
+			Activate();
+			activated = true;
+		}
 	}
 
 	// Activate only the next sibling widget
@@ -169,6 +199,7 @@ void Widget::AddSibling(Widget * a_sibling)
 	}
 	else
 	{
+		// Add to the head of the list (newest get drawn first)
 		Widget * nextChild = m_nextWidget;
 		while (nextChild != NULL)
 		{

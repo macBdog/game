@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
 		// Draw the Gui
 		Gui::Get().Update(lastFrameTimeSec);
-
+		
 		// Draw the debug menu
 		DebugMenu::Get().Update(lastFrameTimeSec);
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 			sprintf(buf, "FPS: %u", lastFps);
 			FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));
 		}
-
+		
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene();
 

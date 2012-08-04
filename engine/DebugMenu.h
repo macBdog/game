@@ -46,7 +46,13 @@ public:
 	//\brief Listener function to enable debug menu functions
 	//\param a_toggle if the debug menu should stay enabled
 	bool OnEnable(bool a_toggle);
+
+	//\brief Debug menu enabled means are we in edit mode, has TAB been toggled
 	bool IsDebugMenuEnabled() const { return m_enabled; }
+
+	//\brief Debug menu active means there is a menu or dialog of the debug menu visible
+	bool IsDebugMenuActive() const { return (m_btnCreateRoot != NULL && m_btnChangeRoot != NULL) && 
+											(m_btnCreateRoot->IsActive() || m_btnChangeRoot->IsActive()); }
 
 private:
 	static const float sc_cursorSize;				// Size of debug mouse cursor

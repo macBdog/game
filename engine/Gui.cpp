@@ -15,8 +15,13 @@ bool Gui::Startup(const char * a_guiPath)
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
 	m_configFile.Load(fileName);
 
-	// Setup the screen root element
-	m_root.SetName("ROOT");
+	// Setup the debug menu root element
+	m_debugRoot.SetName("DebugMenuRoot");
+	m_debugRoot.SetActive(false);
+	m_debugRoot.SetDebugWidget();
+
+	// TODO: In place of a data driven first screen
+	m_root.SetName("First Screen");
 	m_root.SetActive(false);
 
 	// Setup the mouse cursor element
@@ -51,6 +56,9 @@ bool Gui::Update(float a_dt)
 
 	// Draw the parent and all children (which should be everything)
 	m_root.Draw();
+
+	// Draw debug menu elements
+	m_debugRoot.Draw();
 
 	// Draw mouse cursor over the top of the gui
 	if (!DebugMenu::Get().IsDebugMenuEnabled())
@@ -115,30 +123,56 @@ void Gui::DestroyWidget(Widget * a_widget)
 bool Gui::MouseInputHandler(bool active)
 {
 	// The mouse was clicked, check if any elements were rolled over
-	return m_root.DoActivation();
+	bool activated = m_debugRoot.DoActivation();
+	activated &= m_root.DoActivation();
+
+	return activated;
 }
 
-Widget * Gui::GetSelectedWidget()
+Widget * Gui::GetActiveWidget()
 {
 	Widget * selected = NULL;
 	Widget * curChild = m_root.GetChild();
+	DebugMenu & dbgMen = DebugMenu::Get();
 	while (curChild != NULL)
 	{
 		Widget * curSibling = curChild->GetNext();
 		while (curSibling != NULL)
 		{
-			if (curSibling->IsSelected() && !curSibling->IsDebugWidget())
+			if (dbgMen.IsDebugMenuEnabled())
 			{
-				selected = curSibling;
-				break;
+				if (curSibling->IsSelected(Widget::eSelectionEditRollover))
+				{
+					selected = curSibling;
+					break;
+				}
+			}
+			else
+			{
+				if (curSibling->IsSelected())
+				{
+					selected = curSibling;
+					break;
+				}
 			}
 			curSibling = curSibling->GetNext();
 		}
 
-		if (curChild->IsSelected() && !curChild->IsDebugWidget())
+		if (dbgMen.IsDebugMenuEnabled())
 		{
-			selected = curChild;
-			break;
+			if (curChild->IsSelected(Widget::eSelectionEditRollover))
+			{
+				selected = curChild;
+				break;
+			}
+		}
+		else
+		{
+			if (curChild->IsSelected())
+			{
+				selected = curChild;
+				break;
+			}
 		}
 
 		curChild = curChild->GetChild();
@@ -150,5 +184,10 @@ Widget * Gui::GetSelectedWidget()
 void Gui::UpdateSelection()
 {
 	// Any childrend of the root element will be updated
-	m_root.UpdateSelection(m_cursor.GetPos());
+	m_debugRoot.UpdateSelection(m_cursor.GetPos());
+
+	if (!DebugMenu::Get().IsDebugMenuActive())
+	{
+		m_root.UpdateSelection(m_cursor.GetPos());
+	}
 }

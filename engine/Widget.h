@@ -125,7 +125,12 @@ public:
 	//\param a_selectMode is the kind of selection to check for
 	//\return true if the element is selected
 	bool IsSelected(eSelectionFlags a_selectMode = eSelectionRollover);
+	inline void SetSelection(eSelectionFlags a_newFlags) { m_selection = a_newFlags; }
+
+	//\brief Active means rendering, updating selection and responding to events
 	inline bool IsActive() { return m_active; }
+
+	//\brief Debug widgets are rendered in a different batch to regular widgets
 	inline bool IsDebugWidget() { return m_debugRender; }
 
 	//\brief Append a child widget pointer onto this widget creating a hierachy

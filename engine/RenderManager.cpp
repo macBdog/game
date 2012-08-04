@@ -48,6 +48,8 @@ bool RenderManager::Startup(Colour a_clearColour)
 	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
 	glEnable(GL_COLOR_MATERIAL);
 
+	glLineWidth(2.0f);
+
 	// Storage for all the primitives
 	bool batchAlloc = true;
 	for (unsigned int i = 0; i < eBatchCount; ++i)
@@ -159,7 +161,6 @@ void RenderManager::DrawScene()
 			case eBatchGui:
 			case eBatchDebug:
 			{
-				//glDisable(GL_DEPTH_TEST);
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
@@ -171,24 +172,6 @@ void RenderManager::DrawScene()
 
 		// This may not be necessary but its a cheap catch all
 		glLoadIdentity();
-
-		// Draw lines as part of the debug batch
-		if ((eBatch)i == eBatchDebug)
-		{
-			glDisable(GL_TEXTURE_2D);
-			Line * l = m_lines;
-			for (unsigned int j = 0; j < m_lineCount; ++j)
-			{
-				glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
-				glBegin(GL_LINES);
-				glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
-				glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
-				glEnd();
-				++l;
-			}
-			m_lineCount = 0;
-			glEnable(GL_TEXTURE_2D);
-		}
 
 		// Submit the quad
 		Quad * q = m_batch[i];
@@ -222,11 +205,11 @@ void RenderManager::DrawScene()
 				glDisable(GL_TEXTURE_2D);
 
 				// Outline
-				for (unsigned int i = 0; i < 3; ++i)
+				for (unsigned int k = 0; k < 3; ++k)
 				{
 					glBegin(GL_LINES);
-					glVertex3f(q->m_verts[i].GetX(), q->m_verts[i].GetY(), q->m_verts[i].GetZ());
-					glVertex3f(q->m_verts[i+1].GetX(), q->m_verts[i+1].GetY(), q->m_verts[i+1].GetZ());
+					glVertex3f(q->m_verts[k].GetX(), q->m_verts[k].GetY(), q->m_verts[k].GetZ());
+					glVertex3f(q->m_verts[k+1].GetX(), q->m_verts[k+1].GetY(), q->m_verts[k+1].GetZ());
 					glEnd();
 				}
 				glBegin(GL_LINES);
@@ -235,13 +218,13 @@ void RenderManager::DrawScene()
 				glEnd();
 
 				// Attenuate the fill colour
-				glColor4f(q->m_colour.GetR()*0.25f, q->m_colour.GetG()*0.25f, q->m_colour.GetB()*0.25f, q->m_colour.GetA()*0.35f);
+				glColor4f(q->m_colour.GetR()*0.15f, q->m_colour.GetG()*0.15f, q->m_colour.GetB()*0.15f, q->m_colour.GetA()*0.9f);
 
 				// Fill colour
 				glBegin(GL_QUADS);
-				for (unsigned int i = 0; i < 4; ++i)
+				for (unsigned int f = 0; f < 4; ++f)
 				{
-					glVertex3f(q->m_verts[i].GetX(), q->m_verts[i].GetY(), q->m_verts[i].GetZ());
+					glVertex3f(q->m_verts[f].GetX(), q->m_verts[f].GetY(), q->m_verts[f].GetZ());
 				}
 				glEnd();
 
@@ -250,6 +233,25 @@ void RenderManager::DrawScene()
 
 			q++;
 		}
+
+		// Draw lines as part of the debug batch
+		if ((eBatch)i == eBatchDebug)
+		{
+			glDisable(GL_TEXTURE_2D);
+			Line * l = m_lines;
+			for (unsigned int j = 0; j < m_lineCount; ++j)
+			{
+				glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
+				glBegin(GL_LINES);
+				glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
+				glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
+				glEnd();
+				++l;
+			}
+			m_lineCount = 0;
+			glEnable(GL_TEXTURE_2D);
+		}
+
 		m_batchCount[i] = 0;
 	}
 
@@ -277,7 +279,7 @@ void RenderManager::AddLine2D(Vector2 a_point1, Vector2 a_point2, Colour a_tint)
 
 void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient, Colour a_tint)
 {
-	// Create a full tex size coord at top left
+	// Create a quad with tex coord at top left
 	TexCoord texPos(0.0f, 0.0f);
 	TexCoord texSize(1.0f, 1.0f);
 	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient, a_tint);

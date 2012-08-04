@@ -159,12 +159,12 @@ bool FontManager::LoadFont(const char * a_fontName)
 	return false;
 }
 
-bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour)
+bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
 {
-	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour);
+	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour, a_batch);
 }
 
-bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour)
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
 {
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
@@ -194,14 +194,13 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						renderMan.AddQuad2D(RenderManager::eBatchGui, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize, Texture::eOrientationNormal, a_colour);
+						renderMan.AddQuad2D(a_batch, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize, Texture::eOrientationNormal, a_colour);
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}
 				else
 				{
-					// CH:TODO Log once functionality
-					//Log::Get().LogOnce(rendering, "Unexported font glyph for character %s", a_string[j]
+					Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Unexported font glyph for character.");
 				}
 			}
 			return true;
@@ -219,7 +218,7 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, a_pos, a_colour);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, a_pos, a_colour, RenderManager::eBatchDebug);
 	}
 	else // Not fonts loaded
 	{
