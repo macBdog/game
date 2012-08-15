@@ -22,6 +22,8 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 
 DebugMenu::DebugMenu()
 : m_enabled(false) 
+, m_handledCommand(false)
+, m_editMode(eEditModeNone)
 , m_widgetToEdit(NULL)
 , m_btnCreateRoot(NULL)
 , m_btnCancel(NULL)
@@ -41,14 +43,8 @@ DebugMenu::DebugMenu()
 
 bool DebugMenu::Startup()
 {
-	// Add a ketboard listener so the debug menu can be enabled
-	InputManager & inMan = InputManager::Get();
-	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
-
-	// Add a listener so the debug menu can be activated
-	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
-	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
 	Gui & gui = Gui::Get();
+	InputManager & inMan = InputManager::Get();
 
 	// Create the root of all debug menu items
 	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
@@ -61,6 +57,11 @@ bool DebugMenu::Startup()
 	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
 	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
 
+	// Register global key and mnouse listeners - note these will be processed after the button callbacks
+	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
+
 	// Process vector cursors for display aspect
 	for (unsigned int i = 0; i < 4; ++i)
 	{
@@ -71,11 +72,37 @@ bool DebugMenu::Startup()
 
 void DebugMenu::Update(float a_dt)
 {
+	// Handle editing actions tied to mouse move
+	if (m_widgetToEdit != NULL)
+	{
+		InputManager & inMan = InputManager::Get();
+		Vector2 mousePos = inMan.GetMousePosRelative();
+		switch (m_editMode)
+		{
+			case eEditModePos:
+			{	
+				m_widgetToEdit->SetPos(mousePos); 
+				break;
+			}
+			case eEditModeShape:	
+			{
+				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
+												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
+				break;
+			}
+			default: break;
+		}
+	}
+
+	// Draw all widgets with updated coords
 	Draw();
 }
 
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 {
+	// Commands can be handled by the menu items here or in the key/button handlers
+	m_handledCommand = false;
+
 	// Do nothing if the debug menu isn't enabled
 	if (!IsDebugMenuEnabled())
 	{
@@ -96,7 +123,8 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		m_btnCancel->SetPos(right + height);
 		
 		ShowCreateMenu(true);
-		return true;
+		m_handledCommand = true;
+		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateWidget)
 	{
@@ -111,20 +139,27 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		// TODO: The parent of this should be the screen that is currently being worked in
 		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetRootWidget();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
-		newWidget->SetPos(InputManager::Get().GetMousePosRelative());
+		newWidget->SetPos(m_btnCreateRoot->GetPos());
 		
 		// Cancel menu display
 		ShowCreateMenu(false);
+		m_handledCommand = true;
+		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateGameObject)
 	{
 		Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "TODO! Create new game object.");
+		m_handledCommand = true;
+		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCancel)
 	{
 		// Cancel all menu display
 		ShowCreateMenu(false);
 		ShowChangeMenu(false);
+
+		m_handledCommand = true;
+		return m_handledCommand;
 	}
 	else if (a_widget == m_btnChangeRoot)
 	{
@@ -145,9 +180,33 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		m_btnCancel->SetPos(right + height);
 
 		ShowChangeMenu(true);
-		return true;
+		m_handledCommand = true;
+		return m_handledCommand;
 	}
-	return false;
+	else if (a_widget == m_btnChangePos)
+	{
+		m_editMode = eEditModePos;
+		ShowChangeMenu(false);
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+	else if (a_widget == m_btnChangeShape)
+	{
+		m_editMode = eEditModeShape;
+		ShowChangeMenu(false);
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+	else if (a_widget == m_btnChangeTexture)
+	{
+		m_editMode = eEditModeTexture;
+		ShowChangeMenu(false);
+		// TODO ShowFileSelect(configFile->texturePath);
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+
+	return m_handledCommand;
 }
 
 bool DebugMenu::OnMenuItemMouseOver(Widget * a_widget)
@@ -185,8 +244,27 @@ bool DebugMenu::OnActivate(bool a_active)
 
 bool DebugMenu::OnSelect(bool a_active)
 {
-	// Cancle previous selection
-	if (!IsDebugMenuActive())
+	// Do not respond to a click if it's been handled by a menu item
+	if (m_handledCommand == true)
+	{
+		m_handledCommand = false;
+		return true;
+	}
+
+	// Stop any mouse bound editing on click
+	if (m_editMode == eEditModePos  || m_editMode == eEditModeShape)
+	{
+		m_editMode = eEditModeNone;
+	}
+
+	// Don't play around with widget selection while a menu is up
+	if (IsDebugMenuActive())
+	{
+		return false;
+	}
+
+	// Cancel previous selection
+	if (!IsDebugMenuActive() && m_editMode == eEditModeNone)
 	{
 		if (m_widgetToEdit != NULL)
 		{
@@ -244,6 +322,7 @@ void DebugMenu::Draw()
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)
 {
+	// All debug menu elements are created roughly equal
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
 	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
@@ -260,6 +339,7 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 
 void DebugMenu::ShowCreateMenu(bool a_show)
 {
+	// Set the create menu and all children visible
 	m_btnCreateRoot->SetActive(a_show);
 	m_btnCancel->SetActive(a_show);
 	m_btnCreateWidget->SetActive(a_show);
@@ -268,6 +348,7 @@ void DebugMenu::ShowCreateMenu(bool a_show)
 
 void DebugMenu::ShowChangeMenu(bool a_show)
 {
+	// Set the change menu and all children visible
 	m_btnCancel->SetActive(a_show);
 	m_btnChangeRoot->SetActive(a_show);
 	m_btnChangePos->SetActive(a_show);

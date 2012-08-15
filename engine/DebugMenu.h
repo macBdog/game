@@ -55,6 +55,19 @@ public:
 											(m_btnCreateRoot->IsActive() || m_btnChangeRoot->IsActive()); }
 
 private:
+
+	//\brief What type of editing mode is being performed 
+	enum eEditMode
+	{
+		eEditModeNone = -1,
+		eEditModePos,			// Widget top left stuck to mouse pos
+		eEditModeShape,			// Widget bottom right stuck to mouse pos
+		eEditModeTexture,		// File selection dialog active
+		eEditModeType,			// Type selection dialog active
+
+		eEditModeCount,
+	};
+
 	static const float sc_cursorSize;				// Size of debug mouse cursor
 	static Vector2 sc_vectorCursor[4];				// Debug menu does not have textures so it draws mouse cursors by vectors
 
@@ -69,6 +82,8 @@ private:
 	inline void ShowChangeMenu(bool a_show);
 
 	bool m_enabled;									// Is the menu being shown
+	bool m_handledCommand;							// In the case that we are responding both to a global and a gui command
+	eEditMode m_editMode;							// If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						// If we have selected a widget to edit, this will be set
 
 	Widget * m_btnCreateRoot;						// Pointer to a widget that we create on startup

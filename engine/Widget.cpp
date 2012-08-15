@@ -135,7 +135,7 @@ bool Widget::DoActivation()
 		{
 			// Do nothing, potentially test the action but not execute 
 		} 
-		else
+		else if (IsActive())
 		{
 			// Perform whatever the widget's function is
 			Activate();
