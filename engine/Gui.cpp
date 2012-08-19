@@ -227,12 +227,13 @@ bool Gui::LoadMenu(const char * a_menuFile)
 	if (menuFile->Load(a_menuFile))
 	{
 		// Create a new widget and copy properties from file
-		if (GameFile::Object * menuObject = menuFile->GetObject("Menu"))
+		if (GameFile::Object * menuObject = menuFile->GetObject("menu"))
 		{
-			if (GameFile::Property * nameProp = menuFile->GetProperty(menuObject, "Name"))
+			if (GameFile::Property * nameProp = menuFile->GetProperty(menuObject, "name"))
 			{
 				Widget * newWidget = new Widget();
-				newWidget->SetName(nameProp->m_name);
+				newWidget->SetName(menuFile->GetString("menu", "name"));
+				newWidget->SetFilePath(a_menuFile);
 				newWidget->SetActive(false);
 
 				// Add to list of menus

@@ -21,6 +21,7 @@ public:
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
 	inline float GetZ() const { return z; }
+	inline const char * GetString() const { return "0.0f, 0.0f, 0.0f"; }
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y + z*z; }
@@ -58,6 +59,7 @@ public:
 	inline void SetY(float a_y) { y = a_y; }
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
+	inline const char * GetString() const { return "0.0f, 0.0f"; }
 
 	// Operator overloads
 	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }

@@ -255,6 +255,9 @@ bool DebugMenu::OnSelect(bool a_active)
 	if (m_editMode == eEditModePos  || m_editMode == eEditModeShape)
 	{
 		m_editMode = eEditModeNone;
+
+		// Changed a property, save the file
+		Gui::Get().GetActiveMenu()->Serialise();
 	}
 
 	// Don't play around with widget selection while a menu is up

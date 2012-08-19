@@ -101,7 +101,10 @@ public:
 		, m_nextWidget(NULL)
 		, m_childWidget(NULL)
 		, m_debugRender(false)
-	{}
+	{
+		memset(&m_name, 0, sizeof(char) * StringUtils::s_maxCharsPerName);
+		memset(&m_filePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	}
 
 	//\brief Used for passing around a definition to create a widget without
 	//		 having a method with a gigantic parameter list
@@ -154,6 +157,7 @@ public:
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
 
@@ -165,9 +169,9 @@ public:
 	void Activate();
 
 	//\brief Write the widget and all properties to a file stream
-	//\param a_output_OUT is an output filestream reference to write characters to
+	//\param a_outputStream is a pointer to an output stream to write to, will create one if NULL
 	//\param a_indentCount is an optional number of tab character to prefix each line with
-	void Serialise(std::ofstream & a_output_OUT, unsigned int a_indentCount = 0);
+	void Serialise(std::ofstream * a_outputStream = NULL, unsigned int a_indentCount = 0);
 
 	// Templated function so any part of the engine or game can be a widget action listener
 	template <class TObj, typename TMethod>
@@ -195,8 +199,9 @@ private:
 	unsigned int m_selectFlags;			// Bit mask of kind of selection this widget supports
 	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
-	char m_name[StringUtils::s_maxCharsPerName];	// Display name or label
 	bool m_debugRender;					// If the widget should be rendered using the debug batch
+	char m_name[StringUtils::s_maxCharsPerName];		// Display name or label
+	char m_filePath[StringUtils::s_maxCharsPerLine];	// Path for loading and saving, only menus should have this property
 };
 
 

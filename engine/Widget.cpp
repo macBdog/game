@@ -231,3 +231,49 @@ void Widget::Activate()
 		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Widget named %s does not have an action set.", GetName());
 	}
 }
+
+void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount)
+{
+	const char * lineEnd = "\n";
+	const char * tab = "\t";
+
+	// Can only write if 
+	if (a_outputStream != NULL)
+	{
+		//char tabs[StringUtils::s_maxCharsPerName];
+		std::ofstream & menuStream = *a_outputStream;
+		menuStream << "widget" << lineEnd;
+		menuStream << "{" << lineEnd;
+		menuStream << tab << "name: "	<< m_name				<< lineEnd;
+		menuStream << tab << "pos: "	<< m_pos.GetString()	<< lineEnd;
+		menuStream << tab << "size: "	<< m_size.GetString()	<< lineEnd;
+		menuStream << "}" << lineEnd;
+			
+	}
+	else if (strlen(m_filePath) > 0)
+	{
+		// Create an output stream
+		ofstream menuOutput;
+		menuOutput.open(m_filePath);
+
+		// Write menu header
+		if (menuOutput.is_open())
+		{
+			menuOutput << "menu"	<< lineEnd;
+			menuOutput << "{"		<< lineEnd;
+			menuOutput << tab		<< "name: "		<< m_name << lineEnd;
+			
+			// Write all children out
+			Widget * nextChild = m_childWidget;
+			while (nextChild != NULL)
+			{
+				nextChild->Serialise(&menuOutput, 1);
+				nextChild = nextChild->GetNext();
+			}
+
+			menuOutput << "{" << lineEnd;
+		}
+
+		menuOutput.close();
+	}
+}

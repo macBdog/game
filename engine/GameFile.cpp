@@ -27,6 +27,12 @@ bool GameFile::Load(const char * a_filePath)
 				continue;
 			}
 
+			// Parse any empty lines
+			if (strlen(line) <= 0)
+			{
+				continue;
+			}
+
 			// A line without any symbols means a new object
 			if (IsLineNewObject(line))
 			{
@@ -54,7 +60,7 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	unsigned int lineCount = 0;
 
-	Object * currentObject = AddObject(a_objectName);
+	Object * currentObject = AddObject(StringUtils::TrimString(a_objectName));
 	a_stream.getline(line, StringUtils::s_maxCharsPerLine);
 	lineCount++;
 
@@ -88,6 +94,8 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 			{
 				// Read the child object
 				lineCount += ReadObjectAndProperties(line, a_stream, currentObject);
+				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+				lineCount++;
 			}
 			else // Otherwise normal property
 			{
