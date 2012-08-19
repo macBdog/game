@@ -2,6 +2,9 @@
 #define _ENGINE_WIDGET_
 #pragma once
 
+#include <iostream>
+#include <fstream>
+
 #include "../core/Colour.h"
 #include "../core/Delegate.h"
 #include "../core/Vector.h"
@@ -161,7 +164,12 @@ public:
 	//\brief Execute the callback if defined
 	void Activate();
 
-	// Templated function so any part of the engine can be a widget action listener
+	//\brief Write the widget and all properties to a file stream
+	//\param a_output_OUT is an output filestream reference to write characters to
+	//\param a_indentCount is an optional number of tab character to prefix each line with
+	void Serialise(std::ofstream & a_output_OUT, unsigned int a_indentCount = 0);
+
+	// Templated function so any part of the engine or game can be a widget action listener
 	template <class TObj, typename TMethod>
 	void SetAction(TObj * a_listenerObject, TMethod a_listenerFunc)
 	{

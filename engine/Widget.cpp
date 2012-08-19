@@ -6,6 +6,8 @@
 
 #include "Widget.h"
 
+using namespace std;	//< For fstream operations
+
 const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.55f, 0.25f, 0.25f, 0.5f);

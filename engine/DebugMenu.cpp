@@ -81,7 +81,7 @@ void DebugMenu::Update(float a_dt)
 		{
 			case eEditModePos:
 			{	
-				m_widgetToEdit->SetPos(mousePos); 
+				m_widgetToEdit->SetPos(mousePos);
 				break;
 			}
 			case eEditModeShape:	
@@ -136,8 +136,8 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		curItem.m_selectFlags = Widget::eSelectionRollover;
 		curItem.m_name = "NEW_WIDGET";
 
-		// TODO: The parent of this should be the screen that is currently being worked in
-		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetRootWidget();
+		// Parent is the active menu
+		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
 		newWidget->SetPos(m_btnCreateRoot->GetPos());
 		

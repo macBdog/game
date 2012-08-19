@@ -1,6 +1,3 @@
-#include <iostream>
-#include <fstream>
-
 #include "Log.h"
 
 #include "GameFile.h"
@@ -24,59 +21,20 @@ bool GameFile::Load(const char * a_filePath)
 			file.getline(line, StringUtils::s_maxCharsPerLine);
 			lineCount++;
 			
-			// Parse any comment line
+			// Parse any comment lines
 			if (strstr(line, "//"))
 			{
 				continue;
 			}
 
 			// A line without any symbols means a new object
-			if (!strstr(line, "{") && 
-				!strstr(line, "}") &&
-				!strstr(line, ";"))
+			if (IsLineNewObject(line))
 			{
-				currentObject = AddObject(line);
-				file.getline(line, StringUtils::s_maxCharsPerLine);
-				lineCount++;
-
-				// Parse any comment line
-				if (strstr(line, "//"))
-				{
-					continue;
-				}
-
-				// Next line should be a brace
-				unsigned int braceCount = 0;
-				if (strstr(line, "{"))
-				{
-					braceCount++;
-					file.getline(line, StringUtils::s_maxCharsPerLine);
-					lineCount++;
-
-					// Parse any comment line
-					if (strstr(line, "//"))
-					{
-						continue;
-					}
-
-					// Now properties of that object
-					while(!strstr(line, "}"))
-					{
-						AddProperty(currentObject, StringUtils::ExtractPropertyName(line, ":"), StringUtils::ExtractValue(line, ":"));
-						file.getline(line, StringUtils::s_maxCharsPerLine);
-						lineCount++;
-					}
-					braceCount--;
-				}
-				else if (braceCount > 0) // Mismatched number of braces
-				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
-					break;
-				}
+				lineCount += ReadObjectAndProperties(line, file);
 			}
 			else // Bad formatting
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an object declaration.");
+				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an object declaration at line %d.", lineCount);
 			}
 		}
 
@@ -85,9 +43,67 @@ bool GameFile::Load(const char * a_filePath)
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open config file at the path provided.");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open game file resource at path %s", a_filePath);
 		return false;
 	}
+}
+
+unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstream & a_stream, Object * a_parent)
+{
+	char line[StringUtils::s_maxCharsPerLine];
+	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	unsigned int lineCount = 0;
+
+	Object * currentObject = AddObject(a_objectName);
+	a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+	lineCount++;
+
+	// Parse any comment line
+	if (strstr(line, "//"))
+	{
+		a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+		lineCount++;;
+	}
+
+	// Next line should be a brace
+	unsigned int braceCount = 0;
+	if (strstr(line, "{"))
+	{
+		braceCount++;
+		a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+		lineCount++;
+
+		// Parse any comment line
+		if (strstr(line, "//"))
+		{
+			a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+			lineCount++;
+		}
+
+		// Now properties of that object
+		while(!strstr(line, "}"))
+		{ 
+			// Look for child object
+			if (IsLineNewObject(line))
+			{
+				// Read the child object
+				lineCount += ReadObjectAndProperties(line, a_stream, currentObject);
+			}
+			else // Otherwise normal property
+			{
+				AddProperty(currentObject, StringUtils::ExtractPropertyName(line, ":"), StringUtils::ExtractValue(line, ":"));
+				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+				lineCount++;
+			}
+		}
+		braceCount--;
+	}
+	else if (braceCount > 0) // Mismatched number of braces
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
+	}
+
+	return lineCount;
 }
 
 void GameFile::Reset()
@@ -156,11 +172,19 @@ bool GameFile::GetBool(const char * a_object, const char * a_property)
 	return false;
 }
 
-GameFile::Object * GameFile::AddObject(const char * a_objectName)
+GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_parent)
 {
 	LinkedListNode<Object> * newObject = new LinkedListNode<Object>();
 	newObject->SetData(new Object());
+
+	// Set name
 	ALLOC_CSTRING_COPY(newObject->GetData()->m_name, a_objectName);
+
+	// Set parent
+	if (a_parent != NULL)
+	{
+		newObject->GetData()->m_parent = a_parent;
+	}
 	
 	m_objects.Insert(newObject);
 

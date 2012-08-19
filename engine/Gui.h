@@ -2,6 +2,8 @@
 #define _ENGINE_GUI_
 #pragma once
 
+#include "../core/LinkedList.h"
+
 #include "GameFile.h"
 #include "Singleton.h"
 #include "Widget.h"
@@ -13,6 +15,9 @@
 class Gui : public Singleton<Gui>
 {
 public:
+
+	// Constructor just for initialisation list
+	Gui() : m_activeMenu(NULL) {}
 
 	// Destructor cleans up all allocations
 	~Gui() { Shutdown(); }
@@ -37,24 +42,34 @@ public:
 	bool MouseInputHandler(bool active = false);
 	bool KeyInputHandler();
 
-	//\brief Utility function to get the base container for all real objects
+	//\brief Utility function to get the base containers
 	inline Widget * GetDebugRoot() { return &m_debugRoot; }
-	inline Widget * GetRootWidget() { return &m_root; }
+	inline Widget * GetActiveMenu() { return m_activeMenu; }
 
 	//brief Return the top widget with different selection flags
 	Widget * GetActiveWidget();
 
 private:
 
+	//\brief Shortcut to access lists of menu items
+	typedef LinkedListNode<Widget> MenuListNode;
+	typedef LinkedList<Widget> MenuList; 
+
+	//\brief Load and unload gui menus and child widgets from permanent storage
+	//\param a_menuFile is a pointer to the c string of the path of the menu file to load
+	//\return bool true if the load or load operation completed without failure
+	bool LoadMenu(const char * a_menuFile);
+	bool LoadMenus(const char * a_guiPath);
+	bool UnloadMenus();
+
 	//\brief Helper function to update selection status of all widgets based on mouse pos
 	void UpdateSelection();
 
+	MenuList m_menus;		// All menus loaded from data or created on the fly
 	GameFile m_configFile;	// Base gui config file
 	Widget m_debugRoot;		// All debug menu elements are children of this
-
-	// TODO: These should both be data driven
-	Widget m_root;			// The parent of all widget that are created
 	Widget m_cursor;		// A special widget for the mouse position
+	Widget * m_activeMenu;	// The current menu that's active of editing and display
 };
 
 
