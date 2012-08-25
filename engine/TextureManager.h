@@ -34,7 +34,7 @@ public:
 	~TextureManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup textures on shutdown
-	bool Startup();
+	bool Startup(const char * a_texturePath);
 	bool Shutdown();
 
 	//\brief Update will poll for texture changes and reload any textures that have a newer version than on disk
@@ -80,6 +80,7 @@ private:
 
 	LinearAllocator<ManagedTexture> m_texturePool[eCategoryCount];	// Memory pool for each texture category
 	TextureMap m_textureMap[eCategoryCount];						// List of textures for each category
+	char m_texturePath[StringUtils::s_maxCharsPerLine];				// Cache off texture path 
 	float m_updateFreq;												// How often the texture manager should check for changes
 	float m_updateTimer;											// If we are due for a scan and update of textures
 };

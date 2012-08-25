@@ -34,6 +34,7 @@ public:
 	//\brief Allocate memory for a widget and return a pointer to it
 	//return A pointer to the newly created widget if succesfull otherwise NULL
 	Widget * CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive = true);
+	Widget * CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, bool a_startActive = true);
 	void DestroyWidget(Widget * a_widget);
 	bool LoadWidgets(GameFile *a_inputFile);
 	bool SaveWidgets(GameFile *a_outputFile);

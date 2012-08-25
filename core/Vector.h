@@ -3,6 +3,7 @@
 #pragma once
 
 #include <math.h>
+#include <stdio.h>
 
 //\brief Basic vector class
 class Vector
@@ -21,7 +22,7 @@ public:
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
 	inline float GetZ() const { return z; }
-	inline const char * GetString() const { return "0.0f, 0.0f, 0.0f"; }
+	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f", x, y, z); }
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y + z*z; }
@@ -29,6 +30,7 @@ public:
 	bool IsEqualZero() const { return x + y + z == 0.0f; }
 	float Dot(const Vector & a_vec) const { return x * a_vec.x + y * a_vec.y + z * a_vec.z; }
 	Vector Cross(const Vector & a_vec) const { return Vector(((y * a_vec.z) - (z * a_vec.y)),  ((z * a_vec.x) - (x * a_vec.z)), ((x * a_vec.y) - (y * a_vec.x))); }
+	static Vector VectorZero() { return Vector(0.0f, 0.0f, 0.0f); }
 
 	// Operator overloads
 	Vector operator + (const Vector & a_val) const { return Vector(x + a_val.x, y + a_val.y, z + a_val.z); }
@@ -41,7 +43,6 @@ public:
 
 private:
 	float x, y, z;
-
 };
 
 //\brief Simple 2 component vector class
@@ -59,7 +60,8 @@ public:
 	inline void SetY(float a_y) { y = a_y; }
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
-	inline const char * GetString() const { return "0.0f, 0.0f"; }
+	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f", x, y); }
+	static Vector2 Vector2Zero() { return Vector2(0.0f, 0.0f); }
 
 	// Operator overloads
 	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }

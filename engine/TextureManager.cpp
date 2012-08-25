@@ -20,10 +20,9 @@ TextureManager::TextureManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
 {
-	Startup();
 }
 
-bool TextureManager::Startup()
+bool TextureManager::Startup(const char * a_texturePath)
 {
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
@@ -36,6 +35,10 @@ bool TextureManager::Startup()
 		// This can be removed in all but DEBUG configuration, but its nice when viewing memory
 		memset(m_texturePool[i].GetHead(), 0, m_texturePool[i].GetAllocationSizeBytes());
 	}
+
+	// Cache off the texture path for non qualified addressing of fonts
+	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
+	strncpy(m_texturePath, a_texturePath, strlen(a_texturePath));
 
 	return true;
 }
@@ -84,8 +87,19 @@ bool TextureManager::Update(float a_dt)
 
 Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_cat)
 {
+	// Texture paths are either fully qualified or relative to the config texture dir
+	char fileNameBuf[StringUtils::s_maxCharsPerLine];
+	if (!strstr(a_tgaPath, ":\\"))
+	{
+		sprintf(fileNameBuf, "%s%s", m_texturePath, a_tgaPath);
+	} 
+	else // Already fully qualified
+	{
+		sprintf(fileNameBuf, "%s", a_tgaPath);
+	}
+	
 	// Get the identifier for the new texture
-	StringHash texHash(a_tgaPath);
+	StringHash texHash(fileNameBuf);
 	unsigned int texId = texHash.GetHash();
 	eTextureCategory a_loadedCat = IsTextureLoaded(texId);
 
@@ -100,15 +114,15 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(Texture)))
 	{
 		// Insert the newly allocated texture
-		newTex->m_texture.Load(a_tgaPath);
-		newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(a_tgaPath);
-		sprintf(newTex->m_path, "%s", a_tgaPath);
+		newTex->m_texture.Load(fileNameBuf);
+		newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(fileNameBuf);
+		sprintf(newTex->m_path, "%s", fileNameBuf);
 		m_textureMap[a_cat].Insert(texId, newTex);
 		return &newTex->m_texture;
 	}
 	else // Report the error
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture allocation failed for %s, a_tgaPath");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture allocation failed for %s, fileNameBuf");
 		return NULL;
 	}
    return NULL;

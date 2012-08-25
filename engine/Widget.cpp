@@ -234,21 +234,37 @@ void Widget::Activate()
 
 void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount)
 {
+	char outBuf[StringUtils::s_maxCharsPerName];
 	const char * lineEnd = "\n";
 	const char * tab = "\t";
 
 	// Can only write if 
 	if (a_outputStream != NULL)
 	{
-		//char tabs[StringUtils::s_maxCharsPerName];
+		// Generate the correct tab amount
+		char tabs[StringUtils::s_maxCharsPerName];
+		memset(&tabs[0], '\t', a_indentCount);
+		tabs[a_indentCount] = '\0';
+
 		std::ofstream & menuStream = *a_outputStream;
-		menuStream << "widget" << lineEnd;
-		menuStream << "{" << lineEnd;
-		menuStream << tab << "name: "	<< m_name				<< lineEnd;
-		menuStream << tab << "pos: "	<< m_pos.GetString()	<< lineEnd;
-		menuStream << tab << "size: "	<< m_size.GetString()	<< lineEnd;
-		menuStream << "}" << lineEnd;
-			
+		menuStream << tabs << "widget" << lineEnd;
+		menuStream << tabs << "{" << lineEnd;
+		menuStream << tabs << tab << "name: "	<< m_name				<< lineEnd;
+		
+		m_pos.GetString(outBuf);
+		menuStream << tabs << tab << "pos: "	<< outBuf	<< lineEnd;
+
+		m_size.GetString(outBuf);
+		menuStream << tabs << tab <<"size: "	<< outBuf	<< lineEnd;
+		menuStream << tabs << "}" << lineEnd;
+
+		// Serialise any children of this child
+		Widget * nextChild = m_childWidget;
+		while (nextChild != NULL)
+		{
+			nextChild->Serialise(a_outputStream, ++a_indentCount);
+			nextChild = nextChild->GetNext();
+		}	
 	}
 	else if (strlen(m_filePath) > 0)
 	{
@@ -271,7 +287,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 				nextChild = nextChild->GetNext();
 			}
 
-			menuOutput << "{" << lineEnd;
+			menuOutput << "}" << lineEnd;
 		}
 
 		menuOutput.close();

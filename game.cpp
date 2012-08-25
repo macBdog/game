@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
 	// Subsystem startup
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
+	TextureManager::Get().Startup(configFile->GetString("config", "texturePath"));
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 	Gui::Get().Startup(configFile->GetString("config", "guiPath"));
 	InputManager::Get().Startup(fullScreen);

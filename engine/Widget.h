@@ -110,7 +110,16 @@ public:
 	//		 having a method with a gigantic parameter list
 	struct WidgetDef
 	{
+		WidgetDef()
+			: m_size()
+			, m_pos()
+			, m_colour(sc_colourWhite)
+			, m_name(NULL)
+			, m_fontNameHash(0)
+			, m_selectFlags(eSelectionRollover) {}
+
 		WidgetVector m_size;
+		WidgetVector m_pos;
 		Colour m_colour;
 		const char * m_name;
 		unsigned int m_fontNameHash;

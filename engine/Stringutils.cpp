@@ -137,8 +137,9 @@ const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes)
 			for (unsigned int i = 0; i < stringLength; i++) 
 			{
 				// Remove all whitespace characters
-				if (a_buffer[i] != 10 && 
-					a_buffer[i] != 32 &&
+				if (a_buffer[i] != 10 &&	// 
+					a_buffer[i] != 32 &&	// 
+					a_buffer[i] != 9 &&		// Tab?
 					a_buffer[i] != ';')
 				{
 					// And quotes if requested

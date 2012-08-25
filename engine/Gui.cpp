@@ -33,6 +33,8 @@ bool Gui::Startup(const char * a_guiPath)
 		// Create one and add it to the list
 		Widget * defaultMenu = new Widget();
 		defaultMenu->SetName("New Menu");
+		sprintf(fileName, "%s%s", a_guiPath, "newMenu.mnu");
+		defaultMenu->SetFilePath(fileName);
 		defaultMenu->SetActive(false);
 
 		MenuListNode * newMenuNode = new MenuListNode();
@@ -105,6 +107,7 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	newWidget->SetName(a_def.m_name);
 	newWidget->SetColour(a_def.m_colour);
 	newWidget->SetSize(a_def.m_size);
+	newWidget->SetPos(a_def.m_pos);
 	newWidget->SetFontName(a_def.m_fontNameHash);
 	newWidget->SetSelectFlags(a_def.m_selectFlags);
 	newWidget->SetActive(a_startActive);
@@ -120,6 +123,57 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	}
 
 	return newWidget;
+}
+
+
+Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, bool a_startActive)
+{
+	// Check for a valid parent
+	if (a_parent == NULL) 
+	{	
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Widget creation from file failed due to an invalid parent.");
+		return NULL;
+	}
+
+	// Get properties from the file that correspond to widget definitions
+	Widget::WidgetDef defFromFile;
+	if (GameFile::Property * size = a_widgetFile->GetProperty("size"))
+	{
+		defFromFile.m_size = size->GetVector2();
+	}
+	if (GameFile::Property * pos = a_widgetFile->GetProperty("pos"))
+	{
+		defFromFile.m_pos = pos->GetVector2();
+	}
+	if (GameFile::Property * fontName = a_widgetFile->GetProperty("font"))
+	{
+		defFromFile.m_fontNameHash = StringHash::GenerateCRC(fontName->GetString());
+	}
+	else // No font name supplied, use debug
+	{
+		defFromFile.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+	}
+	
+	// Create the widget
+	if (Widget * newWidget = CreateWidget(defFromFile, a_parent, a_startActive))
+	{
+		// Apply properties not set during creation
+		if (GameFile::Property * name = a_widgetFile->GetProperty("name"))
+		{
+			newWidget->SetName(name->GetString());
+		}
+		if (GameFile::Property * texture = a_widgetFile->GetProperty("texture"))
+		{
+			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureManager::eCategoryGui))
+			{
+				newWidget->SetTexture(tex);
+			}
+		}
+
+		return newWidget;
+	}
+
+	return NULL;
 }
 
 void Gui::DestroyWidget(Widget * a_widget)
@@ -231,14 +285,22 @@ bool Gui::LoadMenu(const char * a_menuFile)
 		{
 			if (GameFile::Property * nameProp = menuFile->GetProperty(menuObject, "name"))
 			{
-				Widget * newWidget = new Widget();
-				newWidget->SetName(menuFile->GetString("menu", "name"));
-				newWidget->SetFilePath(a_menuFile);
-				newWidget->SetActive(false);
+				Widget * parentMenu = new Widget();
+				parentMenu->SetName(menuFile->GetString("menu", "name"));
+				parentMenu->SetFilePath(a_menuFile);
+				parentMenu->SetActive(false);
+
+				// Load child elements of the menu
+				GameFile::Object * childWidget = menuObject->m_firstChild;
+				while (childWidget != NULL)
+				{
+					CreateWidget(childWidget, parentMenu);
+					childWidget = childWidget->m_next;
+				}
 
 				// Add to list of menus
 				MenuListNode * newMenuNode = new MenuListNode();
-				newMenuNode->SetData(newWidget);
+				newMenuNode->SetData(parentMenu);
 				m_menus.Insert(newMenuNode);
 			}
 			else // No properties present

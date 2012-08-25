@@ -13,8 +13,8 @@ public:
 
 	//\brief Create a Cyclic Redundancy Check value for a string
 	//\param a_string the cString to generate from
-	//\param a_convertToLower to convert to downcase
-	static unsigned int GenerateCRC(const char * a_string, bool a_convertToLower);
+	//\param optional a_convertToLower to convert to downcase to ensure case insensitive comparisons
+	static unsigned int GenerateCRC(const char * a_string, bool a_convertToLower = true);
 
 	//\brief Create a Cyclic Redundancy Check value for some binary data
 	//\param a_string the cString to generate from

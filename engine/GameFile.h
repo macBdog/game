@@ -6,7 +6,9 @@
 #include <fstream>
 
 #include "../core/LinkedList.h"
+#include "../core/Vector.h"
 
+#include "StringHash.h"
 #include "StringUtils.h"
 
 //\brief A GameFile is a general purpose configuration and data file that
@@ -39,10 +41,55 @@ public:
 	struct Property
 	{
 		Property()
-			: m_name(NULL)
-			, m_data(NULL) { }
+			: m_data(NULL) { }
 
-		char * m_name;
+		//\brief Property type casting unsafe versions
+		inline const char * GetString()
+		{
+			return (const char *)m_data;
+		}
+
+		inline int GetInt()
+		{
+			return atoi((const char *)m_data);
+		}
+
+		inline float GetFloat()
+		{
+			return (float)atof((const char *)m_data);
+		}
+
+		inline bool GetBool()
+		{
+			const char * vecString = (const char *)m_data;
+			return strstr(vecString, "true") != NULL;
+		}
+
+		inline Vector GetVector()
+		{
+			const char * vecString = (const char *)m_data;
+			if (strstr(vecString, ","))
+			{
+				float f1, f2, f3 = 0.0f;
+				sscanf(StringUtils::TrimString(vecString), "%f,%f,%f", &f1, &f2, &f3);
+				return Vector(f1, f2, f3);
+			}
+			return Vector::VectorZero();
+		}
+
+		inline Vector2 GetVector2() 
+		{
+			const char * vecString = (const char *)m_data;
+			if (strstr(vecString, ","))
+			{
+				float f1, f2 = 0.0f;
+				sscanf(StringUtils::TrimString(vecString), "%f,%f", &f1, &f2);
+				return Vector2(f1, f2);
+			}
+			return Vector2::Vector2Zero();
+		}
+
+		StringHash m_name;
 		void * m_data;
 	};
 
@@ -50,11 +97,18 @@ public:
 	struct Object
 	{
 		Object()
-			: m_name(NULL)
-			, m_parent(NULL) { }
+			: m_firstChild(NULL)
+			, m_next(NULL) { }
 
-		char * m_name;						// Literal declared before the open brace
-		Object * m_parent;					// Any parent object for nested objects
+		//\brief Direct accessor for property data for convenience
+		Property * GetProperty(const char * a_propertyName)
+		{
+			return GameFile::GetProperty(this, a_propertyName);
+		}
+
+		StringHash m_name;					// Literal declared before the open brace
+		Object * m_firstChild;				// First child of this object
+		Object * m_next;					// Next sibling object
 		LinkedList<Property> m_properties;	// Properties of this object
 	};
 
@@ -73,6 +127,8 @@ public:
 	int GetInt(const char * a_object, const char * a_property);
 	float GetFloat(const char * a_object, const char * a_property);
 	bool GetBool(const char * a_object, const char * a_property);
+	bool GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT);
+	bool GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT);
 
 	//\brief Add an object that has properties
 	//\param a_objectName is the literal declared on the line preceeding the open bracket
@@ -85,8 +141,8 @@ public:
 	//\brief Helper function to find an object by name
 	Object * GetObject(const char * a_name);
 
-	//brief Helper function to find a property of an object
-	Property * GetProperty(Object * a_parent, const char * a_propertyName);
+	//brief Static helper function to find a property of an object, can be used at the file or object level
+	static Property * GetProperty(Object * a_parent, const char * a_propertyName);
 
 private:
 
@@ -95,6 +151,7 @@ private:
 	unsigned int ReadObjectAndProperties(const char * a_objectName, std::ifstream & a_stream, Object * a_parentObject = NULL);
 
 	//\brief Helper function to determine if a line of text defines a new object
+	//\param const char * to a line read in from a file
 	static inline bool IsLineNewObject(const char * a_line)
 	{
 		return !strstr(a_line, "{") && !strstr(a_line, "}") && !strstr(a_line, ":") && strlen(a_line) > 0;
