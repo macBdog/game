@@ -1,5 +1,6 @@
 WHAT IS THE CURRENT SHORT TERM GOAL: In engine resource selection dialog.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
+TASK QUEUE: LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
 
 What is this project?
 
