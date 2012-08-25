@@ -1,4 +1,4 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Serialisation of gui elements.
+WHAT IS THE CURRENT SHORT TERM GOAL: In engine resource selection dialog.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 
 What is this project?
