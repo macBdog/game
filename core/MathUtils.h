@@ -6,7 +6,8 @@
 namespace MathUtils
 {
 	//\brief Get the larger of two floats
-	static float GetMax(float a_val1, float a_val2)
+	template <class T>
+	static T GetMax(T a_val1, T a_val2)
 	{
 		if (a_val1 >= a_val2)
 		{
@@ -19,7 +20,8 @@ namespace MathUtils
 	}
 
 	//\brief Get the smaller of two floats
-	static float GetMax(float a_val1, float a_val2)
+	template <class T>
+	static T GetMin(T a_val1, T a_val2)
 	{
 		if (a_val1 <= a_val2)
 		{

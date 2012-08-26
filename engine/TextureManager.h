@@ -61,6 +61,10 @@ public:
 	//\brief Wholesale reload of single or multiple categories
 	bool ReloadTextureCategory(eTextureCategory a_cat);
 	bool ReloadAllTextureCategories();
+
+	//\brief Get the fully qualified texture path
+	//\return A pointer to a c string containing the texture path
+	inline const char * GetTexturePath() { return m_texturePath; }
 	
 private:
 
