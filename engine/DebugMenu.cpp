@@ -4,6 +4,7 @@
 #include "InputManager.h"
 #include "Log.h"
 #include "RenderManager.h"
+#include "TextureManager.h"
 #include "Widget.h"
 
 #include "DebugMenu.h"
@@ -34,6 +35,9 @@ DebugMenu::DebugMenu()
 , m_btnChangeShape(NULL)
 , m_btnChangeType(NULL)
 , m_btnChangeTexture(NULL)
+, m_resourceSelect(NULL)
+, m_btnResourceSelectOk(NULL)
+, m_btnResourceSelectCancel(NULL)
 {
 	if (!Startup())
 	{
@@ -46,7 +50,7 @@ bool DebugMenu::Startup()
 	Gui & gui = Gui::Get();
 	InputManager & inMan = InputManager::Get();
 
-	// Create the root of all debug menu items
+	// Create the root of the create menu buttons and use it as the parent to each button
 	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
 	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
 	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
@@ -56,6 +60,28 @@ bool DebugMenu::Startup()
 	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
 	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
 	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
+
+	// Create the resource selection dialog
+	Widget::WidgetDef curItem;
+	curItem.m_size = WidgetVector(0.95f, 1.5f);
+	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+	curItem.m_selectFlags = Widget::eSelectionNone;
+	curItem.m_colour = sc_colourBlue;
+	curItem.m_name = "Resource Select";
+	m_resourceSelect = gui.CreateWidget(curItem, gui.GetDebugRoot(), false);
+	m_resourceSelect->SetDebugWidget();
+
+	// Ok and Cancel buttons on the resource select dialog
+	curItem.m_selectFlags = Widget::eSelectionRollover;
+	curItem.m_size = WidgetVector(0.2f, 0.1f);
+	curItem.m_colour = sc_colourRed;
+	curItem.m_name = "Ok";
+	m_btnResourceSelectOk = gui.CreateWidget(curItem, m_resourceSelect, false);
+	m_btnResourceSelectOk->SetDebugWidget();
+	curItem.m_colour = sc_colourGrey;
+	curItem.m_name = "Cancel";
+	m_btnResourceSelectCancel = gui.CreateWidget(curItem, m_resourceSelect, false);
+	m_btnResourceSelectCancel->SetDebugWidget();
 
 	// Register global key and mnouse listeners - note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
@@ -201,7 +227,9 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 	{
 		m_editMode = eEditModeTexture;
 		ShowChangeMenu(false);
-		// TODO ShowFileSelect(configFile->texturePath);
+		
+		// Bring up the resource selection dialog
+		ShowResourceSelect(TextureManager::Get().GetTexturePath(), "tga");
 		m_handledCommand = true;
 		return m_handledCommand;
 	}
@@ -291,6 +319,22 @@ bool DebugMenu::OnEnable(bool a_toggle)
 {
 	m_enabled = !m_enabled;
 	return m_enabled;
+}
+
+void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter)
+{
+	// Position and display the elements of the dialog
+	m_resourceSelect->SetActive();
+	m_btnResourceSelectOk->SetActive();
+	m_btnResourceSelectCancel->SetActive();
+
+	float buttonSpacing = 0.02f;
+	Vector2 size = m_resourceSelect->GetSize();
+	Vector2 pos = Vector2(-size.GetX()*0.5f, 0.75f);
+	
+	m_resourceSelect->SetPos(pos);
+	m_btnResourceSelectOk->SetPos(Vector2(pos.GetX() + buttonSpacing, pos.GetY() - size.GetY() + buttonSpacing));
+	m_btnResourceSelectCancel->SetPos(Vector2(pos.GetX() + size.GetX() - buttonSpacing, pos.GetY() - size.GetY() + buttonSpacing));
 }
 
 void DebugMenu::Draw()

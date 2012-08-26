@@ -80,7 +80,9 @@ public:
 	  eSelectionCount = 5,
 	};
 
-	//\brief Each widget type has a distinct behavior 
+	//\brief The idea is that any widget has the capabilities to behave as
+	// any kind of widget but the types exist to short cut behaviour and appearance
+	// traits together.
 	enum eWidgetType
 	{
 		eWidgetTypeCursor = 0,

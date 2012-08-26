@@ -54,6 +54,11 @@ public:
 	bool IsDebugMenuActive() const { return (m_btnCreateRoot != NULL && m_btnChangeRoot != NULL) && 
 											(m_btnCreateRoot->IsActive() || m_btnChangeRoot->IsActive()); }
 
+	//\brief Show the resource selection dialog to enable a file to be chose
+	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
+	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
+	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = NULL);
+
 private:
 
 	//\brief What type of editing mode is being performed 
@@ -97,6 +102,10 @@ private:
 	Widget * m_btnChangeTexture;
 
 	Widget * m_btnCancel;
+
+	Widget * m_resourceSelect;
+	Widget * m_btnResourceSelectOk;
+	Widget * m_btnResourceSelectCancel;
 };
 
 #endif //_ENGINE_DEBUG_MENU_
