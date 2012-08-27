@@ -4,7 +4,7 @@ TASK QUEUE: LUA integration with hooks for pos, size, texture, UVs, velocity, co
 
 What is this project?
 
-1. A lightweight, simple framework for indie 2D and 3D PC games.
+1. A lightweight, simple framework for gamejamming and indie 2D and 3D PC games.
 2. Well organised and easy to read and understand.
 3. Focused on making games easier to develop by using only in-engine tools.
 
