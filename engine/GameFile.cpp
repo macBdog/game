@@ -117,7 +117,7 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 	return lineCount;
 }
 
-void GameFile::Reset()
+void GameFile::Unload()
 {
 	// Iterate through all objects and delete inclusive of properties
 	LinkedListNode<Object> * nextObject = m_objects.GetHead();

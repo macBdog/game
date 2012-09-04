@@ -7,6 +7,7 @@
 
 #include "../core/Colour.h"
 #include "../core/Delegate.h"
+#include "../core/LinkedList.h"
 #include "../core/Vector.h"
 
 #include "StringHash.h"
@@ -108,6 +109,9 @@ public:
 		memset(&m_filePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	}
 
+	//\brief Removes and deallocates all list items
+	~Widget();
+
 	//\brief Used for passing around a definition to create a widget without
 	//		 having a method with a gigantic parameter list
 	struct WidgetDef
@@ -171,7 +175,7 @@ public:
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
-
+	
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
 	inline const char * GetName() { return m_name; }
@@ -186,10 +190,15 @@ public:
 
 	// Templated function so any part of the engine or game can be a widget action listener
 	template <class TObj, typename TMethod>
-	void SetAction(TObj * a_listenerObject, TMethod a_listenerFunc)
+	inline void SetAction(TObj * a_listenerObject, TMethod a_listenerFunc)
 	{
 		m_action.SetCallback(a_listenerObject, a_listenerFunc);
 	}
+
+	//\brief List accessors for combo box and list type widgets
+	void AddListItem(const char * a_newItemName);
+	void RemoveListItem(const char * a_existingItemName);
+	void ClearListItems();
 
 private:
 
@@ -213,6 +222,8 @@ private:
 	bool m_debugRender;					// If the widget should be rendered using the debug batch
 	char m_name[StringUtils::s_maxCharsPerName];		// Display name or label
 	char m_filePath[StringUtils::s_maxCharsPerLine];	// Path for loading and saving, only menus should have this property
+
+	LinkedList<StringHash> m_listItems;						// Any string items that belong to this widget for lists and combo boxes
 };
 
 

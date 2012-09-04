@@ -13,9 +13,26 @@ const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.55f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_editSelectedColour = Colour(1.0f, 0.15f, 1.0f, 0.75f);
 
+Widget::~Widget()
+{
+	// Iterate through all items and deletes and deallocs
+	LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+	while(nextItem != NULL)
+	{
+		// Cache off working node
+		LinkedListNode<StringHash> * curItem = nextItem;
+		nextItem = nextItem->GetNext();
+
+		m_listItems.Remove(curItem);
+		delete curItem->GetData();
+		delete curItem;	
+	}	
+}
+
 void Widget::Draw()
 {
-	if (m_active && !(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled()))
+	if (m_active && // Should be drawn
+		!(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled()))	// Is a debug widget and the debug menu is on
 	{
 		// Determine colour from selection
 		Colour selectColour = m_colour;
@@ -42,7 +59,19 @@ void Widget::Draw()
 		// Draw gui label on top of the widget
 		if (m_fontNameHash > 0)
 		{
-			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, IsDebugWidget() ? RenderManager::eBatchDebug : RenderManager::eBatchGui);
+			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, batch);
+		}
+
+		// Draw any list items
+		const float fontDisplaySize = 0.05f;
+		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		while(nextItem != NULL)
+		{
+			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 0.8f, listDisplayPos, m_colour, batch);
+			listDisplayPos.SetY(listDisplayPos.GetY() - fontDisplaySize);
+
+			nextItem = nextItem->GetNext();
 		}
 	}
 
@@ -291,5 +320,46 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		}
 
 		menuOutput.close();
+	}
+}
+
+void Widget::AddListItem(const char * a_newItemName)
+{
+	// Allocate a new node and set data
+	if (LinkedListNode<StringHash> * newListItem = new LinkedListNode<StringHash>())
+	{
+		newListItem->SetData(new StringHash(a_newItemName));
+		m_listItems.Insert(newListItem);
+	}
+}
+
+void Widget::RemoveListItem(const char * a_existingItemName)
+{
+	LinkedListNode<StringHash> * cur = m_listItems.GetHead();
+	while(cur != NULL)
+	{
+		// Remove item and quit out of the loop if found
+		if (cur->GetData()->GetHash() == StringHash::GenerateCRC(a_existingItemName))
+		{
+			delete cur->GetData();
+			m_listItems.Remove(cur);
+			delete cur;
+			break;
+		}
+	}
+}
+
+void Widget::ClearListItems()
+{
+	LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+	while(nextItem != NULL)
+	{
+		// Remove all items by caching off the current pointer
+		LinkedListNode<StringHash> * curItem = nextItem;
+		nextItem = nextItem->GetNext();
+
+		m_listItems.Remove(curItem);
+		delete curItem->GetData();
+		delete curItem;	
 	}
 }

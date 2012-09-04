@@ -74,7 +74,7 @@ public:
 				sscanf(StringUtils::TrimString(vecString), "%f,%f,%f", &f1, &f2, &f3);
 				return Vector(f1, f2, f3);
 			}
-			return Vector::VectorZero();
+			return Vector::Zero();
 		}
 
 		inline Vector2 GetVector2() 
@@ -114,12 +114,12 @@ public:
 
 	//\ No work done in the constructor, only Init
 	GameFile() {};
-	~GameFile() { Reset(); }
+	~GameFile() { Unload(); }
 
 	//\brief Load the game file and parse it into data
     bool Load(const char * a_filePath);
-	void Reset();
-	inline bool Reload() { Reset(); return Load(m_filePath); }
+	void Unload();
+	inline bool Reload() { Unload(); return Load(m_filePath); }
 	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
 
 	//\brief Accessors to the gamefile property data

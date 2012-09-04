@@ -85,6 +85,7 @@ private:
 	//\brief Helper function to close debug menus
 	inline void ShowCreateMenu(bool a_show);
 	inline void ShowChangeMenu(bool a_show);
+	inline void HideResoureMenu();
 
 	bool m_enabled;									// Is the menu being shown
 	bool m_handledCommand;							// In the case that we are responding both to a global and a gui command
