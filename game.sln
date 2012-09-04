@@ -7,9 +7,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game.vcxproj", "{1B
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10} = {AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core\core.vcxproj", "{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcxproj", "{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine\engine.vcxproj", "{5A800C3F-9279-4258-9CF6-55F4663FBD9C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcxproj", "{5A800C3F-9279-4258-9CF6-55F4663FBD9C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10} = {AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}
 	EndProjectSection
