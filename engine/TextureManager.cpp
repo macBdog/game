@@ -114,11 +114,13 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(Texture)))
 	{
 		// Insert the newly allocated texture
-		newTex->m_texture.Load(fileNameBuf);
-		newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(fileNameBuf);
-		sprintf(newTex->m_path, "%s", fileNameBuf);
-		m_textureMap[a_cat].Insert(texId, newTex);
-		return &newTex->m_texture;
+		if (newTex->m_texture.Load(fileNameBuf))
+		{
+			newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(fileNameBuf);
+			sprintf(newTex->m_path, "%s", fileNameBuf);
+			m_textureMap[a_cat].Insert(texId, newTex);
+			return &newTex->m_texture;
+		}
 	}
 	else // Report the error
 	{

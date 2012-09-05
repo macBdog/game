@@ -95,6 +95,17 @@ public:
 		eWidgetTypeCount,
 	};
 
+	//\brief Specifies how a widget with items in it's list is displayed
+	enum WidgetListType
+	{
+		eWidgetListType_List = 0,
+		eWidgetListType_DropDown,
+		eWidgetListType_Checkbox,
+		eWidgetListType_Radio,
+
+		eWidgetListType_Count,
+	};
+
 	//\brief Ctor nulls all pointers out for safety
 	Widget()
 		: m_fontNameHash(0)
@@ -104,6 +115,7 @@ public:
 		, m_nextWidget(NULL)
 		, m_childWidget(NULL)
 		, m_debugRender(false)
+		, m_selectedListItemId(0)
 	{
 		memset(&m_name, 0, sizeof(char) * StringUtils::s_maxCharsPerName);
 		memset(&m_filePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
@@ -199,6 +211,10 @@ public:
 	void AddListItem(const char * a_newItemName);
 	void RemoveListItem(const char * a_existingItemName);
 	void ClearListItems();
+	void SetSelectedListItem(unsigned int a_itemId);
+	void SetSelectedListItem(const char * a_itemName);
+	const char * GetListItem(unsigned int a_itemId);
+	inline const char * GetSelectedListItem() { return GetListItem(m_selectedListItemId); } 
 
 private:
 
@@ -224,6 +240,7 @@ private:
 	char m_filePath[StringUtils::s_maxCharsPerLine];	// Path for loading and saving, only menus should have this property
 
 	LinkedList<StringHash> m_listItems;						// Any string items that belong to this widget for lists and combo boxes
+	unsigned int m_selectedListItemId;						// Which item is currently selected
 };
 
 

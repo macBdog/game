@@ -46,14 +46,15 @@ void Widget::Draw()
 		}
 
 		// Draw the quad in various states of activation
+		RenderManager & rMan = RenderManager::Get();
 		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
-			RenderManager::Get().AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture);
+			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture);
 		}
 		else // No texture version
 		{
-			RenderManager::Get().AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
+			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
 		}
 
 		// Draw gui label on top of the widget
@@ -63,15 +64,27 @@ void Widget::Draw()
 		}
 
 		// Draw any list items
-		const float fontDisplaySize = 0.05f;
+		const float fontDisplaySize = 0.07f;
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
 		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		unsigned int numItems = 0;
 		while(nextItem != NULL)
 		{
-			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 0.8f, listDisplayPos, m_colour, batch);
+			// If this is the selected item then draw the highlight bar behind the item
+			if (numItems == m_selectedListItemId)
+			{
+				Vector2 hLightPos = listDisplayPos;
+				hLightPos.SetY(hLightPos.GetY() + fontDisplaySize * numItems);
+				Vector2 hLightSize = Vector2(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
+				rMan.AddQuad2D(batch, hLightPos, hLightSize, NULL, Texture::eOrientationNormal, selectColour + sc_rolloverColour);
+			}
+
+			// Now draw the item text
+			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 1.0f, listDisplayPos, m_colour, batch);
 			listDisplayPos.SetY(listDisplayPos.GetY() - fontDisplaySize);
 
 			nextItem = nextItem->GetNext();
+			++numItems;
 		}
 	}
 
@@ -284,7 +297,13 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		menuStream << tabs << tab << "pos: "	<< outBuf	<< lineEnd;
 
 		m_size.GetString(outBuf);
-		menuStream << tabs << tab <<"size: "	<< outBuf	<< lineEnd;
+		menuStream << tabs << tab << "size: "	<< outBuf	<< lineEnd;
+
+		if (m_texture != NULL)
+		{
+			menuStream << tabs << tab << "texture: " << m_texture->GetFilePath() << lineEnd;
+		}
+
 		menuStream << tabs << "}" << lineEnd;
 
 		// Serialise any children of this child
@@ -362,4 +381,29 @@ void Widget::ClearListItems()
 		delete curItem->GetData();
 		delete curItem;	
 	}
+}
+
+const char * Widget::GetListItem(unsigned int a_itemId)
+{
+	if (a_itemId >= m_listItems.GetLength())
+	{
+		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Trying to get an invalid list item %d from widget called %s.", a_itemId, m_name);
+		return NULL;
+	}
+
+	unsigned int numItems = 0;
+	LinkedListNode<StringHash> * cur = m_listItems.GetHead();
+	while(cur != NULL)
+	{
+		// Remove item and quit out of the loop if found
+		if (numItems == a_itemId)
+		{
+			return cur->GetData()->GetCString();
+		}
+
+		cur = cur->GetNext();
+		++numItems;
+	}
+
+	return NULL;
 }

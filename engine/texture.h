@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <GL/gl.h>
 
+#include "StringUtils.h"
+
 class Texture
 {
 public:
@@ -26,6 +28,8 @@ public:
 	bool Load(const char *a_tgaFilePath);
 	inline bool IsLoaded() { return m_textureId >= 0; }
 	inline unsigned int GetId() { return m_textureId; }
+	//inline const char * GetFilePath() { return m_filePath; }
+	inline const char * GetFilePath() { return "DUMMY"; }
 
 private:
 
@@ -52,7 +56,8 @@ private:
 	//\brief Return a pointer to texture data in memory
 	GLubyte *loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp);
 
-	int m_textureId;		// Texture ID as stored off by the load operation
+	int m_textureId;			///< Texture ID as stored off by the load operation
+	char m_filePath[StringUtils::s_maxCharsPerName];	///< File path stored off during load, fully qualified
 
 };
 

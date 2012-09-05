@@ -105,6 +105,7 @@ private:
 	Widget * m_btnCancel;
 
 	Widget * m_resourceSelect;
+	Widget * m_resourceSelectList;
 	Widget * m_btnResourceSelectOk;
 	Widget * m_btnResourceSelectCancel;
 };

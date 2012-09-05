@@ -36,6 +36,7 @@ DebugMenu::DebugMenu()
 , m_btnChangeType(NULL)
 , m_btnChangeTexture(NULL)
 , m_resourceSelect(NULL)
+, m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
 , m_btnResourceSelectCancel(NULL)
 {
@@ -70,6 +71,15 @@ bool DebugMenu::Startup()
 	curItem.m_name = "Resource Select";
 	m_resourceSelect = gui.CreateWidget(curItem, gui.GetDebugRoot(), false);
 	m_resourceSelect->SetDebugWidget();
+
+	// Create list box for resources
+	curItem.m_size = WidgetVector(0.85f, 1.2f);
+	curItem.m_selectFlags = Widget::eSelectionRollover;
+	curItem.m_colour = sc_colourPurple;
+	curItem.m_name="Resource List";
+	m_resourceSelectList = gui.CreateWidget(curItem, m_resourceSelect, false);
+	m_resourceSelectList->SetDebugWidget();
+	m_resourceSelectList->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
 	// Ok and Cancel buttons on the resource select dialog
 	m_btnResourceSelectOk = CreateButton("Ok", sc_colourOrange, m_resourceSelect);
@@ -227,6 +237,12 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 	}
 	else if (a_widget == m_btnResourceSelectOk)
 	{
+		if (m_widgetToEdit != NULL)
+		{
+			char tgaBuf[StringUtils::s_maxCharsPerLine];
+			sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
+			m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
+		}
 		HideResoureMenu();
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
@@ -325,6 +341,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 {
 	// Position and display the elements of the dialog
 	m_resourceSelect->SetActive();
+	m_resourceSelectList->SetActive();
 	m_btnResourceSelectOk->SetActive();
 	m_btnResourceSelectCancel->SetActive();
 
@@ -335,6 +352,10 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
 	m_resourceSelect->SetPos(parentPos);
 
+	// Position the list of resources
+	m_resourceSelectList->SetPos(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
+
+	// Position the Ok and Cancel buttons
 	Vector2 buttonSize = m_btnResourceSelectOk->GetSize();
 	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
 								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
@@ -344,7 +365,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	m_btnResourceSelectCancel->SetPos(buttonPos);
 
 	// Add resource list to widget
-	m_resourceSelect->ClearListItems();
+	m_resourceSelectList->ClearListItems();
 	FileManager & fileMan = FileManager::Get();
 	FileManager::FileList resourceFiles;
 	FileManager::Get().FillFileList(a_startingPath, resourceFiles, a_fileExtensionFilter);
@@ -353,7 +374,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	FileManager::FileListNode * curNode = resourceFiles.GetHead();
 	while(curNode != NULL)
 	{
-		m_resourceSelect->AddListItem(curNode->GetData()->m_name);
+		m_resourceSelectList->AddListItem(curNode->GetData()->m_name);
 
 		curNode = curNode->GetNext();
 	}
@@ -429,6 +450,7 @@ void DebugMenu::ShowChangeMenu(bool a_show)
 void DebugMenu::HideResoureMenu()
 {
 	m_resourceSelect->SetActive(false);
+	m_resourceSelectList->SetActive(false);
 	m_btnResourceSelectOk->SetActive(false);
 	m_btnResourceSelectCancel->SetActive(false);
 }
