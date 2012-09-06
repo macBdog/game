@@ -33,7 +33,7 @@ bool Texture::Load(const char *a_tgaFilePath)
 	}
 
 	// Store off the file name
-	//sprintf(m_filePath, "%s", "Some chars");
+	memcpy(m_filePath, a_tgaFilePath, sizeof(char) * strlen(a_tgaFilePath));
 
 	// Load texture data into memory and check if successful
     textureData = loadTGA(a_tgaFilePath, x, y, bpp);

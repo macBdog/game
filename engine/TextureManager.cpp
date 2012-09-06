@@ -30,10 +30,16 @@ bool TextureManager::Startup(const char * a_texturePath)
 	// Init a pool of memory for each category
 	for (unsigned int i = 0; i < eCategoryCount; ++i)
 	{
-		m_texturePool[i].Init(s_texurePoolSize[i]);
-
-		// This can be removed in all but DEBUG configuration, but its nice when viewing memory
-		memset(m_texturePool[i].GetHead(), 0, m_texturePool[i].GetAllocationSizeBytes());
+		if (m_texturePool[i].Init(s_texurePoolSize[i]))
+		{
+			// This can be removed in all but DEBUG configuration, but its nice when viewing memory
+			memset(m_texturePool[i].GetHead(), 0, m_texturePool[i].GetAllocationSizeBytes());
+		}
+		else // Allocation of the pool failed in Init
+		{
+			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture memory allocation for texture categpry %d", i);
+			return false;
+		}
 	}
 
 	// Cache off the texture path for non qualified addressing of fonts
@@ -111,7 +117,7 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 		m_textureMap[a_loadedCat].Get(texId, foundTex);
 		return &foundTex->m_texture;
 	}
-	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(Texture)))
+	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(ManagedTexture)))
 	{
 		// Insert the newly allocated texture
 		if (newTex->m_texture.Load(fileNameBuf))
