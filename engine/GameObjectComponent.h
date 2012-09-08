@@ -6,8 +6,8 @@
 class GameObjectComponent
 {
 public:
-	virtual GameObjectComponent() = 0;
-	virtual ~GameObjectComponent() = 0;
+	
+	// Aint nothing here for the moment
 
 private:
 	static const unsigned int m_componentId;

@@ -73,6 +73,11 @@ private:
 		eEditModeCount,
 	};
 
+	//\brief Helper function to handle widget visibility and position as a result of actions
+	//\param a_widget is a pointer to the widget that was activated on
+	//\return a bool indicating that the action was handled correctly
+	bool HandleMenuAction(Widget * a_widget);
+
 	static const float sc_cursorSize;				// Size of debug mouse cursor
 	static Vector2 sc_vectorCursor[4];				// Debug menu does not have textures so it draws mouse cursors by vectors
 
@@ -92,22 +97,26 @@ private:
 	eEditMode m_editMode;							// If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						// If we have selected a widget to edit, this will be set
 
-	Widget * m_btnCreateRoot;						// Pointer to a widget that we create on startup
-	Widget * m_btnCreateWidget;
-	Widget * m_btnCreateGameObject;
+	//\ingroup Debug menu buttons organised in hierachy using tabs
+
+	Widget * m_btnCreateRoot;						//< Pointer to a widget that we create on startup with all other buttons as children
+		Widget * m_btnCreateWidget;
+		Widget * m_btnCreateGameObject2D;
+		Widget * m_btnCreateGameObject3D;
+			Widget * m_btnCreateGameObjectFromTemplate;
+			Widget * m_btnCreateGameObjectNew;
 
 	Widget * m_btnChangeRoot;
-	Widget * m_btnChangePos;
-	Widget * m_btnChangeShape;
-	Widget * m_btnChangeType;
-	Widget * m_btnChangeTexture;
-
-	Widget * m_btnCancel;
+		Widget * m_btnChangePos;
+		Widget * m_btnChangeShape;
+		Widget * m_btnChangeType;
+		Widget * m_btnChangeTexture;
+		Widget * m_btnCancel;
 
 	Widget * m_resourceSelect;
-	Widget * m_resourceSelectList;
-	Widget * m_btnResourceSelectOk;
-	Widget * m_btnResourceSelectCancel;
+		Widget * m_resourceSelectList;
+		Widget * m_btnResourceSelectOk;
+		Widget * m_btnResourceSelectCancel;
 };
 
 #endif //_ENGINE_DEBUG_MENU_

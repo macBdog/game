@@ -6,6 +6,7 @@
 #include "RenderManager.h"
 #include "TextureManager.h"
 #include "Widget.h"
+#include "WorldManager.h"
 
 #include "DebugMenu.h"
 
@@ -29,7 +30,10 @@ DebugMenu::DebugMenu()
 , m_btnCreateRoot(NULL)
 , m_btnCancel(NULL)
 , m_btnCreateWidget(NULL)
-, m_btnCreateGameObject(NULL)
+, m_btnCreateGameObject2D(NULL)
+, m_btnCreateGameObject3D(NULL)
+, m_btnCreateGameObjectFromTemplate(NULL)
+, m_btnCreateGameObjectNew(NULL)
 , m_btnChangeRoot(NULL)
 , m_btnChangePos(NULL)
 , m_btnChangeShape(NULL)
@@ -55,12 +59,19 @@ bool DebugMenu::Startup()
 	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
 	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
 	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
-	m_btnCreateGameObject = CreateButton("GameObject", sc_colourBlue, m_btnCreateRoot);
+	m_btnCreateGameObject2D = CreateButton("2D Object", sc_colourGreen, m_btnCreateRoot);
+	m_btnCreateGameObject3D = CreateButton("3D Object", sc_colourBlue, m_btnCreateRoot);
+	m_btnCreateGameObjectFromTemplate = CreateButton("From Template", sc_colourOrange, m_btnCreateRoot);
+	m_btnCreateGameObjectNew = CreateButton("New Object", sc_colourSkyBlue, m_btnCreateRoot);
+
+	// Change 2D objects
 	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetDebugRoot());
 	m_btnChangePos = CreateButton("Position", sc_colourPurple, m_btnChangeRoot);
 	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
 	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
 	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
+
+	// TODO Change 3D objects
 
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;
@@ -137,19 +148,33 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		return false;
 	}
 	
+	// Set visibility and position for the debug
+	return HandleMenuAction(a_widget);
+}
+
+bool DebugMenu::HandleMenuAction(Widget * a_widget)
+{
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
+
 	if (a_widget == m_btnCreateRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnCreateRoot->GetPos() + WidgetVector(m_btnCreateRoot->GetSize().GetX(), -m_btnCreateRoot->GetSize().GetY());
+		WidgetVector right = m_btnCreateRoot->GetPos() + WidgetVector(m_btnCreateRoot->GetSize().GetX(), 0.0f);
 		WidgetVector height = m_btnCreateRoot->GetSize();
 		height.SetX(0.0f);
 		m_btnCreateWidget->SetPos(right);
-		m_btnCreateGameObject->SetPos(right + height);
+		m_btnCreateGameObject2D->SetPos(right - height);
+
 		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
+		m_btnCreateGameObject2D->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY());
+		m_btnCreateGameObject3D->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY());
 		m_btnCancel->SetPos(right + height);
-		
+
 		ShowCreateMenu(true);
 		m_handledCommand = true;
 		return m_handledCommand;
@@ -168,15 +193,62 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
 		newWidget->SetPos(m_btnCreateRoot->GetPos());
+		Gui::Get().GetActiveMenu()->Serialise();
 		
 		// Cancel menu display
 		ShowCreateMenu(false);
 		m_handledCommand = true;
 		return m_handledCommand;
 	}
-	else if (a_widget == m_btnCreateGameObject)
+	else if (a_widget == m_btnCreateGameObject2D)
 	{
-		Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "TODO! Create new game object.");
+		// Position the create object submenu buttons
+		WidgetVector right = m_btnCreateGameObject2D->GetPos() + WidgetVector(m_btnCreateGameObject2D->GetSize().GetX(), -m_btnCreateGameObject2D->GetSize().GetY());
+		WidgetVector height = m_btnCreateGameObject2D->GetSize();
+		height.SetX(0.0f);
+		m_btnCreateGameObjectFromTemplate->SetPos(right);
+		m_btnCreateGameObjectNew->SetPos(right + height);
+
+		m_btnCreateGameObjectFromTemplate->SetActive(true);
+		m_btnCreateGameObjectNew->SetActive(true);
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+	else if (a_widget == m_btnCreateGameObject3D)
+	{
+		// Position the create object submenu buttons
+		WidgetVector right = m_btnCreateGameObject3D->GetPos() + WidgetVector(m_btnCreateGameObject3D->GetSize().GetX(), -m_btnCreateGameObject3D->GetSize().GetY());
+		WidgetVector height = m_btnCreateGameObject3D->GetSize();
+		height.SetX(0.0f);
+		m_btnCreateGameObjectFromTemplate->SetPos(right);
+		m_btnCreateGameObjectNew->SetPos(right + height);
+
+		m_btnCreateGameObjectFromTemplate->SetActive(true);
+		m_btnCreateGameObjectNew->SetActive(true);
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+	else if (a_widget == m_btnCreateGameObjectFromTemplate)
+	{
+		ShowCreateMenu(false);
+		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "*.tmp");
+		m_handledCommand = true;
+		return m_handledCommand;
+	}
+	else if (a_widget == m_btnCreateGameObjectNew)
+	{
+		// Create a 2D game object
+		if (m_btnCreateGameObject2D->IsActive())
+		{
+			WorldManager::Get().CreateObject();
+		}
+		// Create a 3D game object
+		else if (m_btnCreateGameObject3D->IsActive())
+		{
+			WorldManager::Get().CreateObject();
+		}
+		// Or a script object with no representation?
+		
 		m_handledCommand = true;
 		return m_handledCommand;
 	}
@@ -237,11 +309,15 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 	}
 	else if (a_widget == m_btnResourceSelectOk)
 	{
+		// TODO! This could be any resource type for any kind of object!
+		// Right now its assuming texture for widget. Could be template for game object 2D/3D
+		// Assign the texture from the resource select box
 		if (m_widgetToEdit != NULL)
 		{
 			char tgaBuf[StringUtils::s_maxCharsPerLine];
 			sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
 			m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
+			Gui::Get().GetActiveMenu()->Serialise();
 		}
 		HideResoureMenu();
 	}
@@ -429,11 +505,25 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 
 void DebugMenu::ShowCreateMenu(bool a_show)
 {
-	// Set the create menu and all children visible
-	m_btnCreateRoot->SetActive(a_show);
-	m_btnCancel->SetActive(a_show);
-	m_btnCreateWidget->SetActive(a_show);
-	m_btnCreateGameObject->SetActive(a_show);
+	// Set the create menu and first children visible
+	if (a_show)
+	{
+		m_btnCreateRoot->SetActive(a_show);
+		m_btnCancel->SetActive(a_show);
+		m_btnCreateWidget->SetActive(a_show);
+		m_btnCreateGameObject2D->SetActive(a_show);
+		m_btnCreateGameObject3D->SetActive(a_show);
+	}
+	else // Hide everything
+	{
+		m_btnCreateRoot->SetActive(a_show);
+		m_btnCancel->SetActive(a_show);
+		m_btnCreateWidget->SetActive(a_show);
+		m_btnCreateGameObject2D->SetActive(a_show);
+		m_btnCreateGameObject3D->SetActive(a_show);
+		m_btnCreateGameObjectFromTemplate->SetActive(a_show);
+		m_btnCreateGameObjectNew->SetActive(a_show);
+	}
 }
 
 void DebugMenu::ShowChangeMenu(bool a_show)

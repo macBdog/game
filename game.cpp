@@ -14,6 +14,7 @@
 #include "engine/RenderManager.h"
 #include "engine/StringUtils.h"
 #include "engine/TextureManager.h"
+#include "engine/WorldManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
 	Gui::Get().Startup(configFile->GetString("config", "guiPath"));
 	InputManager::Get().Startup(fullScreen);
+	WorldManager::Get().Startup(configFile->GetString("config", "templatePath"));
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -121,6 +123,9 @@ int main(int argc, char *argv[])
             active = InputManager::Get().Update(event);
         }
 
+		// Update the world first, other systems rely on object positions/states etc
+		WorldManager::Get().Update(lastFrameTimeSec);
+		
 		// Draw the Gui
 		Gui::Get().Update(lastFrameTimeSec);
 		

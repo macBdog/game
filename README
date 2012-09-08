@@ -1,6 +1,6 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: In engine resource selection dialog.
+WHAT IS THE CURRENT SHORT TERM GOAL: Create game objects from templates and save in a scene.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
-TASK QUEUE: LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
+TASK QUEUE: Model loading, LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
 
 What is this project?
 
@@ -18,9 +18,10 @@ Technology Choices:
 
 * libSDL for IO
 * OpenGL for rendering
+* LUA for scripting
 * irrKlang for Sound
 * TGA, OBJ and ANM file formats
-* For everything else, the choice is Roll-Your-Own because dependancies suck and this is a coding for fun project.
+* For everything else, the choice is Roll-Your-Own because dependancies suck and this is a coding for fun and learning project.
 
 Organisation:
 
@@ -64,6 +65,7 @@ void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
 For variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
 m_variable for a member 
 a_variable for an argument
+s_variable for a static and usually const data member
 variable for locally scoped.
 
 To be explicit about mutable arguments passed into a method by reference, the following convention is useful

@@ -42,7 +42,7 @@ bool TextureManager::Startup(const char * a_texturePath)
 		}
 	}
 
-	// Cache off the texture path for non qualified addressing of fonts
+	// Cache off the texture path for non qualified loading of textures
 	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_texturePath, a_texturePath, strlen(a_texturePath));
 
