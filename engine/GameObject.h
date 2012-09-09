@@ -4,7 +4,11 @@
 
 #include "GameObjectComponent.h"
 #include "StringUtils.h"
+#include "Texture.h"
 
+//\brief A gameobject is the container for all entities involved in the gameplay.
+//		 It is lightweight yet has provisions for all basic game related functions like
+//		 2D sprites, 3D models, scripts, events and collision.
 class GameObject
 {
 
@@ -47,6 +51,12 @@ public:
 	inline GameObject * GetChild() { return m_child; }
 	inline GameObject * GetNext() { return m_next; }
 
+	//\brief Resource mutators and accessors
+	inline void SetTexture(Texture * a_newTexture) { m_texture = a_newTexture; }
+	//inline void SetMesh(Mesh * a_newMesh) { m_mesh = a_newMesh; }
+	//inline void SetScript(Script * a_newScript) { m_script = a_newScript; }
+	inline Texture * GetTexture() { return m_texture; }
+
 private:
 
 	//\brief Destruction is private as it should only be handled by object management
@@ -56,9 +66,11 @@ private:
 	GameObject *		  m_child;			///< Pointer to first child game obhject
 	GameObject *		  m_next;			///< Pointer to sibling game objects
 	GameObjectComponent * m_components;		///< Purpose built object features live in a list of components
-	//Script			  m_script;			///< The lua script for user defined behavior
+	Texture *			  m_texture;		///< Pointer to a texture for 2D display purposes
+	//Mesh *			  m_mesh;			///< Pointer to a mesh for 3D display purposes
+	//Script			  m_script;			///< The LUA script for user defined behavior
 	eGameObjectState	  m_state;			///< What state the object is in
-	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every object needs a name
+	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every creature needs a name
 
 };
 

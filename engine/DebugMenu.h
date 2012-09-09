@@ -6,8 +6,9 @@
 #include "../core/Vector.h"
 #include "../core/LinkedList.h"
 
-#include "Singleton.h"
+#include "GameObject.h"
 #include "Gui.h"
+#include "Singleton.h"
 
 class Widget;
 
@@ -47,6 +48,10 @@ public:
 	//\param a_toggle if the debug menu should stay enabled
 	bool OnEnable(bool a_toggle);
 
+	//\brief Listener function for typing alpha keys
+	//\param a_unused
+	bool OnAlphaKey(bool a_unused);
+
 	//\brief Debug menu enabled means are we in edit mode, has TAB been toggled
 	bool IsDebugMenuEnabled() const { return m_enabled; }
 
@@ -61,14 +66,24 @@ public:
 
 private:
 
+	//\brief When editing we can change properties of GUI widgets and also game objects
+	enum eEditType
+	{
+		eEditTypeNone = -1,		///< Not changing anything
+		eEditTypeWidget,		///< Changing a gui widget
+		eEditTypeGameObject,	///< Changing a game object
+		
+		eEditTypeCount,
+	};
+
 	//\brief What type of editing mode is being performed 
 	enum eEditMode
 	{
 		eEditModeNone = -1,
-		eEditModePos,			// Widget top left stuck to mouse pos
-		eEditModeShape,			// Widget bottom right stuck to mouse pos
-		eEditModeTexture,		// File selection dialog active
-		eEditModeType,			// Type selection dialog active
+		eEditModePos,			///< Widget top left stuck to mouse pos
+		eEditModeShape,			///< Widget bottom right stuck to mouse pos
+		eEditModeTexture,		///< File selection dialog active
+		eEditModeName,			///< Cursor keys bound to display name
 
 		eEditModeCount,
 	};
@@ -92,14 +107,16 @@ private:
 	inline void ShowChangeMenu(bool a_show);
 	inline void HideResoureMenu();
 
-	bool m_enabled;									// Is the menu being shown
-	bool m_handledCommand;							// In the case that we are responding both to a global and a gui command
-	eEditMode m_editMode;							// If we are in a modal editing mode, which mode are we in
-	Widget * m_widgetToEdit;						// If we have selected a widget to edit, this will be set
+	bool m_enabled;									///< Is the menu being shown
+	bool m_handledCommand;							///< In the case that we are responding both to a global and a gui command
+	eEditType m_editType;							///< What type of object we are editing 
+	eEditMode m_editMode;							///< If we are in a modal editing mode, which mode are we in
+	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
+	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 
 	//\ingroup Debug menu buttons organised in hierachy using tabs
 
-	Widget * m_btnCreateRoot;						//< Pointer to a widget that we create on startup with all other buttons as children
+	Widget * m_btnCreateRoot;						///< Pointer to a widget that we create on startup with all other buttons as children
 		Widget * m_btnCreateWidget;
 		Widget * m_btnCreateGameObject2D;
 		Widget * m_btnCreateGameObject3D;
@@ -109,7 +126,7 @@ private:
 	Widget * m_btnChangeRoot;
 		Widget * m_btnChangePos;
 		Widget * m_btnChangeShape;
-		Widget * m_btnChangeType;
+		Widget * m_btnChangeName;
 		Widget * m_btnChangeTexture;
 		Widget * m_btnCancel;
 

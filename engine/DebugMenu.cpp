@@ -25,8 +25,10 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 DebugMenu::DebugMenu()
 : m_enabled(false) 
 , m_handledCommand(false)
+, m_editType(eEditTypeNone)
 , m_editMode(eEditModeNone)
 , m_widgetToEdit(NULL)
+, m_gameObjectToEdit(NULL)
 , m_btnCreateRoot(NULL)
 , m_btnCancel(NULL)
 , m_btnCreateWidget(NULL)
@@ -37,7 +39,7 @@ DebugMenu::DebugMenu()
 , m_btnChangeRoot(NULL)
 , m_btnChangePos(NULL)
 , m_btnChangeShape(NULL)
-, m_btnChangeType(NULL)
+, m_btnChangeName(NULL)
 , m_btnChangeTexture(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
@@ -68,7 +70,7 @@ bool DebugMenu::Startup()
 	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetDebugRoot());
 	m_btnChangePos = CreateButton("Position", sc_colourPurple, m_btnChangeRoot);
 	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
-	m_btnChangeType = CreateButton("Type", sc_colourOrange, m_btnChangeRoot);
+	m_btnChangeName = CreateButton("Name", sc_colourOrange, m_btnChangeRoot);
 	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
 
 	// TODO Change 3D objects
@@ -98,6 +100,7 @@ bool DebugMenu::Startup()
 	
 	// Register global key and mnouse listeners - note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
+	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKey, InputManager::eInputTypeKeyDown); 
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
 
@@ -112,7 +115,7 @@ bool DebugMenu::Startup()
 void DebugMenu::Update(float a_dt)
 {
 	// Handle editing actions tied to mouse move
-	if (m_widgetToEdit != NULL)
+	if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
 	{
 		InputManager & inMan = InputManager::Get();
 		Vector2 mousePos = inMan.GetMousePosRelative();
@@ -156,6 +159,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 {
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
+	m_handledCommand = false;
 
 	if (a_widget == m_btnCreateRoot)
 	{
@@ -177,7 +181,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 
 		ShowCreateMenu(true);
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateWidget)
 	{
@@ -198,7 +201,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		// Cancel menu display
 		ShowCreateMenu(false);
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateGameObject2D)
 	{
@@ -212,7 +214,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateGameObject3D)
 	{
@@ -225,15 +226,15 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
+
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateGameObjectFromTemplate)
 	{
 		ShowCreateMenu(false);
 		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "*.tmp");
+
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCreateGameObjectNew)
 	{
@@ -250,7 +251,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		// Or a script object with no representation?
 		
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnCancel)
 	{
@@ -259,7 +259,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		ShowChangeMenu(false);
 
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnChangeRoot)
 	{
@@ -271,7 +270,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_btnChangeShape->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY() * 2.0f);
-		m_btnChangeType->SetPos(right + height);
+		m_btnChangeName->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY());
 		m_btnChangeTexture->SetPos(right + height);
@@ -281,21 +280,24 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 
 		ShowChangeMenu(true);
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnChangePos)
 	{
 		m_editMode = eEditModePos;
 		ShowChangeMenu(false);
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnChangeShape)
 	{
 		m_editMode = eEditModeShape;
 		ShowChangeMenu(false);
 		m_handledCommand = true;
-		return m_handledCommand;
+	}
+	else if (a_widget == m_btnChangeName)
+	{
+		m_editMode = eEditModeName;
+		ShowChangeMenu(false);
+		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeTexture)
 	{
@@ -305,25 +307,54 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		// Bring up the resource selection dialog
 		ShowResourceSelect(TextureManager::Get().GetTexturePath(), "tga");
 		m_handledCommand = true;
-		return m_handledCommand;
 	}
 	else if (a_widget == m_btnResourceSelectOk)
 	{
-		// TODO! This could be any resource type for any kind of object!
-		// Right now its assuming texture for widget. Could be template for game object 2D/3D
-		// Assign the texture from the resource select box
-		if (m_widgetToEdit != NULL)
+		// Have just selected a resource for some object
+		switch (m_editType)
 		{
-			char tgaBuf[StringUtils::s_maxCharsPerLine];
-			sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
-			m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
-			Gui::Get().GetActiveMenu()->Serialise();
+			case eEditTypeWidget: 
+			{
+				// Early out for no widget selected
+				if (m_widgetToEdit == NULL) { break; }
+
+				// Setting a texture on a widget
+				if (m_editMode == eEditModeTexture)
+				{
+					char tgaBuf[StringUtils::s_maxCharsPerLine];
+					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
+					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
+					Gui::Get().GetActiveMenu()->Serialise();
+				}
+				break;
+			}
+			case eEditTypeGameObject:
+			{
+				// Early out for no object
+				if (m_gameObjectToEdit == NULL) { break; }
+
+				// Setting a texture on a game object
+				if (m_editMode == eEditModeTexture)
+				{
+					char tgaBuf[StringUtils::s_maxCharsPerLine];
+					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
+					m_gameObjectToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryWorld));
+					WorldManager::Get().GetCurrentScene()->Serialise();
+				}
+				break;
+			}
+			default: break;
 		}
+
 		HideResoureMenu();
+
+		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
 	{
 		HideResoureMenu();
+
+		m_handledCommand = true;
 	}
 
 	return m_handledCommand;
@@ -391,6 +422,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	{
 		if (m_widgetToEdit != NULL)
 		{
+			m_editType = eEditTypeNone;
 			m_widgetToEdit->SetSelection(Widget::eSelectionNone);
 			m_widgetToEdit = NULL;
 		}
@@ -399,6 +431,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Find the first widget that is rolled over in edit mode
 	if (Widget * newEditedWidget = Gui::Get().GetActiveWidget())
 	{
+		m_editType = eEditTypeWidget;
 		m_widgetToEdit = newEditedWidget;
 		m_widgetToEdit->SetSelection(Widget::eSelectionEditSelected);
 		return true;
@@ -411,6 +444,52 @@ bool DebugMenu::OnEnable(bool a_toggle)
 {
 	m_enabled = !m_enabled;
 	return m_enabled;
+}
+
+bool DebugMenu::OnAlphaKey(bool a_unused)
+{
+	// Only useful if typing
+	if (m_editMode == eEditModeName)
+	{
+		if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
+		{
+			InputManager & inMan = InputManager::Get();
+			char newName[StringUtils::s_maxCharsPerName];
+			memset(newName, 0, StringUtils::s_maxCharsPerName);
+			strncpy(newName, m_widgetToEdit->GetName(), strlen(m_widgetToEdit->GetName()));
+
+			SDLKey lastKey = inMan.GetLastKey();
+			if (lastKey == SDLK_RETURN)
+			{
+				// Quit out of editing
+				m_widgetToEdit->SetSelection(Widget::eSelectionNone);
+				m_editType = eEditTypeNone;
+				m_editMode = eEditModeNone;
+				m_widgetToEdit = NULL;
+				Gui::Get().GetActiveMenu()->Serialise();
+			}
+			else if (lastKey == SDLK_BACKSPACE)
+			{
+				// Delete a character off the end of the name
+				newName[strlen(newName) - 1] = '\0';
+				m_widgetToEdit->SetName(newName);
+			}
+			else // Some other alpha key, append to the name
+			{
+				// TODO move this check to string utils and input manager
+				char keyVal = (char)lastKey;
+				if (keyVal >= 97 && keyVal <= 121)
+				{
+					sprintf(newName, "%s%c", m_widgetToEdit->GetName(), keyVal);
+					m_widgetToEdit->SetName(newName);
+				}
+			}
+		
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter)
@@ -533,7 +612,7 @@ void DebugMenu::ShowChangeMenu(bool a_show)
 	m_btnChangeRoot->SetActive(a_show);
 	m_btnChangePos->SetActive(a_show);
 	m_btnChangeShape->SetActive(a_show);
-	m_btnChangeType->SetActive(a_show);
+	m_btnChangeName->SetActive(a_show);
 	m_btnChangeTexture->SetActive(a_show);
 }
 

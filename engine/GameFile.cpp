@@ -92,6 +92,9 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 			// Look for child object
 			if (IsLineNewObject(line))
 			{
+				// Link up child objects as they are read
+
+
 				// Read the child object
 				lineCount += ReadObjectAndProperties(line, a_stream, currentObject);
 				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
@@ -242,7 +245,21 @@ GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_par
 	// Set parent child relationship
 	if (a_parent != NULL)
 	{
-		a_parent->m_firstChild = newObject->GetData();
+		// If not children already
+		if (a_parent->m_firstChild == NULL)
+		{
+			a_parent->m_firstChild = newObject->GetData();
+		}
+		else // Set up sibling relationship with the last child
+		{
+			Object * lastSibling = a_parent->m_firstChild;
+			while (lastSibling->m_next != NULL)
+			{
+				lastSibling = lastSibling->m_next;
+			}
+
+			lastSibling->m_next = newObject->GetData();
+		}
 	}
 	
 	m_objects.Insert(newObject);

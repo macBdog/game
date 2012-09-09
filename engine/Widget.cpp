@@ -50,7 +50,7 @@ void Widget::Draw()
 		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
-			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture);
+			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture/*, Texture::eOrientationNormal, selectColour*/);
 		}
 		else // No texture version
 		{
@@ -280,7 +280,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 	const char * lineEnd = "\n";
 	const char * tab = "\t";
 
-	// Can only write if 
+	// If this is a recursive call the output stream will be already set up
 	if (a_outputStream != NULL)
 	{
 		// Generate the correct tab amount
@@ -306,13 +306,21 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 
 		menuStream << tabs << "}" << lineEnd;
 
-		// Serialise any children of this child
-		Widget * nextChild = m_childWidget;
-		while (nextChild != NULL)
+		// Serialise any siblings of this element at this indentation level
+		Widget * next = m_nextWidget;
+		while (next != NULL)
 		{
-			nextChild->Serialise(a_outputStream, ++a_indentCount);
-			nextChild = nextChild->GetNext();
-		}	
+			next->Serialise(a_outputStream, a_indentCount);
+			next = next->GetNext();
+		}
+
+		// Serialise any children of this child
+		Widget * child = m_childWidget;
+		while (child != NULL)
+		{
+			child->Serialise(a_outputStream, ++a_indentCount);
+			child = child->GetChild();
+		}
 	}
 	else if (strlen(m_filePath) > 0)
 	{
@@ -327,12 +335,20 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuOutput << "{"		<< lineEnd;
 			menuOutput << tab		<< "name: "		<< m_name << lineEnd;
 			
-			// Write all children out
-			Widget * nextChild = m_childWidget;
-			while (nextChild != NULL)
+			// Write all the siblings out
+			Widget * next = m_nextWidget;
+			while (next != NULL)
 			{
-				nextChild->Serialise(&menuOutput, 1);
-				nextChild = nextChild->GetNext();
+				next->Serialise(&menuOutput, 1);
+				next = next->GetNext();
+			}
+
+			// Write all children out
+			Widget * child = m_childWidget;
+			while (child != NULL)
+			{
+				child->Serialise(&menuOutput, 1);
+				child = child->GetChild();
 			}
 
 			menuOutput << "}" << lineEnd;

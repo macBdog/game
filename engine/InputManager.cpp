@@ -4,19 +4,6 @@
 
 template<> InputManager * Singleton<InputManager>::s_instance = NULL;
 
-InputManager::InputManager()
-	: m_focus(true)
-	, m_fullScreen(false)
-	, m_mousePos(0.0f)
-{
-
-}
-
-InputManager::~InputManager()
-{
-	Shutdown();
-}
-
 bool InputManager::Startup(bool a_fullScreen)
 {
 	m_fullScreen = a_fullScreen;
@@ -183,6 +170,15 @@ bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 
 bool InputManager::ProcessKeyUp(SDLKey a_key)
 {
+	// Set convenience keys
+	m_lastKeyRelease = a_key;
+
+	// Process the global callbacks
+	if (m_alphaKeys.m_type == eInputTypeKeyUp)
+	{
+		m_alphaKeys.m_delegate.Execute(true);
+	}
+
 	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
@@ -211,6 +207,15 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 
 bool InputManager::ProcessKeyDown(SDLKey a_key)
 {
+	// Set convenience keys
+	m_lastKeyPress = a_key;
+
+	// Process the global callbacks
+	if (m_alphaKeys.m_type == eInputTypeKeyDown)
+	{
+		m_alphaKeys.m_delegate.Execute(true);
+	}
+
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
 	{

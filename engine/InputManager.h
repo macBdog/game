@@ -41,8 +41,14 @@ public:
 		eMouseButtonCount,
 	};
 
-	InputManager();
-	~InputManager();
+	InputManager() 
+		: m_focus(true)
+		, m_fullScreen(false)
+		, m_mousePos(0.0f)
+		, m_lastKeyPress(SDLK_CLEAR)
+		, m_lastKeyRelease(SDLK_CLEAR) {}
+
+	~InputManager() { Shutdown(); }
 
 	//\brief Startup will set the input manager with what state the app window is in
 	//\param a_fullScreen bool if the app window is being shown fullscreen
@@ -59,6 +65,10 @@ public:
 	//\brief Access for the mouse coords for any part in the engine
 	inline Vector2 GetMousePosAbsolute() const { return m_mousePos; }
 	Vector2 GetMousePosRelative();
+
+	//\brief Utility function to get the last key pressed or released
+	//\param a_keyPress if the last key to be pressed or released is required, optional
+	inline SDLKey GetLastKey(bool a_keyPress = true) { return a_keyPress ? m_lastKeyPress : m_lastKeyRelease; }
 
 	//\brief Register a function pointer to be called when the app receives a mouse event
 	//\param a_callback is the object that contains the member function to call back
@@ -102,6 +112,19 @@ public:
 		m_events.Insert(newInputNode);
 	}
 
+	//\brief Register a function pointer to be called when the app receives a keyboard for any alphanumeric key
+	//\param a_callback is the object that contains the member function to call back
+	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
+	template <typename TObj, typename TMethod>
+	void RegisterAlphaKeyCallback(TObj * a_callerObject, TMethod a_callback, eInputType a_type = eInputTypeKeyDown, bool a_oneShot = false)
+	{
+		// Set data for the new global event
+		m_alphaKeys.m_src.m_key = SDLK_CLEAR;
+		m_alphaKeys.m_type = a_type;
+		m_alphaKeys.m_oneShot = a_oneShot;
+		m_alphaKeys.m_delegate.SetCallback(a_callerObject, a_callback);
+	}
+
 private:
 
 	//\brief An input event can come from a number of sources but only one at once hence the union
@@ -114,6 +137,12 @@ private:
 	//\brief Storage for an input event and it's callback
 	struct InputEvent
 	{
+		InputEvent() 
+			: m_src(InputSource())
+			, m_delegate()
+			, m_type(eInputTypeNone)
+			, m_oneShot(false) {}
+
 		InputSource m_src;					// What event happened
 		Delegate<bool, bool> m_delegate;	// Pointer to object to call when it happens
 		eInputType	m_type;					// What type of event to respond to
@@ -145,10 +174,13 @@ private:
 	//\return true if at least one event was found
 	bool GetEvents(eInputType a_type, InputSource a_src, InputEventList & a_events_OUT);
 
+	InputEvent m_alphaKeys;		// Special input event to catch all keys being pressed
 	InputEventList m_events;	// List of events to match up to actions
 	bool m_focus;				// If the app currently has OS focus
 	bool m_fullScreen;			// If the app is fullscreen, input manager needs to handle focus
 	Vector2 m_mousePos;			// Cache of mouse coords for convenience
+	SDLKey m_lastKeyPress;		// Cache off last key for convenience
+	SDLKey m_lastKeyRelease;	// Cache off last key for convenience
 };
 
 #endif // _ENGINE_INPUT_MANAGER_
