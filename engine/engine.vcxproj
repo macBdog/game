@@ -83,6 +83,8 @@
     <ClInclude Include="Gui.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="ModelManager.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="StringHash.h" />
@@ -101,6 +103,8 @@
     <ClCompile Include="Gui.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ModelManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="StringUtils.cpp" />

@@ -471,8 +471,12 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 			else if (lastKey == SDLK_BACKSPACE)
 			{
 				// Delete a character off the end of the name
-				newName[strlen(newName) - 1] = '\0';
-				m_widgetToEdit->SetName(newName);
+				unsigned int nameLength = strlen(newName);
+				if (nameLength > 0)
+				{
+					newName[nameLength - 1] = '\0';
+					m_widgetToEdit->SetName(newName);
+				}
 			}
 			else // Some other alpha key, append to the name
 			{
