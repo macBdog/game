@@ -57,10 +57,13 @@ void Widget::Draw()
 			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
 		}
 
-		// Draw gui label on top of the widget
-		if (m_fontNameHash > 0)
+		// Draw gui label on top of the widget in editing mode
+		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
-			FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, batch);
+			if (m_fontNameHash > 0)
+			{
+				FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, batch);
+			}
 		}
 
 		// Draw any list items
