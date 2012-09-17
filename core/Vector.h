@@ -75,6 +75,8 @@ public:
 	Vector2 operator + (const Vector2 & a_val) const { return Vector2(x + a_val.x, y + a_val.y); }
 	Vector2 operator - (const Vector2 & a_val) const { return Vector2(x - a_val.x, y - a_val.y); }
 	Vector2 operator *= (const float & a_scale) const { return Vector2(x + x*a_scale, y + y*a_scale); }
+	void  operator += (const Vector2 a_val) { x += a_val.x; y += a_val.y; }
+	void  operator -= (const Vector2 a_val) { x -= a_val.x; y -= a_val.y; }
 
 protected:
 	float x, y;

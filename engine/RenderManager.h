@@ -2,10 +2,12 @@
 #define _ENGINE_RENDER_MANAGER_
 #pragma once
 
+#include "Model.h"
 #include "Singleton.h"
 #include "Texture.h"
 
 #include "../core/Colour.h"
+#include "../core/Matrix.h"
 #include "../core/Vector.h"
 
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
@@ -37,8 +39,7 @@ public:
 	};
 	
 	//\ No work done in the constructor, only Init
-	RenderManager() : m_lines(NULL)
-					, m_clearColour(sc_colourBlack)
+	RenderManager() : m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
 					, m_aspect(1.0f) {}
 	~RenderManager() { Shutdown(); }
@@ -63,14 +64,28 @@ public:
 	inline unsigned int GetViewDepth() { return m_bpp; }
 	inline float GetViewAspect() { return m_aspect; }
 
-	//\brief Drawing functions
-	void AddLine2D(Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+	//\brief Drawing functions for lines
+	//\param a_point1 is the start of the line
+	//\param a_point2 is the end of the line
+	//\a_tint is the colour to draw the line
+	void AddLine2D(eBatch a_batch, Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
 
 	//\brief Quad drawing function with manual texture coordinates
 	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+
+	//\brief 3D Drawing functions
+	void AddLine(eBatch a_batch, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
+	void AddTri(eBatch a_batch, Vector a_point1, Vector a_point2, Vector a_point3, 
+								TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3,
+								Texture * a_tex, Colour a_tint = sc_colourWhite);
+	
+	//\brief Add a 3D model for drawing
+	//\param a_batch is the rendering group to draw the model in
+	//\param a_mat is the position and orientation to draw the model at
+	void AddModel(eBatch a_batch, Model * a_model, const Matrix & a_mat);
 
 private:
 
@@ -83,6 +98,15 @@ private:
 		Colour m_colour;
 	};
 
+	//\brief Fixed size structure for queing render primitices
+	struct Tri
+	{
+		Vector m_verts[3];
+		TexCoord m_coords[3];
+		int m_textureId;
+		Colour m_colour;
+	};
+
 	//\brief Fixed size structure for queing render primitives
 	struct Quad
 	{
@@ -92,10 +116,12 @@ private:
 		Colour m_colour;
 	};
 
-	Quad * m_batch[eBatchCount];							// Pointer to a pool of memory for quads
-	Line * m_lines;											// Lines are a debug feature so they aren't divided into batches
-	unsigned int m_batchCount[eBatchCount];					// Number of primitives in each batch per frame
-	unsigned int m_lineCount;								// Number of lines per frame
+	Tri	 * m_tris[eBatchCount];								// Pointer to a pool of memory for tris
+	Quad * m_quads[eBatchCount];							// Pointer to a pool of memory for quads
+	Line * m_lines[eBatchCount];							// Lines for each batch
+	unsigned int m_triCount[eBatchCount];					// Number of tris per batch per frame
+	unsigned int m_quadCount[eBatchCount];					// Number of primitives in each batch per frame
+	unsigned int m_lineCount[eBatchCount];					// Number of lines per frame
 	unsigned int m_viewWidth;								// Cache of arguments passed to init
 	unsigned int m_viewHeight;								// Cache of arguments passed to init
 	unsigned int m_bpp;										// Cache of arguments passed to init

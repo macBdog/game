@@ -50,11 +50,28 @@ void Widget::Draw()
 		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
-			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture/*, Texture::eOrientationNormal, selectColour*/);
+			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture, Texture::eOrientationNormal, selectColour);
 		}
-		else // No texture version
+
+		// Draw fill colour for debug widgets
+		if (IsDebugWidget())
 		{
-			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, selectColour);
+			Colour fillColour = selectColour * 0.3f;
+			fillColour.SetA(0.95f);
+			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, fillColour);
+		}
+
+		// Draw widget bounds for editing mode or for debug widgets
+		if (DebugMenu::Get().IsDebugMenuEnabled() || IsDebugWidget())
+		{
+			Vector2 startVec = m_pos.GetVector();
+			Vector2 size = m_size.GetVector();
+			Vector2 endVec = Vector2(startVec.GetX() + m_size.GetX(), startVec.GetY());
+			rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, m_colour);
+			
+			startVec = endVec;	endVec -= Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, m_colour);
+			startVec = endVec;	endVec -= Vector2(m_size.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, m_colour);
+			startVec = endVec;	endVec += Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, m_colour);
 		}
 
 		// Draw gui label on top of the widget in editing mode
@@ -63,7 +80,7 @@ void Widget::Draw()
 			if (m_fontNameHash > 0)
 			{
 				FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, batch);
-			}
+			}	
 		}
 
 		// Draw any list items

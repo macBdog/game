@@ -551,8 +551,8 @@ void DebugMenu::Draw()
 	FontManager & fontMan = FontManager::Get();
 
 	// Draw gridlines
-	renMan.AddLine2D(Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
-	renMan.AddLine2D(Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
+	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
 	
 	// Show mouse pos at cursor
 	char mouseBuf[16];
@@ -564,9 +564,9 @@ void DebugMenu::Draw()
 	// Draw mouse cursor
 	for (int i = 0; i < 3; ++i)
 	{
-		renMan.AddLine2D(mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
+		renMan.AddLine2D(RenderManager::eBatchDebug, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
-	renMan.AddLine2D(mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+	renMan.AddLine2D(RenderManager::eBatchDebug, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)
