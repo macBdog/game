@@ -78,12 +78,15 @@ bool TextureManager::Update(float a_dt)
 			ManagedTexture * curTex = NULL;
 			while ( m_textureMap[i].GetNext(curTex) && curTex != NULL)
 			{
-				unsigned int curTimeStamp = FileManager::Get().GetFileTimeStamp(curTex->m_path);
-				if (curTimeStamp > curTex->m_timeStamp)
+				FileManager::Timestamp curTimeStamp;
+				if (FileManager::Get().GetFileTimeStamp(curTex->m_path, curTimeStamp))
 				{
-					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in %s, reloading.", curTex->m_path);
-					textureReloaded = curTex->m_texture.Load(curTex->m_path);
-					curTex->m_timeStamp = curTimeStamp;
+					if (curTimeStamp > curTex->m_timeStamp)
+					{
+						Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in %s, reloading.", curTex->m_path);
+						textureReloaded = curTex->m_texture.Load(curTex->m_path);
+						curTex->m_timeStamp = curTimeStamp;
+					}
 				}
 			}
 		}
@@ -122,7 +125,7 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 		// Insert the newly allocated texture
 		if (newTex->m_texture.Load(fileNameBuf))
 		{
-			newTex->m_timeStamp = FileManager::Get().GetFileTimeStamp(fileNameBuf);
+			FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
 			sprintf(newTex->m_path, "%s", fileNameBuf);
 			m_textureMap[a_cat].Insert(texId, newTex);
 			return &newTex->m_texture;

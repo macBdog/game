@@ -121,7 +121,7 @@ void FileManager::EmptyFileList(FileList & a_fileList_OUT)
 	}
 }
 
-unsigned int FileManager::GetFileTimeStamp(const char * a_path) const
+bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
 {
 	// Check there is actually a path supplied
 	if (a_path == NULL || !a_path[0])
@@ -137,11 +137,14 @@ unsigned int FileManager::GetFileTimeStamp(const char * a_path) const
 		SYSTEMTIME times, stLocal;
 		FileTimeToSystemTime(&lpFileInformation.ftLastWriteTime, &times);
 		SystemTimeToTzSpecificLocalTime(NULL, &times, &stLocal);
-		return stLocal.wDay*24*60*60 + stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;
+
+		a_timestamp_OUT.m_totalDays = stLocal.wYear*365 + stLocal.wMonth*12 + stLocal.wDay*31;
+		a_timestamp_OUT.m_totalSeconds = stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;
+		return true;
 	}
 	else
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "File modification date NOT retreived for: %s.", a_path);
-		return 0;
+		return false;
 	}
 }

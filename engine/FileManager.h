@@ -19,6 +19,18 @@ public:
 		bool m_isDir;
 	};
 
+	//\brief Info for storing a timestamp
+	struct Timestamp
+	{
+		Timestamp() : m_totalDays(0), m_totalSeconds(0) {}
+
+		unsigned int m_totalDays;
+		unsigned int m_totalSeconds;
+		
+		bool operator > (const Timestamp & a_val) { return m_totalDays > a_val.m_totalDays && m_totalSeconds > a_val.m_totalSeconds; }
+		bool operator < (const Timestamp & a_val) { return m_totalDays < a_val.m_totalDays && m_totalSeconds < a_val.m_totalSeconds; }
+	};
+
 	//\brief How to pass lists of file info around
 	typedef LinkedListNode<FileInfo> FileListNode;
 	typedef LinkedList<FileInfo> FileList;
@@ -42,8 +54,9 @@ public:
 
 	//\brief Utility function to return a file's time stamp, is RELATIVE to each day.
 	//\param a_path the path to the file to be interrogated
-	//\return an unsigned int equivalent to the file's last modification time, 0 for file not found
-	unsigned int GetFileTimeStamp(const char * a_path) const;
+	//\param an Timestamp ref which will be written with to the file's last modification time, 0 for file not found
+	//\return bool true if the file was found
+	bool GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const;
 
 private:
 	// TODO: The file manager should cache off a function pointer for anything calling for

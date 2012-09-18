@@ -57,12 +57,15 @@ bool ModelManager::Update(float a_dt)
 		ManagedModel * curModel = NULL;
 		while ( m_modelMap.GetNext(curModel) && curModel != NULL)
 		{
-			unsigned int curTimeStamp = FileManager::Get().GetFileTimeStamp(curModel->m_path);
-			if (curTimeStamp > curModel->m_timeStamp)
+			FileManager::Timestamp curTimestamp;
+			if (FileManager::Get().GetFileTimeStamp(curModel->m_path, curTimestamp))
 			{
-				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in model %s, reloading.", curModel->m_path);
-				modelReloaded = curModel->m_model.Load(curModel->m_path);
-				curModel->m_timeStamp = curTimeStamp;
+				if (curTimestamp > curModel->m_timeStamp)
+				{
+					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in model %s, reloading.", curModel->m_path);
+					modelReloaded = curModel->m_model.Load(curModel->m_path);
+					curModel->m_timeStamp = curTimestamp;
+				}
 			}
 		}
 		
@@ -99,7 +102,7 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	{
 		// Insert the newly allocated model
 		newModel->m_model.Load(fileNameBuf);
-		newModel->m_timeStamp = FileManager::Get().GetFileTimeStamp(fileNameBuf);
+		FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
 		sprintf(newModel->m_path, "%s", fileNameBuf);
 		m_modelMap.Insert(modelId, newModel);
 		return &newModel->m_model;

@@ -4,6 +4,7 @@
 #include "../core/HashMap.h"
 #include "../core/LinearAllocator.h"
 
+#include "FileManager.h"
 #include "Singleton.h"
 #include "StringHash.h"
 #include "StringUtils.h"
@@ -62,7 +63,7 @@ private:
 	struct ManagedModel
 	{
 		Model  m_model;											///< The actual model
-		unsigned int m_timeStamp;								///< Datestamp for checking a newer version
+		FileManager::Timestamp m_timeStamp;						///< Datestamp for checking a newer version
 		char m_path[StringUtils::s_maxCharsPerLine];			///< The full path for reloading
 	};
 
