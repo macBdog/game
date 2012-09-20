@@ -110,6 +110,7 @@ public:
 	Widget()
 		: m_fontNameHash(0)
 		, m_selectFlags(0)
+		, m_colour(sc_colourWhite)
 		, m_active(true)
 		, m_texture(NULL)
 		, m_nextWidget(NULL)

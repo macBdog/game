@@ -25,7 +25,12 @@ public:
 	Texture() : m_textureId(-1) {}
 
 	//\brief Load a TGA file into memory and store out the texture ID
-	bool Load(const char *a_tgaFilePath);
+	//\param a_tgaFilePath is a const pointer to a c string with the fully qualified path
+	//\param a_useLinearFilter is an optional, if set to false, textures will approximate by pixel
+	//\return bool true if the texture was loaded succesfullly
+	bool Load(const char *a_tgaFilePath, bool a_useLinearFilter = true);
+
+	//\brief Utility methods for texture member data for convenience
 	inline bool IsLoaded() { return m_textureId >= 0; }
 	inline unsigned int GetId() { return m_textureId; }
 	inline const char * GetFilePath() { return m_filePath; }

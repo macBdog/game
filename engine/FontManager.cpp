@@ -114,7 +114,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 			
 			// Load texture for font
 			sprintf(texturePath, "%s%s", m_fontPath, textureName);
-			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureManager::eCategoryGui);
+			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureManager::eCategoryGui, TextureManager::eTextureFilterLinear);
 			newFont->m_numChars = numChars;
 			newFont->m_sizeX = sizeW;
 			newFont->m_sizeY = sizeH;

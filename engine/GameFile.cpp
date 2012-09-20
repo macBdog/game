@@ -94,7 +94,6 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 			{
 				// Link up child objects as they are read
 
-
 				// Read the child object
 				lineCount += ReadObjectAndProperties(line, a_stream, currentObject);
 				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
@@ -105,9 +104,17 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 				// Break apart the property and parse for type
 				const char * propName = StringUtils::ExtractPropertyName(line, ":");
 				const char * propValue = StringUtils::ExtractValue(line, ":");
-				AddProperty(currentObject, propName, propValue);
-				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
-				lineCount++;
+				if (propName && propValue)
+				{
+					AddProperty(currentObject, propName, propValue);
+					a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+					lineCount++;
+				}
+				else
+				{
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, a property name and value at line %u.", lineCount);
+					return lineCount;
+				}
 			}
 		}
 		braceCount--;
@@ -115,6 +122,7 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 	else if (braceCount > 0) // Mismatched number of braces
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
+		return lineCount;
 	}
 
 	return lineCount;

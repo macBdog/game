@@ -19,7 +19,7 @@ static const char tgaHeader[] = {
 static const GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
 static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
-bool Texture::Load(const char *a_tgaFilePath)
+bool Texture::Load(const char *a_tgaFilePath, bool a_useLinearFilter)
 {
     int x, y, bpp;
     GLubyte *textureData;
@@ -69,8 +69,17 @@ bool Texture::Load(const char *a_tgaFilePath)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	if (a_useLinearFilter)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
     
     glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, x, y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
 

@@ -22,7 +22,7 @@ TextureManager::TextureManager(float a_updateFreq)
 {
 }
 
-bool TextureManager::Startup(const char * a_texturePath)
+bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTextureFilter)
 {
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
@@ -45,6 +45,9 @@ bool TextureManager::Startup(const char * a_texturePath)
 	// Cache off the texture path for non qualified loading of textures
 	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_texturePath, a_texturePath, strlen(a_texturePath));
+
+	// Set filtering rule
+	m_filterMode = a_useLinearTextureFilter ? eTextureFilterLinear : eTextureFilterNearest;
 
 	return true;
 }
@@ -94,7 +97,7 @@ bool TextureManager::Update(float a_dt)
 	}
 }
 
-Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_cat)
+Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_cat, eTextureFilter a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
@@ -122,8 +125,14 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	}
 	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(ManagedTexture)))
 	{
+		// If the filter is not specified, use the default
+		if (a_currentFilter == eTextureFilterInvalid)
+		{
+			a_currentFilter = m_filterMode;
+		}
+
 		// Insert the newly allocated texture
-		if (newTex->m_texture.Load(fileNameBuf))
+		if (newTex->m_texture.Load(fileNameBuf, a_currentFilter == eTextureFilterLinear))
 		{
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
 			sprintf(newTex->m_path, "%s", fileNameBuf);

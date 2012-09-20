@@ -10,8 +10,8 @@ using namespace std;	//< For fstream operations
 
 const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
-const Colour Widget::sc_editRolloverColour = Colour(0.55f, 0.05f, 0.25f, 0.25f);
-const Colour Widget::sc_editSelectedColour = Colour(1.0f, 0.0f, 0.25f, 0.25f);
+const Colour Widget::sc_editRolloverColour = Colour(0.05f, 0.2f, 0.2f, 0.2f);
+const Colour Widget::sc_editSelectedColour = Colour(0.15f, 0.35f, 0.35f, 0.35f);
 
 Widget::~Widget()
 {
@@ -87,21 +87,21 @@ void Widget::Draw()
 		const float fontDisplaySize = 0.07f;
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
 		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		Vector2 itemDisplayPos(listDisplayPos);
 		unsigned int numItems = 0;
 		while(nextItem != NULL)
 		{
 			// If this is the selected item then draw the highlight bar behind the item
 			if (numItems == m_selectedListItemId)
 			{
-				Vector2 hLightPos = listDisplayPos;
-				hLightPos.SetY(hLightPos.GetY() + fontDisplaySize * numItems);
-				Vector2 hLightSize = Vector2(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
-				rMan.AddQuad2D(batch, hLightPos, hLightSize, NULL, Texture::eOrientationNormal, selectColour + sc_rolloverColour);
+				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
+				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
+				rMan.AddQuad2D(batch, hLightPos, hLightSize, NULL, Texture::eOrientationNormal, selectColour - sc_rolloverColour);
 			}
 
 			// Now draw the item text
-			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 1.0f, listDisplayPos, m_colour, batch);
-			listDisplayPos.SetY(listDisplayPos.GetY() - fontDisplaySize);
+			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 1.0f, itemDisplayPos, m_colour, batch);
+			itemDisplayPos.SetY(itemDisplayPos.GetY() - fontDisplaySize);
 
 			nextItem = nextItem->GetNext();
 			++numItems;
@@ -161,6 +161,29 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 			m_selection != eSelectionEditSelected)
 		{
 			m_selection = eSelectionNone;
+		}
+	}
+
+	// Update selection of list items
+	if (m_selection > eSelectionNone)
+	{
+		const float fontDisplaySize = 0.07f;
+		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		unsigned int numItems = 0;
+		while(nextItem != NULL)
+		{
+			Vector2 testPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
+			Vector2 testSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
+			if (a_pos.GetX() >= testPos.GetX() && a_pos.GetX() <= testPos.GetX() + testSize.GetX() && 
+				a_pos.GetY() <= testPos.GetY() && a_pos.GetY() >= testPos.GetY() - testSize.GetY())
+			{
+				m_selectedListItemId = numItems;
+				break;
+			}
+
+			nextItem = nextItem->GetNext();
+			numItems++;
 		}
 	}
 
