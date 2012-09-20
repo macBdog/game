@@ -3,6 +3,7 @@
 #include "FontManager.h"
 #include "InputManager.h"
 #include "Log.h"
+#include "ModelManager.h"
 #include "RenderManager.h"
 #include "TextureManager.h"
 #include "Widget.h"
@@ -334,11 +335,11 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				if (m_gameObjectToEdit == NULL) { break; }
 
 				// Setting a texture on a game object
-				if (m_editMode == eEditModeTexture)
+				if (m_editMode == eEditModeModel)
 				{
-					char tgaBuf[StringUtils::s_maxCharsPerLine];
-					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
-					m_gameObjectToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryWorld));
+					char objBuf[StringUtils::s_maxCharsPerLine];
+					sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
+					m_gameObjectToEdit->SetModel(ModelManager::Get().GetModel(objBuf));
 					WorldManager::Get().GetCurrentScene()->Serialise();
 				}
 				break;

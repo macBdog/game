@@ -84,6 +84,7 @@ private:
 		eEditModeShape,			///< Widget bottom right stuck to mouse pos
 		eEditModeTexture,		///< File selection dialog active
 		eEditModeName,			///< Cursor keys bound to display name
+		eEditModeModel,			///< Setting the model for an object
 
 		eEditModeCount,
 	};

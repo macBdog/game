@@ -100,6 +100,7 @@
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GameFile.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Gui.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Log.cpp" />

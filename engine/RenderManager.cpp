@@ -412,3 +412,8 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 	t->m_coords[1] = a_txc2;
 	t->m_coords[2] = a_txc3;
 }
+
+void RenderManager::AddModel(eBatch a_batch, Model * a_model, const Matrix & a_mat)
+{
+	// TODO
+}
