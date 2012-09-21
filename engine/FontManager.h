@@ -38,7 +38,7 @@ public:
 	bool DrawString(const char * a_string, unsigned int a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
 	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
 	bool DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite);
-	bool DrawString3D(const char * a_string, const char * a_fontName, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
+	bool DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 
 	//brief Get the symbol for a loaded font name
 	StringHash * GetLoadedFontName(const char * a_fontName);

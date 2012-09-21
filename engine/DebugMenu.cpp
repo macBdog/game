@@ -33,8 +33,7 @@ DebugMenu::DebugMenu()
 , m_btnCreateRoot(NULL)
 , m_btnCancel(NULL)
 , m_btnCreateWidget(NULL)
-, m_btnCreateGameObject2D(NULL)
-, m_btnCreateGameObject3D(NULL)
+, m_btnCreateGameObject(NULL)
 , m_btnCreateGameObjectFromTemplate(NULL)
 , m_btnCreateGameObjectNew(NULL)
 , m_btnChangeRoot(NULL)
@@ -62,8 +61,7 @@ bool DebugMenu::Startup()
 	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
 	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
 	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
-	m_btnCreateGameObject2D = CreateButton("2D Object", sc_colourGreen, m_btnCreateRoot);
-	m_btnCreateGameObject3D = CreateButton("3D Object", sc_colourBlue, m_btnCreateRoot);
+	m_btnCreateGameObject = CreateButton("Game Object", sc_colourGreen, m_btnCreateRoot);
 	m_btnCreateGameObjectFromTemplate = CreateButton("From Template", sc_colourOrange, m_btnCreateRoot);
 	m_btnCreateGameObjectNew = CreateButton("New Object", sc_colourSkyBlue, m_btnCreateRoot);
 
@@ -169,13 +167,10 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		WidgetVector height = m_btnCreateRoot->GetSize();
 		height.SetX(0.0f);
 		m_btnCreateWidget->SetPos(right);
-		m_btnCreateGameObject2D->SetPos(right - height);
+		m_btnCreateGameObject->SetPos(right - height);
 
 		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
-		m_btnCreateGameObject2D->SetPos(right + height);
-
-		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY());
-		m_btnCreateGameObject3D->SetPos(right + height);
+		m_btnCreateGameObject->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY());
 		m_btnCancel->SetPos(right + height);
@@ -203,54 +198,38 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		ShowCreateMenu(false);
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnCreateGameObject2D)
+	else if (a_widget == m_btnCreateGameObject)
 	{
 		// Position the create object submenu buttons
-		WidgetVector right = m_btnCreateGameObject2D->GetPos() + WidgetVector(m_btnCreateGameObject2D->GetSize().GetX(), -m_btnCreateGameObject2D->GetSize().GetY());
-		WidgetVector height = m_btnCreateGameObject2D->GetSize();
+		WidgetVector right = m_btnCreateGameObject->GetPos() + WidgetVector(m_btnCreateGameObject->GetSize().GetX(), -m_btnCreateGameObject->GetSize().GetY());
+		WidgetVector height = m_btnCreateGameObject->GetSize();
 		height.SetX(0.0f);
 		m_btnCreateGameObjectFromTemplate->SetPos(right);
 		m_btnCreateGameObjectNew->SetPos(right + height);
 
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCreateGameObject3D)
-	{
-		// Position the create object submenu buttons
-		WidgetVector right = m_btnCreateGameObject3D->GetPos() + WidgetVector(m_btnCreateGameObject3D->GetSize().GetX(), -m_btnCreateGameObject3D->GetSize().GetY());
-		WidgetVector height = m_btnCreateGameObject3D->GetSize();
-		height.SetX(0.0f);
-		m_btnCreateGameObjectFromTemplate->SetPos(right);
-		m_btnCreateGameObjectNew->SetPos(right + height);
-
-		m_btnCreateGameObjectFromTemplate->SetActive(true);
-		m_btnCreateGameObjectNew->SetActive(true);
-
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnCreateGameObjectFromTemplate)
 	{
-		ShowCreateMenu(false);
-		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "*.tmp");
+		m_editType = eEditTypeGameObject;
+		m_editMode = eEditModeTemplate;
+		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "tmp");
 
+		ShowCreateMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnCreateGameObjectNew)
 	{
-		// Create a 2D game object
-		if (m_btnCreateGameObject2D->IsActive())
-		{
-			WorldManager::Get().CreateObject();
-		}
-		// Create a 3D game object
-		else if (m_btnCreateGameObject3D->IsActive())
+		// Create a game object
+		if (m_btnCreateGameObject->IsActive())
 		{
 			WorldManager::Get().CreateObject();
 		}
 		// Or a script object with no representation?
 		
+		ShowCreateMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnCancel)
@@ -331,16 +310,28 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 			}
 			case eEditTypeGameObject:
 			{
+				WorldManager & worldMan = WorldManager::Get();
+				if (m_editMode == eEditModeTemplate)
+				{
+					// Delete the old object
+					if (m_gameObjectToEdit)
+					{
+						worldMan.RemoveObject(m_gameObjectToEdit->GetId());
+					}
+					worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem());
+					worldMan.GetCurrentScene()->Serialise();
+				}
+
 				// Early out for no object
 				if (m_gameObjectToEdit == NULL) { break; }
 
-				// Setting a texture on a game object
+				// Setting a model on a game object
 				if (m_editMode == eEditModeModel)
 				{
 					char objBuf[StringUtils::s_maxCharsPerLine];
 					sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
 					m_gameObjectToEdit->SetModel(ModelManager::Get().GetModel(objBuf));
-					WorldManager::Get().GetCurrentScene()->Serialise();
+					worldMan.GetCurrentScene()->Serialise();
 				}
 				break;
 			}
@@ -595,16 +586,14 @@ void DebugMenu::ShowCreateMenu(bool a_show)
 		m_btnCreateRoot->SetActive(a_show);
 		m_btnCancel->SetActive(a_show);
 		m_btnCreateWidget->SetActive(a_show);
-		m_btnCreateGameObject2D->SetActive(a_show);
-		m_btnCreateGameObject3D->SetActive(a_show);
+		m_btnCreateGameObject->SetActive(a_show);
 	}
 	else // Hide everything
 	{
 		m_btnCreateRoot->SetActive(a_show);
 		m_btnCancel->SetActive(a_show);
 		m_btnCreateWidget->SetActive(a_show);
-		m_btnCreateGameObject2D->SetActive(a_show);
-		m_btnCreateGameObject3D->SetActive(a_show);
+		m_btnCreateGameObject->SetActive(a_show);
 		m_btnCreateGameObjectFromTemplate->SetActive(a_show);
 		m_btnCreateGameObjectNew->SetActive(a_show);
 	}

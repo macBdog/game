@@ -85,6 +85,7 @@ private:
 		eEditModeTexture,		///< File selection dialog active
 		eEditModeName,			///< Cursor keys bound to display name
 		eEditModeModel,			///< Setting the model for an object
+		eEditModeTemplate,		///< Create an object from a template
 
 		eEditModeCount,
 	};
@@ -119,8 +120,7 @@ private:
 
 	Widget * m_btnCreateRoot;						///< Pointer to a widget that we create on startup with all other buttons as children
 		Widget * m_btnCreateWidget;
-		Widget * m_btnCreateGameObject2D;
-		Widget * m_btnCreateGameObject3D;
+		Widget * m_btnCreateGameObject;
 			Widget * m_btnCreateGameObjectFromTemplate;
 			Widget * m_btnCreateGameObjectNew;
 

@@ -137,15 +137,15 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 
 	// Get properties from the file that correspond to widget definitions
 	Widget::WidgetDef defFromFile;
-	if (GameFile::Property * size = a_widgetFile->GetProperty("size"))
+	if (GameFile::Property * size = a_widgetFile->FindProperty("size"))
 	{
 		defFromFile.m_size = size->GetVector2();
 	}
-	if (GameFile::Property * pos = a_widgetFile->GetProperty("pos"))
+	if (GameFile::Property * pos = a_widgetFile->FindProperty("pos"))
 	{
 		defFromFile.m_pos = pos->GetVector2();
 	}
-	if (GameFile::Property * fontName = a_widgetFile->GetProperty("font"))
+	if (GameFile::Property * fontName = a_widgetFile->FindProperty("font"))
 	{
 		defFromFile.m_fontNameHash = StringHash::GenerateCRC(fontName->GetString());
 	}
@@ -158,11 +158,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	if (Widget * newWidget = CreateWidget(defFromFile, a_parent, a_startActive))
 	{
 		// Apply properties not set during creation
-		if (GameFile::Property * name = a_widgetFile->GetProperty("name"))
+		if (GameFile::Property * name = a_widgetFile->FindProperty("name"))
 		{
 			newWidget->SetName(name->GetString());
 		}
-		if (GameFile::Property * texture = a_widgetFile->GetProperty("texture"))
+		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
 			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureManager::eCategoryGui))
 			{
@@ -281,9 +281,9 @@ bool Gui::LoadMenu(const char * a_menuFile)
 	if (menuFile->Load(a_menuFile))
 	{
 		// Create a new widget and copy properties from file
-		if (GameFile::Object * menuObject = menuFile->GetObject("menu"))
+		if (GameFile::Object * menuObject = menuFile->FindObject("menu"))
 		{
-			if (GameFile::Property * nameProp = menuFile->GetProperty(menuObject, "name"))
+			if (GameFile::Property * nameProp = menuFile->FindProperty(menuObject, "name"))
 			{
 				Widget * parentMenu = new Widget();
 				parentMenu->SetName(menuFile->GetString("menu", "name"));

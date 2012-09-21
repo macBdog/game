@@ -417,3 +417,11 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, const Matrix & a_m
 {
 	// TODO
 }
+
+void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)
+{
+	Vector startPos = a_mat.GetPos();
+	AddLine(a_batch, startPos, a_mat.GetRight(), sc_colourRed);		// Red for X right axis left right
+	AddLine(a_batch, startPos, a_mat.GetLook(), sc_colourGreen);	// Green for Y axis look
+	AddLine(a_batch, startPos, a_mat.GetUp(), sc_colourBlue);		// Blue for Z axis up
+}

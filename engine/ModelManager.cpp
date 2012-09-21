@@ -101,11 +101,19 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	else if (ManagedModel * newModel = m_modelPool.Allocate(sizeof(ManagedModel)))
 	{
 		// Insert the newly allocated model
-		newModel->m_model.Load(fileNameBuf);
-		FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
-		sprintf(newModel->m_path, "%s", fileNameBuf);
-		m_modelMap.Insert(modelId, newModel);
-		return &newModel->m_model;
+		if (newModel->m_model.Load(fileNameBuf))
+		{
+			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
+			sprintf(newModel->m_path, "%s", fileNameBuf);
+			m_modelMap.Insert(modelId, newModel);
+			return &newModel->m_model;
+		}
+		else
+		{
+			delete newModel;
+			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model load failed for %s", fileNameBuf);
+			return NULL;
+		}
 	}
 	else // Report the error
 	{

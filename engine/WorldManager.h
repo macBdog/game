@@ -1,13 +1,10 @@
 #ifndef _ENGINE_WORLD_MANAGER_H_
 #define _ENGINE_WORLD_MANAGER_H_
 
-#include "../core/HashMap.h"
-#include "../core/LinearAllocator.h"
 #include "../core/LinkedList.h"
 
 #include "GameObject.h"
 #include "Singleton.h"
-#include "StringHash.h"
 #include "StringUtils.h"
 
 //\brief A scene is a subset of a world, containing objects that are fixed and floating
@@ -21,7 +18,7 @@ public:
 
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
-	GameObject * GetObject(unsigned int a_objectId);
+	GameObject * GetSceneObject(unsigned int a_objectId);
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);
@@ -72,10 +69,13 @@ public:
 	//\return A pointer to the newly created game object of NULL for failure
 	GameObject * CreateObject(const char * a_templatePath = NULL);
 
+	//\brief Remove a created object from the world, will not be destroyed right away
+	bool RemoveObject(unsigned int a_objectId) { return false; }
+
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object
 	//\return Pointer to a game object in the world
-	GameObject * GetObject(unsigned int a_objectId);
+	GameObject * GetGameObject(unsigned int a_objectId);
 
 	//\brief Reload an object...
 

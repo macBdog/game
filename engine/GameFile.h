@@ -101,9 +101,9 @@ public:
 			, m_next(NULL) { }
 
 		//\brief Direct accessor for property data for convenience
-		Property * GetProperty(const char * a_propertyName)
+		Property * FindProperty(const char * a_propertyName)
 		{
-			return GameFile::GetProperty(this, a_propertyName);
+			return GameFile::FindProperty(this, a_propertyName);
 		}
 
 		StringHash m_name;					// Literal declared before the open brace
@@ -114,6 +114,7 @@ public:
 
 	//\ No work done in the constructor, only Init
 	GameFile() {};
+	GameFile(const char * a_filePath) { Load(a_filePath); }
 	~GameFile() { Unload(); }
 
 	//\brief Load the game file and parse it into data
@@ -136,13 +137,19 @@ public:
 	Object * AddObject(const char * a_objectName, Object * a_parent = NULL);
 
 	//\brief Add a property with a parent object
+	//\param a_parentObject is a pointer to another Object of the same file that will be linked to the new property
+	//\param a_propertyName is a pointer to a cstring containing the name of the property to add
+	//\param a_value is the string version of the value to add, other data types will be cast from string
+	//\return A pointer to the property that was added or NULL if the operation was unsuccesfull
 	Property * AddProperty(GameFile::Object * a_parentObject, const char * a_propertyName, const char * a_value);
 
 	//\brief Helper function to find an object by name
-	Object * GetObject(const char * a_name);
+	//\param a_name is the pointer to a c string of the name
+	//\return A pointer to the object data or NULL if there was no object found by name
+	Object * FindObject(const char * a_name);
 
 	//brief Static helper function to find a property of an object, can be used at the file or object level
-	static Property * GetProperty(Object * a_parent, const char * a_propertyName);
+	static Property * FindProperty(Object * a_parent, const char * a_propertyName);
 
 private:
 
@@ -157,8 +164,8 @@ private:
 		return !strstr(a_line, "{") && !strstr(a_line, "}") && !strstr(a_line, ":") && strlen(a_line) > 0;
 	}
 
-	LinkedList<Object> m_objects;							// All the objects in this file
-	char m_filePath[StringUtils::s_maxCharsPerLine];		// Cache off the filepath so the file can be reloaded
+	LinkedList<Object> m_objects;							///< All the objects in this file
+	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Cache off the filepath so the file can be reloaded
 };
 
 #endif // _ENGINE_GAME_FILE

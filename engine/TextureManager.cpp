@@ -139,10 +139,16 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 			m_textureMap[a_cat].Insert(texId, newTex);
 			return &newTex->m_texture;
 		}
+		else
+		{
+			delete newTex;
+			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture load failed for %s", fileNameBuf);
+			return NULL;
+		}
 	}
 	else // Report the error
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture allocation failed for %s, fileNameBuf");
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture allocation failed for %s", fileNameBuf);
 		return NULL;
 	}
    return NULL;

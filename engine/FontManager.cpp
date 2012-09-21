@@ -228,6 +228,22 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	return false;
 }
 
+bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour)
+{
+	// Use the first loaded font as the debug font
+	if (m_fonts.GetLength() > 0)
+	{
+		Vector2 pos(a_pos.GetX(), a_pos.GetY());
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, pos, a_colour, RenderManager::eBatchDebug);
+	}
+	else // Not fonts loaded
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw 3D message on the screen.", false);
+	}
+
+	return false;
+}
+
 StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
 {
 	FontListNode * curFont = m_fonts.GetHead();

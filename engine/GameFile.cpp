@@ -159,10 +159,10 @@ void GameFile::Unload()
 const char * GameFile::GetString(const char * a_object, const char * a_property)
 {
 	// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			return prop->GetString();
 		}
@@ -173,10 +173,10 @@ const char * GameFile::GetString(const char * a_object, const char * a_property)
 int GameFile::GetInt(const char * a_object, const char * a_property)
 {
 	// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			return prop->GetInt();
 		}
@@ -187,10 +187,10 @@ int GameFile::GetInt(const char * a_object, const char * a_property)
 float GameFile::GetFloat(const char * a_object, const char * a_property)
 {
 		// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			return prop->GetFloat();
 		}
@@ -201,10 +201,10 @@ float GameFile::GetFloat(const char * a_object, const char * a_property)
 bool GameFile::GetBool(const char * a_object, const char * a_property)
 {
 	// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			return prop->GetBool();
 		}
@@ -215,10 +215,10 @@ bool GameFile::GetBool(const char * a_object, const char * a_property)
 bool GameFile::GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT)
 {
 	// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			a_vec_OUT = prop->GetVector();
 			return true;
@@ -230,10 +230,10 @@ bool GameFile::GetVector(const char * a_object, const char * a_property, Vector 
 bool GameFile::GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT)
 {
 	// First find the object
-	if (Object * parentObject = GetObject(a_object))
+	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property
-		if (Property * prop = GetProperty(parentObject, a_property))
+		if (Property * prop = FindProperty(parentObject, a_property))
 		{
 			a_vec_OUT = prop->GetVector2();
 			return true;
@@ -287,7 +287,7 @@ GameFile::Property * GameFile::AddProperty(GameFile::Object * a_parentObject, co
 	return newProperty->GetData();
 }
 
-GameFile::Object * GameFile::GetObject(const char * a_name)
+GameFile::Object * GameFile::FindObject(const char * a_name)
 {
 	// Iterate through all objects in this file looking for a name match
 	LinkedListNode<Object> * cur = m_objects.GetHead();
@@ -304,7 +304,7 @@ GameFile::Object * GameFile::GetObject(const char * a_name)
 	return NULL;
 }
 
-GameFile::Property * GameFile::GetProperty(Object * a_parent, const char * a_propertyName)
+GameFile::Property * GameFile::FindProperty(Object * a_parent, const char * a_propertyName)
 {
 	// Iterate through all objects in the parent's property list till a name match is found
 	LinkedListNode<Property> * cur = a_parent->m_properties.GetHead();

@@ -18,10 +18,10 @@ public:
 	inline void SetLook(Vector a_look,		float a_w = 0.0f) { look = a_look; lookW = a_w;}
 	inline void SetUp(Vector a_up,			float a_w = 0.0f) { up = a_up; upW = a_w;}
 	inline void SetPos(Vector a_pos,		float a_w = 1.0f) { pos = a_pos; posW = a_w;}
-	inline Vector GetRight()	{ return right; }
-	inline Vector GetLook()		{ return look; }
-	inline Vector GetUp()		{ return up; }
-	inline Vector GetPos()		{ return pos; }
+	inline Vector GetRight() const	{ return right; }
+	inline Vector GetLook()	const	{ return look; }
+	inline Vector GetUp() const		{ return up; }
+	inline Vector GetPos() const	{ return pos; }
 	static const Matrix Identity() 
 	{ 
 		float vals[16] = {	1.0f, 0.0f, 0.0f, 0.0f,

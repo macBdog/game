@@ -1,4 +1,5 @@
 #include "DebugMenu.h"
+#include "FontManager.h"
 #include "RenderManager.h"
 
 #include "GameObject.h"
@@ -20,12 +21,17 @@ bool GameObject::Draw()
 	{
 		// Normal mesh rendering
 		RenderManager & rMan = RenderManager::Get();
-		rMan.AddModel(RenderManager::eBatchWorld, m_model, m_worldMat);
+
+		if (m_model != NULL)
+		{
+			rMan.AddModel(RenderManager::eBatchWorld, m_model, m_worldMat);
+		}
 		
 		// Draw the object's controller over the top
 		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
-			//rMan.AddMatrix(m_worldMat);
+			rMan.AddMatrix(RenderManager::eBatchWorld, m_worldMat);
+			FontManager::Get().DrawDebugString3D(m_name, 1.0f, m_worldMat.GetPos());
 		}
 
 		return true;

@@ -86,6 +86,9 @@ public:
 	//\param a_batch is the rendering group to draw the model in
 	//\param a_mat is the position and orientation to draw the model at
 	void AddModel(eBatch a_batch, Model * a_model, const Matrix & a_mat);
+	
+	//\brief A matrix is position and orientation displayed with lines
+	void AddMatrix(eBatch a_batch, const Matrix & a_mat);
 
 private:
 

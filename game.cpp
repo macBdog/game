@@ -11,6 +11,7 @@
 #include "engine/Gui.h"
 #include "engine/InputManager.h"
 #include "engine/Log.h"
+#include "engine/ModelManager.h"
 #include "engine/RenderManager.h"
 #include "engine/StringUtils.h"
 #include "engine/TextureManager.h"
@@ -32,8 +33,12 @@ int main(int argc, char *argv[])
 	}
 
 	// Read the main config file to setup video etc
-	GameFile * configFile = new GameFile();
-	configFile->Load(configFilePath);
+	GameFile configFile(configFilePath);
+	if (!configFile.IsLoaded())
+	{
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load the main configuration file at %s", configFilePath);
+		return 1;
+	}
 
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -73,16 +78,16 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
 	// Set fullscreen from config
-	bool fullScreen = configFile->GetBool("config", "fullscreen");
+	bool fullScreen = configFile.GetBool("config", "fullscreen");
 	if (fullScreen)
 	{
 		videoFlags |= SDL_FULLSCREEN;
 	}
 
 	// Create a new window
-	int width = configFile->GetInt("config", "width");
-	int height = configFile->GetInt("config", "height");
-	int bpp = configFile->GetInt("config", "bpp");
+	int width = configFile.GetInt("config", "width");
+	int height = configFile.GetInt("config", "height");
+	int bpp = configFile.GetInt("config", "bpp");
     SDL_Surface* screen = SDL_SetVideoMode(width, height, bpp, videoFlags);
     if ( !screen )
     {
@@ -97,11 +102,12 @@ int main(int argc, char *argv[])
 	// Subsystem startup
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
-	TextureManager::Get().Startup(configFile->GetString("config", "texturePath"), configFile->GetBool("render", "textureFilter"));
-	FontManager::Get().Startup(configFile->GetString("config", "fontPath"));
-	Gui::Get().Startup(configFile->GetString("config", "guiPath"));
+	TextureManager::Get().Startup(configFile.GetString("config", "texturePath"), configFile.GetBool("render", "textureFilter"));
+	FontManager::Get().Startup(configFile.GetString("config", "fontPath"));
+	Gui::Get().Startup(configFile.GetString("config", "guiPath"));
 	InputManager::Get().Startup(fullScreen);
-	WorldManager::Get().Startup(configFile->GetString("config", "templatePath"));
+	ModelManager::Get().Startup(configFile.GetString("config", "modelPath"));
+	WorldManager::Get().Startup(configFile.GetString("config", "templatePath"));
 
     // Game main loop
 	unsigned int lastFrameTime = 0;

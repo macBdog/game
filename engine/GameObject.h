@@ -38,6 +38,7 @@ public:
 		, m_model(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
+		, m_worldMat(Matrix::Identity())
 		{ }
 
 	~GameObject() { Destroy(); }
@@ -60,13 +61,15 @@ public:
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	//inline void SetScript(Script * a_newScript) { m_script = a_newScript; }
+	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
+	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetPos(Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 
 private:
 
 	//\brief Destruction is private as it should only be handled by object management
 	void Destroy();
 
-	Matrix				  m_worldMat;		///< Position and orientation in the world
 	unsigned int		  m_id;				///< Unique identifier, objects can be resolved from ids
 	GameObject *		  m_child;			///< Pointer to first child game obhject
 	GameObject *		  m_next;			///< Pointer to sibling game objects
@@ -76,6 +79,7 @@ private:
 	eGameObjectState	  m_state;			///< What state the object is in
 	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every creature needs a name
 	float				  m_lifeTime;		///< How long this guy has been active
+	Matrix				  m_worldMat;		///< Position and orientation in the world
 
 };
 
