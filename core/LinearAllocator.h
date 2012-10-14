@@ -67,6 +67,15 @@ public:
 		}
 	}
 
+	//\brief Unallocate everything and ready for use again, memory is not freed
+	inline void Reset()
+	{
+		if (m_memory != NULL)
+		{
+			m_memoryEnd = m_memory;
+		}
+	}
+
 	//\brief Allocate a block from the contiguous memory and advance the offset
 	//\param a_allocationSizeBytes how much memory is being allocated
 	//\return a pointer to the allocated memory

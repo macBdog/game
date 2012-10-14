@@ -151,7 +151,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	}
 	else // No font name supplied, use debug
 	{
-		defFromFile.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+		// Check for a loaded debug font
+		if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
+		{
+			defFromFile.m_fontNameHash = debugFont->GetHash();
+		}
 	}
 	
 	// Create the widget

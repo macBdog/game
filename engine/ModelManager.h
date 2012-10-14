@@ -52,10 +52,16 @@ public:
 	//\brief Get the fully qualified model path
 	//\return A pointer to a c string containing the model path
 	inline const char * GetModelPath() { return m_modelPath; }
+
+	//\brief While a model is loading, it stores data in these memory pools temporarily
+	static const unsigned int s_loadingVertPoolSize;			///< The maximum number of verts that could be loaded from model file
+	static const unsigned int s_loadingNormalPoolSize;			///< The maximum number of normals that could be loaded from a model file
+	static const unsigned int s_loadingUvPoolSize;				///< The maximum number of tex coords that could be loaded from a model file
 	
 private:
 
 	static const unsigned int s_modelPoolSize;					///< How much memory is assigned for each category
+
 	static const float s_updateFreq;							///< How often the model manager should check for updates
 
 	//\brief A managed model contains the actual model data as well as extra information
@@ -70,6 +76,11 @@ private:
 	typedef HashMap<unsigned int, ManagedModel *> modelMap;
 
 	LinearAllocator<ManagedModel> m_modelPool;					///< Memory pool for each model category
+	
+	LinearAllocator<Vector> m_loadingVertPool;					///< Temporary pool of vectors used when reading a model file
+	LinearAllocator<Vector> m_loadingNormalPool;				///< Temporary pool of normals used when reading a model file
+	LinearAllocator<TexCoord> m_loadingUvPool;					///< Temporary pool of tex corrds used when reading a model file
+
 	modelMap m_modelMap;										///< List of models for each category
 	char m_modelPath[StringUtils::s_maxCharsPerLine];			///< Cache off model path 
 	float m_updateFreq;											///< How often the model manager should check for changes

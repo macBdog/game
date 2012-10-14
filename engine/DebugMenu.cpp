@@ -77,7 +77,13 @@ bool DebugMenu::Startup()
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.95f, 1.5f);
-	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+
+	// Check for a loaded debug font
+	if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
+	{
+		curItem.m_fontNameHash = debugFont->GetHash();
+	}
+
 	curItem.m_selectFlags = Widget::eSelectionNone;
 	curItem.m_colour = sc_colourBlue;
 	curItem.m_name = "Resource Select";
@@ -184,7 +190,13 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		Widget::WidgetDef curItem;
 		curItem.m_colour = sc_colourWhite;
 		curItem.m_size = WidgetVector(0.35f, 0.35f);
-		curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
+	
+		// Check for a loaded debug font
+		if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
+		{
+			curItem.m_fontNameHash = debugFont->GetHash();
+		}
+
 		curItem.m_selectFlags = Widget::eSelectionRollover;
 		curItem.m_name = "NEW_WIDGET";
 
@@ -566,11 +578,16 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 	// All debug menu elements are created roughly equal
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
-	curItem.m_fontNameHash = FontManager::Get().GetLoadedFontName("Arial")->GetHash();
 	curItem.m_selectFlags = Widget::eSelectionRollover;
 	curItem.m_colour = a_colour;
 	curItem.m_name = a_name;
-	
+
+	// Check for a loaded debug font
+	if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
+	{
+		curItem.m_fontNameHash = debugFont->GetHash();
+	}
+
 	Widget * newWidget = Gui::Get().CreateWidget(curItem, a_parent, false);
 	newWidget->SetDebugWidget();
 	newWidget->SetAction(this, &DebugMenu::OnMenuItemMouseUp);

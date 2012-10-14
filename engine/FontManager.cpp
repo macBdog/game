@@ -222,7 +222,7 @@ bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a
 	}
 	else // Not fonts loaded
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw error message on the screen.", false);
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw error message on the screen.", false);
 	}
 
 	return false;
@@ -238,7 +238,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	}
 	else // Not fonts loaded
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw 3D message on the screen.", false);
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw 3D message on the screen.", false);
 	}
 
 	return false;
@@ -256,4 +256,18 @@ StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
 	}
 
 	return NULL;
+}
+
+StringHash * FontManager::GetDebugFontName()
+{
+	if (m_fonts.GetLength() > 0)
+	{
+		return &m_fonts.GetHead()->GetData()->m_fontName;
+	}
+	else // No fonts loaded
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot find a debug font to draw with! Only hope now is reading stdout!");
+		return NULL;
+	}
+	
 }

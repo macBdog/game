@@ -5,7 +5,10 @@
 
 template<> ModelManager * Singleton<ModelManager>::s_instance = NULL;
 
-const unsigned int ModelManager::s_modelPoolSize = 65536;		// 64 meg for models
+const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64 meg for all models
+const unsigned int ModelManager::s_loadingVertPoolSize = 32768;		// 32 meg for temporary loading of model vertices
+const unsigned int ModelManager::s_loadingNormalPoolSize = 32768;	// 32 meg for temporary loading of model normals
+const unsigned int ModelManager::s_loadingUvPoolSize = 32768;		// 32 meg for temporary loading texture coords
 
 const float ModelManager::s_updateFreq = 1.0f;
 
@@ -22,6 +25,11 @@ bool ModelManager::Startup(const char * a_modelPath)
 
 	// Init model memory pool
 	m_modelPool.Init(s_modelPoolSize);
+
+	// Init temporary loading pools
+	m_loadingVertPool.Init(s_loadingVertPoolSize);
+	m_loadingNormalPool.Init(s_loadingNormalPoolSize);
+	m_loadingUvPool.Init(s_loadingUvPoolSize);
 
 	// This can be removed in all but DEBUG configuration, but its nice when viewing memory
 	memset(m_modelPool.GetHead(), 0, m_modelPool.GetAllocationSizeBytes());
@@ -60,11 +68,16 @@ bool ModelManager::Update(float a_dt)
 			FileManager::Timestamp curTimestamp;
 			if (FileManager::Get().GetFileTimeStamp(curModel->m_path, curTimestamp))
 			{
+				// Timestamp is new, trigger a reload
 				if (curTimestamp > curModel->m_timeStamp)
 				{
 					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in model %s, reloading.", curModel->m_path);
-					modelReloaded = curModel->m_model.Load(curModel->m_path);
+					modelReloaded = curModel->m_model.Load(curModel->m_path, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool);
 					curModel->m_timeStamp = curTimestamp;
+
+					m_loadingVertPool.Reset();
+					m_loadingNormalPool.Reset();
+					m_loadingUvPool.Reset();
 				}
 			}
 		}
@@ -101,7 +114,7 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	else if (ManagedModel * newModel = m_modelPool.Allocate(sizeof(ManagedModel)))
 	{
 		// Insert the newly allocated model
-		if (newModel->m_model.Load(fileNameBuf))
+		if (newModel->m_model.Load(fileNameBuf, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool))
 		{
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
 			sprintf(newModel->m_path, "%s", fileNameBuf);
@@ -114,6 +127,11 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model load failed for %s", fileNameBuf);
 			return NULL;
 		}
+
+		// Reset the temporary loading pools ready for the next load
+		m_loadingVertPool.Reset();
+		m_loadingNormalPool.Reset();
+		m_loadingUvPool.Reset();
 	}
 	else // Report the error
 	{

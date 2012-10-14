@@ -40,8 +40,13 @@ public:
 	bool DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite);
 	bool DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 
-	//brief Get the symbol for a loaded font name
+	//\brief Get the symbol for a loaded font name
+	//\param pointer to a cstring of the font name to retreieve
+	//\return pointer to a StringHash or NULL for failure
 	StringHash * GetLoadedFontName(const char * a_fontName);
+
+	//\brief Get a default font name
+	StringHash * GetDebugFontName();
 
 private:
 
