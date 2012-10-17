@@ -22,9 +22,9 @@ bool GameObject::Draw()
 		// Normal mesh rendering
 		RenderManager & rMan = RenderManager::Get();
 
-		if (m_model != NULL)
+		if (m_model != NULL && m_model->IsLoaded())
 		{
-			rMan.AddModel(RenderManager::eBatchWorld, m_model, m_worldMat);
+			rMan.AddModel(RenderManager::eBatchWorld, m_model, &m_worldMat);
 		}
 		
 		// Draw the object's controller over the top

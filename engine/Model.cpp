@@ -127,8 +127,11 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		}
 
 		// Now we know the size of the mesh, allocate memory for verts
-		m_faces = (Face *)malloc(sizeof(Face) * m_numFaces);
-		if (m_faces != NULL)
+		// TODO Use a resizable memory structure for mesh data
+		m_verts = (Vector *)malloc(sizeof(Vector) * m_numFaces * s_vertsPerTri);
+		m_normals = (Vector *)malloc(sizeof(Vector) * m_numFaces * s_vertsPerTri);
+		m_uvs = (TexCoord *)malloc(sizeof(TexCoord) * m_numFaces * s_vertsPerTri);
+		if (m_verts != NULL && m_normals != NULL && m_uvs != NULL)
 		{
 			// Create an alias to the loading memory pools so the data can be accessed randomly
 			Vector * verts = a_vertPool.GetHead();
@@ -136,22 +139,24 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			TexCoord * uvs = a_uvPool.GetHead();
 
 			// Now map faces to triangles by linking vertex, uv and normals by index
+			unsigned int vertCount = 0;
 			for (unsigned int i = 0; i < m_numFaces; ++i)
 			{                
 				// Set the face data up
-				m_faces->m_verts[0] = verts[vertIndices[0][i]];
-				m_faces->m_verts[1] = verts[vertIndices[1][i]];
-				m_faces->m_verts[2] = verts[vertIndices[2][i]];
+				m_verts[vertCount]		= verts[vertIndices[0][i]];
+				m_normals[vertCount]	= normals[normalIndices[0][i]];
+				m_uvs[vertCount]		= uvs[uvIndices[0][i]];
+				vertCount++;
 
-				m_faces->m_normals[0] = normals[normalIndices[0][i]];
-				m_faces->m_normals[1] = normals[normalIndices[1][i]];
-				m_faces->m_normals[2] = normals[normalIndices[2][i]];
+				m_verts[vertCount]		= verts[vertIndices[1][i]];
+				m_normals[vertCount]	= normals[normalIndices[1][i]];
+				m_uvs[vertCount]		= uvs[uvIndices[1][i]];
+				vertCount++;
 
-				m_faces->m_uvs[0] = uvs[uvIndices[0][i]];
-				m_faces->m_uvs[1] = uvs[uvIndices[1][i]];
-				m_faces->m_uvs[2] = uvs[uvIndices[2][i]];
-				
-				++m_faces;
+				m_verts[vertCount]		= verts[vertIndices[2][i]];
+				m_normals[vertCount]	= normals[normalIndices[2][i]];
+				m_uvs[vertCount]		= uvs[uvIndices[2][i]];
+				vertCount++;
 			}
 		}
 		else
@@ -162,7 +167,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		// Loaded succesfully
 		file.close();
 		m_loaded = true;
-		return m_faces > 0;
+		return m_numFaces > 0;
 	}
 	else
 	{

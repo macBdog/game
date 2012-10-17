@@ -84,8 +84,9 @@ public:
 	
 	//\brief Add a 3D model for drawing
 	//\param a_batch is the rendering group to draw the model in
-	//\param a_mat is the position and orientation to draw the model at
-	void AddModel(eBatch a_batch, Model * a_model, const Matrix & a_mat);
+	//\param a_model is a pointer to the loaded model to draw
+	//\param a_mat is a pointer to the position and orientation to draw the model at
+	void AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat);
 	
 	//\brief A matrix is position and orientation displayed with lines
 	void AddMatrix(eBatch a_batch, const Matrix & a_mat);
@@ -119,12 +120,21 @@ private:
 		Colour m_colour;
 	};
 
+	//\brief Fixed size structure for queing render models
+	struct RenderModel
+	{
+		Model * m_model;
+		Matrix * m_mat;
+	};
+
 	Tri	 * m_tris[eBatchCount];								// Pointer to a pool of memory for tris
 	Quad * m_quads[eBatchCount];							// Pointer to a pool of memory for quads
 	Line * m_lines[eBatchCount];							// Lines for each batch
+	RenderModel * m_models[eBatchCount];					// Models for each batch
 	unsigned int m_triCount[eBatchCount];					// Number of tris per batch per frame
 	unsigned int m_quadCount[eBatchCount];					// Number of primitives in each batch per frame
 	unsigned int m_lineCount[eBatchCount];					// Number of lines per frame
+	unsigned int m_modelCount[eBatchCount];					// Number of models to render
 	unsigned int m_viewWidth;								// Cache of arguments passed to init
 	unsigned int m_viewHeight;								// Cache of arguments passed to init
 	unsigned int m_bpp;										// Cache of arguments passed to init

@@ -413,9 +413,39 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(eBatch a_batch, Model * a_model, const Matrix & a_mat)
+void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 {
-	// TODO
+	// If we have not generated buffers for this model
+	if (!a_model->IsRenderBufferAssigned())
+	{
+		// Alias model data
+		unsigned int numVerts = a_model->GetNumVertices();
+		Vector * verts = a_model->GetVertices();
+		TexCoord * uvs = a_model->GetUvs();
+
+		// Create a vertex array for the model
+		GLuint vertexArrayId;
+		glGenVertexArrays(1, &vertexArrayId);
+		glBindVertexArray(vertexArrayId);
+
+		// Load model data into a VBO
+		GLuint vertexBufferId;
+		glGenBuffers(1, &vertexBufferId);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vector), verts, GL_STATIC_DRAW);
+
+		GLuint uvBufferId;
+		glGenBuffers(1, &uvBufferId);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferId);
+		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(TexCoord), uvs, GL_STATIC_DRAW);
+
+		a_model->SetRenderBuffers(vertexArrayId, vertexBufferId, uvBufferId);
+
+		RenderModel * r = m_models[a_batch];
+		r += m_modelCount[a_batch]++;
+		r->m_model = a_model;
+		r->m_mat = a_mat;
+	}
 }
 
 void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)

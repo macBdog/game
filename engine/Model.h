@@ -15,10 +15,14 @@ public:
 	// Assigned texture IDs start from 0
 	Model() 
 		: m_loaded(false)
+		, m_renderBufferAssigned(false)
 		, m_diffuseTex(NULL)
 		, m_normalTex(NULL)
 		, m_specularTex(NULL)
-		, m_numFaces(0) {}
+		, m_numFaces(0) 
+		, m_vertexArrayId(0)
+		, m_vertexBufferId(0)
+		, m_uvBufferId(0) {}
 
 	~Model() { Unload(); }
 
@@ -32,24 +36,44 @@ public:
 	bool Unload();
 	inline bool IsLoaded() { return m_loaded; }
 
+	//\brief Accessors for the model's data
+	inline unsigned int GetNumFaces() const { return m_numFaces; }
+	inline unsigned int GetNumVertices() const { return m_numFaces * s_vertsPerTri; }
+	inline Vector * GetVertices() const { return m_verts; }
+	inline Vector * GetNormals() const { return m_normals; }
+	inline TexCoord * GetUvs() const { return m_uvs; }
+
+	//\brief Accessors for rendering buffer Ids
+	inline bool IsRenderBufferAssigned() const { return m_renderBufferAssigned; }
+	inline unsigned int GetVertexArrayId() const { return m_vertexArrayId; }
+	inline unsigned int GetUvBufferId() const { return m_uvBufferId; }
+	inline void SetRenderBuffers(unsigned int a_vertexArrayId, unsigned int a_vertexBufferId, unsigned int a_uvBufferId) 
+	{
+		m_vertexArrayId = a_vertexArrayId; 
+		m_vertexBufferId = a_vertexBufferId; 
+		m_uvBufferId = a_uvBufferId; 
+		m_renderBufferAssigned = true; 
+	}
+
 private:
 
-	///\brief Vertex data stored on the model is organised by face
-	struct Face
-	{
-		Vector m_verts[3];
-		Vector m_normals[3];
-		TexCoord m_uvs[3];
-	};
+	static const unsigned int s_vertsPerTri = 3;	///< Seems silly to have a variable for the number of sides to a triangle but it's instructional when reading code that references it
 
-	bool m_loaded;				// If the model has been loaded correctly
+	bool m_loaded;							///< If the model has been loaded correctly
+	bool m_renderBufferAssigned;			///< If the render manager has set the buffer Ids
 
-	Texture * m_diffuseTex;		// The texture used to draw the model
-	Texture * m_normalTex;		// For drawing normal depth mapping
-	Texture * m_specularTex;	// The shininess map
+	Texture * m_diffuseTex;					///< The texture used to draw the model
+	Texture * m_normalTex;					///< For drawing normal depth mapping
+	Texture * m_specularTex;				///< The shininess map
 
-	Face * m_faces;
-	unsigned int m_numFaces;
+	Vector * m_verts;						///< Storage for the verts of the model
+	Vector * m_normals;						///< Storage for the normals
+	TexCoord * m_uvs;						///< Storage for the tex coords
+	unsigned int m_numFaces;				///< All indexed by face
+
+	unsigned int m_vertexArrayId;			///< Assigned by the render manager when added for rendering
+	unsigned int m_vertexBufferId;			///< Assigned by the render manager when added for rendering
+	unsigned int m_uvBufferId;				///< Assigned by the render manager when added for rendering
 };
 
 #endif /* _ENGINE_MODEL_H_ */
