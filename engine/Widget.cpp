@@ -79,7 +79,7 @@ void Widget::Draw()
 		{
 			if (m_fontNameHash > 0)
 			{
-				FontManager::Get().DrawString(m_name, m_fontNameHash, 1.0f, m_pos.GetVector(), m_colour, batch);
+				FontManager::Get().DrawDebugString(m_name, m_pos.GetVector(), m_colour, batch);
 			}	
 		}
 

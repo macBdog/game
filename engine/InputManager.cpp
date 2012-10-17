@@ -1,5 +1,6 @@
 #include "InputManager.h"
 
+#include "Log.h"
 #include "RenderManager.h"
 
 template<> InputManager * Singleton<InputManager>::s_instance = NULL;
@@ -140,6 +141,20 @@ Vector2 InputManager::GetMousePosRelative()
 	return Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f); 
 }
 
+bool InputManager::IsKeyDepressed(SDLKey a_key)
+{
+	// Check all keys in the list
+	for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
+	{
+		if (m_depressedKeys[i] == a_key)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 {
 	bool foundEvent = false;
@@ -172,6 +187,22 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 {
 	// Set convenience keys
 	m_lastKeyRelease = a_key;
+	
+	// Release depressed keys
+	bool clearedDepressedKey = false;
+	for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
+	{
+		if (m_depressedKeys[i] == a_key)
+		{
+			m_depressedKeys[i] = SDLK_UNKNOWN;
+			clearedDepressedKey = true;
+			break;
+		}
+	}
+	if (!clearedDepressedKey)
+	{
+		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "InputManager cannot correctly release the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+	}
 
 	// Process the global callbacks
 	if (m_alphaKeys.m_type == eInputTypeKeyUp)
@@ -209,6 +240,22 @@ bool InputManager::ProcessKeyDown(SDLKey a_key)
 {
 	// Set convenience keys
 	m_lastKeyPress = a_key;
+
+	// Set depressed keys
+	bool setDepressedKey = false;
+	for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
+	{
+		if (m_depressedKeys[i] == SDLK_UNKNOWN)
+		{
+			m_depressedKeys[i] = a_key;
+			setDepressedKey = true;
+			break;
+		}
+	}
+	if (!setDepressedKey)
+	{
+		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "InputManager cannot correctly maintain the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+	}
 
 	// Process the global callbacks
 	if (m_alphaKeys.m_type == eInputTypeKeyDown)

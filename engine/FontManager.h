@@ -37,7 +37,7 @@ public:
 	//\return true if the glyph quads were submitted to the render manager
 	bool DrawString(const char * a_string, unsigned int a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
 	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
-	bool DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite);
+	bool DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchDebug);
 	bool DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 
 	//\brief Get the symbol for a loaded font name
@@ -50,8 +50,9 @@ public:
 
 private:
 
-	static const float s_debugFontSize;					// Glyph height for debug drawing
-	static const unsigned int s_maxCharsPerFont = 256u;	// No non-unicode support needed (yet)
+	static const float s_debugFontSize;					///< Glyph height for debug drawing
+	static const unsigned int s_maxCharsPerFont = 256u;	///< No non-unicode support needed (yet)
+	static const unsigned int s_maxFontTexSize = 1024u; ///< Cannot load fonts greater than a meg
 
 	//\brief Spacing and positioning info about a character in a font
 	struct FontChar
@@ -85,8 +86,8 @@ private:
 	//\return True if the load operation was completed successfully
 	bool LoadFont(const char * a_fontConfigFilePath);
 	
-	char m_fontPath[StringUtils::s_maxCharsPerLine];	// Cache off path to fonts
-	FontList m_fonts;									// Storage for all fonts that are available for drawing
+	char m_fontPath[StringUtils::s_maxCharsPerLine];	///< Cache off path to fonts
+	FontList m_fonts;									///< Storage for all fonts that are available for drawing
 };
 
 

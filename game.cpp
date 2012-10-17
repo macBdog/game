@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 		{
 			char buf[32];
 			sprintf(buf, "FPS: %u", lastFps);
-			FontManager::Get().DrawDebugString(buf, Vector2(0.87f, 1.0f));
+			FontManager::Get().DrawDebugString(buf, Vector2(0.85f, 1.0f));
 		}
 		
 		// Drawing the scene will flush the batches

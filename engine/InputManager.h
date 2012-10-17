@@ -46,7 +46,11 @@ public:
 		, m_fullScreen(false)
 		, m_mousePos(0.0f)
 		, m_lastKeyPress(SDLK_CLEAR)
-		, m_lastKeyRelease(SDLK_CLEAR) {}
+		, m_lastKeyRelease(SDLK_CLEAR) 
+	{
+		// Init the list of depressed keys
+		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
+	}
 
 	~InputManager() { Shutdown(); }
 
@@ -69,6 +73,11 @@ public:
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional
 	inline SDLKey GetLastKey(bool a_keyPress = true) { return a_keyPress ? m_lastKeyPress : m_lastKeyRelease; }
+
+	//\brief Utility function to find if an arbitrary key is pressed or release
+	//\param a_keyVal the SDL key value of the key to check
+	//\return bool true if the button is currently down
+	bool IsKeyDepressed(SDLKey a_key);
 
 	//\brief Register a function pointer to be called when the app receives a mouse event
 	//\param a_callback is the object that contains the member function to call back
@@ -174,13 +183,16 @@ private:
 	//\return true if at least one event was found
 	bool GetEvents(eInputType a_type, InputSource a_src, InputEventList & a_events_OUT);
 
-	InputEvent m_alphaKeys;		// Special input event to catch all keys being pressed
-	InputEventList m_events;	// List of events to match up to actions
-	bool m_focus;				// If the app currently has OS focus
-	bool m_fullScreen;			// If the app is fullscreen, input manager needs to handle focus
-	Vector2 m_mousePos;			// Cache of mouse coords for convenience
-	SDLKey m_lastKeyPress;		// Cache off last key for convenience
-	SDLKey m_lastKeyRelease;	// Cache off last key for convenience
+	static const unsigned int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
+
+	InputEvent m_alphaKeys;		///< Special input event to catch all keys being pressed
+	InputEventList m_events;	///< List of events to match up to actions
+	bool m_focus;				///< If the app currently has OS focus
+	bool m_fullScreen;			///< If the app is fullscreen, input manager needs to handle focus
+	Vector2 m_mousePos;			///< Cache of mouse coords for convenience
+	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
+	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience
+	SDLKey m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
 };
 
 #endif // _ENGINE_INPUT_MANAGER_

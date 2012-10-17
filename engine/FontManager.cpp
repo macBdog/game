@@ -11,7 +11,7 @@ using namespace std;	//< For fstream operations
 
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
-const float FontManager::s_debugFontSize = 0.01f;
+const float FontManager::s_debugFontSize = 1.25f;
 
 bool FontManager::Startup(const char * a_fontPath)
 {
@@ -106,6 +106,14 @@ bool FontManager::LoadFont(const char * a_fontName)
 			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
 								   &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
 
+			// As we try to render all fonts the same size, fail to load fonts greater than a meg
+			if (sizeW > s_maxFontTexSize || sizeH > s_maxFontTexSize)
+			{
+				Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Cannot load the font called %s because it's bigger than meg in resolution.", shortFontName);
+				file.close();
+				return false;
+			}
+
 			file.getline(line, StringUtils::s_maxCharsPerLine);			// page id=0 file="arial.tga"
 			sprintf(textureName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "=", 2), true));
 
@@ -176,6 +184,10 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 			RenderManager & renderMan = RenderManager::Get();
 			float xAdvance = 0.0f;
 
+			// Calculate a scaling ratio for the font to match the requested pixel size, font size limit is 1 meg
+			a_size *= (float)font->m_sizeX / (float)s_maxFontTexSize;
+			Vector2 sizeRatio(a_size / font->m_sizeX / renderMan.GetViewAspect(), a_size / font->m_sizeY);
+
 			unsigned int textLength = strlen(a_string);
 			for (unsigned int j = 0; j < textLength; ++j)
 			{
@@ -183,8 +195,8 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 				const FontChar & curChar = font->m_chars[(int)a_string[j]];
 				if (curChar.m_width > 0 || curChar.m_height > 0)
 				{ 
-					Vector2 sizeRatio(a_size / font->m_sizeX / renderMan.GetViewAspect(), a_size / font->m_sizeY);
-					Vector2 charSize(curChar.m_width * sizeRatio.GetX() , curChar.m_height * sizeRatio.GetY());
+					// This is the glyph size as a ratio of the texture size
+					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
 
 					// Do not add a quad for a space
 					if (a_string[j] != ' ') 
@@ -213,12 +225,12 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 }
 
 
-bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour)
+bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
 {
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, a_pos, a_colour, RenderManager::eBatchDebug);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, a_pos, a_colour, a_batch);
 	}
 	else // Not fonts loaded
 	{
@@ -234,7 +246,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	if (m_fonts.GetLength() > 0)
 	{
 		Vector2 pos(a_pos.GetX(), a_pos.GetY());
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, 1.0f, pos, a_colour, RenderManager::eBatchDebug);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, pos, a_colour, RenderManager::eBatchDebug);
 	}
 	else // Not fonts loaded
 	{

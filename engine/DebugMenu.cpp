@@ -485,9 +485,22 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 			else // Some other alpha key, append to the name
 			{
 				// TODO move this check to string utils and input manager
-				char keyVal = (char)lastKey;
-				if (keyVal >= 97 && keyVal <= 121)
+				int keyVal = (int)lastKey;
+				const unsigned int alphaStart = 97; // ASCII for a key
+				const unsigned int alphaEnd = 122;  // ASCII for z key
+				const unsigned int numStart = 48;	// ASCII for 0
+				const unsigned int numEnd = 57;		// ASCII for 9
+				if ((keyVal >= alphaStart && keyVal <= alphaEnd) ||
+					(keyVal >= numStart && keyVal <= numEnd) ||
+					lastKey == SDLK_UNDERSCORE)
 				{
+					// Handle upper case letters when a shift is held
+					if ((keyVal >= alphaStart && keyVal <= alphaEnd) && 
+						(inMan.IsKeyDepressed(SDLK_LSHIFT) || inMan.IsKeyDepressed(SDLK_RSHIFT)))
+					{
+						keyVal -= 32;
+					}
+
 					sprintf(newName, "%s%c", m_widgetToEdit->GetName(), keyVal);
 					m_widgetToEdit->SetName(newName);
 				}
