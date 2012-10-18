@@ -15,14 +15,12 @@ public:
 	// Assigned texture IDs start from 0
 	Model() 
 		: m_loaded(false)
-		, m_renderBufferAssigned(false)
+		, m_displayListGenerated(false)
 		, m_diffuseTex(NULL)
 		, m_normalTex(NULL)
 		, m_specularTex(NULL)
 		, m_numFaces(0) 
-		, m_vertexArrayId(0)
-		, m_vertexBufferId(0)
-		, m_uvBufferId(0) {}
+		, m_displayListId(0) {}
 
 	~Model() { Unload(); }
 
@@ -44,23 +42,19 @@ public:
 	inline TexCoord * GetUvs() const { return m_uvs; }
 
 	//\brief Accessors for rendering buffer Ids
-	inline bool IsRenderBufferAssigned() const { return m_renderBufferAssigned; }
-	inline unsigned int GetVertexArrayId() const { return m_vertexArrayId; }
-	inline unsigned int GetUvBufferId() const { return m_uvBufferId; }
-	inline void SetRenderBuffers(unsigned int a_vertexArrayId, unsigned int a_vertexBufferId, unsigned int a_uvBufferId) 
-	{
-		m_vertexArrayId = a_vertexArrayId; 
-		m_vertexBufferId = a_vertexBufferId; 
-		m_uvBufferId = a_uvBufferId; 
-		m_renderBufferAssigned = true; 
-	}
+	inline bool IsDisplayListGenerated() const { return m_displayListGenerated; }
+	inline unsigned int GetDisplayListId() const { return m_displayListId; }
+	inline void SetDisplayListId(unsigned int a_displayListId) { m_displayListId = a_displayListId; m_displayListGenerated = true; }
 
-private:
+	//\brief Accessors for texture data
+	inline Texture * GetDiffuseTexture() const { return m_diffuseTex; }
 
 	static const unsigned int s_vertsPerTri = 3;	///< Seems silly to have a variable for the number of sides to a triangle but it's instructional when reading code that references it
 
+private:
+
 	bool m_loaded;							///< If the model has been loaded correctly
-	bool m_renderBufferAssigned;			///< If the render manager has set the buffer Ids
+	bool m_displayListGenerated;			///< If the render manager has set the buffer Ids
 
 	Texture * m_diffuseTex;					///< The texture used to draw the model
 	Texture * m_normalTex;					///< For drawing normal depth mapping
@@ -71,9 +65,7 @@ private:
 	TexCoord * m_uvs;						///< Storage for the tex coords
 	unsigned int m_numFaces;				///< All indexed by face
 
-	unsigned int m_vertexArrayId;			///< Assigned by the render manager when added for rendering
-	unsigned int m_vertexBufferId;			///< Assigned by the render manager when added for rendering
-	unsigned int m_uvBufferId;				///< Assigned by the render manager when added for rendering
+	unsigned int m_displayListId;			///< Assigned by the render manager when added for rendering
 };
 
 #endif /* _ENGINE_MODEL_H_ */

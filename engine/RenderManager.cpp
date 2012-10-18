@@ -67,6 +67,11 @@ bool RenderManager::Startup(Colour a_clearColour)
 		m_lines[i] = (Line *)malloc(sizeof(Line) * s_maxPrimitivesPerBatch);
 		batchAlloc &= m_lines[i] != NULL;
 		m_lineCount[i] = 0;
+
+		// Render Models
+		m_models[i] = (RenderModel *)malloc(sizeof(RenderModel) * s_maxPrimitivesPerBatch);
+		batchAlloc &= m_models[i] != NULL;
+		m_modelCount[i] = 0;
 	}
 
 	// Alert if memory allocation failed
@@ -86,9 +91,12 @@ bool RenderManager::Shutdown()
 		free(m_tris[i]);
 		free(m_quads[i]);
 		free(m_lines[i]);
+		free(m_models[i]);
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
+		m_modelCount[i] = 0;
+
 	}
 
 	return true;
@@ -138,6 +146,7 @@ void RenderManager::DrawScene()
 				m_triCount[i] = 0;
 				m_quadCount[i] = 0;
 				m_lineCount[i] = 0;
+				m_modelCount[i] = 0;
 			}
 			return;
 		}
@@ -260,12 +269,20 @@ void RenderManager::DrawScene()
 			++l;
 		}
 		glEnable(GL_TEXTURE_2D);
+
+		// Draw models
+		RenderModel * rm = m_models[i];
+		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
+		{
+			glCallList(rm->m_model->GetDisplayListId());
+			++rm;
+		}
 		
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
+		m_modelCount[i] = 0;
 	}
-
 }
 
 void RenderManager::AddLine2D(eBatch a_batch, Vector2 a_point1, Vector2 a_point2, Colour a_tint)
@@ -416,36 +433,45 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 {
 	// If we have not generated buffers for this model
-	if (!a_model->IsRenderBufferAssigned())
+	if (!a_model->IsDisplayListGenerated())
 	{
 		// Alias model data
 		unsigned int numVerts = a_model->GetNumVertices();
+		Texture * diffuseTex = a_model->GetDiffuseTexture();
 		Vector * verts = a_model->GetVertices();
 		TexCoord * uvs = a_model->GetUvs();
 
-		// Create a vertex array for the model
-		GLuint vertexArrayId;
-		glGenVertexArrays(1, &vertexArrayId);
-		glBindVertexArray(vertexArrayId);
+		GLuint displayListId = glGenLists(1);
+		glNewList(displayListId, GL_COMPILE);
+		glBegin(GL_TRIANGLES);
+		
+		// Bind the texture
+		if (diffuseTex != NULL)
+		{
+			glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
+		}
+		// Draw vertices in threes
+		for (unsigned int i = 0; i < numVerts; i += Model::s_vertsPerTri)
+		{
+			glTexCoord2f(uvs[i].GetX(), uvs[i].GetY()); 
+			glVertex3f(verts[i].GetX(), verts[i].GetY(), verts[i].GetZ());
 
-		// Load model data into a VBO
-		GLuint vertexBufferId;
-		glGenBuffers(1, &vertexBufferId);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vector), verts, GL_STATIC_DRAW);
+			glTexCoord2f(uvs[i+1].GetX(), uvs[i+1].GetY()); 
+			glVertex3f(verts[i+1].GetX(), verts[i+1].GetY(), verts[i+1].GetZ());
 
-		GLuint uvBufferId;
-		glGenBuffers(1, &uvBufferId);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBufferId);
-		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(TexCoord), uvs, GL_STATIC_DRAW);
+			glTexCoord2f(uvs[i+2].GetX(), uvs[i+2].GetY()); 
+			glVertex3f(verts[i+2].GetX(), verts[i+2].GetY(), verts[i+2].GetZ());
+		}
+		glEnd();
+		glEndList();
 
-		a_model->SetRenderBuffers(vertexArrayId, vertexBufferId, uvBufferId);
-
-		RenderModel * r = m_models[a_batch];
-		r += m_modelCount[a_batch]++;
-		r->m_model = a_model;
-		r->m_mat = a_mat;
+		a_model->SetDisplayListId(displayListId);
 	}
+
+	RenderModel * r = m_models[a_batch];
+	r += m_modelCount[a_batch]++;
+	r->m_model = a_model;
+	r->m_mat = a_mat;
 }
 
 void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)

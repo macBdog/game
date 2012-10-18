@@ -62,7 +62,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 				if (Vector * v = a_vertPool.Allocate(sizeof(Vector)))
 				{
 					float vec[3];
-					sscanf(StringUtils::ExtractField(line, " ", 0), "%f %f %f", &vec[0], &vec[1], &vec[2]);
+					sscanf(line, "v %f %f %f", &vec[0], &vec[1], &vec[2]);
 					v->SetX(vec[0]);
 					v->SetY(vec[1]);
 					v->SetZ(vec[2]);
@@ -75,7 +75,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 				if (TexCoord * t = a_uvPool.Allocate(sizeof(TexCoord)))
 				{
 					float uv[2];
-					sscanf(StringUtils::ExtractField(line, " ", 0), "%f %f", &uv[0], &uv[1]);
+					sscanf(line, "vt %f %f", &uv[0], &uv[1]);
 					t->SetX(uv[0]);
 					t->SetY(uv[1]);
 					++numUvs;
@@ -87,7 +87,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 				if (Vector * vn = a_normalPool.Allocate(sizeof(Vector)))
 				{
 					float norm[3];
-					sscanf(StringUtils::ExtractField(line, " ", 0), "%f %f %f", &norm[0], &norm[1], &norm[2]);
+					sscanf(line, "vn %f %f %f", &norm[0], &norm[1], &norm[2]);
 					vn->SetX(norm[0]);
 					vn->SetY(norm[1]);
 					vn->SetZ(norm[2]);
@@ -118,10 +118,17 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			// Face
 			else if (line[0] == 'f' && line[1] == ' ')
 			{
-				sscanf(StringUtils::ExtractField(line, " ", 0), "%d/%d/%d %d/%d/%d %d/%d/%d", 
+				// Extract and store out which vertices are used for the faces of the model
+				sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
 					&vertIndices[0][m_numFaces], &uvIndices[0][m_numFaces], &normalIndices[0][m_numFaces], 
 					&vertIndices[1][m_numFaces], &uvIndices[1][m_numFaces], &normalIndices[1][m_numFaces], 
 					&vertIndices[2][m_numFaces], &uvIndices[2][m_numFaces], &normalIndices[2][m_numFaces]);
+
+				// File format specifies vertices are indexed from 1 instead of 0 so fix that
+				--vertIndices[0][m_numFaces];	--vertIndices[1][m_numFaces];	--vertIndices[2][m_numFaces];
+				--uvIndices[0][m_numFaces];		--uvIndices[1][m_numFaces];		--uvIndices[2][m_numFaces];
+				--normalIndices[0][m_numFaces];	--normalIndices[1][m_numFaces];	--normalIndices[2][m_numFaces];
+
 				++m_numFaces;
 			}
 		}
