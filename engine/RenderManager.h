@@ -51,8 +51,9 @@ public:
 	//\brief Setup the viewport
     bool Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen = false);
 
-	//\brief Dump everything to the buffer 
-	void DrawScene();
+	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
+	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
+	void DrawScene(Matrix & a_viewMatrix);
 
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set

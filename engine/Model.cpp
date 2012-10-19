@@ -54,7 +54,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			else if (strstr(line, "usemtl"))
 			{
 				// Set diffuse texture
-				m_diffuseTex = TextureManager::Get().GetTexture(StringUtils::ExtractField(line, " ", 0), TextureManager::eCategoryModel);
+				m_diffuseTex = TextureManager::Get().GetTexture(StringUtils::ExtractField(line, " ", 1), TextureManager::eCategoryModel);
 			}
 			// Vertex
 			else if (line[0] == 'v' && line[1] == ' ')

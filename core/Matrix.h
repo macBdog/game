@@ -12,7 +12,7 @@ class Matrix
 public:
 	Matrix() {};
 	Matrix(float a_f[16]) { for (int i = 0; i < 16; ++i) { f[i] = a_f[i]; } }
-	inline float GetValue(unsigned int a_row, unsigned int a_col)			{ return row[a_row][a_col]; }
+	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
 	inline float * GetValues() { return &f[0]; }
 	inline void SetRight(Vector a_right,	float a_w = 0.0f) { right = a_right; rightW = a_w;}
 	inline void SetLook(Vector a_look,		float a_w = 0.0f) { look = a_look; lookW = a_w;}

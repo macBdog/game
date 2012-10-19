@@ -109,11 +109,12 @@ bool DebugMenu::Startup()
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
 
-	// Process vector cursors for display aspect
+	// Process vector cursor vertices for display aspect
 	for (unsigned int i = 0; i < 4; ++i)
 	{
 		sc_vectorCursor[i].SetY(sc_vectorCursor[i].GetY() * RenderManager::Get().GetViewAspect());
 	}
+
 	return true;
 }
 

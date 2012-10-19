@@ -5,6 +5,7 @@
 
 #include <SDL.h>
 
+#include "engine/CameraManager.h"
 #include "engine/DebugMenu.h"
 #include "engine/FontManager.h"
 #include "engine/GameFile.h"
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(configFile.GetString("config", "modelPath"));
 	WorldManager::Get().Startup(configFile.GetString("config", "templatePath"));
+	CameraManager::Get().Startup();
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -151,9 +153,12 @@ int main(int argc, char *argv[])
 			sprintf(buf, "FPS: %u", lastFps);
 			FontManager::Get().DrawDebugString(buf, Vector2(0.85f, 1.0f));
 		}
+
+		// Update the camera last
+		CameraManager::Get().Update(lastFrameTimeSec);
 		
 		// Drawing the scene will flush the batches
-        RenderManager::Get().DrawScene();
+        RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix());
 
         // Cycle SDL surface
         SDL_GL_SwapBuffers();

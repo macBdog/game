@@ -133,7 +133,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
     return true;
 }
 
-void RenderManager::DrawScene()
+void RenderManager::DrawScene(Matrix & a_viewMatrix)
 {
 	// Handle different rendering modes
 	switch (m_renderMode)
@@ -170,11 +170,19 @@ void RenderManager::DrawScene()
 		{
 			case eBatchWorld:
 			{
-				glEnable(GL_DEPTH_TEST);
+				// Setup projection matrix stack to transform eye space to clip coordinates
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
-				glMatrixMode(GL_MODELVIEW);
+
+				// Setup the inverse of the camera transformation in the modelview matrix
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+                glLoadMatrixf(a_viewMatrix.GetValues());
+
+				// Setup other world only rendering flags
+				glEnable(GL_DEPTH_TEST);
+
 				break;
 			}
 			case eBatchGui:
@@ -184,13 +192,11 @@ void RenderManager::DrawScene()
 				glLoadIdentity();
 				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
 				break;
 			}
 			default: break;
 		}
-
-		// This may not be necessary but its a cheap catch all
-		glLoadIdentity();
 
 		// Submit the tris
 		Tri * t = m_tris[i];
