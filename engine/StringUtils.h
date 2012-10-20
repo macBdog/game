@@ -48,6 +48,18 @@ namespace StringUtils
 	//\return the lower case equivalent char
 	extern unsigned char ConvertToLower(unsigned char a_char);
 
+	//\brief Modify a c string argument by adding on another string in front of it
+	//\param a_buffer is the c string to modify
+	//\param a_prefix is the string add to the start
+	//\return true if the string was moodified
+	extern bool PrependString(char * a_buffer_OUT, const char * a_prefix);
+
+	//\brief Modify a c string argument by adding on another string at the end of it
+	//\param a_buffer is the c string to modify
+	//\param a_prefix is the string add to the end
+	//\return true if the string was moodified
+	extern bool AppendString(char * a_buffer_OUT, const char * a_suffix);
+
 	static const unsigned int s_maxCharsPerLine = 256u;		// Maximum number of chars that can be read before a cr
 	static const unsigned int s_maxCharsPerName = 64u;		// Maximum number of chars for a simple name
 }

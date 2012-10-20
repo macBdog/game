@@ -21,8 +21,11 @@
 int main(int argc, char *argv[])
 {
 	// Single parameter to the executable is the main config file
+	bool useRelativePaths = false;
 	char configFilePath[StringUtils::s_maxCharsPerLine];
+	char gameDataPath[StringUtils::s_maxCharsPerLine];
 	memset(&configFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&gameDataPath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	if (argc > 1)
 	{
 		memcpy(&configFilePath, argv, strlen(argv[1]));
@@ -39,6 +42,13 @@ int main(int argc, char *argv[])
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load the main configuration file at %s", configFilePath);
 		return 1;
+	}
+
+	// Setup relative pathing if defined
+	if (configFile.GetString("config", "gameDataPath") != NULL)
+	{
+		sprintf(gameDataPath, "%s", configFile.GetString("config", "gameDataPath"));
+		useRelativePaths = true;
 	}
 
     // Initialize SDL video
@@ -100,15 +110,38 @@ int main(int argc, char *argv[])
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 
+	// Process resource paths
+	char texturePath[StringUtils::s_maxCharsPerLine];
+	char fontPath[StringUtils::s_maxCharsPerLine];
+	char guiPath[StringUtils::s_maxCharsPerLine];
+	char modelPath[StringUtils::s_maxCharsPerLine];
+	char templatePath[StringUtils::s_maxCharsPerLine];
+
+	strcpy(texturePath, configFile.GetString("config", "texturePath"));
+	strcpy(fontPath, configFile.GetString("config", "fontPath"));
+	strcpy(guiPath, configFile.GetString("config", "guiPath"));
+	strcpy(modelPath, configFile.GetString("config", "modelPath"));
+	strcpy(templatePath, configFile.GetString("config", "templatePath"));
+
+	// Prefix paths that don't look explicit
+	if (useRelativePaths)
+	{
+		if (strstr(texturePath, ":") == NULL)	{ StringUtils::PrependString(texturePath, gameDataPath); }
+		if (strstr(fontPath, ":") == NULL)		{ StringUtils::PrependString(fontPath, gameDataPath); }
+		if (strstr(guiPath, ":") == NULL)		{ StringUtils::PrependString(guiPath, gameDataPath); }
+		if (strstr(modelPath, ":") == NULL)		{ StringUtils::PrependString(modelPath, gameDataPath); }
+		if (strstr(templatePath, ":") == NULL)	{ StringUtils::PrependString(templatePath, gameDataPath); }
+	}
+
 	// Subsystem startup
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
-	TextureManager::Get().Startup(configFile.GetString("config", "texturePath"), configFile.GetBool("render", "textureFilter"));
-	FontManager::Get().Startup(configFile.GetString("config", "fontPath"));
-	Gui::Get().Startup(configFile.GetString("config", "guiPath"));
+	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
+	FontManager::Get().Startup(fontPath);
+	Gui::Get().Startup(guiPath);
 	InputManager::Get().Startup(fullScreen);
-	ModelManager::Get().Startup(configFile.GetString("config", "modelPath"));
-	WorldManager::Get().Startup(configFile.GetString("config", "templatePath"));
+	ModelManager::Get().Startup(modelPath);
+	WorldManager::Get().Startup(templatePath);
 	CameraManager::Get().Startup();
 
     // Game main loop
@@ -157,6 +190,9 @@ int main(int argc, char *argv[])
 		// Update the camera last
 		CameraManager::Get().Update(lastFrameTimeSec);
 		
+		// Font drawing test
+		FontManager::Get().DrawDebugString("The quick brown fox jumped over the lazy dog! 1234567890", Vector2(0.0f, 0.0f));
+
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix());
 

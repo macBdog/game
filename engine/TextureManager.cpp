@@ -141,7 +141,6 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 		}
 		else
 		{
-			delete newTex;
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture load failed for %s", fileNameBuf);
 			return NULL;
 		}

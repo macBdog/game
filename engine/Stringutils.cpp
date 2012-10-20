@@ -192,3 +192,29 @@ extern unsigned char StringUtils::ConvertToLower(unsigned char a_char)
 	// TODO!
 	return a_char;
 }
+
+extern bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefix)
+{
+	char tempString[s_maxCharsPerLine];
+	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
+	{
+		strcpy(tempString, a_buffer_OUT);
+		sprintf(a_buffer_OUT, "%s%s", a_prefix, tempString);
+		return true;
+	}
+
+	return false;
+}
+
+extern bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix)
+{
+	char tempString[s_maxCharsPerLine];
+	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
+	{
+		strcpy(tempString, a_buffer_OUT);
+		sprintf(a_buffer_OUT, "%s%s", tempString, a_suffix);
+		return true;
+	}
+
+	return false;
+}
