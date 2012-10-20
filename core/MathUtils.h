@@ -5,7 +5,8 @@
 #include <random>
 #include <time.h>
 
-#define PI 3.141592654f 
+#define PI 3.141592654f
+#define EPSILON 0.0001f
 
 //\brief Math helpers
 namespace MathUtils

@@ -21,27 +21,32 @@ namespace StringUtils
 	//\param a_buffer pointer to a cstring to read from and parse
 	//\param a_delim pointer to a cstring containing the delimiter to search for
 	//\return a buffer containing a c string with everything after the delimeter and before the next delimeter
-	extern const char * ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex);
+	extern const char * ExtractField(const char * a_buffer, const char * a_delim, unsigned int a_fieldIndex);
 
 	//\brief Reads from a_buffer looking for the first index of a_delim and returns everything up to that delimiter
 	//\param a_buffer pointer to a cstring to read from and parse
 	//\param a_delim pointer to a cstring containing the delimiter to search for
 	//\return a buffer containing a c string with everything before the delimeter
-	extern const char * ExtractPropertyName(const char *a_buffer, const char *a_delim);
+	extern const char * ExtractPropertyName(const char * a_buffer, const char * a_delim);
 
 	//\brief Reads from a_buffer looking for the first index of a_delim and returns everything after that delimiter
 	//\param a_buffer pointer to a cstring to read from and parse
 	//\param a_delim pointer to a cstring containing the delimiter to search for
 	//\return a buffer containing a c string with everything after the delimeter
-	extern const char * ExtractValue(const char *a_buffer, const char *a_delim);
+	extern const char * ExtractValue(const char * a_buffer, const char * a_delim);
+
+	//\brief Returns a string that is all characters before and including the last backslash in a string
+	//\param a_buffer pointer to a cstring to work from
+	//\return a c string pointing to the start of the just the filename from the buffer
+	extern const char * ExtractFileNameFromPath(const char * a_buffer);
 
 	//\brief Removes whitespace characters \t \n from a_buffer and returns a modified buffer containing a c string
 	//\param a_buffer pointer to a cstring to read from and parse
 	//\param a_trimQuotes to optioanlly also strip all quote chars from the string
-	extern const char * TrimString(const char *a_buffer, bool a_trimQuotes = false);
+	extern const char * TrimString(const char * a_buffer, bool a_trimQuotes = false);
 
 	//\brief Reads from a file until a newline or carriage return is found then returns a c string of the last read
-	extern const char * ReadLine(FILE *a_filePointer);
+	extern const char * ReadLine(FILE * a_filePointer);
 
 	//\brief Convert a character to it's lower case equivalent
 	//\param a_char the character to downcase

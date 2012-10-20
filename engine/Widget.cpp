@@ -344,7 +344,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 
 		if (m_texture != NULL)
 		{
-			menuStream << tabs << tab << "texture: " << m_texture->GetFilePath() << lineEnd;
+			menuStream << tabs << tab << "texture: " << m_texture->GetFileName() << lineEnd;
 		}
 
 		menuStream << tabs << "}" << lineEnd;

@@ -34,6 +34,7 @@ public:
 	inline bool IsLoaded() { return m_textureId >= 0; }
 	inline unsigned int GetId() { return m_textureId; }
 	inline const char * GetFilePath() { return m_filePath; }
+	inline const char * GetFileName() { return StringUtils::ExtractFileNameFromPath(m_filePath); }
 
 private:
 

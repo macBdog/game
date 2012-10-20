@@ -72,6 +72,7 @@
     <ClInclude Include="LinkedList.h" />
     <ClInclude Include="MathUtils.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

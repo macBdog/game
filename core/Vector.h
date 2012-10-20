@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 
-//\brief Basic vector class
+//\brief Basic vector class, W component is only represented in matrices
 class Vector
 {
 public:

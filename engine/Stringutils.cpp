@@ -120,6 +120,23 @@ const char * StringUtils::ExtractValue(const char *a_buffer, const char *a_delim
 	return TrimString(delimLoc+1);
 }
 
+const char * StringUtils::ExtractFileNameFromPath(const char * a_buffer)
+{
+	unsigned int  bufLength = strlen(a_buffer);
+	if (bufLength > 0)
+	{
+		for (unsigned int i = bufLength; i > 0; --i)
+		{
+			if (a_buffer[i] == '\\')
+			{
+				return &a_buffer[i+1];
+			}
+		}
+	}
+
+	return NULL;
+}
+
 const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes) 
 {
 	// Iterate through the string and remove bad characters
