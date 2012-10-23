@@ -53,6 +53,12 @@ public:
 
 private:
 
+	//\brief Read the material file specified in the model file and load any textures required
+	//\param a_materialFileName pointer to a c string containing the file to load, adjacent to the model file itself
+	//\param a_materialName is the name in the material file to use for the model
+	//\return true if the material was loaded successfully and a texture for the model was assigned
+	bool LoadMaterial(const char * a_materialFileName, const char * a_materialName);
+
 	bool m_loaded;							///< If the model has been loaded correctly
 	bool m_displayListGenerated;			///< If the render manager has set the buffer Ids
 

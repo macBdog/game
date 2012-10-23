@@ -137,6 +137,25 @@ const char * StringUtils::ExtractFileNameFromPath(const char * a_buffer)
 	return NULL;
 }
 
+void StringUtils::TrimFileNameFromPath(char * a_buffer_OUT)
+{
+	unsigned int  bufLength = strlen(a_buffer_OUT);
+	if (a_buffer_OUT > 0)
+	{
+		// Work backwards through the string until a slash is encountered
+		for (unsigned int i = bufLength; i > 0; --i)
+		{
+			if (a_buffer_OUT[i] == '\\')
+			{
+				// Terminate the string at the slash
+				a_buffer_OUT[i+1] = '\0';
+				return;
+			}
+		}
+	}
+}
+
+
 const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes) 
 {
 	// Iterate through the string and remove bad characters

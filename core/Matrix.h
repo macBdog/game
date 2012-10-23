@@ -24,6 +24,8 @@ public:
 	inline Vector GetLook()	const	{ return look; }
 	inline Vector GetUp() const		{ return up; }
 	inline Vector GetPos() const	{ return pos; }
+	inline float GetDeterminant() const { return 0.0f; } //TODO
+	inline bool HasInverse() const { return GetDeterminant() > 0.0f; }
 	static const Matrix Identity() 
 	{ 
 		float vals[16] = {	1.0f, 0.0f, 0.0f, 0.0f,
@@ -77,8 +79,6 @@ public:
 		return rotMat;
 	}
 	inline Matrix Scale(const float & a_scalar) { } //TODO!
-
-
 
 private:
 	

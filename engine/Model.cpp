@@ -17,11 +17,20 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		return false;
 	}
 
-	// Storage for file reading progress
+	// Storage for model file reading progress
 	char line[StringUtils::s_maxCharsPerLine];
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	ifstream file(a_modelFilePath);
 	unsigned int lineCount = 0;
+
+	// Storage for material file reading progress
+	char materialFileName[StringUtils::s_maxCharsPerLine];
+	char materialFilePath[StringUtils::s_maxCharsPerLine];
+	char materialName[StringUtils::s_maxCharsPerLine];
+	strcpy(materialFilePath, a_modelFilePath);
+	StringUtils::TrimFileNameFromPath(materialFilePath);
+	memset(&materialFileName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&materialName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	
 	// Open the file and parse each line 
 	if (file.is_open())
@@ -31,9 +40,9 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		unsigned int numUvs = 0;		// Number of texture coords
 
 		// TODO Yay lets only support models with 64 faces
-		unsigned int vertIndices[3][64];
-		unsigned int normalIndices[3][64];
-		unsigned int uvIndices[3][64];
+		unsigned int vertIndices[3][2056];
+		unsigned int normalIndices[3][2056];
+		unsigned int uvIndices[3][2056];
 
 		while (file.good())
 		{
@@ -48,13 +57,18 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			// Material library declaration
 			else if (strstr(line, "mtllib"))
 			{
+				// Cache off the material file name for later usage
+				sscanf(line, "mtllib %s", &materialFileName);
+
+				// Append the filename onto the file path
+				StringUtils::AppendString(materialFilePath, materialFileName); 
 				continue;
 			}
 			// Material name
 			else if (strstr(line, "usemtl"))
 			{
 				// Set diffuse texture
-				m_diffuseTex = TextureManager::Get().GetTexture(StringUtils::ExtractField(line, " ", 1), TextureManager::eCategoryModel);
+				sscanf(line, "usemtl %s", materialName);
 			}
 			// Vertex
 			else if (line[0] == 'v' && line[1] == ' ')
@@ -118,6 +132,13 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			// Face
 			else if (line[0] == 'f' && line[1] == ' ')
 			{
+				// Check for no texture map
+				if (strstr(line, "\\\\") != NULL)
+				{
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load model %s with no uv or normal exported per face", a_modelFilePath);
+					file.close();
+					return false;
+				}
 				// Extract and store out which vertices are used for the faces of the model
 				sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
 					&vertIndices[0][m_numFaces], &uvIndices[0][m_numFaces], &normalIndices[0][m_numFaces], 
@@ -171,16 +192,78 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot allocate memory for the faces of model %s", a_modelFilePath);
 		}		
 
-		// Loaded succesfully
+		// Model data loaded succesfully
 		file.close();
 		m_loaded = true;
-		return m_numFaces > 0;
+
+		// Load the material resources
+		bool materialLoadSuccess = LoadMaterial(materialFilePath, materialName);
+
+		return m_numFaces > 0 && materialLoadSuccess;
 	}
 	else
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open model file resource at path %s", a_modelFilePath);
 		return false;
 	}
+}
+
+bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materialName)
+{
+	// Early out for no file case
+	if (a_materialFileName == NULL)
+	{
+		return false;
+	}
+
+	// Storage for material file reading progress
+	char line[StringUtils::s_maxCharsPerLine];
+	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	ifstream file(a_materialFileName);
+	unsigned int lineCount = 0;
+	bool foundTargetMaterial = false;
+	
+	// Open the file and parse each line 
+	if (file.is_open())
+	{
+		while (file.good())
+		{
+			file.getline(line, StringUtils::s_maxCharsPerLine);
+			lineCount++;
+
+			// Comment
+			if (strstr(line, "#"))
+			{
+				continue;
+			}
+			// Material library declaration
+			else if (strstr(line, "newmtl"))
+			{
+				// Cache off the material file name for later usage
+				char tempMatName[StringUtils::s_maxCharsPerLine];
+				memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+				sscanf(line, "newmtl %s", &tempMatName);
+
+				// Set flag so we load the next map specific in the material as the diffuse map
+				foundTargetMaterial = strstr(tempMatName, a_materialName) != NULL;
+				continue;
+			}
+			// Material name
+			else if (strstr(line, "map_Kd") && foundTargetMaterial)
+			{
+				char tempMatName[StringUtils::s_maxCharsPerLine];
+				memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+				sscanf(line, "map_Kd %s", &tempMatName);
+
+				m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureManager::eCategoryModel);
+				file.close();
+				return true;
+			}
+		}
+		file.close();
+		return false;
+	}
+	return false;
 }
 
 bool Model::Unload()
