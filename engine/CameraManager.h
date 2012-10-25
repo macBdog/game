@@ -43,6 +43,7 @@ private:
         Matrix m_mat;                   ///< The matrix defining the new coordinate system as calculated by the camera
         Vector m_pos;                   ///< Position of the camera in the world
         Vector2 m_orientation;			///< Angle of the camera around it's view axis
+		Vector2 m_orientationInput;		///< Input to orientation given mouse corrds
 };
 
 #endif //_ENGINE_CAMERA_MANAGER

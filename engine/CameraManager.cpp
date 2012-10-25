@@ -12,30 +12,32 @@ template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
 
 void CameraManager::Update(float a_dt)
 {
-		// Process debug camera controls
-		InputManager & inMan = InputManager::Get();
-		if (inMan.IsKeyDepressed(SDLK_w))
-		{
-			m_pos += Vector(0.0f, sc_debugCameraSpeed * a_dt, 0.0f);
-		}	
-		if (inMan.IsKeyDepressed(SDLK_s))
-		{
-			m_pos += Vector(0.0f, -sc_debugCameraSpeed * a_dt, 0.0f);
-		}	
-		if (inMan.IsKeyDepressed(SDLK_a))
-		{
-			m_pos += Vector(sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
-		}	
-		if (inMan.IsKeyDepressed(SDLK_d))
-		{
-			m_pos += Vector(-sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
-		}	
+	// Process debug camera controls
+	InputManager & inMan = InputManager::Get();
+	if (inMan.IsKeyDepressed(SDLK_w))
+	{
+		m_pos += Vector(0.0f, sc_debugCameraSpeed * a_dt, 0.0f);
+	}	
+	if (inMan.IsKeyDepressed(SDLK_s))
+	{
+		m_pos += Vector(0.0f, -sc_debugCameraSpeed * a_dt, 0.0f);
+	}	
+	if (inMan.IsKeyDepressed(SDLK_a))
+	{
+		m_pos += Vector(sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
+	}	
+	if (inMan.IsKeyDepressed(SDLK_d))
+	{
+		m_pos += Vector(-sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
+	}	
 
-        // Set rotation speed
-        m_orientation.SetX(m_orientation.GetX() + (sc_debugCameraRot * a_dt * inMan.GetMousePosRelative().GetX()));
-        m_orientation.SetY(m_orientation.GetY() + (sc_debugCameraRot * a_dt * inMan.GetMousePosRelative().GetY()));
+    // Set rotation based on mouse delta
+	Vector2 curInput = inMan.GetMousePosRelative();
+    m_orientation.SetX(m_orientation.GetX() - ((curInput.GetX() - m_orientationInput.GetX()) * sc_debugCameraRot));
+    m_orientation.SetY(m_orientation.GetY() + ((curInput.GetY() - m_orientationInput.GetY()) * sc_debugCameraRot));
+	m_orientationInput = curInput;
 
-        CalculateCameraMatrix();
+    CalculateCameraMatrix();
 }
 
 void CameraManager::CalculateCameraMatrix()
