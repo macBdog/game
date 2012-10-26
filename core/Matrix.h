@@ -12,8 +12,16 @@ class Matrix
 public:
 	Matrix() {};
 	Matrix(float a_f[16]) { for (int i = 0; i < 16; ++i) { f[i] = a_f[i]; } }
-	Matrix(float a_0, float a_1, float a_2, float a_3, float a_4, float a_5, float a_6, float a_7, float a_8, float a_9, float a_10, float a_11, float a_12, float a_13, float a_14, float a_15) 
-			{ f[0]=a_0; f[1]=a_1; f[2]=a_2; f[3]=a_3; f[4]=a_4; f[5]=a_5; f[6]=a_6; f[7]=a_7; f[8]=a_8; f[9]=a_9; f[10]=a_10; f[11]=a_11; f[12]=a_12; f[13]=a_13; f[14]=a_14; f[15]=a_15; }
+	Matrix(	float a_0, float a_1, float a_2, float a_3, 
+			float a_4, float a_5, float a_6, float a_7, 
+			float a_8, float a_9, float a_10, float a_11, 
+			float a_12, float a_13, float a_14, float a_15) 
+			{ 
+				f[0]=a_0; f[1]=a_1; f[2]=a_2; f[3]=a_3; 
+				f[4]=a_4; f[5]=a_5; f[6]=a_6; f[7]=a_7; 
+				f[8]=a_8; f[9]=a_9; f[10]=a_10; f[11]=a_11; 
+				f[12]=a_12; f[13]=a_13; f[14]=a_14; f[15]=a_15; 
+			}
 	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
 	inline float * GetValues() { return &f[0]; }
 	inline void SetRight(Vector a_right,	float a_w = 0.0f) { right = a_right; rightW = a_w;}

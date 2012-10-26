@@ -63,6 +63,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BitSet.h" />
     <ClInclude Include="Callback.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="Delegate.h" />
