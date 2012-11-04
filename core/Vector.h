@@ -69,6 +69,10 @@ public:
 	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f", x, y); }
 	static Vector2 Vector2Zero() { return Vector2(0.0f, 0.0f); }
 
+	// Utility functions
+	const float LengthSquared() const { return x*x + y*y; }
+	float Length() const { return sqrt(LengthSquared()); }
+
 	// Operator overloads
 	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }
 	Vector2 operator * (const float & a_scale) const { return Vector2(x * a_scale, y * a_scale); }

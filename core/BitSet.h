@@ -30,7 +30,7 @@ public:
 	inline unsigned int GetBits() { return m_bits; }
 
 	//\brief Bit counting functions, slow methods included for comprehensive purposes
-	inline unsigned int GetBitCountSlow() const
+	inline unsigned int GetBitCountBasic() const
 	{
 		unsigned int numBits = 0;
 		for (unsigned int i = 0; i < sizeof(unsigned int) * 8; ++i)
@@ -43,7 +43,19 @@ public:
 
 		return numBits;
 	}
+	//\brief A bit faster than the previous method as it will stop early due to the while loop
+	inline unsigned int GetBitCountSlow() const
+	{
 
+		int n=0;
+		unsigned bCopy = m_bits;
+        while (bCopy)
+        {
+            bCopy &= bCopy-1;
+            n++;
+        }
+        return n;
+	}
 	inline unsigned int GetBitCountLookupTable() const
 	{
 		// It's silly having this lookup table generated here and not declared as a static const member.

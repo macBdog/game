@@ -14,28 +14,47 @@ void CameraManager::Update(float a_dt)
 {
 	// Process debug camera controls
 	InputManager & inMan = InputManager::Get();
-	if (inMan.IsKeyDepressed(SDLK_w))
+	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		m_pos += Vector(0.0f, sc_debugCameraSpeed * a_dt, 0.0f);
-	}	
-	if (inMan.IsKeyDepressed(SDLK_s))
-	{
-		m_pos += Vector(0.0f, -sc_debugCameraSpeed * a_dt, 0.0f);
-	}	
-	if (inMan.IsKeyDepressed(SDLK_a))
-	{
-		m_pos += Vector(sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
-	}	
-	if (inMan.IsKeyDepressed(SDLK_d))
-	{
-		m_pos += Vector(-sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
-	}	
+		if (inMan.IsKeyDepressed(SDLK_w))
+		{
+			m_pos += Vector(0.0f, sc_debugCameraSpeed * a_dt, 0.0f);
+		}	
+		if (inMan.IsKeyDepressed(SDLK_s))
+		{
+			m_pos += Vector(0.0f, -sc_debugCameraSpeed * a_dt, 0.0f);
+		}	
+		if (inMan.IsKeyDepressed(SDLK_a))
+		{
+			m_pos += Vector(sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
+		}	
+		if (inMan.IsKeyDepressed(SDLK_d))
+		{
+			m_pos += Vector(-sc_debugCameraSpeed * a_dt, 0.0f, 0.0f);
+		}	
+		if (inMan.IsKeyDepressed(SDLK_q))
+		{
+			m_pos += Vector(0.0f, 0.0f, -sc_debugCameraSpeed * a_dt);
+		}	
+		if (inMan.IsKeyDepressed(SDLK_e))
+		{
+			m_pos += Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt);
+		}	
 
-    // Set rotation based on mouse delta
-	Vector2 curInput = inMan.GetMousePosRelative();
-    m_orientation.SetX(m_orientation.GetX() - ((curInput.GetX() - m_orientationInput.GetX()) * sc_debugCameraRot));
-    m_orientation.SetY(m_orientation.GetY() + ((curInput.GetY() - m_orientationInput.GetY()) * sc_debugCameraRot));
-	m_orientationInput = curInput;
+		// Set rotation based on mouse delta while hotkey pressed
+		if (inMan.IsKeyDepressed(SDLK_LSHIFT))
+		{
+			// Cancel out mouse movement above an epsilon to prevent the camera jumping around
+			const float cameraMoveEpsilonSq = 0.05f;
+			Vector2 curInput = inMan.GetMousePosRelative();
+			if ((m_orientationInput - curInput).LengthSquared() > cameraMoveEpsilonSq)
+			{
+				m_orientationInput = curInput;
+			}
+			m_orientation += (curInput - m_orientationInput) * sc_debugCameraRot;
+			m_orientationInput = curInput;
+		}
+	}
 
     CalculateCameraMatrix();
 }

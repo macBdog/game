@@ -568,9 +568,31 @@ void DebugMenu::Draw()
 	RenderManager & renMan = RenderManager::Get();
 	FontManager & fontMan = FontManager::Get();
 
-	// Draw gridlines
+	// Draw 2D gridlines
 	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
 	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+
+	// Draw 3D gridlines
+	const unsigned int gridSize = 10;
+	const float gridMeasurement = 1.0f;
+	Vector gridStart(-((float)gridSize * 0.5f) * gridMeasurement, -((float)gridSize * 0.5f) * gridMeasurement, 0.0f);	
+	
+	// Gridlines on the X axis
+	for (unsigned int x = 0; x < gridSize+1; ++x)
+	{
+		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
+		renMan.AddLine(RenderManager::eBatchWorld, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
+	}
+
+	// Gridlines on the Y axis
+	for (unsigned int y = 0; y < gridSize+1; ++y)
+	{
+		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
+		renMan.AddLine(RenderManager::eBatchWorld, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
+	}
+
+	// Draw an identity matrix at the origin
+	renMan.AddMatrix(RenderManager::eBatchWorld, Matrix::Identity());
 	
 	// Show mouse pos at cursor
 	char mouseBuf[16];
