@@ -57,13 +57,14 @@ private:
 	//\brief Spacing and positioning info about a character in a font
 	struct FontChar
 	{
-		float m_x;			//< X position in the texture file
-		float m_y;			//< Y position in the texture file
-		float m_width;		//< How wide the glyph is
-		float m_height;		//< How high the glyph is
-		float m_xoffset;	//< X position of the glyph insuide it's box
-		float m_yoffset;	//< Y position of the glyph inside it's box
-		float m_xadvance;	//< How much spacing to put in front of the glyph
+		float m_x;						///< X position in the texture file
+		float m_y;						///< Y position in the texture file
+		float m_width;					///< How wide the glyph is
+		float m_height;					///< How high the glyph is
+		float m_xoffset;				///< X position of the glyph insuide it's box
+		float m_yoffset;				///< Y position of the glyph inside it's box
+		float m_xadvance;				///< How much spacing to put in front of the glyph
+		unsigned int m_displayListId;	///< The generated display list ID for drawing each character
 	};
 
 	//\brief Info about a font and a group of all the character info

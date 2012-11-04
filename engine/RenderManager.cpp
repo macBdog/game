@@ -68,10 +68,15 @@ bool RenderManager::Startup(Colour a_clearColour)
 		batchAlloc &= m_lines[i] != NULL;
 		m_lineCount[i] = 0;
 
-		// Render Models
+		// Render models
 		m_models[i] = (RenderModel *)malloc(sizeof(RenderModel) * s_maxPrimitivesPerBatch);
 		batchAlloc &= m_models[i] != NULL;
 		m_modelCount[i] = 0;
+
+		// Font characters
+		m_fontChars[i] = (FontChar *)malloc(sizeof(FontChar) * s_maxPrimitivesPerBatch);
+		batchAlloc &= m_fontChars[i] != NULL;
+		m_fontCharCount[i] = 0;
 	}
 
 	// Alert if memory allocation failed
@@ -92,11 +97,12 @@ bool RenderManager::Shutdown()
 		free(m_quads[i]);
 		free(m_lines[i]);
 		free(m_models[i]);
+		free(m_fontChars[i]);
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
 		m_modelCount[i] = 0;
-
+		m_fontCharCount[i] = 0;
 	}
 
 	return true;
@@ -147,6 +153,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 				m_quadCount[i] = 0;
 				m_lineCount[i] = 0;
 				m_modelCount[i] = 0;
+				m_fontCharCount[i] = 0;
 			}
 			return;
 		}
@@ -276,19 +283,66 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		}
 		glEnable(GL_TEXTURE_2D);
 
-		// Draw models
+		// Draw models by calling their display lists
 		RenderModel * rm = m_models[i];
 		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
 		{
+			glPushMatrix();
+			// TODO: rotation
+			glTranslatef(rm->m_mat->GetPos().GetX(), rm->m_mat->GetPos().GetY(), rm->m_mat->GetPos().GetZ());
 			glCallList(rm->m_model->GetDisplayListId());
+			glPopMatrix();
 			++rm;
+		}
+
+		// Draw font chars by calling their display lists
+		FontChar * fc = m_fontChars[i];
+		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
+		{
+			// TODO: billboarding for 3D font characters
+			glPushMatrix();
+			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
+			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
+			glScalef(fc->m_size, fc->m_size, 0.0f);
+			glCallList(fc->m_displayListId);
+			glPopMatrix();
+			++fc;
 		}
 		
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
 		m_modelCount[i] = 0;
+		m_fontCharCount[i] = 0;
 	}
+}
+
+unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)
+{
+	// Generate and begin compiling a new display list
+	GLuint displayListId = glGenLists(1);
+	glNewList(displayListId, GL_COMPILE);
+	
+	// Bind the texture
+	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
+
+	// Draw the verts
+	glBegin(GL_QUADS);
+	glTexCoord2f(a_texCoord.GetX(), 1.0f - a_texCoord.GetY()); 
+	glVertex3f(0.0f, 0.0f, s_renderDepth2D);
+
+	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
+	glVertex3f(a_size.GetX(), 0.0f, s_renderDepth2D);
+
+	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
+	glVertex3f(a_size.GetX(), -a_size.GetY(), s_renderDepth2D);
+
+	glTexCoord2f(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
+	glVertex3f(0.0f, -a_size.GetY(), s_renderDepth2D);
+	glEnd();
+	glEndList();
+
+	return displayListId;
 }
 
 void RenderManager::AddLine2D(eBatch a_batch, Vector2 a_point1, Vector2 a_point2, Colour a_tint)
@@ -438,6 +492,13 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 
 void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 {
+	// Don't add more models than have been allocated for
+	if (m_modelCount[a_batch] >= s_maxPrimitivesPerBatch)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many render models added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		return;
+	}
+
 	// If we have not generated buffers for this model
 	if (!a_model->IsDisplayListGenerated())
 	{
@@ -449,10 +510,6 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 
 		GLuint displayListId = glGenLists(1);
 		glNewList(displayListId, GL_COMPILE);
-		
-		// Translate and rotate as specified by the world matrix
-		// TODO rotation
-		glTranslatef(a_mat->GetPos().GetX(), a_mat->GetPos().GetY(), a_mat->GetPos().GetZ());
 		
 		// Bind the texture and set colour
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -484,6 +541,43 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 	r += m_modelCount[a_batch]++;
 	r->m_model = a_model;
 	r->m_mat = a_mat;
+}
+
+
+void RenderManager::AddFontChar2D(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector2 a_pos, Colour a_colour)
+{
+	// Don't add more font characters than have been allocated for
+	if (m_fontCharCount[a_batch] >= s_maxPrimitivesPerBatch)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many font characters added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		return;
+	}
+
+	FontChar * fc = m_fontChars[a_batch];
+	fc += m_fontCharCount[a_batch]++;
+	fc->m_displayListId = a_fontCharId;
+	fc->m_size = a_size;
+	fc->m_pos.SetX(a_pos.GetX());
+	fc->m_pos.SetY(a_pos.GetY());
+	fc->m_pos.SetZ(s_renderDepth2D);
+	fc->m_colour = a_colour;
+}
+
+void RenderManager::AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour)
+{
+	// Don't add more font characters than have been allocated for
+	if (m_fontCharCount[a_batch] >= s_maxPrimitivesPerBatch)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many font characters added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		return;
+	}
+
+	FontChar * fc = m_fontChars[a_batch];
+	fc += m_fontCharCount[a_batch]++;
+	fc->m_displayListId = a_fontCharId;
+	fc->m_size = a_size;
+	fc->m_pos = a_pos;
+	fc->m_colour = a_colour;
 }
 
 void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)

@@ -65,6 +65,13 @@ public:
 	inline unsigned int GetViewDepth() { return m_bpp; }
 	inline float GetViewAspect() { return m_aspect; }
 
+	//\brief Set up a display list for a font character so drawing only involves calling a list
+	//\param a_size is an arbitrary width to height to generate the list at
+	//\param a_texCoord is the starting coordinate to draw
+	//\param a_texSize is the size of the character in reference to the font texture
+	//\return The uint equivalent of the GLuint that is returned from glGenLists
+	unsigned int RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture);
+
 	//\brief Drawing functions for lines
 	//\param a_point1 is the start of the line
 	//\param a_point2 is the end of the line
@@ -88,6 +95,16 @@ public:
 	//\param a_model is a pointer to the loaded model to draw
 	//\param a_mat is a pointer to the position and orientation to draw the model at
 	void AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat);
+
+	//\brief Add a font character for drawing
+	//\param a_batch is the rendering group to draw the model in
+	//\param a_fontCharId is the display list ID of the character
+	void AddFontChar2D(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite);
+
+	//\brief Add a font character for drawing
+	//\param a_batch is the rendering group to draw the model in
+	//\param a_fontCharId is the display list ID of the character
+	void AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
 	//\brief A matrix is position and orientation displayed with lines
 	void AddMatrix(eBatch a_batch, const Matrix & a_mat);
@@ -128,14 +145,25 @@ private:
 		Matrix * m_mat;
 	};
 
+	//\brief Fixes size structure for queing font characters that are just a display list
+	struct FontChar
+	{
+		unsigned int m_displayListId;
+		float m_size;
+		Vector m_pos;
+		Colour m_colour;
+	};
+
 	Tri	 * m_tris[eBatchCount];								// Pointer to a pool of memory for tris
 	Quad * m_quads[eBatchCount];							// Pointer to a pool of memory for quads
 	Line * m_lines[eBatchCount];							// Lines for each batch
 	RenderModel * m_models[eBatchCount];					// Models for each batch
+	FontChar * m_fontChars[eBatchCount];
 	unsigned int m_triCount[eBatchCount];					// Number of tris per batch per frame
 	unsigned int m_quadCount[eBatchCount];					// Number of primitives in each batch per frame
 	unsigned int m_lineCount[eBatchCount];					// Number of lines per frame
 	unsigned int m_modelCount[eBatchCount];					// Number of models to render
+	unsigned int m_fontCharCount[eBatchCount];				// Number for font characters to render
 	unsigned int m_viewWidth;								// Cache of arguments passed to init
 	unsigned int m_viewHeight;								// Cache of arguments passed to init
 	unsigned int m_bpp;										// Cache of arguments passed to init

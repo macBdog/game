@@ -79,6 +79,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 	unsigned int lineCount = 0;
 	
 	// Create a new font to be managed
+	RenderManager & renMan = RenderManager::Get();
 	FontListNode * newFontNode = new FontListNode();
 	newFontNode->SetData(new Font());
 	Font * newFont = newFontNode->GetData();
@@ -134,16 +135,28 @@ bool FontManager::LoadFont(const char * a_fontName)
 				int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
 				sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d", 
 								&charId,	 &x,	 &y,	 &width,	  &height,		&xoffset,	   &yoffset,	 &xadvance,		 &page,   &chnl);
-				newFont->m_chars[charId].m_x = (float)x;
-				newFont->m_chars[charId].m_y = (float)y;
-				newFont->m_chars[charId].m_width = (float)width;
-				newFont->m_chars[charId].m_height = (float)height;
-				newFont->m_chars[charId].m_xoffset = (float)xoffset;
-				newFont->m_chars[charId].m_yoffset = (float)yoffset;
-				newFont->m_chars[charId].m_xadvance = (float)xadvance;
+				FontChar & curChar = newFont->m_chars[charId];
+				curChar.m_x = (float)x;
+				curChar.m_y = (float)y;
+				curChar.m_width = (float)width;
+				curChar.m_height = (float)height;
+				curChar.m_xoffset = (float)xoffset;
+				curChar.m_yoffset = (float)yoffset;
+				curChar.m_xadvance = (float)xadvance;
+
+				// This is the glyph size as a ratio of the texture size
+				Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
+				Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
+
+				// Used to generate the position of the character within the texture
+				TexCoord texSize(curChar.m_width/newFont->m_sizeX, curChar.m_height/newFont->m_sizeY);
+				TexCoord texCoord(curChar.m_x/newFont->m_sizeX, curChar.m_y/newFont->m_sizeY);
+
+				// Generate a display list for each character in the font
+				newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
 			}
 
-			// There is more info such as kerning here but we don't care about it
+			// There is more info such as kerning here but we don't support it
 			break;
 		}
 
@@ -195,18 +208,12 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 				const FontChar & curChar = font->m_chars[(int)a_string[j]];
 				if (curChar.m_width > 0 || curChar.m_height > 0)
 				{ 
-					// This is the glyph size as a ratio of the texture size
-					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
-
 					// Do not add a quad for a space
 					if (a_string[j] != ' ') 
 					{
-						TexCoord texSize(curChar.m_width/font->m_sizeX, curChar.m_height/font->m_sizeY);
-						TexCoord texCoord(curChar.m_x/font->m_sizeX, curChar.m_y/font->m_sizeY);
-
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						renderMan.AddQuad2D(a_batch, Vector2(xPos, yPos), charSize, font->m_texture, texCoord, texSize, Texture::eOrientationNormal, a_colour);
+						renderMan.AddFontChar2D(a_batch, curChar.m_displayListId, a_size, Vector2(xPos, yPos), a_colour);
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}

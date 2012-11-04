@@ -189,14 +189,6 @@ int main(int argc, char *argv[])
 
 		// Update the camera last
 		CameraManager::Get().Update(lastFrameTimeSec);
-		
-		// Font drawing test code
-		/*
-		const unsigned int numFontTests = 48;
-		for (unsigned int i = 0; i < numFontTests; ++i)
-		{
-			FontManager::Get().DrawDebugString("The quick brown fox jumped over the lazy dog! 1234567890", Vector2(0.0f, 1.0f - (float)i * 0.05f), sc_colourWhite - (float)i*0.015f);
-		}*/
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix());
