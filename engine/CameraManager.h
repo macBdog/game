@@ -37,8 +37,9 @@ private:
 		//\brief Update the camera matrix from the inputs
         void CalculateCameraMatrix();
 
-		static const float sc_debugCameraSpeed;	///< Debug camera translation constant
-		static const float sc_debugCameraRot;	///< Debug camera rotation max
+		static const float sc_debugCameraSpeed;		///< Debug camera translation constant
+		static const float sc_debugCameraRot;		///< Debug camera rotation max degrees
+		static const float sc_debugCameraRotSpeed;	///< Debug camera rotation speed degrees per second
 
         Matrix m_mat;                   ///< The matrix defining the new coordinate system as calculated by the camera
         Vector m_pos;                   ///< Position of the camera in the world
