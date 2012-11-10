@@ -1,6 +1,6 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Create game objects from templates and save in a scene.
+WHAT IS THE CURRENT SHORT TERM GOAL: Save game objects in a scene file.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
-TASK QUEUE: Model loading, LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
+TASK QUEUE: LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
 
 What is this project?
 
