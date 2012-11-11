@@ -269,6 +269,9 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 bool Model::Unload()
 {
 	// Deallocate memory here
+	free(m_verts);
+	free(m_normals);
+	free(m_uvs);
 
 	m_loaded = false;
 	return true;

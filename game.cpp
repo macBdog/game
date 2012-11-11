@@ -5,6 +5,8 @@
 
 #include <SDL.h>
 
+#include "core/MathUtils.h"
+
 #include "engine/CameraManager.h"
 #include "engine/DebugMenu.h"
 #include "engine/FontManager.h"
@@ -134,6 +136,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Subsystem startup
+	MathUtils::InitialiseRandomNumberGenerator();
     RenderManager::Get().Startup(sc_colourBlack);
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));

@@ -22,7 +22,7 @@ public:
 		, m_numFaces(0) 
 		, m_displayListId(0) {}
 
-	~Model() { Unload(); }
+	~Model() { if (m_loaded) { Unload(); } }
 
 	//\brief Load a TGA file into memory and store out the texture ID
 	//\param a_modelFilePath pointer to a c string containing the fully qualified path to the model to load

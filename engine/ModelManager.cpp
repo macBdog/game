@@ -119,6 +119,13 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
 			sprintf(newModel->m_path, "%s", fileNameBuf);
 			m_modelMap.Insert(modelId, newModel);
+
+			// Reset the temporary loading pools ready for the next load
+			m_loadingVertPool.Reset();
+			m_loadingNormalPool.Reset();
+			m_loadingUvPool.Reset();
+
+			// Return the pointer to the actual model
 			return &newModel->m_model;
 		}
 		else
@@ -127,11 +134,6 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model load failed for %s", fileNameBuf);
 			return NULL;
 		}
-
-		// Reset the temporary loading pools ready for the next load
-		m_loadingVertPool.Reset();
-		m_loadingNormalPool.Reset();
-		m_loadingUvPool.Reset();
 	}
 	else // Report the error
 	{

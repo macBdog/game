@@ -21,6 +21,7 @@ public:
 	inline float GetG() { return g; }
 	inline float GetB() { return b; }
 	inline float GetA() { return a; }
+	inline float * GetValues() { return &r; }
 
 	//\brief Standard arithmatic operator overloads
 	Colour operator + (const Colour & a_val) const { return Colour(r + a_val.r, g + a_val.g, b + a_val.b, a + a_val.a); }
