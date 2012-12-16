@@ -27,7 +27,7 @@ bool GameObject::Draw()
 			rMan.AddModel(RenderManager::eBatchWorld, m_model, &m_worldMat);
 		}
 		
-		// Draw the object's controller over the top
+		// Draw the object's name, position, orientation and clip volume over the top
 		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
 			rMan.AddMatrix(RenderManager::eBatchWorld, m_worldMat);

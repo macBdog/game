@@ -216,6 +216,12 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 			default: break;
 		}
 
+		// Ensure debug text renders on top of everything
+		if ((eBatch)i >= eBatchDebug2D)
+		{
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
+
 		// Submit the tris
 		Tri * t = m_tris[i];
 		for (unsigned int j = 0; j < m_triCount[i]; ++j)
