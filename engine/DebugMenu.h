@@ -10,6 +10,17 @@
 #include "Gui.h"
 #include "Singleton.h"
 
+///\brief This macro creates a debug menu element for an arbitrary variable to enable easy and quick tuning
+#define DEBUG_TUNABLE_BOOL(varName)										\
+	bool varName = false;												\
+	inline void SetvarName(bool a_val)									\
+	{																	\
+		varName = a_val;												\
+		DebugMenu::Get().Set											\
+	}																	\
+	inline bool GetvarName() const { return varName; }					\
+	DebugMenu::Get().RegisterVarCallback_Bool(varName);	
+
 class Widget;
 
 //\brief The Debug Menu handles all in-game editing functionality. The current version will

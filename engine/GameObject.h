@@ -20,13 +20,24 @@ public:
 	//\brief GameObject state determines how the update effects related subsystems
 	enum eGameObjectState
 	{
-		eGameObjectState_New = 0,	// Object is created but not ready for life
-		eGameObjectState_Loading,	// Loading resources, scripts, models etc
-		eGameObjectState_Active,	// Out and about in the world
-		eGameObjectState_Sleep,		// Hibernation, no updates or rendering, can come back from sleep
-		eGameObjectState_Death,		// Unloading and cleaning up before destruction, no coming back from death
+		eGameObjectState_New = 0,	///< Object is created but not ready for life
+		eGameObjectState_Loading,	///< Loading resources, scripts, models etc
+		eGameObjectState_Active,	///< Out and about in the world
+		eGameObjectState_Sleep,		///< Hibernation, no updates or rendering, can come back from sleep
+		eGameObjectState_Death,		///< Unloading and cleaning up before destruction, no coming back from death
 
 		eGameObjectState_Count,
+	};
+
+	//\brief Clipping is for render culling and simple collisions for picking 
+	enum eClipType
+	{
+		eClipTypeNone = 0,			///< Always rendered, can't be picked
+		eClipTypeSphere,			///< Sphere bounding volume
+		eClipTypeAxisAlignedBox,	///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
+		eClipTypeBox,				///< Box with thrree seperate dimensions
+
+		eClipTypeCount,
 	};
 
 	//\brief Creation and destruction
@@ -38,6 +49,8 @@ public:
 		, m_model(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
+		, m_clipType(eClipTypeNone)
+		, m_clipVolumeSize(0.0f)
 		, m_worldMat(Matrix::Identity())
 		{ }
 
@@ -77,9 +90,11 @@ private:
 	Model *				  m_model;			///< Pointer to a mesh for display purposes
 	//Script			  m_script;			///< The LUA script for user defined behavior
 	eGameObjectState	  m_state;			///< What state the object is in
-	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every creature needs a name
 	float				  m_lifeTime;		///< How long this guy has been active
+	eClipType			  m_clipType;		///< What kind of shape represents the bounds of the object
+	Vector				  m_clipVolumeSize; ///< Dimensions of the clipping volume for culling and picking
 	Matrix				  m_worldMat;		///< Position and orientation in the world
+	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every creature needs a name
 
 };
 

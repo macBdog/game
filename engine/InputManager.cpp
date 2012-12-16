@@ -207,7 +207,7 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 	// Process the global callbacks
 	if (m_alphaKeys.m_type == eInputTypeKeyUp)
 	{
-		m_alphaKeys.m_delegate.Execute(true);
+		m_alphaKeys.m_delegate.Execute(false);
 	}
 
 	bool foundEvent = false;
@@ -219,7 +219,7 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 		if (ev->m_type == eInputTypeKeyUp && 
 			ev->m_src.m_key == a_key)
 		{
-			ev->m_delegate.Execute(true);
+			ev->m_delegate.Execute(false);
 
 			// Remove event if set to one shot
 			if (ev->m_oneShot)

@@ -260,9 +260,15 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 				return true;
 			}
 		}
+
+		// Report error and fail out
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot find material def %s in material file %s", a_materialName, a_materialFileName);
 		file.close();
 		return false;
 	}
+
+	// No material file to load
+	Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot open material file %s", a_materialFileName);
 	return false;
 }
 

@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 		{
 			char buf[32];
 			sprintf(buf, "FPS: %u", lastFps);
-			FontManager::Get().DrawDebugString(buf, Vector2(0.85f, 1.0f));
+			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
 		}
 
 		// Update the camera last

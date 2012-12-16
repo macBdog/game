@@ -120,9 +120,8 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath)
 			// Create from template properties
 			if (GameObject * newGameObject = new GameObject(m_totalSceneNumObjects++))
 			{
+				bool validObject = true;
 				newGameObject->SetState(GameObject::eGameObjectState_Loading);
-				newGameObject->SetPos(Vector(0.0f, 0.0f, -20.0f));
-
 				if (GameFile::Object * object = templateFile.FindObject("object"))
 				{
 					if (GameFile::Property * name = object->FindProperty("name"))
@@ -131,14 +130,27 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath)
 					}
 					if (GameFile::Property * model = object->FindProperty("model"))
 					{
-						newGameObject->SetModel(modelMan.GetModel(model->GetString()));
+						if (Model * newModel = modelMan.GetModel(model->GetString()))
+						{
+							newGameObject->SetModel(newModel);
+						}
+						else // Failure of model load will report errors
+						{
+							validObject = false;
+						}
 					}
 					// TODO Pos, rot, shader, etc
 
 					// Add to currently active scene
-					m_defaultScene.AddObject(newGameObject);
-
-					return newGameObject;
+					if (validObject)
+					{
+						m_defaultScene.AddObject(newGameObject);
+						return newGameObject;
+					}
+					else
+					{
+						return NULL;
+					}
 				}
 			}
 		}

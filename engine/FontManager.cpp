@@ -187,6 +187,12 @@ bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, flo
 
 bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
 {
+	Vector stringPos(a_pos.GetX(), a_pos.GetY(), 0.0f);
+	return DrawString(a_string, a_fontNameHash, a_size, stringPos, a_colour, a_batch);
+}
+
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+{
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
 	{
@@ -213,7 +219,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 					{
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						renderMan.AddFontChar2D(a_batch, curChar.m_displayListId, a_size, Vector2(xPos, yPos), a_colour);
+						renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, yPos, a_pos.GetZ()), a_colour);
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}
@@ -232,7 +238,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 }
 
 
-bool FontManager::DrawDebugString(const char * a_string, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
 {
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
@@ -253,7 +259,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	if (m_fonts.GetLength() > 0)
 	{
 		Vector2 pos(a_pos.GetX(), a_pos.GetY());
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, pos, a_colour, RenderManager::eBatchDebug);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, pos, a_colour, RenderManager::eBatchDebug3D);
 	}
 	else // Not fonts loaded
 	{

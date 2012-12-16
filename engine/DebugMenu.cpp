@@ -343,8 +343,13 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				{
 					char objBuf[StringUtils::s_maxCharsPerLine];
 					sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
-					m_gameObjectToEdit->SetModel(ModelManager::Get().GetModel(objBuf));
-					worldMan.GetCurrentScene()->Serialise();
+					
+					// Load the model and set it as the current model to edit
+					if (Model * newModel = ModelManager::Get().GetModel(objBuf))
+					{
+						m_gameObjectToEdit->SetModel(newModel);
+						worldMan.GetCurrentScene()->Serialise();
+					}
 				}
 				break;
 			}
@@ -569,8 +574,8 @@ void DebugMenu::Draw()
 	FontManager & fontMan = FontManager::Get();
 
 	// Draw 2D gridlines
-	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
-	renMan.AddLine2D(RenderManager::eBatchDebug, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+	renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
+	renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
 
 	// Draw 3D gridlines
 	const unsigned int gridSize = 10;
@@ -581,14 +586,14 @@ void DebugMenu::Draw()
 	for (unsigned int x = 0; x < gridSize+1; ++x)
 	{
 		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
-		renMan.AddLine(RenderManager::eBatchWorld, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
+		renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
 	}
 
 	// Gridlines on the Y axis
 	for (unsigned int y = 0; y < gridSize+1; ++y)
 	{
 		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
-		renMan.AddLine(RenderManager::eBatchWorld, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
+		renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
 	}
 
 	// Draw an identity matrix at the origin
@@ -599,14 +604,14 @@ void DebugMenu::Draw()
 	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 	sprintf(mouseBuf, "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
 	Vector2 displayPos(mousePos.GetX() + sc_cursorSize, mousePos.GetY() - sc_cursorSize);
-	fontMan.DrawDebugString(mouseBuf, displayPos, sc_colourGreen);
+	fontMan.DrawDebugString2D(mouseBuf, displayPos, sc_colourGreen);
 
 	// Draw mouse cursor
 	for (int i = 0; i < 3; ++i)
 	{
-		renMan.AddLine2D(RenderManager::eBatchDebug, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
+		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
-	renMan.AddLine2D(RenderManager::eBatchDebug, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)

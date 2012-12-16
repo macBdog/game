@@ -27,13 +27,14 @@ public:
 	};
 
 	//\brief A Batch is a way to specify rendering order
-	// CH:TODO Rename from batch, it's incorrect terminology
+	// CH:TODO Rename from batch, it's incorrect terminology, what about Category? Layer?
 	enum eBatch
 	{
 		eBatchNone = 0,		//< It's valid to render in the none batch
 		eBatchWorld,		//< But it will be drawn over by the world
 		eBatchGui,			//< GUI covers the world
-		eBatchDebug,		//< Debug text over everything
+		eBatchDebug2D,		//< Debug text over everything
+		eBatchDebug3D,		//< Debug text over everything
 
 		eBatchCount,
 	};
@@ -83,6 +84,7 @@ public:
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+	void AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
 
 	//\brief 3D Drawing functions
 	void AddLine(eBatch a_batch, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
@@ -98,12 +100,9 @@ public:
 
 	//\brief Add a font character for drawing
 	//\param a_batch is the rendering group to draw the model in
-	//\param a_fontCharId is the display list ID of the character
-	void AddFontChar2D(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite);
-
-	//\brief Add a font character for drawing
-	//\param a_batch is the rendering group to draw the model in
-	//\param a_fontCharId is the display list ID of the character
+	//\param a_fontCharId is the display list ID of the character to call
+	//\param a_size is the size multiplier to use
+	//\param a_pos is the position in 3D space to draw. If a 2D batch is used, the Z component will be ignored
 	void AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
 	//\brief A matrix is position and orientation displayed with lines
@@ -152,6 +151,7 @@ private:
 		float m_size;
 		Vector m_pos;
 		Colour m_colour;
+		bool m_2d;
 	};
 
 	Tri	 * m_tris[eBatchCount];								// Pointer to a pool of memory for tris

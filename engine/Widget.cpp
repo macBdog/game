@@ -1,3 +1,4 @@
+#include "DebugMenu.h"
 #include "Log.h"
 #include "InputManager.h"
 #include "RenderManager.h"
@@ -47,7 +48,7 @@ void Widget::Draw()
 
 		// Draw the quad in various states of activation
 		RenderManager & rMan = RenderManager::Get();
-		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug : RenderManager::eBatchGui;
+		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug2D : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
 			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture, Texture::eOrientationNormal, selectColour);
@@ -79,7 +80,7 @@ void Widget::Draw()
 		{
 			if (m_fontNameHash > 0)
 			{
-				FontManager::Get().DrawDebugString(m_name, m_pos.GetVector(), m_colour, batch);
+				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, batch);
 			}	
 		}
 

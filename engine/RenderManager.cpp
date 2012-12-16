@@ -12,7 +12,7 @@
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_renderDepth2D = -10.0f;
 const float RenderManager::s_nearClipPlane = 0.5f;
-const float RenderManager::s_farClipPlane = 200.0f;
+const float RenderManager::s_farClipPlane = 1000.0f;
 const float RenderManager::s_fovAngleY = 50.0f;
 
 bool RenderManager::Startup(Colour a_clearColour)
@@ -122,6 +122,16 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 
     // Setup our viewport
     glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
+	
+	// Set up fog
+	// TODO Fog and other effects (DOF, blur, colourisation etc) should be configurable in the scene file
+    glFogi(GL_FOG_MODE, GL_LINEAR);                                         // Fog Mode nicest
+    glFogfv(GL_FOG_COLOR, m_clearColour.GetValues());						// Fog colour matches clear colour
+    glFogf(GL_FOG_DENSITY, 0.15f);                                          // How Dense Will The Fog Be
+    glHint(GL_FOG_HINT, GL_DONT_CARE);                                      // Fog Hint Value
+    glFogf(GL_FOG_START, 20.0f);                                            // Fog Start Depth
+    glFogf(GL_FOG_END, 400.0f);                                             // Fog End Depth
+    glEnable(GL_FOG);                                                       // Enables GL_FOG
 
     // Change to the projection matrix and set our viewing volume
     glMatrixMode(GL_PROJECTION);
@@ -176,6 +186,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		switch ((eBatch)i)
 		{
 			case eBatchWorld:
+			case eBatchDebug3D:
 			{
 				// Setup projection matrix stack to transform eye space to clip coordinates
 				glMatrixMode(GL_PROJECTION);
@@ -193,7 +204,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 				break;
 			}
 			case eBatchGui:
-			case eBatchDebug:
+			case eBatchDebug2D:
 			{
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
@@ -283,24 +294,15 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		}
 		glEnable(GL_TEXTURE_2D);
 
-		// Draw models by calling their display lists
-		RenderModel * rm = m_models[i];
-		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
-		{
-			glPushMatrix();
-			// TODO: rotation
-			glTranslatef(rm->m_mat->GetPos().GetX(), rm->m_mat->GetPos().GetY(), rm->m_mat->GetPos().GetZ());
-			glCallList(rm->m_model->GetDisplayListId());
-			glPopMatrix();
-			++rm;
-		}
-
 		// Draw font chars by calling their display lists
 		FontChar * fc = m_fontChars[i];
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
 		{
-			// TODO: billboarding for 3D font characters
 			glPushMatrix();
+			if (!fc->m_2d)
+			{
+				glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+			}
 			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
 			glScalef(fc->m_size, fc->m_size, 0.0f);
@@ -308,7 +310,18 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 			glPopMatrix();
 			++fc;
 		}
-		
+
+		// Draw models by calling their display lists
+		RenderModel * rm = m_models[i];
+		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
+		{
+			glPushMatrix();
+			glMultMatrixf(rm->m_mat->GetValues());
+			glCallList(rm->m_model->GetDisplayListId());
+			glPopMatrix();
+			++rm;
+		}
+
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
@@ -325,7 +338,7 @@ unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord
 	
 	// Bind the texture
 	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
-
+	
 	// Draw the verts
 	glBegin(GL_QUADS);
 	glTexCoord2f(a_texCoord.GetX(), 1.0f - a_texCoord.GetY()); 
@@ -340,6 +353,7 @@ unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord
 	glTexCoord2f(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
 	glVertex3f(0.0f, -a_size.GetY(), s_renderDepth2D);
 	glEnd();
+
 	glEndList();
 
 	return displayListId;
@@ -392,7 +406,7 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	}
 
 	// Warn about no texture
-	if (a_batch != eBatchDebug && a_tex == NULL)
+	if (a_batch != eBatchDebug2D && a_tex == NULL)
 	{
 		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Quad submitted without a texture");
 	}
@@ -450,6 +464,49 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	}
 }
 
+void RenderManager::AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex, Colour a_tint)
+{
+	// Don't add more primitives than have been allocated for
+	if (m_quadCount[a_batch] >= s_maxPrimitivesPerBatch)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many primitives added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		return;
+	}
+
+	// Warn about no texture
+	if (a_batch != eBatchDebug2D && a_tex == NULL)
+	{
+		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "3D Quad submitted without a texture");
+	}
+
+	// Copy params to next queue item
+	Quad * q = m_quads[a_batch];
+	q += m_quadCount[a_batch]++;
+	if (a_tex)
+	{
+		q->m_textureId = a_tex->GetId();
+	}
+	else
+	{
+		q->m_textureId = -1;
+	}
+	q->m_colour = a_tint;
+	
+	// Setup verts for clockwise drawing 
+	q->m_verts[0] = a_verts[0];
+	q->m_verts[1] = a_verts[1];
+	q->m_verts[2] = a_verts[2];
+	q->m_verts[3] = a_verts[3];
+
+	// Only one tex coord style for now
+	if (a_tex)
+	{
+		q->m_coords[0] = TexCoord(0.0f,	1.0f);
+		q->m_coords[1] = TexCoord(1.0f,	1.0f);
+		q->m_coords[2] = TexCoord(1.0f,	0.0f);
+		q->m_coords[3] = TexCoord(0.0f,	0.0f);
+	}
+}
 
 void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vector a_point2, Vector a_point3, TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3, Texture * a_tex, Colour a_tint)
 {
@@ -461,7 +518,7 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 	}
 
 	// Warn about no texture
-	if (a_batch != eBatchDebug && a_tex == NULL)
+	if (a_batch != eBatchDebug3D && a_tex == NULL)
 	{
 		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Tri submitted without a texture");
 	}
@@ -541,26 +598,13 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 	r += m_modelCount[a_batch]++;
 	r->m_model = a_model;
 	r->m_mat = a_mat;
-}
 
-
-void RenderManager::AddFontChar2D(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector2 a_pos, Colour a_colour)
-{
-	// Don't add more font characters than have been allocated for
-	if (m_fontCharCount[a_batch] >= s_maxPrimitivesPerBatch)
+	// Show the local matrix in debug mode
+	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many font characters added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
-		return;
+		AddMatrix(eBatchDebug3D, *a_mat);
 	}
 
-	FontChar * fc = m_fontChars[a_batch];
-	fc += m_fontCharCount[a_batch]++;
-	fc->m_displayListId = a_fontCharId;
-	fc->m_size = a_size;
-	fc->m_pos.SetX(a_pos.GetX());
-	fc->m_pos.SetY(a_pos.GetY());
-	fc->m_pos.SetZ(s_renderDepth2D);
-	fc->m_colour = a_colour;
 }
 
 void RenderManager::AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour)
@@ -578,6 +622,7 @@ void RenderManager::AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float
 	fc->m_size = a_size;
 	fc->m_pos = a_pos;
 	fc->m_colour = a_colour;
+	fc->m_2d = a_batch == eBatchGui || a_batch == eBatchDebug2D;
 }
 
 void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)

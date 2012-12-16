@@ -108,9 +108,25 @@ public:
 		return NULL;
 	}
 
+	//\brief DeAlloc a block from the contiguous memory, care should be taken to pair this with an alloc
+	//\param a_allocationSizeBytes how much memory is being deallocated
+	inline void DeAllocate(size_t a_allocationSizeBytes)
+	{
+		if (a_allocationSizeBytes > 0)
+		{
+			// Just rewind the pointer
+			size_t newMemoryEnd = ((size_t) m_memoryEnd) - a_allocationSizeBytes;
+			m_memoryEnd = (T*)newMemoryEnd;
+
+			// Clear the overhang - this should be removed in debug configuration
+			T * ptr = m_memoryEnd;
+			memset(m_memoryEnd, 0, a_allocationSizeBytes);
+		}
+	}
+
 	//\brief Informational functions to track how much memory is in use
 	inline size_t GetAllocationSizeBytes() { return m_memorySize; }
-	//inline float GetAllocationRatio() { return m_memorySize > 0 ? m_currentOffset / m_memorySize : 0.0f; }
+	inline float GetAllocationRatio() { return m_memorySize > 0 ? m_currentOffset / m_memorySize : 0.0f; }
 	inline T * GetHead() { return m_memory; }
 
 private:

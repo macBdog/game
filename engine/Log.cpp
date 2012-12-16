@@ -129,7 +129,7 @@ void Log::Update(float a_dt)
 		// Display log entries that are still alive
 		if (logEntry->m_lifeTime > 0.0f)
 		{
-			FontManager::Get().DrawDebugString(logEntry->m_message, Vector2(-1.0f, logDisplayPosY), logEntry->m_colour);
+			FontManager::Get().DrawDebugString2D(logEntry->m_message, Vector2(-1.0f, logDisplayPosY), logEntry->m_colour);
 			if (logEntryCount == 0)
 			{
 				logEntry->m_lifeTime -= a_dt;

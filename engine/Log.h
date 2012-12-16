@@ -49,6 +49,10 @@ public:
 	void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 	void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 
+	//\brief Some handy overrides for common usage
+	inline void WriteEngineErrorNoParams(const char * a_message) { Write(LL_ERROR, LC_ENGINE, a_message); }
+	inline void WriteGameErrorNoParams(const char * a_message) { Write(LL_ERROR, LC_GAME, a_message); }
+
 	//\brief Update will draw all log entries that need to be displayed
 	//\param a_dt float of the time that has passed since the last update call
 	void Update(float a_dt);

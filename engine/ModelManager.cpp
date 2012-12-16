@@ -130,7 +130,8 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 		}
 		else
 		{
-			delete newModel;
+			//delete newModel;
+			m_modelPool.DeAllocate(sizeof(ManagedModel));
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model load failed for %s", fileNameBuf);
 			return NULL;
 		}
