@@ -608,7 +608,7 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		AddMatrix(eBatchDebug3D, *a_mat);
+		AddDebugMatrix(*a_mat);
 	}
 
 }
@@ -631,10 +631,20 @@ void RenderManager::AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float
 	fc->m_2d = a_batch == eBatchGui || a_batch == eBatchDebug2D;
 }
 
-void RenderManager::AddMatrix(eBatch a_batch, const Matrix & a_mat)
+void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 {
 	Vector startPos = a_mat.GetPos();
-	AddLine(a_batch, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left right
-	AddLine(a_batch, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look
-	AddLine(a_batch, startPos, startPos + a_mat.GetUp(), sc_colourBlue);		// Blue for Z axis up
+	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
+	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
+	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetUp(), sc_colourBlue);			// Blue for Z axis up
+}
+
+void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
+{
+	// TODO
+}
+
+void RenderManager::AddDebugCube(const Vector & a_worldPos, const float & a_size, Colour a_colour)
+{
+	// TODO
 }

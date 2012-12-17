@@ -11,7 +11,8 @@ using namespace std;	//< For fstream operations
 
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
-const float FontManager::s_debugFontSize = 1.25f;
+const float FontManager::s_debugFontSize2D = 1.25f;
+const float FontManager::s_debugFontSize3D = 5.0f;
 
 bool FontManager::Startup(const char * a_fontPath)
 {
@@ -243,7 +244,7 @@ bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, a_pos, a_colour, a_batch);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize2D, a_pos, a_colour, a_batch);
 	}
 	else // Not fonts loaded
 	{
@@ -259,7 +260,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	if (m_fonts.GetLength() > 0)
 	{
 		Vector2 pos(a_pos.GetX(), a_pos.GetY());
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize, pos, a_colour, RenderManager::eBatchDebug3D);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize3D, pos, a_colour, RenderManager::eBatchDebug3D);
 	}
 	else // Not fonts loaded
 	{

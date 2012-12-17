@@ -51,7 +51,8 @@ public:
 
 private:
 
-	static const float s_debugFontSize;					///< Glyph height for debug drawing
+	static const float s_debugFontSize2D;				///< Glyph height for debug drawing in ortho mode
+	static const float s_debugFontSize3D;				///< Glyph height for debug drawing in debug mode
 	static const unsigned int s_maxCharsPerFont = 256u;	///< No non-unicode support needed (yet)
 	static const unsigned int s_maxFontTexSize = 1024u; ///< Cannot load fonts greater than a meg
 

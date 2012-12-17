@@ -75,6 +75,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CameraManager.h" />
+    <ClInclude Include="CollisionUtils.h" />
     <ClInclude Include="DebugMenu.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FontManager.h" />
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CameraManager.cpp" />
+    <ClCompile Include="CollisionUtils.cpp" />
     <ClCompile Include="DebugMenu.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontManager.cpp" />

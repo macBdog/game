@@ -34,7 +34,8 @@ public:
 	{
 		eClipTypeNone = 0,			///< Always rendered, can't be picked
 		eClipTypeSphere,			///< Sphere bounding volume
-		eClipTypeAxisAlignedBox,	///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
+		eClipTypeAABB,				///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
+		eClipTypeCube,				///< Sphere bounding volume
 		eClipTypeBox,				///< Box with thrree seperate dimensions
 
 		eClipTypeCount,

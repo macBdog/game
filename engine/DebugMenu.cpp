@@ -597,7 +597,7 @@ void DebugMenu::Draw()
 	}
 
 	// Draw an identity matrix at the origin
-	renMan.AddMatrix(RenderManager::eBatchWorld, Matrix::Identity());
+	renMan.AddDebugMatrix(Matrix::Identity());
 	
 	// Show mouse pos at cursor
 	char mouseBuf[16];

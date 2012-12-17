@@ -30,7 +30,22 @@ bool GameObject::Draw()
 		// Draw the object's name, position, orientation and clip volume over the top
 		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
-			rMan.AddMatrix(RenderManager::eBatchWorld, m_worldMat);
+			rMan.AddDebugMatrix(m_worldMat);
+
+			switch (m_clipType)
+			{
+				case eClipTypeSphere:
+				{
+					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPurple); 
+					break;
+				}
+				case eClipTypeCube:
+				{
+					rMan.AddDebugCube(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPurple); 
+				}
+				default: break;
+			}
+
 			FontManager::Get().DrawDebugString3D(m_name, 1.0f, m_worldMat.GetPos());
 		}
 
