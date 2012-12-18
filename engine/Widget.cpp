@@ -321,8 +321,6 @@ void Widget::Activate()
 void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount)
 {
 	char outBuf[StringUtils::s_maxCharsPerName];
-	const char * lineEnd = "\n";
-	const char * tab = "\t";
 
 	// If this is a recursive call the output stream will be already set up
 	if (a_outputStream != NULL)
@@ -333,22 +331,22 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		tabs[a_indentCount] = '\0';
 
 		std::ofstream & menuStream = *a_outputStream;
-		menuStream << tabs << "widget" << lineEnd;
-		menuStream << tabs << "{" << lineEnd;
-		menuStream << tabs << tab << "name: "	<< m_name				<< lineEnd;
+		menuStream << tabs << "widget" << StringUtils::s_charLineEnd;
+		menuStream << tabs << "{" << StringUtils::s_charLineEnd;
+		menuStream << tabs << StringUtils::s_charTab << "name: "	<< m_name				<< StringUtils::s_charLineEnd;
 		
 		m_pos.GetString(outBuf);
-		menuStream << tabs << tab << "pos: "	<< outBuf	<< lineEnd;
+		menuStream << tabs << StringUtils::s_charTab << "pos: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
 		m_size.GetString(outBuf);
-		menuStream << tabs << tab << "size: "	<< outBuf	<< lineEnd;
+		menuStream << tabs << StringUtils::s_charTab << "size: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
 		if (m_texture != NULL)
 		{
-			menuStream << tabs << tab << "texture: " << m_texture->GetFileName() << lineEnd;
+			menuStream << tabs << StringUtils::s_charTab << "texture: " << m_texture->GetFileName() << StringUtils::s_charLineEnd;
 		}
 
-		menuStream << tabs << "}" << lineEnd;
+		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
 
 		// Serialise any siblings of this element at this indentation level
 		Widget * next = m_nextWidget;
@@ -375,9 +373,9 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		// Write menu header
 		if (menuOutput.is_open())
 		{
-			menuOutput << "menu"	<< lineEnd;
-			menuOutput << "{"		<< lineEnd;
-			menuOutput << tab		<< "name: "		<< m_name << lineEnd;
+			menuOutput << "menu"	<< StringUtils::s_charLineEnd;
+			menuOutput << "{"		<< StringUtils::s_charLineEnd;
+			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
 			
 			// Write all the siblings out
 			Widget * next = m_nextWidget;
@@ -395,7 +393,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 				child = child->GetChild();
 			}
 
-			menuOutput << "}" << lineEnd;
+			menuOutput << "}" << StringUtils::s_charLineEnd;
 		}
 
 		menuOutput.close();

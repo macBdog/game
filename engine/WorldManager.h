@@ -1,6 +1,9 @@
 #ifndef _ENGINE_WORLD_MANAGER_H_
 #define _ENGINE_WORLD_MANAGER_H_
 
+#include <iostream>
+#include <fstream>
+
 #include "../core/LinkedList.h"
 
 #include "GameObject.h"
@@ -13,8 +16,20 @@ class Scene
 
 public:
 	
+	//\brief SceneState keeps track of which scenes are loaded
+	enum SceneState
+	{
+		eSceneState_Unloaded = 0,	///< Not rendering or updating
+		eSceneState_Loading,		///< Loading settings and game objects
+		eSceneState_Active,			///< Updating and rendering
+		
+		eSceneState_Count,
+	};
+
 	//\brief Set scene count to 0 on construction
-	Scene() : m_numObjects(0) {}
+	Scene() 
+		: m_numObjects(0)
+		, m_state(eSceneState_Unloaded) { sprintf(m_name, "Scene01"); }
 
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
@@ -26,9 +41,12 @@ public:
 	//\brief Get the number of objects in the scene
 	//\return uint of the number of objects
 	inline unsigned int GetNumObjects() { return m_numObjects; }
+	
+	//\brief Resource mutators and accessors
+	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 
-	//\brief TODO Write all objects in the scene out 
-	void Serialise() {}
+	//\brief Write all objects in the scene out to a scene file
+	void Serialise();
 
 private:
 
@@ -40,8 +58,10 @@ private:
 	//\return true if resources were submitted without issue
 	bool Draw();
 
-	SceneObjects m_objects;			///< All the objects in the current scene
-	unsigned int m_numObjects;		///< How many objects are in the default scene
+	SceneObjects m_objects;							///< All the objects in the current scene
+	char m_name[StringUtils::s_maxCharsPerName];	///< Scene name for serialization
+	unsigned int m_numObjects;						///< How many objects are in the default scene
+	SceneState m_state;								///< What state the scene is in
 };
 
 //\brief WorldManager handles object and scene management.
@@ -57,7 +77,9 @@ public:
 
 	//\brief Initialise memory pools on startup, cleanup worlds objects on shutdown
 	//\param a_templatePath is the path to templates for game object creation
-	bool Startup(const char * a_templatePath);
+	//\param a_scenePath is the path to scene files for partitioning groups of game objects
+	//\return bool true if the world and scenes were started without error
+	bool Startup(const char * a_templatePath, const char * a_scenePath);
 	bool Shutdown();
 
 	//\brief Update will propogate through all objects in the active scene
@@ -77,18 +99,20 @@ public:
 	//\return Pointer to a game object in the world
 	GameObject * GetGameObject(unsigned int a_objectId);
 
-	//\brief Reload an object...
-
+	//\brief Get the scene that the world is currently showing
+	//\return A pointer to a scene
 	Scene * GetCurrentScene() { return &m_defaultScene; }
 
-	//\brief Accessor for the relative template path
+	//\brief Accessor for the relative paths
 	inline const char * GetTemplatePath() { return m_templatePath; }
+	inline const char * GetScenePath() { return m_scenePath; }
 
 private:
 
-	Scene	m_defaultScene;					///< Eventually scenes can be added and removed by the user
-	unsigned int m_totalSceneNumObjects;	///< Total objet count across all scenes, drives ID creation
+	Scene	m_defaultScene;									///< Eventually scenes can be added and removed by the user - multiple at once?
+	unsigned int m_totalSceneNumObjects;					///< Total object count across all scenes, drives ID creation
 	char	m_templatePath[StringUtils::s_maxCharsPerLine]; ///< Path for templates
+	char	m_scenePath[StringUtils::s_maxCharsPerLine];	///< Path for scene files
 };
 
 #endif /* _ENGINE_WORLD_MANAGER_H_ */

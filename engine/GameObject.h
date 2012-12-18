@@ -2,6 +2,9 @@
 #define _ENGINE_GAME_OBJECT_
 #pragma once
 
+#include <iostream>
+#include <fstream>
+
 #include "../core/Matrix.h"
 
 #include "StringUtils.h"
@@ -9,7 +12,7 @@
 class GameObjectComponent;
 class Model;
 
-//\brief A gameobject is the container for all entities involved in the gameplay.
+//\brief A GameObject is the container for all entities involved in the gameplay.
 //		 It is lightweight yet has provisions for all basic game related functions like
 //		 2D sprites, 3D models, scripts, events and collision.
 class GameObject
@@ -67,6 +70,10 @@ public:
 	inline bool IsActive()	  { return m_state == eGameObjectState_Active; }
 	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
 	inline unsigned int GetId() { return m_id; }
+	inline const char * GetName() { return m_name; }
+	inline Vector GetPos() { return m_worldMat.GetPos(); }
+	inline Vector GetRot() { return m_worldMat.GetPos(); } // TODO
+	inline Vector GetScale() { return m_worldMat.GetPos(); } //TODO
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }
@@ -78,6 +85,11 @@ public:
 	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetPos(Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
+
+	//\brief Write the game object, all instance properties and children to a file stream
+	//\param a_outputStream is a pointer to an output stream to write to
+	//\param a_indentCount is an optional number of tab character to prefix each line with
+	void Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount = 0);
 
 private:
 

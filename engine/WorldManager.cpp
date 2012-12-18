@@ -4,6 +4,8 @@
 
 #include "WorldManager.h"
 
+using namespace std;	//< For fstream operations
+
 template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
 
 void Scene::AddObject(GameObject * a_newObject)
@@ -57,6 +59,42 @@ bool Scene::Update(float a_dt)
 	return updateSuccess && drawSuccess;
 }
 
+void Scene::Serialise()
+{
+	// Construct the path from the scene directory and name of the scene
+	char scenePath[StringUtils::s_maxCharsPerLine];
+	sprintf(scenePath, "%s/%s.scn", WorldManager::Get().GetScenePath(), m_name);
+
+	// Create an output stream
+	std::ofstream sceneOutput;
+	sceneOutput.open(scenePath);
+
+	// Write menu header
+	if (sceneOutput.is_open())
+	{
+		sceneOutput << "scene"	<< StringUtils::s_charLineEnd;
+		sceneOutput << "{"		<< StringUtils::s_charLineEnd;
+		sceneOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
+		
+		// Add each object in the scene
+		SceneObject * curObject = m_objects.GetHead();
+		while (curObject != NULL)
+		{
+			// Alias the game object in the scene
+			GameObject * childGameObject = curObject->GetData();
+		
+			// Add the object to the game file and all properties
+			childGameObject->Serialise(&sceneOutput, 1);
+			
+			curObject = curObject->GetNext();
+		}
+
+		sceneOutput << "}" << StringUtils::s_charLineEnd;
+	}
+
+	sceneOutput.close();
+}
+
 bool Scene::Draw()
 {
 	// Iterate through all objects in the scene and update state
@@ -73,11 +111,16 @@ bool Scene::Draw()
 	return drawSuccess;
 }
 
-bool WorldManager::Startup(const char * a_templatePath)
+bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath)
 {
 	// Cache off the template path for non qualified loading of game object
 	memset(&m_templatePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_templatePath, a_templatePath, strlen(a_templatePath));
+
+	// Iterate through all scenes in the scenepath and load them
+	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
+	strncpy(m_scenePath, a_scenePath, strlen(a_scenePath));
+
 
 	return true;
 }

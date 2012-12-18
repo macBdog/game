@@ -118,12 +118,14 @@ int main(int argc, char *argv[])
 	char guiPath[StringUtils::s_maxCharsPerLine];
 	char modelPath[StringUtils::s_maxCharsPerLine];
 	char templatePath[StringUtils::s_maxCharsPerLine];
+	char scenePath[StringUtils::s_maxCharsPerLine];
 
 	strcpy(texturePath, configFile.GetString("config", "texturePath"));
 	strcpy(fontPath, configFile.GetString("config", "fontPath"));
 	strcpy(guiPath, configFile.GetString("config", "guiPath"));
 	strcpy(modelPath, configFile.GetString("config", "modelPath"));
 	strcpy(templatePath, configFile.GetString("config", "templatePath"));
+	strcpy(scenePath, configFile.GetString("config", "scenePath"));
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
 	Gui::Get().Startup(guiPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);
-	WorldManager::Get().Startup(templatePath);
+	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
 
     // Game main loop
