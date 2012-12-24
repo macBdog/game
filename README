@@ -1,6 +1,6 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Save game objects in a scene file.
+WHAT IS THE CURRENT SHORT TERM GOAL: LUA integration for scenes and GameObjects, providing lifecycle hooks.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
-TASK QUEUE: LUA integration with hooks for pos, size, texture, UVs, velocity, collision.
+TASK QUEUE: Script hooks for pos, size, texture, UVs, velocity, collision. Write a page allocator showing fragments.
 
 What is this project?
 
