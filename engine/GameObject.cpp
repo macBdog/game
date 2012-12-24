@@ -34,6 +34,7 @@ bool GameObject::Draw()
 		{
 			rMan.AddDebugMatrix(m_worldMat);
 
+			// Draw different debug render shapes accoarding to clip type
 			switch (m_clipType)
 			{
 				case eClipTypeSphere:
@@ -58,43 +59,25 @@ bool GameObject::Draw()
 }
 
 
-void GameObject::Serialise(ofstream * a_outputStream, unsigned int a_indentCount)
+void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 {
-	char outBuf[StringUtils::s_maxCharsPerName];
-	const char * lineEnd = "\n";
-	const char * tab = "\t";
-
-	// If this is a recursive call the output stream will be already set up
-	if (a_outputStream != NULL)
+	if (a_parent != NULL)
 	{
-		// Generate the correct tab amount
-		char tabs[StringUtils::s_maxCharsPerName];
-		memset(&tabs[0], '\t', a_indentCount);
-		tabs[a_indentCount] = '\0';
+		// Get string versions of numeric values
+		char posBuf[StringUtils::s_maxCharsPerName];
+		m_worldMat.GetPos().GetString(posBuf);
 
-		ofstream & menuStream = *a_outputStream;
-		menuStream << tabs << "gameObject" << lineEnd;
-		menuStream << tabs << "{" << lineEnd;
-		menuStream << tabs << tab << "name: "	<< m_name				<< lineEnd;
-		
-		m_worldMat.GetPos().GetString(outBuf);
-		menuStream << tabs << tab << "pos: "	<< outBuf	<< lineEnd;
-
-		menuStream << tabs << "}" << lineEnd;
-
-		// Serialise any siblings of this element at this indentation level
-		GameObject * next = m_next;
-		while (next != NULL)
-		{
-			next->Serialise(a_outputStream, a_indentCount);
-			next = next->GetNext();
-		}
+		// Output all properties
+		GameFile::Object * fileObject = outputFile->AddObject("gameObject", a_parent);
+		outputFile->AddProperty(fileObject, "name", m_name);
+		outputFile->AddProperty(fileObject, "template", m_template);
+		outputFile->AddProperty(fileObject, "pos", posBuf);
 
 		// Serialise any children of this child
 		GameObject * child = m_child;
 		while (child != NULL)
 		{
-			child->Serialise(a_outputStream, ++a_indentCount);
+			child->Serialise(outputFile, fileObject);
 			child = child->GetChild();
 		}
 	}

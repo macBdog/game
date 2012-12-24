@@ -323,6 +323,8 @@ bool Gui::LoadMenu(const char * a_menuFile)
 		return true;
 	}
 
+	// Cleanup and return
+	delete menuFile;
 	return false;
 }
 

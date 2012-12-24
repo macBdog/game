@@ -254,3 +254,8 @@ extern bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix
 
 	return false;
 }
+
+extern const char * StringUtils::BoolToString(bool a_input)
+{
+	return a_input ? "true" : "false";
+}

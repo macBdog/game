@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
 		if (strstr(guiPath, ":") == NULL)		{ StringUtils::PrependString(guiPath, gameDataPath); }
 		if (strstr(modelPath, ":") == NULL)		{ StringUtils::PrependString(modelPath, gameDataPath); }
 		if (strstr(templatePath, ":") == NULL)	{ StringUtils::PrependString(templatePath, gameDataPath); }
+		if (strstr(scenePath, ":") == NULL)		{ StringUtils::PrependString(scenePath, gameDataPath); }
 	}
 
 	// Subsystem startup

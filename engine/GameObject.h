@@ -7,6 +7,7 @@
 
 #include "../core/Matrix.h"
 
+#include "GameFile.h"
 #include "StringUtils.h"
 
 class GameObjectComponent;
@@ -56,7 +57,10 @@ public:
 		, m_clipType(eClipTypeNone)
 		, m_clipVolumeSize(0.0f)
 		, m_worldMat(Matrix::Identity())
-		{ }
+		{ 
+			SetName("UNAMED_GAME_OBJECT");
+			SetTemplate("");
+		}
 
 	~GameObject() { Destroy(); }
 
@@ -71,9 +75,11 @@ public:
 	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
+	inline const char * GetTemplate() { return m_template; }
 	inline Vector GetPos() { return m_worldMat.GetPos(); }
 	inline Vector GetRot() { return m_worldMat.GetPos(); } // TODO
 	inline Vector GetScale() { return m_worldMat.GetPos(); } //TODO
+	inline bool HasTemplate() { return strlen(m_template) > 0; }
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }
@@ -84,17 +90,17 @@ public:
 	//inline void SetScript(Script * a_newScript) { m_script = a_newScript; }
 	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
 	inline void SetPos(Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 
-	//\brief Write the game object, all instance properties and children to a file stream
-	//\param a_outputStream is a pointer to an output stream to write to
-	//\param a_indentCount is an optional number of tab character to prefix each line with
-	void Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount = 0);
+	//\brief Add the game object, all instance properties and children to game file object
+	//\param TODO
+	void Serialise(GameFile * outputFile, GameFile::Object * a_parent);
 
 private:
 
 	//\brief Destruction is private as it should only be handled by object management
-	void Destroy();
+	inline void Destroy() {}
 
 	unsigned int		  m_id;				///< Unique identifier, objects can be resolved from ids
 	GameObject *		  m_child;			///< Pointer to first child game obhject
@@ -107,7 +113,8 @@ private:
 	eClipType			  m_clipType;		///< What kind of shape represents the bounds of the object
 	Vector				  m_clipVolumeSize; ///< Dimensions of the clipping volume for culling and picking
 	Matrix				  m_worldMat;		///< Position and orientation in the world
-	char				  m_name[StringUtils::s_maxCharsPerName];	///< Every creature needs a name
+	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
+	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
 
 };
 

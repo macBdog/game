@@ -69,6 +69,9 @@ namespace StringUtils
 	//\return true if the string was moodified
 	extern bool AppendString(char * a_buffer_OUT, const char * a_suffix);
 
+	//\brief String versions of primitive types for serialisation
+	extern const char * BoolToString(bool a_input);
+
 	static const unsigned int s_maxCharsPerLine = 256u;		// Maximum number of chars that can be read before a cr
 	static const unsigned int s_maxCharsPerName = 64u;		// Maximum number of chars for a simple name
 	static const char * s_charLineEnd = "\n";				// Char sequence for the end of a line

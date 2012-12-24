@@ -137,7 +137,7 @@ void GameFile::Unload()
 		LinkedListNode<Property> * nextProperty = nextObject->GetData()->m_properties.GetHead();	
 		while(nextProperty != NULL)
 		{
-			// Cache off the working node so we can delete it and it's data
+			// Cache off the working node so we can delete it and its data
 			LinkedListNode<Property> * curProperty = nextProperty;
 			nextProperty = nextProperty->GetNext();
 
@@ -154,6 +154,29 @@ void GameFile::Unload()
 		delete curObject->GetData();
 		delete curObject;	
 	}	
+}
+
+bool GameFile::Write(const char * a_filePath)
+{
+	// Create an output stream
+	ofstream fileOutput;
+	fileOutput.open(a_filePath);
+
+	// Write menu header
+	if (fileOutput.is_open())
+	{
+		// Output each object and it's properties
+		LinkedListNode<Object> * cur = m_objects.GetHead();
+		while(cur != NULL)
+		{
+			cur->GetData()->Serialise(fileOutput);	
+			cur = cur->GetNext();
+		}
+	}
+
+	// Cleanup
+	fileOutput.close();
+	return true;
 }
 
 const char * GameFile::GetString(const char * a_object, const char * a_property)

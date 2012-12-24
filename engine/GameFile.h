@@ -89,6 +89,15 @@ public:
 			return Vector2::Vector2Zero();
 		}
 
+		inline void Serialise(std::ofstream & a_stream, unsigned int a_indentLevel = 0)
+		{
+			if (m_data)
+			{
+				GameFile::WriteTabs(a_stream, a_indentLevel);
+				a_stream << m_name.GetCString() << ":" << (const char *)m_data << StringUtils::s_charLineEnd;
+			}
+		}
+
 		StringHash m_name;
 		void * m_data;
 	};
@@ -104,6 +113,44 @@ public:
 		Property * FindProperty(const char * a_propertyName)
 		{
 			return GameFile::FindProperty(this, a_propertyName);
+		}
+
+		inline void Serialise(std::ofstream & a_stream, unsigned int a_indentLevel = 0)
+		{
+			GameFile::WriteTabs(a_stream, a_indentLevel);
+
+			// Write object name and opening brackets
+			a_stream << m_name.GetCString() << StringUtils::s_charLineEnd;
+			GameFile::WriteTabs(a_stream, a_indentLevel);
+			a_stream << "{" << StringUtils::s_charLineEnd;
+			++a_indentLevel;
+
+			// Iterate through all properties in the list
+			LinkedListNode<Property> * cur = m_properties.GetHead();
+			while(cur != NULL)
+			{
+				cur->GetData()->Serialise(a_stream, a_indentLevel);
+				cur = cur->GetNext();
+			}
+
+			// Output siblings of this child
+			Object * nextSibling = m_next;
+			while(nextSibling != NULL)
+			{
+				nextSibling->Serialise(a_stream, a_indentLevel);
+				nextSibling = nextSibling->m_next;
+			}
+
+			// Now the children of this child
+			if (m_firstChild)
+			{
+				m_firstChild->Serialise(a_stream, a_indentLevel);
+			}
+
+			// Now end the object
+			--a_indentLevel;
+			GameFile::WriteTabs(a_stream, a_indentLevel);
+			a_stream << "}" << StringUtils::s_charLineEnd;
 		}
 
 		StringHash m_name;					// Literal declared before the open brace
@@ -122,6 +169,9 @@ public:
 	void Unload();
 	inline bool Reload() { Unload(); return Load(m_filePath); }
 	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
+
+	//\brief Write data from memory to file preserving inheritance
+	bool Write(const char * a_filePath);
 
 	//\brief Accessors to the gamefile property data
 	const char * GetString(const char * a_object, const char * a_property);
@@ -162,6 +212,15 @@ private:
 	static inline bool IsLineNewObject(const char * a_line)
 	{
 		return !strstr(a_line, "{") && !strstr(a_line, "}") && !strstr(a_line, ":") && strlen(a_line) > 0;
+	}
+
+	//\brief Helper function to write a number of tabs to an output stream
+	static inline void WriteTabs(std::ofstream & a_stream, unsigned int a_indentLevel)
+	{
+		for (unsigned int i = 0; i < a_indentLevel; ++i)
+		{
+			a_stream << StringUtils::s_charTab;
+		}
 	}
 
 	LinkedList<Object> m_objects;							///< All the objects in this file
