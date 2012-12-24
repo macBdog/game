@@ -106,13 +106,18 @@ public:
 	void AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
 	//\brief A matrix is position and orientation displayed with lines
+	//\param a const ref of the matrix containing the position and orientation to display
 	void AddDebugMatrix(const Matrix & a_mat);
 
 	//\brief A sphere is a position and radius displayed with lines
+	//\param a_colour optional argument for the colour of the box
 	void AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour = sc_colourWhite);
 
-	//\brief A cube
-	void AddDebugCube(const Vector & a_worldPos, const float & a_size, Colour a_colour = sc_colourWhite);
+	//\brief A boc aligned to the world's axis
+	//\param a_worldPos the centre of the box
+	//\param a_dimensions the size of the box in x,y,z order
+	//\param a_colour optional argument for the colour of the box
+	void AddDebugAABB(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
 private:
 

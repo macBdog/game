@@ -642,9 +642,32 @@ void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
 	// TODO
+	AddDebugAABB(a_worldPos, Vector(a_radius), a_colour);
 }
 
-void RenderManager::AddDebugCube(const Vector & a_worldPos, const float & a_size, Colour a_colour)
+void RenderManager::AddDebugAABB(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
-	// TODO
+	// Define the corners of the cube
+	Vector halfSize = a_dimensions * 0.5f;
+	Vector corners[8];
+	corners[0] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
+	corners[1] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
+	corners[2] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
+	corners[3] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
+	
+	corners[4] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
+	corners[5] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
+	corners[6] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
+	corners[7] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
+	
+	// Draw the lines between each corner
+	for (unsigned int i = 0; i < 3; ++i)
+	{
+		AddLine(eBatchDebug3D, corners[i], corners[i+1], a_colour);
+		AddLine(eBatchDebug3D, corners[i+4], corners[i+5], a_colour);
+		AddLine(eBatchDebug3D, corners[i], corners[i+4], a_colour);
+	}
+	AddLine(eBatchDebug3D, corners[3], corners[0], a_colour);
+	AddLine(eBatchDebug3D, corners[7], corners[4], a_colour);
+	AddLine(eBatchDebug3D, corners[3], corners[7], a_colour);
 }

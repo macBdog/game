@@ -2,11 +2,16 @@
 #define _ENGINE_FILE_MANAGER_
 #pragma once
 
+#include "../core/Delegate.h"
 #include "../core/LinkedList.h"
 
 #include "Singleton.h"
 #include "StringUtils.h"
 
+///\brief The file manager handles regular opening, reading and writing of files but 
+//		  can also create a delegate for any system that cares about modifications in
+//		  a list of files. It uses file system events to callback to systems with an 
+//		  updated file or just notification.
 class FileManager : public Singleton<FileManager>
 {
 public:
@@ -31,6 +36,16 @@ public:
 		bool operator < (const Timestamp & a_val) { return m_totalDays < a_val.m_totalDays && m_totalSeconds < a_val.m_totalSeconds; }
 	};
 
+	//\brief Types of file modification
+	enum eModificationType
+	{
+		eModificationType_Change = 0,	///< A file's modification date is new
+		eModificationType_Create,		///< A file was created in a managed directory
+		eModificationType_Delete,		///< A file was deleted in a managed directory
+
+		eModificationType_Count,
+	};
+
 	//\brief How to pass lists of file info around
 	typedef LinkedListNode<FileInfo> FileListNode;
 	typedef LinkedList<FileInfo> FileList;
@@ -49,8 +64,24 @@ public:
 	//\param a_filePath cString of the path to enumerate
 	//\param a_fileList_OUT the list of FileInfo to add to
 	//\param a_fileSubstring optionally exclude all files without this substring in the path
-	bool FillManagedFileList(void * a_modifiedCallback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = NULL);
-	void EmptyManagedFileList(FileList & a_fileList_OUT);
+	template <typename TObj, typename TMethod>
+	inline bool FillManagedFileList(TObj * a_callerObject, TMethod a_callback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = NULL)
+	{
+		// Add an event to the list of items to be processed
+		// TODO memory management! Kill std new with a rusty fork
+		FileEventNode * newFileNode = new FileEventNode();
+		newFileNode->SetData(new FileEvent());
+	
+		// Set data for the new event
+		FileEvent * newEvent = newFileNode->GetData();
+		sprintf(newEvent->m_fileName, "%s", a_filePath);
+		newEvent->m_delegate.SetCallback(a_callerObject, a_callback);
+		m_events.Insert(newInputNode);
+
+		// The filelist itself is regular
+		return FillFileList(a_filePath, a_fileList_OUT, a_fileSubstring);
+	}
+	inline void EmptyManagedFileList(FileList & a_fileList_OUT) { EmptyFileList(a_fileList_OUT); }
 
 	//\brief Utility function to return a file's time stamp, is RELATIVE to each day.
 	//\param a_path the path to the file to be interrogated
@@ -59,11 +90,23 @@ public:
 	bool GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const;
 
 private:
-	// TODO: The file manager should cache off a function pointer for anything calling for
-	//		 a list of files. It should also generate a checksum for file modification in
-	//		 each managed path. At some update frequency the manager should recalculate
-	//		 the checksums of managed paths and call back to the system that ordered that
-	//		 managed path with a fresh file listing.
+
+	//\brief Storage for an input event and it's callback
+	struct FileEvent
+	{
+		FileEvent() 
+			: m_src(eModificationType_Change)
+			, m_delegate()
+			{ sprintf(m_fileName, ""); }
+
+		eModificationType m_src;							///< What event happened
+		char m_fileName[StringUtils::s_maxCharsPerName];	///< The file that was affected
+		Delegate<bool, bool> m_delegate;					///< Pointer to object to call when it happens
+	};
+
+	//\brief Alias to store a list of file handle callbacks
+	typedef LinkedListNode<FileEvent> FileEventNode;
+	typedef LinkedList<FileEvent> FileEventList;
 }; 
 
 #endif // _ENGINE_FILE_MANAGER_

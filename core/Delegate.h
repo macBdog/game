@@ -2,6 +2,8 @@
 #define _CORE_DELEGATE_
 #pragma once
 
+#include <cstdlib>
+
 #include "Callback.h"
 
 //\brief Wrapper for callback class to provide access to the correct method through polymorphism

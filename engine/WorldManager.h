@@ -39,6 +39,7 @@ public:
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
 	GameObject * GetSceneObject(unsigned int a_objectId);
+	GameObject * GetSceneObject(Vector a_worldPos);
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);

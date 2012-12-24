@@ -88,6 +88,7 @@ public:
 	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, eMouseButton a_button, eInputType a_type = eInputTypeMouseUp, bool a_oneShot = false)
 	{
 		// Add an event to the list of items to be processed
+		// TODO memory management! Kill std new with a rusty fork
 		InputEventNode * newInputNode = new InputEventNode();
 		newInputNode->SetData(new InputEvent());
 	
@@ -139,8 +140,8 @@ private:
 	//\brief An input event can come from a number of sources but only one at once hence the union
 	union InputSource
 	{
-		SDLKey m_key;				// A keyboard button
-		eMouseButton m_mouseButton;	// A mouse click
+		SDLKey m_key;				///< A keyboard button
+		eMouseButton m_mouseButton;	///< A mouse click
 	};
 
 	//\brief Storage for an input event and it's callback
@@ -152,10 +153,10 @@ private:
 			, m_type(eInputTypeNone)
 			, m_oneShot(false) {}
 
-		InputSource m_src;					// What event happened
-		Delegate<bool, bool> m_delegate;	// Pointer to object to call when it happens
-		eInputType	m_type;					// What type of event to respond to
-		bool		m_oneShot;				// If the event should only be responded to once
+		InputSource m_src;					///< What event happened
+		Delegate<bool, bool> m_delegate;	///< Pointer to object to call when it happens
+		eInputType	m_type;					///< What type of event to respond to
+		bool		m_oneShot;				///< If the event should only be responded to once
 	};
 
 	//\brief Input handling helper functions are split up so there is no one huge

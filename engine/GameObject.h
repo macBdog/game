@@ -39,7 +39,6 @@ public:
 		eClipTypeNone = 0,			///< Always rendered, can't be picked
 		eClipTypeSphere,			///< Sphere bounding volume
 		eClipTypeAABB,				///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
-		eClipTypeCube,				///< Sphere bounding volume
 		eClipTypeBox,				///< Box with thrree seperate dimensions
 
 		eClipTypeCount,
@@ -73,17 +72,22 @@ public:
 	inline void SetActive()	  { if (m_state == eGameObjectState_Sleep) m_state = eGameObjectState_Active; }
 	inline bool IsActive()	  { return m_state == eGameObjectState_Active; }
 	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
+	inline void SetClipType(eClipType a_newClipType) { m_clipType = a_newClipType; }
+	inline void SetClipSize(Vector a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
 	inline Vector GetPos() { return m_worldMat.GetPos(); }
 	inline Vector GetRot() { return m_worldMat.GetPos(); } // TODO
-	inline Vector GetScale() { return m_worldMat.GetPos(); } //TODO
+	inline Vector GetScale() { return m_worldMat.GetPos(); } // TODO
 	inline bool HasTemplate() { return strlen(m_template) > 0; }
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }
 	inline GameObject * GetNext() { return m_next; }
+
+	//\brief Collision functions
+	bool CollidesWith(Vector a_worldPos);
 
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }

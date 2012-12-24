@@ -170,6 +170,9 @@ int main(int argc, char *argv[])
             active = InputManager::Get().Update(event);
         }
 
+		// Update the camera first
+		CameraManager::Get().Update(lastFrameTimeSec);
+
 		// Update the world first, other systems rely on object positions/states etc
 		WorldManager::Get().Update(lastFrameTimeSec);
 		
@@ -192,9 +195,6 @@ int main(int argc, char *argv[])
 			sprintf(buf, "FPS: %u", lastFps);
 			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
 		}
-
-		// Update the camera last
-		CameraManager::Get().Update(lastFrameTimeSec);
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix());

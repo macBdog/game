@@ -9,7 +9,7 @@
 
 template<> FileManager * Singleton<FileManager>::s_instance = NULL;
 
-#ifndef WINDOWS
+#if __WIN32__
 bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {
 	WIN32_FIND_DATA findFileData;
@@ -99,8 +99,9 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
    return true;	
 }
 #else
-bool FileManager::PopulateFileList(const char * a_path, FileList & a_fileList)
+bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {
+	// TODO implementation on other platforms
 	return false;		
 }
 #endif
@@ -121,6 +122,7 @@ void FileManager::EmptyFileList(FileList & a_fileList_OUT)
 	}
 }
 
+#if __WIN32__
 bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
 {
 	// Check there is actually a path supplied
@@ -148,3 +150,10 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 		return false;
 	}
 }
+#else
+bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
+{
+	// TODO Multiplatform file system implementation
+	return false;
+}
+#endif

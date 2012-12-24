@@ -56,6 +56,25 @@ GameObject * Scene::GetSceneObject(unsigned int a_objectId)
 	return NULL;
 }
 
+GameObject * Scene::GetSceneObject(Vector a_worldPos)
+{
+	// Iterate through all objects in the scene
+	SceneObject * curObject = m_objects.GetHead();
+	while (curObject != NULL)
+	{
+		// To the first object that intersects with a point
+		GameObject * gameObject = curObject->GetData();
+		if (gameObject->CollidesWith(a_worldPos))
+		{
+			return gameObject;
+		}
+	
+		curObject = curObject->GetNext();
+	}
+
+	return NULL;
+}
+
 bool Scene::Update(float a_dt)
 {
 	// Iterate through all objects in the scene and update state
@@ -342,16 +361,19 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		if (templateFile.IsLoaded())
 		{
 			// Create from template properties
+			// TODO memory management
 			if (GameObject * newGameObject = new GameObject(m_totalSceneNumObjects++))
 			{
 				bool validObject = true;
 				newGameObject->SetState(GameObject::eGameObjectState_Loading);
-				if (GameFile::Object * object = templateFile.FindObject("object"))
+				if (GameFile::Object * object = templateFile.FindObject("gameObject"))
 				{
+					// Name
 					if (GameFile::Property * name = object->FindProperty("name"))
 					{
 						newGameObject->SetName(name->GetString());
 					}
+					// Model file
 					if (GameFile::Property * model = object->FindProperty("model"))
 					{
 						if (Model * newModel = modelMan.GetModel(model->GetString()))
@@ -362,6 +384,23 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						{
 							validObject = false;
 						}
+					}
+					// Clipping type
+					if (GameFile::Property * clipType = object->FindProperty("clipType"))
+					{
+						if (strstr(clipType->GetString(), "sphere") != NULL)
+						{
+							newGameObject->SetClipType(GameObject::eClipTypeSphere);
+						}
+						else if (strstr(clipType->GetString(), "axis") != NULL)
+						{
+							newGameObject->SetClipType(GameObject::eClipTypeAABB);
+						}
+					}
+					// Clipping size
+					if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
+					{
+						newGameObject->SetClipSize(Vector(clipSize->GetFloat(), clipSize->GetFloat(), clipSize->GetFloat()));
 					}
 					// TODO Pos, rot, shader, etc
 
@@ -376,11 +415,22 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						return NULL;
 					}
 				}
+				else // Can't find the first object
+				{
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to find a root gameObject node for template file %s", a_templatePath);
+					return NULL;
+				}
+			}
+			else // Can't create the game object
+			{
+				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to allocate memory to create game object from template file %s", a_templatePath);
+				return NULL;
 			}
 		}
-		else
+		else // Load failed
 		{
 			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load template file %s", a_templatePath);
+			return NULL;
 		}
 	}
 	else // Create default object

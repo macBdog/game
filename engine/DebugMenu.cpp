@@ -1,5 +1,6 @@
 #include "../core/Colour.h"
 
+#include "CameraManager.h"
 #include "FontManager.h"
 #include "InputManager.h"
 #include "Log.h"
@@ -612,6 +613,24 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+
+	// Do picking with all the game objects in the scene
+	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+	{
+		Vector pickingPoint = CameraManager::Get().GetCameraMatrix().GetPos();
+
+		// TODO WTF IS GOING ON HERE!
+		pickingPoint.SetX(-pickingPoint.GetX());
+		pickingPoint.SetY(-CameraManager::Get().GetCameraPos().GetY());
+		pickingPoint.SetZ(-CameraManager::Get().GetCameraPos().GetZ());
+		
+		pickingPoint += Vector(0.0f, 2.0f, 0.0f);
+		RenderManager::Get().AddDebugAABB(pickingPoint, Vector(0.02f));
+		if (GameObject * selectedObj = curScene->GetSceneObject(pickingPoint))
+		{
+			RenderManager::Get().AddDebugAABB(selectedObj->GetPos(), Vector(0.37f));
+		}
+	}
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)

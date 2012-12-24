@@ -74,6 +74,7 @@ bool TextureManager::Update(float a_dt)
 	{
 		m_updateTimer = 0.0f;
 		bool textureReloaded = false;
+
 		// For each texture category
 		for (unsigned int i = 0; i < eCategoryCount; ++i)
 		{

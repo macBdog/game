@@ -1,3 +1,4 @@
+#include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
 #include "RenderManager.h"
@@ -42,9 +43,9 @@ bool GameObject::Draw()
 					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPurple); 
 					break;
 				}
-				case eClipTypeCube:
+				case eClipTypeAABB:
 				{
-					rMan.AddDebugCube(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPurple); 
+					rMan.AddDebugAABB(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPurple); 
 				}
 				default: break;
 			}
@@ -58,6 +59,22 @@ bool GameObject::Draw()
 	return false;
 }
 
+bool GameObject::CollidesWith(Vector a_worldPos)
+{ 
+	// Clip point against volume
+	switch (m_clipType)
+	{
+		case eClipTypeSphere:
+		{
+			return CollisionUtils::IntersectPointSphere(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
+		}
+		case eClipTypeAABB:
+		{
+			return CollisionUtils::IntersectPointAABB(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize);
+		}
+		default: return false;
+	}
+}
 
 void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 {
