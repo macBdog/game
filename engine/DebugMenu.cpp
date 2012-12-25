@@ -617,18 +617,13 @@ void DebugMenu::Draw()
 	// Do picking with all the game objects in the scene
 	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 	{
-		Vector pickingPoint = CameraManager::Get().GetCameraMatrix().GetPos();
+		CameraManager & camMan = CameraManager::Get();
+		Vector pickingPoint = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 10.0f);
 
-		// TODO WTF IS GOING ON HERE!
-		pickingPoint.SetX(-pickingPoint.GetX());
-		pickingPoint.SetY(-CameraManager::Get().GetCameraPos().GetY());
-		pickingPoint.SetZ(-CameraManager::Get().GetCameraPos().GetZ());
-		
-		pickingPoint += Vector(0.0f, 2.0f, 0.0f);
 		RenderManager::Get().AddDebugAABB(pickingPoint, Vector(0.02f));
 		if (GameObject * selectedObj = curScene->GetSceneObject(pickingPoint))
 		{
-			RenderManager::Get().AddDebugAABB(selectedObj->GetPos(), Vector(0.37f));
+			RenderManager::Get().AddDebugAABB(selectedObj->GetPos(), selectedObj->GetClipSize(), sc_colourRed);
 		}
 	}
 }

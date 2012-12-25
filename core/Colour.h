@@ -47,6 +47,7 @@ static const Colour sc_colourGreen          = Colour(0.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourBlue           = Colour(0.0f, 0.0f, 1.0f, 1.0f);
 static const Colour sc_colourSkyBlue        = Colour(0.0f, 0.5f, 1.0f, 1.0f);
 static const Colour sc_colourPurple         = Colour(1.0f, 0.0f, 1.0f, 1.0f);
+static const Colour sc_colourPink			= Colour(1.0f, 0.5f, 0.9f, 1.0f);
 static const Colour sc_colourYellow			= Colour(1.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourOrange			= Colour(1.0f, 0.33f, 0.0f, 1.0f);
 static const Colour sc_colourBrown			= Colour(0.625, 0.2f, 0.0f, 1.0f);

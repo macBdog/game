@@ -30,7 +30,8 @@ public:
 
         //\brief Accessor for rendering 
         inline Matrix GetCameraMatrix() { return m_mat; }
-        inline Vector GetCameraPos() { return m_pos; }
+		inline Matrix GetViewMatrix() { return m_viewMat; }
+		inline Vector GetWorldPos() { return Vector(-m_pos.GetX(), -m_pos.GetY(), -m_pos.GetZ()); }
 
 private:
 
@@ -42,6 +43,7 @@ private:
 		static const float sc_debugCameraRotSpeed;	///< Debug camera rotation speed degrees per second
 
         Matrix m_mat;                   ///< The matrix defining the new coordinate system as calculated by the camera
+		Matrix m_viewMat;				///< The matrix defining the direction the camera is looking
         Vector m_pos;                   ///< Position of the camera in the world
         Vector2 m_orientation;			///< Angle of the camera around it's view axis
 		Vector2 m_orientationInput;		///< Input to orientation given mouse corrds

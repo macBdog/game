@@ -18,15 +18,15 @@ void CameraManager::Update(float a_dt)
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
 		// Create a view direction matrix
-		Matrix viewMat = Matrix::Identity();
-		viewMat = viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
-		viewMat = viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * sc_debugCameraRotSpeed));
+		m_viewMat = Matrix::Identity();
+		m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
+		m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * sc_debugCameraRotSpeed));
 
 		// WSAD for FPS style movement
-		if (inMan.IsKeyDepressed(SDLK_w)) {	m_pos -= viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_s)) {	m_pos += viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_d)) { m_pos -= viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_a)) {	m_pos += viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
+		if (inMan.IsKeyDepressed(SDLK_w)) {	m_pos -= m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
+		if (inMan.IsKeyDepressed(SDLK_s)) {	m_pos += m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
+		if (inMan.IsKeyDepressed(SDLK_d)) { m_pos -= m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
+		if (inMan.IsKeyDepressed(SDLK_a)) {	m_pos += m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
 		if (inMan.IsKeyDepressed(SDLK_q)) {	m_pos -= Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }
 		if (inMan.IsKeyDepressed(SDLK_e)) { m_pos += Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }	
 
@@ -52,7 +52,7 @@ void CameraManager::CalculateCameraMatrix()
 {
         // Create the matrix
 		m_mat = Matrix::Identity();
-        m_mat.SetPos(m_pos);
+		m_mat.SetPos(m_pos);
 
         // Rotate the matrix about two axis defined by the mouse coords
         float angleX = (PI * 0.5f) + m_orientation.GetY() * 0.01f;

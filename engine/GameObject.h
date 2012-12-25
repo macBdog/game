@@ -80,6 +80,7 @@ public:
 	inline Vector GetPos() { return m_worldMat.GetPos(); }
 	inline Vector GetRot() { return m_worldMat.GetPos(); } // TODO
 	inline Vector GetScale() { return m_worldMat.GetPos(); } // TODO
+	inline Vector GetClipSize() { return m_clipVolumeSize; }
 	inline bool HasTemplate() { return strlen(m_template) > 0; }
 
 	//\brief Child object accessors

@@ -40,12 +40,12 @@ bool GameObject::Draw()
 			{
 				case eClipTypeSphere:
 				{
-					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPurple); 
+					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPink); 
 					break;
 				}
 				case eClipTypeAABB:
 				{
-					rMan.AddDebugAABB(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPurple); 
+					rMan.AddDebugAABB(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPink); 
 				}
 				default: break;
 			}
