@@ -75,6 +75,25 @@ GameObject * Scene::GetSceneObject(Vector a_worldPos)
 	return NULL;
 }
 
+GameObject *Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
+{
+	// Iterate through all objects in the scene
+	SceneObject * curObject = m_objects.GetHead();
+	while (curObject != NULL)
+	{
+		// To the first object that intersects with a point
+		GameObject * gameObject = curObject->GetData();
+		if (gameObject->CollidesWith(a_lineStart, a_lineEnd))
+		{
+			return gameObject;
+		}
+	
+		curObject = curObject->GetNext();
+	}
+
+	return NULL;
+}
+
 bool Scene::Update(float a_dt)
 {
 	// Iterate through all objects in the scene and update state
@@ -392,15 +411,15 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						{
 							newGameObject->SetClipType(GameObject::eClipTypeSphere);
 						}
-						else if (strstr(clipType->GetString(), "axis") != NULL)
+						else if (strstr(clipType->GetString(), "axisbox") != NULL)
 						{
-							newGameObject->SetClipType(GameObject::eClipTypeAABB);
+							newGameObject->SetClipType(GameObject::eClipTypeAxisBox);
 						}
 					}
 					// Clipping size
 					if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
 					{
-						newGameObject->SetClipSize(Vector(clipSize->GetFloat(), clipSize->GetFloat(), clipSize->GetFloat()));
+						newGameObject->SetClipSize(clipSize->GetVector());
 					}
 					// TODO Pos, rot, shader, etc
 

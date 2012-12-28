@@ -38,7 +38,7 @@ public:
 	{
 		eClipTypeNone = 0,			///< Always rendered, can't be picked
 		eClipTypeSphere,			///< Sphere bounding volume
-		eClipTypeAABB,				///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
+		eClipTypeAxisBox,			///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
 		eClipTypeBox,				///< Box with thrree seperate dimensions
 
 		eClipTypeCount,
@@ -88,7 +88,10 @@ public:
 	inline GameObject * GetNext() { return m_next; }
 
 	//\brief Collision functions
+	//\param The vector(s) to check intersection against the game object
+	//\return bool true if there is an intersection, false if none
 	bool CollidesWith(Vector a_worldPos);
+	bool CollidesWith(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }

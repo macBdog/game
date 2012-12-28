@@ -39,7 +39,20 @@ public:
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
 	GameObject * GetSceneObject(unsigned int a_objectId);
+	
+	//\brief Get the first object in the scene that intersects with a point in worldspace
+	//\param a vector of the point to check agains
+	//\return a pointer to a game object or NULL if no hits
 	GameObject * GetSceneObject(Vector a_worldPos);
+
+	//\brief Get the first object in the scene that intersects with a line segment
+	//\param a_lineStart the start of the line segment to check against
+	//\return a pointer to a game object or NULL if no hits
+	GameObject * GetSceneObject(Vector a_lineStart, Vector a_lineEnd);
+
+	//\brief TODO Stubbed out for implementation
+	GameObject * GetSceneObjects(Vector a_worldPos);
+	GameObject * GetSceneObjects(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);

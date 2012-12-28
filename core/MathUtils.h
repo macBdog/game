@@ -60,9 +60,17 @@ namespace MathUtils
 			return a_from + ((a_to - a_from) * a_frac);
 		}
 	}
+	
+	//\brief Convert between degrees and radians
 	static float Deg2Rad(float a_degrees)
 	{
 		return a_degrees * (PI / 180.0f);
+	}
+
+	//\brief Compare a float value to close to zero
+	static bool IsZeroEpsilon(float a_val)
+	{
+		return fabsf(a_val) < EPSILON;
 	}
 }
 

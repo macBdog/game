@@ -43,9 +43,9 @@ bool GameObject::Draw()
 					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPink); 
 					break;
 				}
-				case eClipTypeAABB:
+				case eClipTypeAxisBox:
 				{
-					rMan.AddDebugAABB(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPink); 
+					rMan.AddDebugAxisBox(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPink); 
 				}
 				default: break;
 			}
@@ -68,9 +68,27 @@ bool GameObject::CollidesWith(Vector a_worldPos)
 		{
 			return CollisionUtils::IntersectPointSphere(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
 		}
-		case eClipTypeAABB:
+		case eClipTypeAxisBox:
 		{
-			return CollisionUtils::IntersectPointAABB(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize);
+			return CollisionUtils::IntersectPointAxisBox(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize);
+		}
+		default: return false;
+	}
+}
+
+bool GameObject::CollidesWith(Vector a_lineStart, Vector a_lineEnd)
+{ 
+	// Clip line against volume
+	Vector clipPoint(0.0f);
+	switch (m_clipType)
+	{
+		case eClipTypeSphere:
+		{
+			return CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
+		}
+		case eClipTypeAxisBox:
+		{
+			return CollisionUtils::IntersectLineAxisBox(a_lineStart, a_lineEnd, m_worldMat.GetPos(), m_clipVolumeSize, clipPoint);
 		}
 		default: return false;
 	}

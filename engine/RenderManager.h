@@ -117,7 +117,7 @@ public:
 	//\param a_worldPos the centre of the box
 	//\param a_dimensions the size of the box in x,y,z order
 	//\param a_colour optional argument for the colour of the box
-	void AddDebugAABB(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
+	void AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
 private:
 

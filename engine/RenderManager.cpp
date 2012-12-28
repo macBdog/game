@@ -642,10 +642,10 @@ void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
 	// TODO
-	AddDebugAABB(a_worldPos, Vector(a_radius), a_colour);
+	AddDebugAxisBox(a_worldPos, Vector(a_radius), a_colour);
 }
 
-void RenderManager::AddDebugAABB(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
+void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
 	// Define the corners of the cube
 	Vector halfSize = a_dimensions * 0.5f;

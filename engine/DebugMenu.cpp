@@ -618,12 +618,12 @@ void DebugMenu::Draw()
 	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 	{
 		CameraManager & camMan = CameraManager::Get();
-		Vector pickingPoint = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 10.0f);
+		Vector pickingPointEnd = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 100.0f);
 
-		RenderManager::Get().AddDebugAABB(pickingPoint, Vector(0.02f));
-		if (GameObject * selectedObj = curScene->GetSceneObject(pickingPoint))
+		RenderManager::Get().AddDebugAxisBox(pickingPointEnd, Vector(0.5f));
+		if (GameObject * selectedObj = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd))
 		{
-			RenderManager::Get().AddDebugAABB(selectedObj->GetPos(), selectedObj->GetClipSize(), sc_colourRed);
+			RenderManager::Get().AddDebugAxisBox(selectedObj->GetPos(), selectedObj->GetClipSize(), sc_colourRed);
 		}
 	}
 }
