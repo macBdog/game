@@ -27,6 +27,8 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 DebugMenu::DebugMenu()
 : m_enabled(false) 
 , m_handledCommand(false)
+, m_dirtyFlags()
+, m_lastMousePosRelative(0.0f)
 , m_editType(eEditTypeNone)
 , m_editMode(eEditModeNone)
 , m_widgetToEdit(NULL)
@@ -37,15 +39,21 @@ DebugMenu::DebugMenu()
 , m_btnCreateGameObject(NULL)
 , m_btnCreateGameObjectFromTemplate(NULL)
 , m_btnCreateGameObjectNew(NULL)
-, m_btnChangeRoot(NULL)
-, m_btnChangePos(NULL)
-, m_btnChangeShape(NULL)
-, m_btnChangeName(NULL)
-, m_btnChangeTexture(NULL)
+, m_btnChangeGUIRoot(NULL)
+, m_btnChangeGUIPos(NULL)
+, m_btnChangeGUIShape(NULL)
+, m_btnChangeGUIName(NULL)
+, m_btnChangeGUITexture(NULL)
+, m_btnChangeObjectRoot(NULL)
+, m_btnSaveObjectTemplate(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
 , m_btnResourceSelectCancel(NULL)
+, m_textInput(NULL)
+, m_textInputField(NULL)
+, m_btnTextInputOk(NULL)
+, m_btnTextInputCancel(NULL)
 {
 	if (!Startup())
 	{
@@ -67,13 +75,15 @@ bool DebugMenu::Startup()
 	m_btnCreateGameObjectNew = CreateButton("New Object", sc_colourSkyBlue, m_btnCreateRoot);
 
 	// Change 2D objects
-	m_btnChangeRoot = CreateButton("Change", sc_colourRed, gui.GetDebugRoot());
-	m_btnChangePos = CreateButton("Position", sc_colourPurple, m_btnChangeRoot);
-	m_btnChangeShape = CreateButton("Shape", sc_colourBlue, m_btnChangeRoot);
-	m_btnChangeName = CreateButton("Name", sc_colourOrange, m_btnChangeRoot);
-	m_btnChangeTexture = CreateButton("Texture", sc_colourYellow, m_btnChangeRoot);
+	m_btnChangeGUIRoot = CreateButton("Change GUI", sc_colourRed, gui.GetDebugRoot());
+	m_btnChangeGUIPos = CreateButton("Position", sc_colourPurple, m_btnChangeGUIRoot);
+	m_btnChangeGUIShape = CreateButton("Shape", sc_colourBlue, m_btnChangeGUIRoot);
+	m_btnChangeGUIName = CreateButton("Name", sc_colourOrange, m_btnChangeGUIRoot);
+	m_btnChangeGUITexture = CreateButton("Texture", sc_colourYellow, m_btnChangeGUIRoot);
 
-	// TODO Change 3D objects
+	// Change 3D objects
+	m_btnChangeObjectRoot = CreateButton("Change Object", sc_colourRed, gui.GetDebugRoot());
+	m_btnSaveObjectTemplate = CreateButton("Save Template", sc_colourPurple, m_btnChangeObjectRoot);
 
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;
@@ -103,6 +113,23 @@ bool DebugMenu::Startup()
 	// Ok and Cancel buttons on the resource select dialog
 	m_btnResourceSelectOk = CreateButton("Ok", sc_colourOrange, m_resourceSelect);
 	m_btnResourceSelectCancel = CreateButton("Cancel", sc_colourGrey, m_resourceSelect);
+
+	// Create text input box for naming objects and files
+	curItem.m_size = WidgetVector(0.85f, 0.6f);
+	curItem.m_colour = sc_colourBlue;
+	curItem.m_name = "Text Entry";
+	m_textInput = gui.CreateWidget(curItem, gui.GetDebugRoot(), false);
+	m_textInput->SetDebugWidget();
+
+	curItem.m_size = WidgetVector(0.8f, 0.4f);
+	curItem.m_colour = sc_colourPurple;
+	curItem.m_name = "Enter Name";
+	m_textInputField = gui.CreateWidget(curItem, m_textInput, false);
+	m_textInputField->SetShowFilePath();
+
+	// Ok and Cancel buttons on the text input dialog
+	m_btnTextInputOk = CreateButton("Ok", sc_colourOrange, m_textInput);
+	m_btnTextInputCancel = CreateButton("Cancel", sc_colourGrey, m_textInput);
 	
 	// Register global key and mnouse listeners - note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
@@ -122,29 +149,78 @@ bool DebugMenu::Startup()
 void DebugMenu::Update(float a_dt)
 {
 	// Handle editing actions tied to mouse move
+	InputManager & inMan = InputManager::Get();
 	if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
 	{
-		InputManager & inMan = InputManager::Get();
 		Vector2 mousePos = inMan.GetMousePosRelative();
 		switch (m_editMode)
 		{
 			case eEditModePos:
 			{	
 				m_widgetToEdit->SetPos(mousePos);
+				m_dirtyFlags.Set(eDirtyFlagGUI);
 				break;
 			}
 			case eEditModeShape:	
 			{
 				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
 												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
+				m_dirtyFlags.Set(eDirtyFlagGUI);
 				break;
 			}
 			default: break;
 		}
 	}
+	else if (m_gameObjectToEdit != NULL)
+	{
+		// Move object in all dimensions separately
+		Vector curPos = m_gameObjectToEdit->GetPos();
+		Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative);
+		if (inMan.IsKeyDepressed(SDLK_x))
+		{
+			m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
+			m_dirtyFlags.Set(eDirtyFlagScene);
+		} 
+		else if (inMan.IsKeyDepressed(SDLK_y))
+		{
+			m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
+			m_dirtyFlags.Set(eDirtyFlagScene);
+		}
+		else if (inMan.IsKeyDepressed(SDLK_z))
+		{
+			m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
+			m_dirtyFlags.Set(eDirtyFlagScene);
+		}
+	}
 
 	// Draw all widgets with updated coords
 	Draw();
+	
+	// Cache off the last mouse pos
+	m_lastMousePosRelative = inMan.GetMousePosRelative();
+}
+
+bool DebugMenu::SaveChanges()
+{
+	// Save resources to disk if dirty
+	bool changesSaved = false;
+	for (unsigned int i = 0; i < eDirtyFlagCount; ++i)
+	{
+		eDirtyFlag curFlag = (eDirtyFlag)i;
+		if (m_dirtyFlags.IsBitSet(curFlag))
+		{
+			// Handle each flag type
+			switch (curFlag)
+			{
+				case eDirtyFlagGUI:		Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
+				case eDirtyFlagScene:	WorldManager::Get().GetCurrentScene()->Serialise();		changesSaved = true; break;
+				default: break;
+			}
+			m_dirtyFlags.Clear(curFlag);
+		}
+	}
+
+	return changesSaved;
 }
 
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
@@ -206,7 +282,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
 		newWidget->SetPos(m_btnCreateRoot->GetPos());
-		Gui::Get().GetActiveMenu()->Serialise();
+		m_dirtyFlags.Set(eDirtyFlagGUI);
 		
 		// Cancel menu display
 		ShowCreateMenu(false);
@@ -250,56 +326,80 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	{
 		// Cancel all menu display
 		ShowCreateMenu(false);
-		ShowChangeMenu(false);
+		ShowChangeGUIMenu(false);
+		ShowChangeObjectMenu(false);
 
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnChangeRoot)
+	else if (a_widget == m_btnChangeGUIRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnChangeRoot->GetPos() + WidgetVector(m_btnChangeRoot->GetSize().GetX(), -m_btnChangeRoot->GetSize().GetY());
-		WidgetVector height = m_btnChangeRoot->GetSize();
+		WidgetVector right = m_btnChangeGUIRoot->GetPos() + WidgetVector(m_btnChangeGUIRoot->GetSize().GetX(), -m_btnChangeGUIRoot->GetSize().GetY());
+		WidgetVector height = m_btnChangeGUIRoot->GetSize();
 		height.SetX(0.0f);
-		m_btnChangePos->SetPos(right);
-		m_btnChangeShape->SetPos(right + height);
+		m_btnChangeGUIPos->SetPos(right);
+		m_btnChangeGUIShape->SetPos(right + height);
 
-		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY() * 2.0f);
-		m_btnChangeName->SetPos(right + height);
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
+		m_btnChangeGUIName->SetPos(right + height);
 
-		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY());
-		m_btnChangeTexture->SetPos(right + height);
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
+		m_btnChangeGUITexture->SetPos(right + height);
 
-		height.SetY(height.GetY() - m_btnChangeRoot->GetSize().GetY());
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
 		m_btnCancel->SetPos(right + height);
 
-		ShowChangeMenu(true);
+		ShowChangeGUIMenu(true);
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnChangePos)
+	else if (a_widget == m_btnChangeGUIPos)
 	{
 		m_editMode = eEditModePos;
-		ShowChangeMenu(false);
+		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnChangeShape)
+	else if (a_widget == m_btnChangeGUIShape)
 	{
 		m_editMode = eEditModeShape;
-		ShowChangeMenu(false);
+		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnChangeName)
-	{
+	else if (a_widget == m_btnChangeGUIName)
+	{		
 		m_editMode = eEditModeName;
-		ShowChangeMenu(false);
+		ShowTextInput(a_widget->GetName());
+		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
-	else if (a_widget == m_btnChangeTexture)
+	else if (a_widget == m_btnChangeGUITexture)
 	{
 		m_editMode = eEditModeTexture;
-		ShowChangeMenu(false);
+		ShowChangeGUIMenu(false);
 		
 		// Bring up the resource selection dialog
 		ShowResourceSelect(TextureManager::Get().GetTexturePath(), "tga");
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnChangeObjectRoot)
+	{
+		// Show menu options on the right of the menu
+		WidgetVector right = m_btnChangeGUIRoot->GetPos() + WidgetVector(m_btnChangeGUIRoot->GetSize().GetX(), -m_btnChangeGUIRoot->GetSize().GetY());
+		WidgetVector height = m_btnChangeGUIRoot->GetSize();
+		height.SetX(0.0f);
+		m_btnSaveObjectTemplate->SetPos(right);
+		m_btnChangeGUIShape->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
+		m_btnCancel->SetPos(right + height);
+
+		ShowChangeObjectMenu(true);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnSaveObjectTemplate)
+	{
+		m_editMode = eEditModeSaveTemplate;
+		ShowTextInput(m_gameObjectToEdit->GetTemplate());
+		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectOk)
@@ -318,7 +418,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 					char tgaBuf[StringUtils::s_maxCharsPerLine];
 					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
 					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
-					Gui::Get().GetActiveMenu()->Serialise();
+					m_dirtyFlags.Set(eDirtyFlagGUI);
 				}
 				break;
 			}
@@ -333,7 +433,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 						worldMan.RemoveObject(m_gameObjectToEdit->GetId());
 					}
 					worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem());
-					worldMan.GetCurrentScene()->Serialise();
+					m_dirtyFlags.Set(eDirtyFlagScene);
 				}
 
 				// Early out for no object
@@ -349,7 +449,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 					if (Model * newModel = ModelManager::Get().GetModel(objBuf))
 					{
 						m_gameObjectToEdit->SetModel(newModel);
-						worldMan.GetCurrentScene()->Serialise();
+						m_dirtyFlags.Set(eDirtyFlagScene);
 					}
 				}
 				break;
@@ -357,16 +457,54 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 			default: break;
 		}
 
-		HideResoureMenu();
+		HideResoureSelect();
 
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
 	{
-		HideResoureMenu();
+		HideResoureSelect();
 
 		m_handledCommand = true;
 	}
+	else if (a_widget == m_btnTextInputOk)
+	{
+		if (m_editType == eEditTypeWidget)
+		{
+			if (m_editMode == eEditModeName)
+			{
+				if (m_widgetToEdit != NULL)
+				{
+					m_widgetToEdit->SetName(m_textInputField->GetFilePath());
+					m_dirtyFlags.Set(eDirtyFlagGUI);
+				}
+			}
+		}
+		else if (m_editType == eEditTypeGameObject)
+		{
+			if (m_editMode == eEditModeSaveTemplate)
+			{
+				if (m_gameObjectToEdit != NULL)
+				{
+					m_gameObjectToEdit->SetTemplate(m_textInputField->GetFilePath());
+					m_dirtyFlags.Set(eDirtyFlagScene);
+				}
+			}
+		}
+
+		HideTextInput();
+
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnTextInputCancel)
+	{
+		HideTextInput();
+
+		m_handledCommand = true;
+	}
+
+	// Save anything dirty to file
+	SaveChanges();
 
 	return m_handledCommand;
 }
@@ -385,14 +523,29 @@ bool DebugMenu::OnActivate(bool a_active)
 		return false;
 	}
 
+	// If there is both a widget and object selected then we are in an error state
+	if (m_widgetToEdit != NULL && m_gameObjectToEdit != NULL)
+	{
+		return false;
+	}
+
 	// Set the creation root element to visible if it isn't already
 	InputManager & inMan = InputManager::Get();
 	if (m_widgetToEdit != NULL)
 	{
 		if (!IsDebugMenuActive())
 		{
-			m_btnChangeRoot->SetPos(inMan.GetMousePosRelative());
-			m_btnChangeRoot->SetActive(a_active);
+			m_btnChangeGUIRoot->SetPos(inMan.GetMousePosRelative());
+			m_btnChangeGUIRoot->SetActive(a_active);
+		}
+	}
+	else if (m_gameObjectToEdit != NULL)
+	{
+		if (!IsDebugMenuActive())
+		{
+			// TODO Get object pos from world pos of object
+			m_btnChangeObjectRoot->SetPos(Vector2(0.0f, 0.0f));
+			m_btnChangeObjectRoot->SetActive(a_active);
 		}
 	}
 	else if (!m_btnCreateRoot->IsActive())
@@ -419,7 +572,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_editMode = eEditModeNone;
 
 		// Changed a property, save the file
-		Gui::Get().GetActiveMenu()->Serialise();
+		m_dirtyFlags.Set(eDirtyFlagGUI);
 	}
 
 	// Don't play around with widget selection while a menu is up
@@ -448,6 +601,15 @@ bool DebugMenu::OnSelect(bool a_active)
 		return true;
 	}
 
+	// Do picking with all the game objects in the scene
+	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+	{
+		// TODO change picking point end to be the mouse cursor transformed to 3D space
+		CameraManager & camMan = CameraManager::Get();
+		Vector pickingPointEnd = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 100.0f);
+		m_gameObjectToEdit = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd);
+	}
+
 	return false;
 }
 
@@ -459,62 +621,50 @@ bool DebugMenu::OnEnable(bool a_toggle)
 
 bool DebugMenu::OnAlphaKey(bool a_unused)
 {
-	// Only useful if typing
-	if (m_editMode == eEditModeName)
+	// Only useful if typing in a text input box
+	if (m_textInput->IsActive())
 	{
-		if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
+		InputManager & inMan = InputManager::Get();
+		char newName[StringUtils::s_maxCharsPerName];
+		memset(newName, 0, StringUtils::s_maxCharsPerName);
+		strncpy(newName, m_textInputField->GetFilePath(), strlen(m_textInputField->GetFilePath()));
+
+		SDLKey lastKey = inMan.GetLastKey();
+		if (lastKey == SDLK_BACKSPACE)
 		{
-			InputManager & inMan = InputManager::Get();
-			char newName[StringUtils::s_maxCharsPerName];
-			memset(newName, 0, StringUtils::s_maxCharsPerName);
-			strncpy(newName, m_widgetToEdit->GetName(), strlen(m_widgetToEdit->GetName()));
-
-			SDLKey lastKey = inMan.GetLastKey();
-			if (lastKey == SDLK_RETURN)
+			// Delete a character off the end of the name
+			unsigned int nameLength = strlen(newName);
+			if (nameLength > 0)
 			{
-				// Quit out of editing
-				m_widgetToEdit->SetSelection(Widget::eSelectionNone);
-				m_editType = eEditTypeNone;
-				m_editMode = eEditModeNone;
-				m_widgetToEdit = NULL;
-				Gui::Get().GetActiveMenu()->Serialise();
+				newName[nameLength - 1] = '\0';
+				m_textInputField->SetFilePath(newName);
 			}
-			else if (lastKey == SDLK_BACKSPACE)
-			{
-				// Delete a character off the end of the name
-				unsigned int nameLength = strlen(newName);
-				if (nameLength > 0)
-				{
-					newName[nameLength - 1] = '\0';
-					m_widgetToEdit->SetName(newName);
-				}
-			}
-			else // Some other alpha key, append to the name
-			{
-				// TODO move this check to string utils and input manager
-				int keyVal = (int)lastKey;
-				const unsigned int alphaStart = 97; // ASCII for a key
-				const unsigned int alphaEnd = 122;  // ASCII for z key
-				const unsigned int numStart = 48;	// ASCII for 0
-				const unsigned int numEnd = 57;		// ASCII for 9
-				if ((keyVal >= alphaStart && keyVal <= alphaEnd) ||
-					(keyVal >= numStart && keyVal <= numEnd) ||
-					lastKey == SDLK_UNDERSCORE)
-				{
-					// Handle upper case letters when a shift is held
-					if ((keyVal >= alphaStart && keyVal <= alphaEnd) && 
-						(inMan.IsKeyDepressed(SDLK_LSHIFT) || inMan.IsKeyDepressed(SDLK_RSHIFT)))
-					{
-						keyVal -= 32;
-					}
-
-					sprintf(newName, "%s%c", m_widgetToEdit->GetName(), keyVal);
-					m_widgetToEdit->SetName(newName);
-				}
-			}
-		
-			return true;
 		}
+		else // Some other alpha key, append to the name
+		{
+			// TODO move this check to string utils and input manager
+			int keyVal = (int)lastKey;
+			const unsigned int alphaStart = 97; // ASCII for a key
+			const unsigned int alphaEnd = 122;  // ASCII for z key
+			const unsigned int numStart = 48;	// ASCII for 0
+			const unsigned int numEnd = 57;		// ASCII for 9
+			if ((keyVal >= alphaStart && keyVal <= alphaEnd) ||
+				(keyVal >= numStart && keyVal <= numEnd) ||
+				lastKey == SDLK_UNDERSCORE)
+			{
+				// Handle upper case letters when a shift is held
+				if ((keyVal >= alphaStart && keyVal <= alphaEnd) && 
+					(inMan.IsKeyDepressed(SDLK_LSHIFT) || inMan.IsKeyDepressed(SDLK_RSHIFT)))
+				{
+					keyVal -= 32;
+				}
+
+				sprintf(newName, "%s%c", m_textInputField->GetFilePath(), keyVal);
+				m_textInputField->SetFilePath(newName);
+			}
+		}
+
+		return true;
 	}
 
 	return false;
@@ -560,6 +710,40 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 		m_resourceSelectList->AddListItem(curNode->GetData()->m_name);
 
 		curNode = curNode->GetNext();
+	}
+}
+
+void DebugMenu::ShowTextInput(const char * a_startingText)
+{
+	// Position and display the elements of the dialog
+	m_textInput->SetActive();
+	m_textInputField->SetActive();
+	m_btnTextInputOk->SetActive();
+	m_btnTextInputCancel->SetActive();
+
+	// Position buttons on the panel
+	const float buttonSpacingX = 0.025f;
+	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
+	Vector2 parentSize = m_textInput->GetSize();
+	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
+	m_textInput->SetPos(parentPos);
+
+	// Position the list of resources
+	m_textInputField->SetPos(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
+
+	// Position the Ok and Cancel buttons
+	Vector2 buttonSize = m_btnTextInputOk->GetSize();
+	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
+								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
+	m_btnTextInputOk->SetPos(buttonPos);
+
+	buttonPos.SetX(parentPos.GetX() + parentSize.GetX() - buttonSize.GetX() - buttonSpacingX);
+	m_btnTextInputCancel->SetPos(buttonPos);
+
+	// Show the starting text if reqd
+	if (a_startingText != NULL)
+	{
+		m_textInputField->SetFilePath(a_startingText);
 	}
 }
 
@@ -614,17 +798,10 @@ void DebugMenu::Draw()
 	}
 	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
 
-	// Do picking with all the game objects in the scene
-	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+	// Draw selection box around objects
+	if (m_gameObjectToEdit != NULL)
 	{
-		CameraManager & camMan = CameraManager::Get();
-		Vector pickingPointEnd = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 100.0f);
-
-		RenderManager::Get().AddDebugAxisBox(pickingPointEnd, Vector(0.5f));
-		if (GameObject * selectedObj = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd))
-		{
-			RenderManager::Get().AddDebugAxisBox(selectedObj->GetPos(), selectedObj->GetClipSize(), sc_colourRed);
-		}
+		renMan.AddDebugAxisBox(m_gameObjectToEdit->GetPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
 	}
 }
 
@@ -671,21 +848,37 @@ void DebugMenu::ShowCreateMenu(bool a_show)
 	}
 }
 
-void DebugMenu::ShowChangeMenu(bool a_show)
+void DebugMenu::ShowChangeGUIMenu(bool a_show)
 {
 	// Set the change menu and all children visible
 	m_btnCancel->SetActive(a_show);
-	m_btnChangeRoot->SetActive(a_show);
-	m_btnChangePos->SetActive(a_show);
-	m_btnChangeShape->SetActive(a_show);
-	m_btnChangeName->SetActive(a_show);
-	m_btnChangeTexture->SetActive(a_show);
+	m_btnChangeGUIRoot->SetActive(a_show);
+	m_btnChangeGUIPos->SetActive(a_show);
+	m_btnChangeGUIShape->SetActive(a_show);
+	m_btnChangeGUIName->SetActive(a_show);
+	m_btnChangeGUITexture->SetActive(a_show);
 }
 
-void DebugMenu::HideResoureMenu()
+void DebugMenu::ShowChangeObjectMenu(bool a_show)
+{
+	// Set the change menu and all children visible
+	m_btnCancel->SetActive(a_show);
+	m_btnChangeObjectRoot->SetActive(a_show);
+	m_btnSaveObjectTemplate->SetActive(a_show);
+}
+
+void DebugMenu::HideResoureSelect()
 {
 	m_resourceSelect->SetActive(false);
 	m_resourceSelectList->SetActive(false);
 	m_btnResourceSelectOk->SetActive(false);
 	m_btnResourceSelectCancel->SetActive(false);
+}
+
+void DebugMenu::HideTextInput()
+{
+	m_textInput->SetActive(false);
+	m_textInputField->SetActive(false);
+	m_btnTextInputOk->SetActive(false);
+	m_btnTextInputCancel->SetActive(false);
 }

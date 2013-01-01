@@ -380,7 +380,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		if (templateFile.IsLoaded())
 		{
 			// Create from template properties
-			// TODO memory management
+			// TODO memory management kill std::new
 			if (GameObject * newGameObject = new GameObject(m_totalSceneNumObjects++))
 			{
 				bool validObject = true;

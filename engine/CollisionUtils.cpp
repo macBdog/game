@@ -48,7 +48,53 @@ extern bool CollisionUtils::IntersectLineAxisBox(Vector a_lineStart, Vector a_li
 		}
 	}
 
-	// TODO Check all other planes
+	// Check left plane
+	planeCentre = Vector(a_boxPos.GetX() - halfDim.GetX(), a_boxPos.GetY(), a_boxPos.GetZ());
+	if (IntersectLinePlane(a_lineStart, a_lineEnd, planeCentre, Vector(-1.0f, 0.0f, 0.0f), a_intersection_OUT))
+	{
+		if (fabsf(a_intersection_OUT.GetX() - planeCentre.GetX()) <= halfDim.GetX() &&
+			fabsf(a_intersection_OUT.GetY() - planeCentre.GetY()) <= halfDim.GetY() &&
+			fabsf(a_intersection_OUT.GetZ() - planeCentre.GetZ()) <= halfDim.GetZ())
+		{
+			return true;
+		}
+	}
+
+	// Check right plane
+	planeCentre = Vector(a_boxPos.GetX() + halfDim.GetX(), a_boxPos.GetY(), a_boxPos.GetZ());
+	if (IntersectLinePlane(a_lineStart, a_lineEnd, planeCentre, Vector(1.0f, 0.0f, 0.0f), a_intersection_OUT))
+	{
+		if (fabsf(a_intersection_OUT.GetX() - planeCentre.GetX()) <= halfDim.GetX() &&
+			fabsf(a_intersection_OUT.GetY() - planeCentre.GetY()) <= halfDim.GetY() &&
+			fabsf(a_intersection_OUT.GetZ() - planeCentre.GetZ()) <= halfDim.GetZ())
+		{
+			return true;
+		}
+	}
+
+	// Check top plane
+	planeCentre = Vector(a_boxPos.GetX(), a_boxPos.GetY(), a_boxPos.GetZ() + halfDim.GetZ());
+	if (IntersectLinePlane(a_lineStart, a_lineEnd, planeCentre, Vector(0.0f, 0.0f, 1.0f), a_intersection_OUT))
+	{
+		if (fabsf(a_intersection_OUT.GetX() - planeCentre.GetX()) <= halfDim.GetX() &&
+			fabsf(a_intersection_OUT.GetY() - planeCentre.GetY()) <= halfDim.GetY() &&
+			fabsf(a_intersection_OUT.GetZ() - planeCentre.GetZ()) <= halfDim.GetZ())
+		{
+			return true;
+		}
+	}
+
+	// Check bottom plane
+	planeCentre = Vector(a_boxPos.GetX(), a_boxPos.GetY(), a_boxPos.GetZ() - halfDim.GetZ());
+	if (IntersectLinePlane(a_lineStart, a_lineEnd, planeCentre, Vector(0.0f, 0.0f, -1.0f), a_intersection_OUT))
+	{
+		if (fabsf(a_intersection_OUT.GetX() - planeCentre.GetX()) <= halfDim.GetX() &&
+			fabsf(a_intersection_OUT.GetY() - planeCentre.GetY()) <= halfDim.GetY() &&
+			fabsf(a_intersection_OUT.GetZ() - planeCentre.GetZ()) <= halfDim.GetZ())
+		{
+			return true;
+		}
+	}
 
 	return false;
 }

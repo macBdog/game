@@ -81,6 +81,12 @@ void Widget::Draw()
 			if (m_fontNameHash > 0)
 			{
 				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, batch);
+
+				// Some widgets also display their path (for text input for example)
+				if (m_showFilePath)
+				{
+					FontManager::Get().DrawDebugString2D(m_filePath, m_pos.GetVector(), m_colour, batch);
+				}
 			}	
 		}
 

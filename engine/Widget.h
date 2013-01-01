@@ -116,6 +116,7 @@ public:
 		, m_nextWidget(NULL)
 		, m_childWidget(NULL)
 		, m_debugRender(false)
+		, m_showFilePath(false)
 		, m_selectedListItemId(0)
 	{
 		memset(&m_name, 0, sizeof(char) * StringUtils::s_maxCharsPerName);
@@ -188,10 +189,12 @@ public:
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
+	inline void SetShowFilePath() { m_showFilePath = true; }
 	
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
 	inline const char * GetName() { return m_name; }
+	inline const char * GetFilePath() { return m_filePath; }
 
 	//\brief Execute the callback if defined
 	void Activate();
@@ -237,6 +240,7 @@ private:
 	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
 	bool m_debugRender;					// If the widget should be rendered using the debug batch
+	bool m_showFilePath;				// If the widget should display the file path
 	char m_name[StringUtils::s_maxCharsPerName];		// Display name or label
 	char m_filePath[StringUtils::s_maxCharsPerLine];	// Path for loading and saving, only menus should have this property
 

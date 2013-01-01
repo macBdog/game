@@ -2,6 +2,7 @@
 #define _ENGINE_DEBUG_MENU_
 #pragma once
 
+#include "../core/BitSet.h"
 #include "../core/Colour.h"
 #include "../core/Vector.h"
 #include "../core/LinkedList.h"
@@ -39,6 +40,10 @@ public:
 	//\param a_dt float of time since the last frame in seconds
 	void Update(float a_dt);
 
+	//\brief Write any changed resources to disk
+	//\return bool true if anything was written, will not write if dirty
+	bool SaveChanges();
+
 	//\brief Callback handler for when a debug menu item is clicked
 	//\param A pointer to the widget that was interacted with
 	bool OnMenuItemMouseUp(Widget * a_widget);
@@ -67,13 +72,17 @@ public:
 	bool IsDebugMenuEnabled() const { return m_enabled; }
 
 	//\brief Debug menu active means there is a menu or dialog of the debug menu visible
-	bool IsDebugMenuActive() const { return (m_btnCreateRoot != NULL && m_btnChangeRoot != NULL) && 
-											(m_btnCreateRoot->IsActive() || m_btnChangeRoot->IsActive()); }
+	bool IsDebugMenuActive() const { return (m_btnCreateRoot != NULL && m_btnChangeGUIRoot != NULL && m_btnChangeObjectRoot != NULL) && 
+		(m_btnCreateRoot->IsActive() || m_btnChangeGUIRoot->IsActive() || m_btnChangeObjectRoot->IsActive()); }
 
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
 	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
 	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = NULL);
+
+	//\brief Show the text input dialog to enable something to be named
+	//\param a_startingText An optional pointer to a c string with the text that should be displayed
+	void ShowTextInput(const char * a_startingText = NULL);
 
 private:
 
@@ -97,8 +106,18 @@ private:
 		eEditModeName,			///< Cursor keys bound to display name
 		eEditModeModel,			///< Setting the model for an object
 		eEditModeTemplate,		///< Create an object from a template
+		eEditModeSaveTemplate,	///< Set the template name for an object
 
 		eEditModeCount,
+	};
+
+	//\brief Dirty flags are stored in a bitset to keep track of changes that need writing to disk
+	enum eDirtyFlag
+	{
+		eDirtyFlagGUI = 0,		///< GUI files need writing
+		eDirtyFlagScene,		///< Scene needs writing
+
+		eDirtyFlagCount,
 	};
 
 	//\brief Helper function to handle widget visibility and position as a result of actions
@@ -117,11 +136,16 @@ private:
 
 	//\brief Helper function to close debug menus
 	inline void ShowCreateMenu(bool a_show);
-	inline void ShowChangeMenu(bool a_show);
-	inline void HideResoureMenu();
+	inline void ShowChangeGUIMenu(bool a_show);
+	inline void ShowChangeObjectMenu(bool a_show);
+
+	void HideResoureSelect();
+	void HideTextInput();
 
 	bool m_enabled;									///< Is the menu being shown
 	bool m_handledCommand;							///< In the case that we are responding both to a global and a gui command
+	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
+	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
 	eEditType m_editType;							///< What type of object we are editing 
 	eEditMode m_editMode;							///< If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
@@ -135,17 +159,25 @@ private:
 			Widget * m_btnCreateGameObjectFromTemplate;
 			Widget * m_btnCreateGameObjectNew;
 
-	Widget * m_btnChangeRoot;
-		Widget * m_btnChangePos;
-		Widget * m_btnChangeShape;
-		Widget * m_btnChangeName;
-		Widget * m_btnChangeTexture;
+	Widget * m_btnChangeGUIRoot;
+		Widget * m_btnChangeGUIPos;
+		Widget * m_btnChangeGUIShape;
+		Widget * m_btnChangeGUIName;
+		Widget * m_btnChangeGUITexture;
 		Widget * m_btnCancel;
+
+	Widget * m_btnChangeObjectRoot;
+		Widget * m_btnSaveObjectTemplate;
 
 	Widget * m_resourceSelect;
 		Widget * m_resourceSelectList;
 		Widget * m_btnResourceSelectOk;
 		Widget * m_btnResourceSelectCancel;
+
+	Widget * m_textInput;
+		Widget * m_textInputField;
+		Widget * m_btnTextInputOk;
+		Widget * m_btnTextInputCancel;
 };
 
 #endif //_ENGINE_DEBUG_MENU_
