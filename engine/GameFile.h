@@ -94,7 +94,7 @@ public:
 			if (m_data)
 			{
 				GameFile::WriteTabs(a_stream, a_indentLevel);
-				a_stream << m_name.GetCString() << ":" << (const char *)m_data << StringUtils::s_charLineEnd;
+				a_stream << m_name.GetCString() << ": " << (const char *)m_data << StringUtils::s_charLineEnd;
 			}
 		}
 

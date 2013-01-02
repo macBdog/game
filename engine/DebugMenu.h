@@ -48,10 +48,6 @@ public:
 	//\param A pointer to the widget that was interacted with
 	bool OnMenuItemMouseUp(Widget * a_widget);
 
-	//\brief Callback handler for when a debug menu item is rolled over
-	//\param A pointer to the widget that was interacted with
-	bool OnMenuItemMouseOver(Widget * a_widget);
-
 	//\brief Listener function to show the debug menu
 	//\param a_active if the menu should be shown or hidden
 	bool OnActivate(bool a_active);
@@ -72,8 +68,19 @@ public:
 	bool IsDebugMenuEnabled() const { return m_enabled; }
 
 	//\brief Debug menu active means there is a menu or dialog of the debug menu visible
-	bool IsDebugMenuActive() const { return (m_btnCreateRoot != NULL && m_btnChangeGUIRoot != NULL && m_btnChangeObjectRoot != NULL) && 
-		(m_btnCreateRoot->IsActive() || m_btnChangeGUIRoot->IsActive() || m_btnChangeObjectRoot->IsActive()); }
+	bool IsDebugMenuActive() const 
+	{ 
+		return	(	m_btnCreateRoot			!= NULL && 
+					m_btnChangeGUIRoot		!= NULL && 
+					m_btnChangeObjectRoot	!= NULL &&
+					m_resourceSelect		!= NULL && 
+					m_textInput				!= NULL) 
+					&& 
+				(	m_btnCreateRoot->IsActive()			|| 
+					m_btnChangeGUIRoot->IsActive()		|| 
+					m_btnChangeObjectRoot->IsActive()	||
+					m_resourceSelect->IsActive()		||
+					m_textInput->IsActive()); }
 
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
@@ -164,10 +171,13 @@ private:
 		Widget * m_btnChangeGUIShape;
 		Widget * m_btnChangeGUIName;
 		Widget * m_btnChangeGUITexture;
-		Widget * m_btnCancel;
+		Widget * m_btnDeleteGUI;
 
 	Widget * m_btnChangeObjectRoot;
+		Widget * m_btnChangeObjectModel;
+		Widget * m_btnChangeObjectName;
 		Widget * m_btnSaveObjectTemplate;
+		Widget * m_btnDeleteObject;
 
 	Widget * m_resourceSelect;
 		Widget * m_resourceSelectList;

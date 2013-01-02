@@ -15,7 +15,7 @@ void CameraManager::Update(float a_dt)
 {
 	// Process debug camera controls
 	InputManager & inMan = InputManager::Get();
-	if (DebugMenu::Get().IsDebugMenuEnabled())
+	if (DebugMenu::Get().IsDebugMenuEnabled() && !DebugMenu::Get().IsDebugMenuActive())
 	{
 		// Create a view direction matrix
 		m_viewMat = Matrix::Identity();

@@ -161,6 +161,7 @@ public:
 	//\return true if the element is selected
 	bool IsSelected(eSelectionFlags a_selectMode = eSelectionRollover);
 	inline void SetSelection(eSelectionFlags a_newFlags) { m_selection = a_newFlags; }
+	inline void ClearSelection() { m_selection = eSelectionNone; }
 
 	//\brief Active means rendering, updating selection and responding to events
 	inline bool IsActive() { return m_active; }

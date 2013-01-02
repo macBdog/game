@@ -117,7 +117,7 @@ public:
 	GameObject * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL);
 
 	//\brief Remove a created object from the world, will not be destroyed right away
-	bool RemoveObject(unsigned int a_objectId) { return false; }
+	bool DestroyObject(unsigned int a_objectId) { return false; }
 
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object

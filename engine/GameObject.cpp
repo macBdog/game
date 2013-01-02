@@ -31,7 +31,7 @@ bool GameObject::Draw()
 		}
 		
 		// Draw the object's name, position, orientation and clip volume over the top
-		if (DebugMenu::Get().IsDebugMenuEnabled())
+		if (DebugMenu::Get().IsDebugMenuEnabled() && !DebugMenu::Get().IsDebugMenuActive())
 		{
 			rMan.AddDebugMatrix(m_worldMat);
 

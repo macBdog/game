@@ -34,7 +34,6 @@ DebugMenu::DebugMenu()
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
 , m_btnCreateRoot(NULL)
-, m_btnCancel(NULL)
 , m_btnCreateWidget(NULL)
 , m_btnCreateGameObject(NULL)
 , m_btnCreateGameObjectFromTemplate(NULL)
@@ -44,8 +43,12 @@ DebugMenu::DebugMenu()
 , m_btnChangeGUIShape(NULL)
 , m_btnChangeGUIName(NULL)
 , m_btnChangeGUITexture(NULL)
+, m_btnDeleteGUI(NULL)
 , m_btnChangeObjectRoot(NULL)
+, m_btnChangeObjectModel(NULL)
+, m_btnChangeObjectName(NULL)
 , m_btnSaveObjectTemplate(NULL)
+, m_btnDeleteObject(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
@@ -68,7 +71,6 @@ bool DebugMenu::Startup()
 
 	// Create the root of the create menu buttons and use it as the parent to each button
 	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
-	m_btnCancel = CreateButton("Cancel", sc_colourGrey, m_btnCreateRoot);
 	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
 	m_btnCreateGameObject = CreateButton("Game Object", sc_colourGreen, m_btnCreateRoot);
 	m_btnCreateGameObjectFromTemplate = CreateButton("From Template", sc_colourOrange, m_btnCreateRoot);
@@ -80,14 +82,19 @@ bool DebugMenu::Startup()
 	m_btnChangeGUIShape = CreateButton("Shape", sc_colourBlue, m_btnChangeGUIRoot);
 	m_btnChangeGUIName = CreateButton("Name", sc_colourOrange, m_btnChangeGUIRoot);
 	m_btnChangeGUITexture = CreateButton("Texture", sc_colourYellow, m_btnChangeGUIRoot);
+	m_btnDeleteGUI = CreateButton("Delete", sc_colourGrey, m_btnChangeGUIRoot);
 
 	// Change 3D objects
 	m_btnChangeObjectRoot = CreateButton("Change Object", sc_colourRed, gui.GetDebugRoot());
-	m_btnSaveObjectTemplate = CreateButton("Save Template", sc_colourPurple, m_btnChangeObjectRoot);
+	m_btnChangeObjectModel = CreateButton("Model", sc_colourGreen, m_btnChangeObjectRoot);
+	m_btnChangeObjectName = CreateButton("Name", sc_colourOrange, m_btnChangeObjectRoot);
+	m_btnSaveObjectTemplate = CreateButton("Template", sc_colourPurple, m_btnChangeObjectRoot);
+	m_btnDeleteObject = CreateButton("Delete", sc_colourGrey, m_btnChangeObjectRoot);
 
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.95f, 1.5f);
+	curItem.m_pos = WidgetVector(10.0f, 10.0f);
 
 	// Check for a loaded debug font
 	if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
@@ -115,16 +122,17 @@ bool DebugMenu::Startup()
 	m_btnResourceSelectCancel = CreateButton("Cancel", sc_colourGrey, m_resourceSelect);
 
 	// Create text input box for naming objects and files
-	curItem.m_size = WidgetVector(0.85f, 0.6f);
+	curItem.m_size = WidgetVector(0.85f, 0.4f);
 	curItem.m_colour = sc_colourBlue;
 	curItem.m_name = "Text Entry";
 	m_textInput = gui.CreateWidget(curItem, gui.GetDebugRoot(), false);
 	m_textInput->SetDebugWidget();
 
-	curItem.m_size = WidgetVector(0.8f, 0.4f);
-	curItem.m_colour = sc_colourPurple;
+	curItem.m_size = WidgetVector(0.8f, 0.15f);
+	curItem.m_colour = sc_colourGrey;
 	curItem.m_name = "Enter Name";
 	m_textInputField = gui.CreateWidget(curItem, m_textInput, false);
+	m_textInputField->SetDebugWidget();
 	m_textInputField->SetShowFilePath();
 
 	// Ok and Cancel buttons on the text input dialog
@@ -173,23 +181,27 @@ void DebugMenu::Update(float a_dt)
 	}
 	else if (m_gameObjectToEdit != NULL)
 	{
-		// Move object in all dimensions separately
-		Vector curPos = m_gameObjectToEdit->GetPos();
-		Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative);
-		if (inMan.IsKeyDepressed(SDLK_x))
+		// Don't move while a menu is up
+		if (!IsDebugMenuActive())
 		{
-			m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
-			m_dirtyFlags.Set(eDirtyFlagScene);
-		} 
-		else if (inMan.IsKeyDepressed(SDLK_y))
-		{
-			m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
-			m_dirtyFlags.Set(eDirtyFlagScene);
-		}
-		else if (inMan.IsKeyDepressed(SDLK_z))
-		{
-			m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
-			m_dirtyFlags.Set(eDirtyFlagScene);
+			// Move object in all dimensions separately
+			Vector curPos = m_gameObjectToEdit->GetPos();
+			Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative);
+			if (inMan.IsKeyDepressed(SDLK_x))
+			{
+				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
+				m_dirtyFlags.Set(eDirtyFlagScene);
+			} 
+			else if (inMan.IsKeyDepressed(SDLK_y))
+			{
+				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
+				m_dirtyFlags.Set(eDirtyFlagScene);
+			}
+			else if (inMan.IsKeyDepressed(SDLK_z))
+			{
+				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
+				m_dirtyFlags.Set(eDirtyFlagScene);
+			}
 		}
 	}
 
@@ -256,9 +268,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
 		m_btnCreateGameObject->SetPos(right + height);
 
-		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY());
-		m_btnCancel->SetPos(right + height);
-
 		ShowCreateMenu(true);
 		m_handledCommand = true;
 	}
@@ -316,19 +325,8 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		if (m_btnCreateGameObject->IsActive())
 		{
 			WorldManager::Get().CreateObject();
-		}
-		// Or a script object with no representation?
-		
+		}		
 		ShowCreateMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCancel)
-	{
-		// Cancel all menu display
-		ShowCreateMenu(false);
-		ShowChangeGUIMenu(false);
-		ShowChangeObjectMenu(false);
-
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUIRoot)
@@ -347,7 +345,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_btnChangeGUITexture->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnCancel->SetPos(right + height);
+		m_btnDeleteGUI->SetPos(right + height);
 
 		ShowChangeGUIMenu(true);
 		m_handledCommand = true;
@@ -367,7 +365,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	else if (a_widget == m_btnChangeGUIName)
 	{		
 		m_editMode = eEditModeName;
-		ShowTextInput(a_widget->GetName());
+		ShowTextInput(m_widgetToEdit->GetName());
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
@@ -380,26 +378,62 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		ShowResourceSelect(TextureManager::Get().GetTexturePath(), "tga");
 		m_handledCommand = true;
 	}
+	else if (a_widget == m_btnDeleteGUI)
+	{
+		Gui::Get().DestroyWidget(m_widgetToEdit);
+		m_widgetToEdit = NULL;
+
+		m_editMode = eEditModeNone;
+		m_editType = eEditTypeNone;
+		ShowChangeGUIMenu(false);
+		m_handledCommand = true;
+	}
 	else if (a_widget == m_btnChangeObjectRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnChangeGUIRoot->GetPos() + WidgetVector(m_btnChangeGUIRoot->GetSize().GetX(), -m_btnChangeGUIRoot->GetSize().GetY());
-		WidgetVector height = m_btnChangeGUIRoot->GetSize();
+		WidgetVector right = m_btnChangeObjectRoot->GetPos() + WidgetVector(m_btnChangeObjectRoot->GetSize().GetX(), -m_btnChangeObjectRoot->GetSize().GetY());
+		WidgetVector height = m_btnChangeObjectRoot->GetSize();
 		height.SetX(0.0f);
-		m_btnSaveObjectTemplate->SetPos(right);
-		m_btnChangeGUIShape->SetPos(right + height);
-
+		m_btnChangeObjectName->SetPos(right);
+		m_btnChangeObjectModel->SetPos(right + height);
+		
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
-		m_btnCancel->SetPos(right + height);
+		m_btnSaveObjectTemplate->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
+		m_btnDeleteObject->SetPos(right + height);
 
 		ShowChangeObjectMenu(true);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnChangeObjectName)
+	{
+		m_editMode = eEditModeName;
+		ShowTextInput(m_gameObjectToEdit->GetName());
+		ShowChangeObjectMenu(false);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnChangeObjectModel)
+	{
+		m_editMode = eEditModeModel;
+		ShowResourceSelect(ModelManager::Get().GetModelPath(), "obj");
+		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnSaveObjectTemplate)
 	{
 		m_editMode = eEditModeSaveTemplate;
 		ShowTextInput(m_gameObjectToEdit->GetTemplate());
-		ShowChangeGUIMenu(false);
+		ShowChangeObjectMenu(false);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnDeleteObject)
+	{
+		WorldManager::Get().DestroyObject(m_gameObjectToEdit->GetId());
+		m_gameObjectToEdit = NULL;
+		m_editMode = eEditModeNone;
+		m_editType = eEditTypeNone;
+		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectOk)
@@ -430,7 +464,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 					// Delete the old object
 					if (m_gameObjectToEdit)
 					{
-						worldMan.RemoveObject(m_gameObjectToEdit->GetId());
+						worldMan.DestroyObject(m_gameObjectToEdit->GetId());
 					}
 					worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem());
 					m_dirtyFlags.Set(eDirtyFlagScene);
@@ -458,12 +492,16 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		}
 
 		HideResoureSelect();
+		m_editType = eEditTypeNone;
+		m_editMode = eEditModeNone;
 
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
 	{
 		HideResoureSelect();
+		m_editType = eEditTypeNone;
+		m_editMode = eEditModeNone;
 
 		m_handledCommand = true;
 	}
@@ -473,6 +511,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		{
 			if (m_editMode == eEditModeName)
 			{
+				// Editing the name of a widget
 				if (m_widgetToEdit != NULL)
 				{
 					m_widgetToEdit->SetName(m_textInputField->GetFilePath());
@@ -482,8 +521,18 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		}
 		else if (m_editType == eEditTypeGameObject)
 		{
-			if (m_editMode == eEditModeSaveTemplate)
+			// Editing the name of an object
+			if (m_editMode == eEditModeName)
 			{
+				if (m_gameObjectToEdit != NULL)
+				{
+					m_gameObjectToEdit->SetName(m_textInputField->GetFilePath());
+					m_dirtyFlags.Set(eDirtyFlagScene);
+				}
+			}
+			else if (m_editMode == eEditModeSaveTemplate)
+			{
+				// Editing the template of an object
 				if (m_gameObjectToEdit != NULL)
 				{
 					m_gameObjectToEdit->SetTemplate(m_textInputField->GetFilePath());
@@ -493,13 +542,15 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		}
 
 		HideTextInput();
-
+		m_editType = eEditTypeNone;
+		m_editMode = eEditModeNone;
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnTextInputCancel)
 	{
 		HideTextInput();
-
+		m_editType = eEditTypeNone;
+		m_editMode = eEditModeNone;
 		m_handledCommand = true;
 	}
 
@@ -507,12 +558,6 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	SaveChanges();
 
 	return m_handledCommand;
-}
-
-bool DebugMenu::OnMenuItemMouseOver(Widget * a_widget)
-{
-	//TODO
-	return true;
 }
 
 bool DebugMenu::OnActivate(bool a_active)
@@ -526,7 +571,7 @@ bool DebugMenu::OnActivate(bool a_active)
 	// If there is both a widget and object selected then we are in an error state
 	if (m_widgetToEdit != NULL && m_gameObjectToEdit != NULL)
 	{
-		return false;
+		m_gameObjectToEdit = NULL;
 	}
 
 	// Set the creation root element to visible if it isn't already
@@ -576,7 +621,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 
 	// Don't play around with widget selection while a menu is up
-	if (IsDebugMenuActive())
+	if (m_textInput->IsActive() || m_resourceSelect->IsActive())
 	{
 		return false;
 	}
@@ -587,18 +632,26 @@ bool DebugMenu::OnSelect(bool a_active)
 		if (m_widgetToEdit != NULL)
 		{
 			m_editType = eEditTypeNone;
-			m_widgetToEdit->SetSelection(Widget::eSelectionNone);
+			m_widgetToEdit->ClearSelection();
 			m_widgetToEdit = NULL;
 		}
 	}
 
 	// Find the first widget that is rolled over in edit mode
-	if (Widget * newEditedWidget = Gui::Get().GetActiveWidget())
+	if (Widget * newSelectedWidget = Gui::Get().GetActiveWidget())
 	{
+		// Clear selection of old widget
+		if (m_widgetToEdit != NULL && m_widgetToEdit != newSelectedWidget)
+		{
+			m_widgetToEdit->ClearSelection();
+		}
 		m_editType = eEditTypeWidget;
-		m_widgetToEdit = newEditedWidget;
+		m_widgetToEdit = newSelectedWidget;
 		m_widgetToEdit->SetSelection(Widget::eSelectionEditSelected);
-		return true;
+	}
+	else
+	{
+		m_widgetToEdit = NULL;
 	}
 
 	// Do picking with all the game objects in the scene
@@ -607,7 +660,18 @@ bool DebugMenu::OnSelect(bool a_active)
 		// TODO change picking point end to be the mouse cursor transformed to 3D space
 		CameraManager & camMan = CameraManager::Get();
 		Vector pickingPointEnd = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 100.0f);
-		m_gameObjectToEdit = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd);
+		if (m_gameObjectToEdit = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd))
+		{
+			m_editType = eEditTypeGameObject;
+		}
+	}
+
+	// Cancel all menu display
+	if (m_gameObjectToEdit == NULL && m_widgetToEdit == NULL)
+	{
+		ShowCreateMenu(false);
+		ShowChangeGUIMenu(false);
+		ShowChangeObjectMenu(false);
 	}
 
 	return false;
@@ -758,31 +822,41 @@ void DebugMenu::Draw()
 	RenderManager & renMan = RenderManager::Get();
 	FontManager & fontMan = FontManager::Get();
 
-	// Draw 2D gridlines
-	renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
-	renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+	// Don't draw lines over the menu
+	if (!IsDebugMenuActive())
+	{
+		// Draw 2D gridlines
+		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
+		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
 
-	// Draw 3D gridlines
-	const unsigned int gridSize = 10;
-	const float gridMeasurement = 1.0f;
-	Vector gridStart(-((float)gridSize * 0.5f) * gridMeasurement, -((float)gridSize * 0.5f) * gridMeasurement, 0.0f);	
+		// Draw 3D gridlines
+		const unsigned int gridSize = 10;
+		const float gridMeasurement = 1.0f;
+		Vector gridStart(-((float)gridSize * 0.5f) * gridMeasurement, -((float)gridSize * 0.5f) * gridMeasurement, 0.0f);	
 	
-	// Gridlines on the X axis
-	for (unsigned int x = 0; x < gridSize+1; ++x)
-	{
-		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
-		renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
-	}
+		// Gridlines on the X axis
+		for (unsigned int x = 0; x < gridSize+1; ++x)
+		{
+			Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
+			renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
+		}
 
-	// Gridlines on the Y axis
-	for (unsigned int y = 0; y < gridSize+1; ++y)
-	{
-		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
-		renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
-	}
+		// Gridlines on the Y axis
+		for (unsigned int y = 0; y < gridSize+1; ++y)
+		{
+			Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
+			renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
+		}
 
-	// Draw an identity matrix at the origin
-	renMan.AddDebugMatrix(Matrix::Identity());
+		// Draw an identity matrix at the origin
+		renMan.AddDebugMatrix(Matrix::Identity());
+
+		// Draw selection box around objects
+		if (m_gameObjectToEdit != NULL)
+		{
+			renMan.AddDebugAxisBox(m_gameObjectToEdit->GetPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
+		}
+	}
 	
 	// Show mouse pos at cursor
 	char mouseBuf[16];
@@ -797,12 +871,6 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
-
-	// Draw selection box around objects
-	if (m_gameObjectToEdit != NULL)
-	{
-		renMan.AddDebugAxisBox(m_gameObjectToEdit->GetPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
-	}
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)
@@ -810,6 +878,7 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 	// All debug menu elements are created roughly equal
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
+	curItem.m_pos = WidgetVector(10.0f, 10.0f);
 	curItem.m_selectFlags = Widget::eSelectionRollover;
 	curItem.m_colour = a_colour;
 	curItem.m_name = a_name;
@@ -823,6 +892,7 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 	Widget * newWidget = Gui::Get().CreateWidget(curItem, a_parent, false);
 	newWidget->SetDebugWidget();
 	newWidget->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
+	newWidget->SetActive(false);
 
 	return newWidget;
 }
@@ -833,14 +903,12 @@ void DebugMenu::ShowCreateMenu(bool a_show)
 	if (a_show)
 	{
 		m_btnCreateRoot->SetActive(a_show);
-		m_btnCancel->SetActive(a_show);
 		m_btnCreateWidget->SetActive(a_show);
 		m_btnCreateGameObject->SetActive(a_show);
 	}
 	else // Hide everything
 	{
 		m_btnCreateRoot->SetActive(a_show);
-		m_btnCancel->SetActive(a_show);
 		m_btnCreateWidget->SetActive(a_show);
 		m_btnCreateGameObject->SetActive(a_show);
 		m_btnCreateGameObjectFromTemplate->SetActive(a_show);
@@ -851,20 +919,22 @@ void DebugMenu::ShowCreateMenu(bool a_show)
 void DebugMenu::ShowChangeGUIMenu(bool a_show)
 {
 	// Set the change menu and all children visible
-	m_btnCancel->SetActive(a_show);
 	m_btnChangeGUIRoot->SetActive(a_show);
 	m_btnChangeGUIPos->SetActive(a_show);
 	m_btnChangeGUIShape->SetActive(a_show);
 	m_btnChangeGUIName->SetActive(a_show);
 	m_btnChangeGUITexture->SetActive(a_show);
+	m_btnDeleteGUI->SetActive(a_show);
 }
 
 void DebugMenu::ShowChangeObjectMenu(bool a_show)
 {
 	// Set the change menu and all children visible
-	m_btnCancel->SetActive(a_show);
 	m_btnChangeObjectRoot->SetActive(a_show);
+	m_btnChangeObjectName->SetActive(a_show);
+	m_btnChangeObjectModel->SetActive(a_show);
 	m_btnSaveObjectTemplate->SetActive(a_show);
+	m_btnDeleteObject->SetActive(a_show);
 }
 
 void DebugMenu::HideResoureSelect()

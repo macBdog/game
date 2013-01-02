@@ -200,6 +200,7 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 				{
 					if (GameObject * newObject = CreateObject(prop->GetString(), a_sceneToLoad_OUT))
 					{
+						newObject->SetTemplate(prop->GetString());
 						newObject->SetName(childGameObject->FindProperty("name")->GetString());
 						newObject->SetPos(childGameObject->FindProperty("pos")->GetVector());
 						a_sceneToLoad_OUT->AddObject(newObject);

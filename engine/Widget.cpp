@@ -76,6 +76,7 @@ void Widget::Draw()
 		}
 
 		// Draw gui label on top of the widget in editing mode
+		const float fontDisplaySize = 0.07f;
 		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
 			if (m_fontNameHash > 0)
@@ -85,13 +86,12 @@ void Widget::Draw()
 				// Some widgets also display their path (for text input for example)
 				if (m_showFilePath)
 				{
-					FontManager::Get().DrawDebugString2D(m_filePath, m_pos.GetVector(), m_colour, batch);
+					FontManager::Get().DrawDebugString2D(m_filePath, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
 				}
 			}	
 		}
 
 		// Draw any list items
-		const float fontDisplaySize = 0.07f;
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
 		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
 		Vector2 itemDisplayPos(listDisplayPos);
@@ -141,7 +141,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		return;
 	}
 
-	// Check if the position is inside the widget
+	// Check if the mouse position is inside the widget
 	if (a_pos.GetX() >= m_pos.GetX() && a_pos.GetX() <= m_pos.GetX() + m_size.GetX() && 
 		a_pos.GetY() <= m_pos.GetY() && a_pos.GetY() >= m_pos.GetY() - m_size.GetY())
 	{
@@ -236,7 +236,7 @@ bool Widget::DoActivation()
 			activated = true;
 		}
 	}
-
+	
 	// Activate only the next sibling widget
 	if (Widget * curWidget = GetNext())
 	{
@@ -318,7 +318,7 @@ void Widget::Activate()
 	{
 		m_action.Execute(this);
 	}
-	else
+	else if (!m_debugRender)
 	{
 		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Widget named %s does not have an action set.", GetName());
 	}
@@ -355,19 +355,15 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
 
 		// Serialise any siblings of this element at this indentation level
-		Widget * next = m_nextWidget;
-		while (next != NULL)
+		if (m_nextWidget != NULL)
 		{
-			next->Serialise(a_outputStream, a_indentCount);
-			next = next->GetNext();
+			m_nextWidget->Serialise(a_outputStream, a_indentCount);
 		}
 
 		// Serialise any children of this child
-		Widget * child = m_childWidget;
-		while (child != NULL)
+		if (m_childWidget != NULL)
 		{
-			child->Serialise(a_outputStream, ++a_indentCount);
-			child = child->GetChild();
+			m_childWidget->Serialise(a_outputStream, ++a_indentCount);
 		}
 	}
 	else if (strlen(m_filePath) > 0)
@@ -383,20 +379,16 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuOutput << "{"		<< StringUtils::s_charLineEnd;
 			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
 			
-			// Write all the siblings out
-			Widget * next = m_nextWidget;
-			while (next != NULL)
+			// Write the siblings out
+			if (m_nextWidget != NULL)
 			{
-				next->Serialise(&menuOutput, 1);
-				next = next->GetNext();
+				m_nextWidget->Serialise(&menuOutput, 1);
 			}
 
 			// Write all children out
-			Widget * child = m_childWidget;
-			while (child != NULL)
+			if (m_childWidget != NULL)
 			{
-				child->Serialise(&menuOutput, 1);
-				child = child->GetChild();
+				m_childWidget->Serialise(&menuOutput, 1);
 			}
 
 			menuOutput << "}" << StringUtils::s_charLineEnd;
