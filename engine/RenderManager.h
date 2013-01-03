@@ -105,6 +105,12 @@ public:
 	//\param a_pos is the position in 3D space to draw. If a 2D batch is used, the Z component will be ignored
 	void AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
+	//\brief Add a line to the debug batch
+	//\param Vector a_point1 start of the line
+	//\param Vector a_point2 end of the line
+	//\param Colour a_tint the colour of the line
+	inline void AddDebugLine(Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite) { AddLine(eBatchDebug3D, a_point1, a_point2, a_tint); }
+
 	//\brief A matrix is position and orientation displayed with lines
 	//\param a const ref of the matrix containing the position and orientation to display
 	void AddDebugMatrix(const Matrix & a_mat);

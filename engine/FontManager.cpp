@@ -220,7 +220,17 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 					{
 						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
 						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, yPos, a_pos.GetZ()), a_colour);
+						float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
+
+						// Align font chars 2D vs 3D
+						if (a_pos.GetZ() == 0.0f)
+						{
+							renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, yPos, 0.0f), a_colour);
+						}
+						else
+						{
+							renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+						}
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}
@@ -259,8 +269,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		Vector2 pos(a_pos.GetX(), a_pos.GetY());
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize3D, pos, a_colour, RenderManager::eBatchDebug3D);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetHash(), s_debugFontSize3D, a_pos, a_colour, RenderManager::eBatchDebug3D);
 	}
 	else // Not fonts loaded
 	{

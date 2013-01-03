@@ -657,10 +657,18 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Do picking with all the game objects in the scene
 	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 	{
-		// TODO change picking point end to be the mouse cursor transformed to 3D space
+		// Picking point is the mouse cursor transformed to 3D space in cam direction
+		const float pickDepth = 50.0f;
 		CameraManager & camMan = CameraManager::Get();
-		Vector pickingPointEnd = camMan.GetWorldPos() + (camMan.GetViewMatrix().GetLook() * 100.0f);
-		if (m_gameObjectToEdit = curScene->GetSceneObject(camMan.GetWorldPos(), pickingPointEnd))
+		RenderManager & renMan = RenderManager::Get();
+		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+		Vector pickStart = camMan.GetWorldPos();
+		Vector pickEnd = pickStart + (camMan.GetViewMatrix().GetLook() * pickDepth);
+		pickEnd = Vector(pickEnd.GetX() + mousePos.GetX()*renMan.GetViewAspect()*pickDepth*0.5f, pickEnd.GetY(), pickEnd.GetZ() + mousePos.GetY()*pickDepth*0.5f);
+	
+		// Visualise the line
+		RenderManager::Get().AddDebugLine(pickStart, pickEnd);
+		if (m_gameObjectToEdit = curScene->GetSceneObject(pickStart, pickEnd))
 		{
 			m_editType = eEditTypeGameObject;
 		}
@@ -871,6 +879,18 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+
+	// Picking point is the mouse cursor transformed to 3D space in cam direction
+	const float pickDepth = 50.0f;
+	CameraManager & camMan = CameraManager::Get();
+	Vector pickStart = camMan.GetWorldPos();
+	Vector pickEnd = pickStart + (camMan.GetViewMatrix().GetLook() * pickDepth);
+	//pickStart = Vector(pickStart.GetX() + mousePos.GetX(), pickStart.GetY(), pickStart.GetZ() + mousePos.GetY());
+	pickEnd = Vector(pickEnd.GetX() + mousePos.GetX()*renMan.GetViewAspect()*pickDepth*0.5f, pickEnd.GetY(), pickEnd.GetZ() + mousePos.GetY()*pickDepth*0.5f);
+	
+	// Visualise the line
+	renMan.AddDebugSphere(pickEnd, 1.0f, sc_colourRed);
+	renMan.AddDebugLine(pickStart, pickEnd);
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)

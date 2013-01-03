@@ -6,6 +6,7 @@
 #include <time.h>
 
 #define PI 3.141592654f
+#define TAU 6.283185308f
 #define EPSILON 0.0001f
 
 //\brief Math helpers

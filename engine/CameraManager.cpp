@@ -15,20 +15,23 @@ void CameraManager::Update(float a_dt)
 {
 	// Process debug camera controls
 	InputManager & inMan = InputManager::Get();
-	if (DebugMenu::Get().IsDebugMenuEnabled() && !DebugMenu::Get().IsDebugMenuActive())
+	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		// Create a view direction matrix
-		m_viewMat = Matrix::Identity();
-		m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
-		m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * sc_debugCameraRotSpeed));
+		if (!DebugMenu::Get().IsDebugMenuActive())
+		{
+			// Create a view direction matrix
+			m_viewMat = Matrix::Identity();
+			m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
+			m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * sc_debugCameraRotSpeed));
 
-		// WSAD for FPS style movement
-		if (inMan.IsKeyDepressed(SDLK_w)) {	m_pos -= m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_s)) {	m_pos += m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_d)) { m_pos -= m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_a)) {	m_pos += m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
-		if (inMan.IsKeyDepressed(SDLK_q)) {	m_pos -= Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }
-		if (inMan.IsKeyDepressed(SDLK_e)) { m_pos += Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }	
+			// WSAD for FPS style movement
+			if (inMan.IsKeyDepressed(SDLK_w)) {	m_pos -= m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
+			if (inMan.IsKeyDepressed(SDLK_s)) {	m_pos += m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
+			if (inMan.IsKeyDepressed(SDLK_d)) { m_pos -= m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
+			if (inMan.IsKeyDepressed(SDLK_a)) {	m_pos += m_viewMat.GetRight() * a_dt * sc_debugCameraSpeed; }	
+			if (inMan.IsKeyDepressed(SDLK_q)) {	m_pos -= Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }
+			if (inMan.IsKeyDepressed(SDLK_e)) { m_pos += Vector(0.0f, 0.0f, sc_debugCameraSpeed * a_dt); }	
+		}
 
 		// Set rotation based on mouse delta while hotkey pressed
 		if (inMan.IsKeyDepressed(SDLK_LSHIFT))

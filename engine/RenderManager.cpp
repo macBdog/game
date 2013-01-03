@@ -3,6 +3,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "../core/MathUtils.h"
+
 #include "DebugMenu.h"
 #include "Log.h"
 #include "Texture.h"
@@ -305,11 +307,13 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
 		{
 			glPushMatrix();
+			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
+
 			if (!fc->m_2d)
 			{
 				glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
 			}
-			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
+			
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
 			glScalef(fc->m_size, fc->m_size, 0.0f);
 			glCallList(fc->m_displayListId);
@@ -641,8 +645,41 @@ void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
-	// TODO
-	AddDebugAxisBox(a_worldPos, Vector(a_radius), a_colour);
+	// Draw a wireframe sphere with three circles in each dimension
+	const unsigned int numSegments = 16;
+	Vector lineStart = a_worldPos;
+	Vector lineEnd = a_worldPos;
+	for (unsigned int axisCount = 0; axisCount < 3; ++axisCount)
+	{
+		for (unsigned int i = 0; i < numSegments; ++i)
+		{
+			const float rFactor = ((float)i / (float)numSegments)*TAU;
+			const float rFactorNext = ((float)(i+1) / (float)numSegments)*TAU;
+			switch (axisCount)
+			{
+				case 0: // X axis 
+				{
+					lineStart = a_worldPos + Vector(sin(rFactor), cos(rFactor), 0.0f);
+					lineEnd = a_worldPos +  Vector(sin(rFactorNext), cos(rFactorNext), 0.0f);
+					break;
+				}
+				case 1: // Y axis 
+				{
+					lineStart = a_worldPos + Vector(0.0f, sin(rFactor), cos(rFactor));
+					lineEnd = a_worldPos +  Vector(0.0f, sin(rFactorNext), cos(rFactorNext));
+					break;
+				}
+				case 2: // Z axis 
+				{
+					lineStart = a_worldPos + Vector(sin(rFactor), 0.0f, cos(rFactor));
+					lineEnd = a_worldPos +  Vector(sin(rFactorNext), 0.0f, cos(rFactorNext));
+					break;
+				}
+				default: break;
+			}
+			AddDebugLine(lineStart, lineEnd, a_colour);
+		}
+	}
 }
 
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
