@@ -86,6 +86,12 @@ public:
 		rotMat.SetPos(	Vector::Zero());
 		return rotMat;
 	}
+	inline Vector Transform(const Vector & a_vec)
+	{
+		return Vector(	a_vec.GetX() * row[0][0] + a_vec.GetY() * row[1][0] + a_vec.GetZ() * row[2][0] + row[3][0],
+						a_vec.GetX() * row[0][1] + a_vec.GetY() * row[1][1] + a_vec.GetZ() * row[2][1] + row[3][1],
+						a_vec.GetX() * row[0][2] + a_vec.GetY() * row[1][2] + a_vec.GetZ() * row[2][2] + row[3][2]);
+	}
 	inline Matrix Scale(const float & a_scalar) { } //TODO!
 
 private:

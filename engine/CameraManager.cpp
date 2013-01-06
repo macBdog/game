@@ -21,8 +21,8 @@ void CameraManager::Update(float a_dt)
 		{
 			// Create a view direction matrix
 			m_viewMat = Matrix::Identity();
-			m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
 			m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * sc_debugCameraRotSpeed));
+			m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * sc_debugCameraRotSpeed));
 
 			// WSAD for FPS style movement
 			if (inMan.IsKeyDepressed(SDLK_w)) {	m_pos -= m_viewMat.GetLook() * a_dt * sc_debugCameraSpeed; }	
