@@ -7,6 +7,7 @@
 #include "../core/LinkedList.h"
 
 #include "GameObject.h"
+#include "Log.h"
 #include "Singleton.h"
 #include "StringUtils.h"
 
@@ -114,8 +115,146 @@ public:
 	//\param a_templatePath Pointer to a cstring with an optional game file to create from
 	//\param a_scene a pointer to the scene to add the object to, will try the current if NULL
 	//\return A pointer to the newly created game object of NULL for failure
-	GameObject * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL);
+	template <typename T>
+	T * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL)
+	{
+		// Check there is a valid scene to add the object to
+		Scene * sceneToAddObjectTo = NULL;
+		if (a_scene == NULL)
+		{
+			sceneToAddObjectTo = m_currentScene;
+		}
+		else
+		{
+			sceneToAddObjectTo = a_scene;
+		}
 
+		// Early out if no scene
+		if (sceneToAddObjectTo == NULL)
+		{
+			Log::Get().WriteEngineErrorNoParams("Cannot create an object, there is no scene to add it to!");
+			return NULL;
+		}
+
+		// TODO Please allocate a heap for game objects
+
+		// Template paths are either fully qualified or relative to the config template dir
+		ModelManager & modelMan = ModelManager::Get();
+		if (a_templatePath)
+		{
+			char fileNameBuf[StringUtils::s_maxCharsPerLine];
+			if (!strstr(a_templatePath, ":\\"))
+			{
+				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
+
+				// Add on file extension if not present
+				if (!strstr(fileNameBuf, ".tmp"))
+				{
+					sprintf(fileNameBuf, "%s%s", fileNameBuf, ".tmp");
+				}
+			} 
+			else // Already fully qualified
+			{
+				sprintf(fileNameBuf, "%s", a_templatePath);
+			}
+
+			// Open the template file
+			GameFile templateFile(fileNameBuf);
+			if (templateFile.IsLoaded())
+			{
+				// Create from template properties
+				// TODO memory management kill std::new
+				if (T * newGameObject = new T())
+				{
+					bool validObject = true;
+					newGameObject->SetId(m_totalSceneNumObjects++);
+					newGameObject->SetState(GameObject::eGameObjectState_Loading);
+					if (GameFile::Object * object = templateFile.FindObject("gameObject"))
+					{
+						// Name
+						if (GameFile::Property * name = object->FindProperty("name"))
+						{
+							newGameObject->SetName(name->GetString());
+						}
+						// Model file
+						if (GameFile::Property * model = object->FindProperty("model"))
+						{
+							if (Model * newModel = modelMan.GetModel(model->GetString()))
+							{
+								newGameObject->SetModel(newModel);
+							}
+							else // Failure of model load will report errors
+							{
+								validObject = false;
+							}
+						}
+						// Clipping type
+						if (GameFile::Property * clipType = object->FindProperty("clipType"))
+						{
+							if (strstr(clipType->GetString(), "sphere") != NULL)
+							{
+								newGameObject->SetClipType(GameObject::eClipTypeSphere);
+							}
+							else if (strstr(clipType->GetString(), "axisbox") != NULL)
+							{
+								newGameObject->SetClipType(GameObject::eClipTypeAxisBox);
+							}
+						}
+						// Clipping size
+						if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
+						{
+							newGameObject->SetClipSize(clipSize->GetVector());
+						}
+						// TODO Pos, rot, shader, etc
+
+						// Add to currently active scene
+						if (validObject)
+						{
+							sceneToAddObjectTo->AddObject(newGameObject);
+							return newGameObject;
+						}
+						else
+						{
+							return NULL;
+						}
+					}
+					else // Can't find the first object
+					{
+						Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to find a root gameObject node for template file %s", a_templatePath);
+						return NULL;
+					}
+				}
+				else // Can't create the game object
+				{
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to allocate memory to create game object from template file %s", a_templatePath);
+					return NULL;
+				}
+			}
+			else // Load failed
+			{
+				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load template file %s", a_templatePath);
+				return NULL;
+			}
+		}
+		else // Create default object
+		{
+			if (T * newGameObject = new T())
+			{
+				newGameObject->SetId(m_totalSceneNumObjects++);
+				newGameObject->SetState(GameObject::eGameObjectState_Loading);
+				newGameObject->SetName("NEW_GAME_OBJECT");
+				newGameObject->SetPos(Vector(0.0f, 0.0f, -20.0f));
+				
+				// Add to currently active scene
+				sceneToAddObjectTo->AddObject(newGameObject);
+
+				return newGameObject;
+			}
+		}
+
+		return NULL;
+	}
+	
 	//\brief Remove a created object from the world, will not be destroyed right away
 	bool DestroyObject(unsigned int a_objectId) { return false; }
 

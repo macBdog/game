@@ -324,7 +324,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		// Create a game object
 		if (m_btnCreateGameObject->IsActive())
 		{
-			WorldManager::Get().CreateObject();
+			WorldManager::Get().CreateObject<GameObject>();
 		}		
 		ShowCreateMenu(false);
 		m_handledCommand = true;
@@ -466,7 +466,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 					{
 						worldMan.DestroyObject(m_gameObjectToEdit->GetId());
 					}
-					worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem());
+					worldMan.CreateObject<GameObject>(m_resourceSelectList->GetSelectedListItem());
 					m_dirtyFlags.Set(eDirtyFlagScene);
 				}
 

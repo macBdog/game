@@ -82,8 +82,9 @@ public:
 	//\brief Quad drawing function with manual texture coordinates
 	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
 	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
 	void AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
 
 	//\brief 3D Drawing functions

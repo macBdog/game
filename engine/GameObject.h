@@ -45,8 +45,8 @@ public:
 	};
 
 	//\brief Creation and destruction
-	GameObject(unsigned int a_id) 
-		: m_id(a_id) 
+	GameObject() 
+		: m_id(0) 
 		, m_child(NULL)
 		, m_next(NULL)
 		, m_components(NULL)
@@ -63,23 +63,26 @@ public:
 
 	~GameObject() { Destroy(); }
 
-	//\brief Functionality inherited by children
+	//\brief Lifecycle functionality inherited by children
+	virtual bool Startup() { return true; }
 	virtual bool Update(float a_dt);
 	virtual bool Draw();
+	virtual bool Shutdown() { return true; }
 
 	//\brief State mutators and accessors
 	inline void SetSleeping() { if (m_state == eGameObjectState_Active) m_state = eGameObjectState_Sleep; }
 	inline void SetActive()	  { if (m_state == eGameObjectState_Sleep) m_state = eGameObjectState_Active; }
 	inline bool IsActive()	  { return m_state == eGameObjectState_Active; }
 	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
+	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
 	inline void SetClipType(eClipType a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(Vector a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
+	inline Model * GetModel() { return m_model; }
+	inline Matrix GetWorldMat() { return m_worldMat; }
 	inline Vector GetPos() { return m_worldMat.GetPos(); }
-	inline Vector GetRot() { return m_worldMat.GetPos(); } // TODO
-	inline Vector GetScale() { return m_worldMat.GetPos(); } // TODO
 	inline Vector GetClipSize() { return m_clipVolumeSize; }
 	inline bool HasTemplate() { return strlen(m_template) > 0; }
 
@@ -102,8 +105,9 @@ public:
 	inline void SetPos(Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 
 	//\brief Add the game object, all instance properties and children to game file object
-	//\param TODO
-	void Serialise(GameFile * outputFile, GameFile::Object * a_parent);
+	//\param a_outputFile is a gamefile object that will be appended
+	//\param a_parent is an object in the output file to add this object's properties to
+	void Serialise(GameFile * a_outputFile, GameFile::Object * a_parent);
 
 private:
 

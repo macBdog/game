@@ -406,7 +406,16 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient, a_tint);
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord texCoord, TexCoord texSize, Texture::eOrientation a_orient, Colour a_tint)
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient, Colour a_tint)
+{
+	Vector2 verts[4] =	{Vector2(a_topLeft.GetX(), a_topLeft.GetY()),
+						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY()),
+						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY() - a_size.GetY()),
+						Vector2(a_topLeft.GetX(), a_topLeft.GetY() - a_size.GetY())};
+	AddQuad2D(a_batch, &verts[0], a_tex, a_texCoord, a_texSize, a_orient, a_tint);
+}
+
+void RenderManager::AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
 	if (m_quadCount[a_batch] >= s_maxPrimitivesPerBatch)
@@ -435,10 +444,10 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 	q->m_colour = a_tint;
 	
 	// Setup verts for clockwise drawing 
-	q->m_verts[0] = Vector(a_topLeft.GetX(), a_topLeft.GetY(), s_renderDepth2D);
-	q->m_verts[1] = Vector(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY(), s_renderDepth2D);
-	q->m_verts[2] = Vector(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY() - a_size.GetY(), s_renderDepth2D);
-	q->m_verts[3] = Vector(a_topLeft.GetX(), a_topLeft.GetY() - a_size.GetY(), s_renderDepth2D);
+	q->m_verts[0] = Vector(a_verts[0].GetX(), a_verts[0].GetY(), s_renderDepth2D);
+	q->m_verts[1] = Vector(a_verts[1].GetX(), a_verts[1].GetY(), s_renderDepth2D);
+	q->m_verts[2] = Vector(a_verts[2].GetX(), a_verts[2].GetY(), s_renderDepth2D);
+	q->m_verts[3] = Vector(a_verts[3].GetX(), a_verts[3].GetY(), s_renderDepth2D);
 
 	// Set texcoords based on orientation
 	if (a_tex)
@@ -447,10 +456,10 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size,
 		{
 			case Texture::eOrientationNormal:
 			{
-				q->m_coords[0] = TexCoord(texCoord.GetX(),					1.0f - texCoord.GetY());
-				q->m_coords[1] = TexCoord(texCoord.GetX() + texSize.GetX(),	1.0f - texCoord.GetY());
-				q->m_coords[2] = TexCoord(texCoord.GetX() + texSize.GetX(),	1.0f - texSize.GetY() - texCoord.GetY());
-				q->m_coords[3] = TexCoord(texCoord.GetX(),					1.0f - texSize.GetY() - texCoord.GetY());
+				q->m_coords[0] = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
+				q->m_coords[1] = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
+				q->m_coords[2] = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_coords[3] = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
 				break;
 			}
 			case Texture::eOrientationFlipVert:
