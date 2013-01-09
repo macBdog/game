@@ -76,6 +76,7 @@ namespace StringUtils
 	static const unsigned int s_maxCharsPerName = 64u;		// Maximum number of chars for a simple name
 	static const char * s_charLineEnd = "\n";				// Char sequence for the end of a line
 	static const char * s_charTab = "\t";					// Char sequence for a tab
+	static const char * s_charPathSep = "\\";				// Path seperator in Win32
 }
 
 #endif /* _ENGINE_STRINGUTILS_H_ */

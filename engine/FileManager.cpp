@@ -66,24 +66,28 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 		// Check substring parameter
 		if (!a_fileSubstring || strstr(findFileData.cFileName, a_fileSubstring))
 		{
-			// Allocate a new file and set its properties
-			FileListNode * newFile = new FileListNode();
-			newFile->SetData(new FileInfo());
-			sprintf(newFile->GetData()->m_name, "%s", findFileData.cFileName);
-			newFile->GetData()->m_sizeBytes = 0;
-			newFile->GetData()->m_isDir = (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-
-			// If not a directory set the size
-			if (!newFile->GetData()->m_isDir)
+			// Don't add the dot and dot dot dirs
+			if (findFileData.cFileName[0] != '.')
 			{
-				LARGE_INTEGER fileSize;
-				fileSize.LowPart = findFileData.nFileSizeLow;
-				fileSize.HighPart = findFileData.nFileSizeHigh;
-				newFile->GetData()->m_sizeBytes = (unsigned int)fileSize.QuadPart; 
-			}
+				// Allocate a new file and set its properties
+				FileListNode * newFile = new FileListNode();
+				newFile->SetData(new FileInfo());
+				sprintf(newFile->GetData()->m_name, "%s", findFileData.cFileName);
+				newFile->GetData()->m_sizeBytes = 0;
+				newFile->GetData()->m_isDir = (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
-			// Add to the file list
-			a_fileList_OUT.Insert(newFile);
+				// If not a directory set the size
+				if (!newFile->GetData()->m_isDir)
+				{
+					LARGE_INTEGER fileSize;
+					fileSize.LowPart = findFileData.nFileSizeLow;
+					fileSize.HighPart = findFileData.nFileSizeHigh;
+					newFile->GetData()->m_sizeBytes = (unsigned int)fileSize.QuadPart; 
+				}
+
+				// Add to the file list
+				a_fileList_OUT.Insert(newFile);
+			}
 		}
 	}
     while (FindNextFile(hFind, &findFileData) != 0);

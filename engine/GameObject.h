@@ -10,6 +10,8 @@
 #include "GameFile.h"
 #include "StringUtils.h"
 
+#include "Components\Component.h"
+
 class GameObjectComponent;
 class Model;
 
@@ -49,16 +51,17 @@ public:
 		: m_id(0) 
 		, m_child(NULL)
 		, m_next(NULL)
-		, m_components(NULL)
 		, m_model(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
 		, m_clipType(eClipTypeNone)
 		, m_clipVolumeSize(0.0f)
+		, m_clipVolumeOffset(0.0f)
 		, m_worldMat(Matrix::Identity())
 		{ 
 			SetName("UNAMED_GAME_OBJECT");
 			SetTemplate("");
+			memset(&m_components[0], 0, sizeof(Component *) * Component::eComponentTypeCount);
 		}
 
 	~GameObject() { Destroy(); }
@@ -69,6 +72,52 @@ public:
 	virtual bool Draw();
 	virtual bool Shutdown() { return true; }
 
+	//\brief Component accessors
+	template <typename T>
+	inline bool AddComponent()
+	{
+		if (T * newComponent = new T())
+		{
+			newComponent->Startup(this);
+			m_components[(unsigned int)newComponent->GetComponentType()] = dynamic_cast<Component *>(newComponent);
+			return true;
+		}
+		return false;
+	}
+	inline bool HasComponent(Component::eComponentType a_type)
+	{
+		return m_components[(unsigned int)a_type] != NULL;
+	}
+	template <typename T>
+	inline T * GetComponent(Component::eComponentType a_type)
+	{
+		Component * curComp = m_components[(unsigned int)a_type];
+		if (curComp != NULL)
+		{
+			return dynamic_cast<T *>(curComp);
+		}
+		return NULL;
+	}
+	inline bool RemoveComponent(Component::eComponentType a_type)
+	{
+		Component * curComp = m_components[(unsigned int)a_type];
+		if (curComp != NULL)
+		{
+			delete curComp;
+			m_components[(unsigned int)a_type] = NULL;
+			return true;
+		}
+
+		return false;
+	}
+	inline void RemoveAllComponents()
+	{
+		for (unsigned int i = 0; i < Component::eComponentTypeCount; ++i)
+		{
+			RemoveComponent((Component::eComponentType)i);
+		}
+	}
+
 	//\brief State mutators and accessors
 	inline void SetSleeping() { if (m_state == eGameObjectState_Active) m_state = eGameObjectState_Sleep; }
 	inline void SetActive()	  { if (m_state == eGameObjectState_Sleep) m_state = eGameObjectState_Active; }
@@ -76,7 +125,9 @@ public:
 	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
 	inline void SetClipType(eClipType a_newClipType) { m_clipType = a_newClipType; }
-	inline void SetClipSize(Vector a_clipSize) { m_clipVolumeSize = a_clipSize; }
+	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
+	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
+	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
@@ -102,7 +153,7 @@ public:
 	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
-	inline void SetPos(Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
+	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 
 	//\brief Add the game object, all instance properties and children to game file object
 	//\param a_outputFile is a gamefile object that will be appended
@@ -112,22 +163,29 @@ public:
 private:
 
 	//\brief Destruction is private as it should only be handled by object management
-	inline void Destroy() {}
+	inline void Destroy() 
+	{
+		// Clean up components
+		RemoveAllComponents();
+	}
 
-	unsigned int		  m_id;				///< Unique identifier, objects can be resolved from ids
-	GameObject *		  m_child;			///< Pointer to first child game obhject
-	GameObject *		  m_next;			///< Pointer to sibling game objects
-	GameObjectComponent * m_components;		///< Purpose built object features live in a list of components
-	Model *				  m_model;			///< Pointer to a mesh for display purposes
-	//Script			  m_script;			///< The LUA script for user defined behavior
-	eGameObjectState	  m_state;			///< What state the object is in
-	float				  m_lifeTime;		///< How long this guy has been active
-	eClipType			  m_clipType;		///< What kind of shape represents the bounds of the object
-	Vector				  m_clipVolumeSize; ///< Dimensions of the clipping volume for culling and picking
-	Matrix				  m_worldMat;		///< Position and orientation in the world
+	//\ingroup Component management
+	Component * m_components[Component::eComponentTypeCount];
+
+	//\ingroup Local properties
+	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids
+	GameObject *		  m_child;				///< Pointer to first child game obhject
+	GameObject *		  m_next;				///< Pointer to sibling game objects
+	Model *				  m_model;				///< Pointer to a mesh for display purposes
+	//Script			  m_script;				///< The LUA script for user defined behavior
+	eGameObjectState	  m_state;				///< What state the object is in
+	float				  m_lifeTime;			///< How long this guy has been active
+	eClipType			  m_clipType;			///< What kind of shape represents the bounds of the object
+	Vector				  m_clipVolumeSize;		///< Dimensions of the clipping volume for culling and picking
+	Vector				  m_clipVolumeOffset;	///< How far from the pivot of the object the clip volume is
+	Matrix				  m_worldMat;			///< Position and orientation in the world
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
-
 };
 
 #endif // _ENGINE_GAME_OBJECT_

@@ -29,6 +29,7 @@ void Scene::AddObject(GameObject * a_newObject)
 	if (SceneObject * newSceneObject = new SceneObject())
 	{
 		newSceneObject->SetData(a_newObject);
+		a_newObject->Startup();
 		a_newObject->SetState(GameObject::eGameObjectState_Active);
 		m_objects.Insert(newSceneObject);
 

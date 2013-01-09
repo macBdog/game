@@ -76,12 +76,13 @@
   <ItemGroup>
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="CollisionUtils.h" />
+    <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\ComponentRootMotion.h" />
     <ClInclude Include="DebugMenu.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameFile.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="GameObjectComponent.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Log.h" />

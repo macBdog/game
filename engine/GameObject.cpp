@@ -15,6 +15,16 @@ bool GameObject::Update(float a_dt)
 		m_lifeTime += a_dt;
 	}
 
+	// Update components
+	for (unsigned int i = 0; i < Component::eComponentTypeCount; ++i)
+	{
+		Component * curComp = m_components[(unsigned int)i];
+		if (curComp != NULL)
+		{
+			curComp->Update(a_dt);
+		}
+	}
+
 	return true;
 }
 
@@ -40,12 +50,12 @@ bool GameObject::Draw()
 			{
 				case eClipTypeSphere:
 				{
-					rMan.AddDebugSphere(m_worldMat.GetPos(), m_clipVolumeSize.GetX(), sc_colourPink); 
+					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourPink); 
 					break;
 				}
 				case eClipTypeAxisBox:
 				{
-					rMan.AddDebugAxisBox(m_worldMat.GetPos(), m_clipVolumeSize, sc_colourPink); 
+					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourPink); 
 				}
 				default: break;
 			}
@@ -66,11 +76,11 @@ bool GameObject::CollidesWith(Vector a_worldPos)
 	{
 		case eClipTypeSphere:
 		{
-			return CollisionUtils::IntersectPointSphere(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
+			return CollisionUtils::IntersectPointSphere(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
 		}
 		case eClipTypeAxisBox:
 		{
-			return CollisionUtils::IntersectPointAxisBox(a_worldPos, m_worldMat.GetPos(), m_clipVolumeSize);
+			return CollisionUtils::IntersectPointAxisBox(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize);
 		}
 		default: return false;
 	}
@@ -84,11 +94,11 @@ bool GameObject::CollidesWith(Vector a_lineStart, Vector a_lineEnd)
 	{
 		case eClipTypeSphere:
 		{
-			return CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
+			return CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX());
 		}
 		case eClipTypeAxisBox:
 		{
-			return CollisionUtils::IntersectLineAxisBox(a_lineStart, a_lineEnd, m_worldMat.GetPos(), m_clipVolumeSize, clipPoint);
+			return CollisionUtils::IntersectLineAxisBox(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, clipPoint);
 		}
 		default: return false;
 	}
