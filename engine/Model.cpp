@@ -35,15 +35,43 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 	// Open the file and parse each line 
 	if (file.is_open())
 	{
+		// Quickly scan through and count the elements
 		unsigned int numNormals = 0;	// How many normals in the model
 		unsigned int numVerts = 0;		// How many vertices are in the model
 		unsigned int numUvs = 0;		// Number of texture coords
+		while (file.good())
+		{
+			file.getline(line, StringUtils::s_maxCharsPerLine);
+			if (line[0] == 'v' && line[1] == ' ')
+			{
+				++numVerts;
+			}
+			else if (line[0] == 'v' && line[1] == 't')
+			{
+				++numUvs;
+			}
+			else if (line[0] == 'v' && line[1] == 'n')
+			{
+				++numNormals;
+			}
+			else if (line[0] == 'f' && line[1] == ' ')
+			{
+				++m_numFaces;
+			}
+		}
 
-		// TODO Yay lets only support models with 64 faces
-		unsigned int vertIndices[3][2056];
-		unsigned int normalIndices[3][2056];
-		unsigned int uvIndices[3][2056];
+		// Allocate space for the indices
+		LinearAllocator<unsigned int> vertIndexPool(sizeof(unsigned int) * 3 * m_numFaces);
+		LinearAllocator<unsigned int> normIndexPool(sizeof(unsigned int) * 3 * m_numFaces);
+		LinearAllocator<unsigned int> uvIndexPool(sizeof(unsigned int) * 3 * m_numFaces);
 
+		unsigned int * vertIndices = vertIndexPool.GetHead();
+		unsigned int * normIndices = normIndexPool.GetHead();
+		unsigned int * uvIndices = uvIndexPool.GetHead();
+
+		// Rewind the file and start reading again
+		file.clear();
+		file.seekg(0, ios::beg);
 		while (file.good())
 		{
 			file.getline(line, StringUtils::s_maxCharsPerLine);
@@ -80,7 +108,6 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 					v->SetX(vec[0]);
 					v->SetY(vec[1]);
 					v->SetZ(vec[2]);
-					++numVerts;
 				}
 			}
 			// Texture coord
@@ -92,7 +119,6 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 					sscanf(line, "vt %f %f", &uv[0], &uv[1]);
 					t->SetX(uv[0]);
 					t->SetY(uv[1]);
-					++numUvs;
 				}
 			}
 			// Vertex normal
@@ -105,7 +131,6 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 					vn->SetX(norm[0]);
 					vn->SetY(norm[1]);
 					vn->SetZ(norm[2]);
-					++numNormals;
 				}
 			}
 			// Group declaration
@@ -139,18 +164,22 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 					file.close();
 					return false;
 				}
+
 				// Extract and store out which vertices are used for the faces of the model
 				sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
-					&vertIndices[0][m_numFaces], &uvIndices[0][m_numFaces], &normalIndices[0][m_numFaces], 
-					&vertIndices[1][m_numFaces], &uvIndices[1][m_numFaces], &normalIndices[1][m_numFaces], 
-					&vertIndices[2][m_numFaces], &uvIndices[2][m_numFaces], &normalIndices[2][m_numFaces]);
+				&vertIndices[0], &uvIndices[0], &normIndices[0], 
+				&vertIndices[1], &uvIndices[1], &normIndices[1], 
+				&vertIndices[2], &uvIndices[2], &normIndices[2]);
 
 				// File format specifies vertices are indexed from 1 instead of 0 so fix that
-				--vertIndices[0][m_numFaces];	--vertIndices[1][m_numFaces];	--vertIndices[2][m_numFaces];
-				--uvIndices[0][m_numFaces];		--uvIndices[1][m_numFaces];		--uvIndices[2][m_numFaces];
-				--normalIndices[0][m_numFaces];	--normalIndices[1][m_numFaces];	--normalIndices[2][m_numFaces];
+				--vertIndices[0];	--vertIndices[1];	--vertIndices[2];
+				--uvIndices[0];		--uvIndices[1];		--uvIndices[2];
+				--normIndices[0];	--normIndices[1];	--normIndices[2];
 
-				++m_numFaces;
+				// Advance to the next face
+				vertIndices+=3;
+				uvIndices+=3;
+				normIndices+=3;
 			}
 		}
 
@@ -165,25 +194,33 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 			Vector * verts = a_vertPool.GetHead();
 			Vector * normals = a_normalPool.GetHead();
 			TexCoord * uvs = a_uvPool.GetHead();
+			vertIndices = vertIndexPool.GetHead();
+			normIndices = normIndexPool.GetHead();
+			uvIndices = uvIndexPool.GetHead();
 
 			// Now map faces to triangles by linking vertex, uv and normals by index
 			unsigned int vertCount = 0;
 			for (unsigned int i = 0; i < m_numFaces; ++i)
 			{                
 				// Set the face data up
-				m_verts[vertCount]		= verts[vertIndices[0][i]];
-				m_normals[vertCount]	= normals[normalIndices[0][i]];
-				m_uvs[vertCount]		= uvs[uvIndices[0][i]];
+				m_verts[vertCount]		= verts[vertIndices[0]];
+				m_normals[vertCount]	= normals[normIndices[0]];
+				m_uvs[vertCount]		= uvs[uvIndices[0]];
 				vertCount++;
 
-				m_verts[vertCount]		= verts[vertIndices[1][i]];
-				m_normals[vertCount]	= normals[normalIndices[1][i]];
-				m_uvs[vertCount]		= uvs[uvIndices[1][i]];
+				m_verts[vertCount]		= verts[vertIndices[1]];
+				m_normals[vertCount]	= normals[normIndices[1]];
+				m_uvs[vertCount]		= uvs[uvIndices[1]];
 				vertCount++;
 
-				m_verts[vertCount]		= verts[vertIndices[2][i]];
-				m_normals[vertCount]	= normals[normalIndices[2][i]];
-				m_uvs[vertCount]		= uvs[uvIndices[2][i]];
+				m_verts[vertCount]		= verts[vertIndices[2]];
+				m_normals[vertCount]	= normals[normIndices[2]];
+				m_uvs[vertCount]		= uvs[uvIndices[2]];
+
+				// Advance to the next face
+				vertIndices += 3;
+				uvIndices += 3;
+				normIndices += 3;
 				vertCount++;
 			}
 		}
