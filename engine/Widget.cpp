@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "DebugMenu.h"
 #include "Log.h"
 #include "InputManager.h"
@@ -260,14 +262,17 @@ bool Widget::IsSelected(eSelectionFlags a_selectMode)
 
 void Widget::AddChild(Widget * a_child)
 {
+	// I'm your daddy
+	a_child->m_parent = this;
+
 	// In the case of no preexisitng children
-	if (m_childWidget == NULL)
+	if (m_firstChild == NULL)
 	{
-		m_childWidget = a_child;
+		m_firstChild = a_child;
 	}
 	else // Otherwise append to the list of children
 	{
-		Widget * nextChild = m_childWidget;
+		Widget * nextChild = m_firstChild;
 		while (nextChild != NULL)
 		{
 			// Check for the end of the list
@@ -286,27 +291,59 @@ void Widget::AddChild(Widget * a_child)
 
 void Widget::AddSibling(Widget * a_sibling)
 {
+	// Your daddy is my daddy
+	a_sibling->m_parent = m_parent;
+
 	// In the case of no existing siblings
-	if (m_nextWidget == NULL)
+	if (m_next == NULL)
 	{
-		m_nextWidget = a_sibling;
+		m_next = a_sibling;
 	}
 	else
 	{
 		// Add to the head of the list (newest get drawn first)
-		Widget * nextChild = m_nextWidget;
+		Widget * nextChild = m_next;
 		while (nextChild != NULL)
 		{
 			// Check for the end of the list
 			if (nextChild->GetNext() == NULL)
 			{
-				nextChild->m_nextWidget = a_sibling;
+				nextChild->m_next = a_sibling;
 				return;
 			}
 			else
 			{
 				nextChild = nextChild->GetNext();
 			}
+		}
+	}
+}
+
+void Widget::Orphan()
+{
+	// Unlink from parents and siblings (disowned)
+	if (m_parent != NULL)
+	{
+		// If first child
+		if (m_parent->m_firstChild == this)
+		{
+			m_parent->m_firstChild = m_next;
+		}
+		else
+		{
+			Widget * sibling = m_parent->m_firstChild;
+			Widget * prevSibling = NULL;
+			while (sibling != NULL)
+			{
+				if (sibling->m_next == this)
+				{
+					sibling->m_next = sibling->m_next->m_next;
+					break;
+				}
+				sibling = sibling->m_next;
+			}
+			// Couldn't find myself in the list of siblings, something is wrong
+			assert(false);
 		}
 	}
 }
@@ -355,15 +392,15 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
 
 		// Serialise any siblings of this element at this indentation level
-		if (m_nextWidget != NULL)
+		if (m_next != NULL)
 		{
-			m_nextWidget->Serialise(a_outputStream, a_indentCount);
+			m_next->Serialise(a_outputStream, a_indentCount);
 		}
 
 		// Serialise any children of this child
-		if (m_childWidget != NULL)
+		if (m_firstChild != NULL)
 		{
-			m_childWidget->Serialise(a_outputStream, ++a_indentCount);
+			m_firstChild->Serialise(a_outputStream, ++a_indentCount);
 		}
 	}
 	else if (strlen(m_filePath) > 0)
@@ -380,15 +417,15 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
 			
 			// Write the siblings out
-			if (m_nextWidget != NULL)
+			if (m_next != NULL)
 			{
-				m_nextWidget->Serialise(&menuOutput, 1);
+				m_next->Serialise(&menuOutput, 1);
 			}
 
 			// Write all children out
-			if (m_childWidget != NULL)
+			if (m_firstChild != NULL)
 			{
-				m_childWidget->Serialise(&menuOutput, 1);
+				m_firstChild->Serialise(&menuOutput, 1);
 			}
 
 			menuOutput << "}" << StringUtils::s_charLineEnd;

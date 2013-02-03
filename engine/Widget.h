@@ -54,7 +54,6 @@ private:
 //\brief Widgets are the base 2D elements that make up the GUI system
 class Widget
 {
-
 public:
 
 	//\brief Alignment types are used when coords are relative to anothe widget
@@ -113,8 +112,9 @@ public:
 		, m_colour(sc_colourWhite)
 		, m_active(true)
 		, m_texture(NULL)
-		, m_nextWidget(NULL)
-		, m_childWidget(NULL)
+		, m_parent(NULL)
+		, m_next(NULL)
+		, m_firstChild(NULL)
 		, m_debugRender(false)
 		, m_showFilePath(false)
 		, m_selectedListItemId(0)
@@ -173,11 +173,13 @@ public:
 	//\param a_child is a pointer to the allocated widget to append
 	void AddChild(Widget * a_child);
 	void AddSibling(Widget * a_sibling);
+	void Orphan();
 
 	//\brief Property accessors to return the head of the sibling or child widgets
 	//\return The sibling or child widget or NULL if not set
-	inline Widget * GetNext() { return m_nextWidget; }
-	inline Widget * GetChild() { return m_childWidget; }
+	inline Widget * GetNext() { return m_next; }
+	inline Widget * GetChild() { return m_firstChild; }
+	inline Widget * GetParent() { return m_parent; }
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
@@ -211,6 +213,10 @@ public:
 	{
 		m_action.SetCallback(a_listenerObject, a_listenerFunc);
 	}
+	inline void ClearAction()
+	{
+		m_action.ClearCallback();
+	}
 
 	//\brief List accessors for combo box and list type widgets
 	void AddListItem(const char * a_newItemName);
@@ -235,8 +241,9 @@ private:
 	bool m_active;						// If the widget should be drawn and reactive
 	unsigned int m_fontNameHash;		// Hash of the name of the font to render with
 	Texture * m_texture;				// What to draw
-	Widget * m_nextWidget;				// Conitiguous widgets are stored as a linked list
-	Widget * m_childWidget;				// And each widget can have multiple children
+	Widget * m_parent;					// Who's ya daddy
+	Widget * m_next;					// Conitiguous widgets are stored as a linked list
+	Widget * m_firstChild;				// And each widget can have multiple children
 	unsigned int m_selectFlags;			// Bit mask of kind of selection this widget supports
 	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated

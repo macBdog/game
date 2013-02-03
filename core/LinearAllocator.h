@@ -16,10 +16,9 @@ public:
 		, m_memorySize(0)
 		, m_maxEnd(0)
 	{ 
-		m_memory = malloc(a_maxSizeBytes);
+		m_memory = (T*)malloc(a_maxSizeBytes);
 		m_memoryEnd = m_memory;
 		m_memorySize = a_maxSizeBytes;
-
 		m_maxEnd = a_maxSizeBytes + (size_t) m_memory;
 	}
 

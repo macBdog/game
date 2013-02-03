@@ -17,13 +17,19 @@ public:
 
 	// Setup the delegate to call the correct method on the object
 	template <typename TObj, typename TMethod>
-	void SetCallback(TObj * a_object, TMethod a_method)
+	inline void SetCallback(TObj * a_object, TMethod a_method)
 	{
 		// This can only happen once as the callback is not reference counted
 		if (m_callback == NULL)
 		{
 			m_callback = new Callback<TReturnType, TParam, TObj, TMethod>(a_object, a_method);
 		}
+	}
+
+	// Clear the callback
+	inline void ClearCallback()
+	{
+		m_callback = NULL;
 	}
 
 	//\brief Test if the delegate has been set up

@@ -18,7 +18,7 @@ bool Gui::Startup(const char * a_guiPath)
 	m_configFile.Load(fileName);
 
 	// Setup the debug menu root element
-	m_debugRoot.SetName("DebugMenuRoot");
+	m_debugRoot.SetName("DebugMenu");
 	m_debugRoot.SetActive(false);
 	m_debugRoot.SetDebugWidget();
 
@@ -185,7 +185,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 
 void Gui::DestroyWidget(Widget * a_widget)
 {
-	// Activate sibling widgets
+	// Clean up any links
+	a_widget->ClearAction();
+	a_widget->Orphan();
+
+	// Delete sibling widgets
 	Widget * curWidget = a_widget->GetNext();
 	while (curWidget != NULL)
 	{
@@ -194,7 +198,7 @@ void Gui::DestroyWidget(Widget * a_widget)
 		curWidget = next;
 	}
 
-	// Activate any child widgets
+	// Delete any child widgets
 	curWidget = a_widget->GetChild();
 	while (curWidget != NULL)
 	{

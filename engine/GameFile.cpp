@@ -36,11 +36,17 @@ bool GameFile::Load(const char * a_filePath)
 			// A line without any symbols means a new object
 			if (IsLineNewObject(line))
 			{
-				lineCount += ReadObjectAndProperties(line, file);
+				int linesRead = ReadObjectAndProperties(line, file);
+				if (linesRead == 0)
+				{
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open game file resource at path %s", a_filePath);
+					return false;
+				}
+				lineCount += linesRead;
 			}
 			else // Bad formatting
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an object declaration at line %d.", lineCount);
+				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an object declaration at line %d of file %s.", lineCount, a_filePath);
 			}
 		}
 
@@ -99,7 +105,7 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
 				lineCount++;
 			}
-			else // Otherwise normal property
+			else if (strlen(StringUtils::TrimString(line)) > 0) // Checking for normal property
 			{
 				// Break apart the property and parse for type
 				const char * propName = StringUtils::ExtractPropertyName(line, ":");
@@ -112,17 +118,21 @@ unsigned int GameFile::ReadObjectAndProperties(const char * a_objectName, ifstre
 				}
 				else
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, a property name and value at line %u.", lineCount);
-					return lineCount;
+					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, there is a missing property name and/or value for object %s at line %u.", a_objectName, lineCount);
+					return 0;
 				}
+			}
+			else // Whitespace, move on
+			{
+				break;
 			}
 		}
 		braceCount--;
 	}
 	else if (braceCount > 0) // Mismatched number of braces
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after object declaration on line %u.", lineCount);
-		return lineCount;
+		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Bad game file format, expecting an open brace after declaration for object %s on line %u.", a_objectName, lineCount);
+		return 0;
 	}
 
 	return lineCount;

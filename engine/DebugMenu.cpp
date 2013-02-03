@@ -632,6 +632,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		if (m_widgetToEdit != NULL)
 		{
 			m_editType = eEditTypeNone;
+			m_editMode = eEditModeNone;
 			m_widgetToEdit->ClearSelection();
 			m_widgetToEdit = NULL;
 		}
@@ -649,9 +650,15 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_widgetToEdit = newSelectedWidget;
 		m_widgetToEdit->SetSelection(Widget::eSelectionEditSelected);
 	}
-	else
+	else // Cancel selections
 	{
-		m_widgetToEdit = NULL;
+		if (m_widgetToEdit != NULL)
+		{
+			m_editType = eEditTypeNone;
+			m_editMode = eEditModeNone;
+			m_widgetToEdit->ClearSelection();
+			m_widgetToEdit = NULL;
+		}
 	}
 
 	// Do picking with all the game objects in the scene

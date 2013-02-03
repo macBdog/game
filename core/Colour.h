@@ -17,10 +17,10 @@ public:
 	inline void SetG(float a_val) { g = a_val; }
 	inline void SetB(float a_val) { b = a_val; }
 	inline void SetA(float a_val) { a = a_val; }
-	inline float GetR() { return r; }
-	inline float GetG() { return g; }
-	inline float GetB() { return b; }
-	inline float GetA() { return a; }
+	inline float GetR() const { return r; }
+	inline float GetG() const { return g; }
+	inline float GetB() const { return b; }
+	inline float GetA() const { return a; }
 	inline float * GetValues() { return &r; }
 
 	//\brief Standard arithmatic operator overloads

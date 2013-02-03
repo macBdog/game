@@ -4,9 +4,9 @@ template<> Log * Singleton<Log>::s_instance = NULL;
 
 const float	Log::s_logDisplayTime[LL_COUNT] =
 {
-	1.0f,
-	2.0f,
-	10.0f
+	1.0f,	// LL_INFO
+	2.0f,	// LL_WARNING
+	99.0f	// LL_ERROR
 };
 
 const Colour Log::s_logDisplayColour[LL_COUNT]=

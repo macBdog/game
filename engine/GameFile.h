@@ -211,7 +211,7 @@ private:
 	//\param const char * to a line read in from a file
 	static inline bool IsLineNewObject(const char * a_line)
 	{
-		return !strstr(a_line, "{") && !strstr(a_line, "}") && !strstr(a_line, ":") && strlen(a_line) > 0;
+		return !strstr(a_line, "{") && !strstr(a_line, "}") && !strstr(a_line, ":") && strlen(StringUtils::TrimString(a_line)) > 0;
 	}
 
 	//\brief Helper function to write a number of tabs to an output stream

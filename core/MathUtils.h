@@ -44,6 +44,18 @@ namespace MathUtils
 		return a_lowerBound + ((a_upperBound - a_lowerBound) * RandFloat());
 	}
 
+	//\brief Return a random int between 0 and RAND_MAX
+	static int RandInt()
+	{
+		return rand();
+	}
+
+	//\brief Return a random into between two ranges
+	static int RandIntRange(int a_lowerBound, int a_upperBound)
+	{
+		return (int)RandFloatRange((float)a_lowerBound, (float)a_upperBound);
+	}
+
 	//\brief Return a float a fraction between two bounds
 	static float LerpFloat(float a_from, float a_to, float a_frac)
 	{
