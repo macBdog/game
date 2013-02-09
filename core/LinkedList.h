@@ -57,8 +57,8 @@ public:
 	{}
 
 	// Accessors for head and tail
-	inline LinkedListNode<T> * GetHead() { return m_head; }
-	inline LinkedListNode<T> * GetTail() { return m_tail; }
+	inline LinkedListNode<T> * GetHead() const { return m_head; }
+	inline LinkedListNode<T> * GetTail() const { return m_tail; }
 	inline bool IsEmpty() const { return m_length == 0; }
 	inline unsigned int GetLength() const { return m_length; }
 

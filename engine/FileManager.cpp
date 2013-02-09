@@ -102,6 +102,52 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 
    return true;	
 }
+
+bool FileManager::CheckFilePath(const char * a_filePath)
+{
+	WIN32_FIND_DATA findFileData;
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	
+	// Check there is actually a path supplied
+	if (a_filePath == NULL || !a_filePath[0])
+	{
+		return false;
+	}
+
+	// Construct a copy of the string for modification
+	unsigned int pathLength = strlen(a_filePath);
+	char workingPath[StringUtils::s_maxCharsPerLine];
+	memset(&workingPath, 0, sizeof(char)*pathLength);
+	memcpy(workingPath, a_filePath, pathLength);
+
+	// Check path isn't too deep
+	if (pathLength > StringUtils::s_maxCharsPerLine)
+	{
+		return false;
+	}
+
+	// Strip any trailing slash from the path
+	if (workingPath[pathLength-1] == '\\')
+	{
+		workingPath[pathLength-1] = '\0';
+	}
+	
+	// Now try getting the first file of the list
+	TCHAR szDir[MAX_PATH];
+	StringCchCopy(szDir, MAX_PATH, workingPath);
+	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
+	hFind = FindFirstFile(szDir, &findFileData);
+
+	// Check path actually exists
+	if (hFind == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+
+	// Must be alright if we got this far
+	return true;
+}
+
 #else
 bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {

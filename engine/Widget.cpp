@@ -14,7 +14,7 @@ using namespace std;	//< For fstream operations
 const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.05f, 0.2f, 0.2f, 0.2f);
-const Colour Widget::sc_editSelectedColour = Colour(0.15f, 0.35f, 0.35f, 0.35f);
+const Colour Widget::sc_editSelectedColour = Colour(0.05f, 0.85f, 0.85f, 0.0f);
 
 Widget::~Widget()
 {
@@ -42,8 +42,8 @@ void Widget::Draw()
 		switch (m_selection)
 		{
 			case eSelectionRollover:		selectColour -= sc_rolloverColour;		break;
-			case eSelectionEditRollover:	selectColour -= sc_editRolloverColour;	break;
 			case eSelectionSelected:		selectColour -= sc_selectedColour;		break;
+			case eSelectionEditRollover:	selectColour -= sc_editRolloverColour;	break;
 			case eSelectionEditSelected:	selectColour -= sc_editSelectedColour;	break;
 			default: break;
 		}
@@ -67,14 +67,16 @@ void Widget::Draw()
 		// Draw widget bounds for editing mode or for debug widgets
 		if (DebugMenu::Get().IsDebugMenuEnabled() || IsDebugWidget())
 		{
+			Colour boxColour = selectColour;
+			boxColour.SetA(0.1f);
 			Vector2 startVec = m_pos.GetVector();
 			Vector2 size = m_size.GetVector();
 			Vector2 endVec = Vector2(startVec.GetX() + m_size.GetX(), startVec.GetY());
-			rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
+			rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
 			
-			startVec = endVec;	endVec -= Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
-			startVec = endVec;	endVec -= Vector2(m_size.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
-			startVec = endVec;	endVec += Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
+			startVec = endVec;	endVec -= Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
+			startVec = endVec;	endVec -= Vector2(m_size.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
+			startVec = endVec;	endVec += Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
 		}
 
 		// Draw gui label on top of the widget in editing mode

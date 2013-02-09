@@ -28,6 +28,7 @@ public:
 	inline void SetLook(Vector a_look,		float a_w = 0.0f) { look = a_look; lookW = a_w;}
 	inline void SetUp(Vector a_up,			float a_w = 0.0f) { up = a_up; upW = a_w;}
 	inline void SetPos(Vector a_pos,		float a_w = 1.0f) { pos = a_pos; posW = a_w;}
+	inline void Translate(Vector a_trans) { pos += a_trans; }
 	inline Vector GetRight() const	{ return right; }
 	inline Vector GetLook()	const	{ return look; }
 	inline Vector GetUp() const		{ return up; }

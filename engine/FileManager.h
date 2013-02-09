@@ -55,8 +55,40 @@ public:
 	//\param a_filePath cString of the path to enumerate
 	//\param a_fileList_OUT the list of FileInfo to add to
 	//\param a_fileSubstring optionally exclude all files without this substring in the path
-    bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = NULL);
+	bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = NULL);
+	bool CheckFilePath(const char * a_filePath);
 	void EmptyFileList(FileList & a_fileList_OUT);
+
+	//\brief Convenience functions for file lists
+	//\param a_fileList const ref to the fileList being counted
+	//\param a_countFiles bool true if files should be included in the count
+	//\param a_countDirs bool true if directories should be included in the count
+	//\return The number of files and folders in the file list
+	inline unsigned int CountFiles(const FileList & a_fileList, bool a_countFiles, bool a_countDirs) const
+	{
+		unsigned int numFiles = 0;
+		FileListNode * next = a_fileList.GetHead();
+		while(next != NULL)
+		{
+			FileInfo * curFile = next->GetData();
+			if (curFile->m_isDir)
+			{
+				if (a_countDirs)
+				{
+					++numFiles;
+				}
+			}
+			else // Is a file
+			{
+				if (a_countFiles)
+				{
+					++numFiles;
+				}
+			}
+			next = next->GetNext();
+		}
+		return numFiles;
+	}
 
 	//\brief Load the game file and parse it into data, will allocate new entries
 	//		 in the list so be sure to use the helper function or delete entries to avoid leaks

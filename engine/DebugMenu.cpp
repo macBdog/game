@@ -794,6 +794,9 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 
 		curNode = curNode->GetNext();
 	}
+
+	// Clean up file list
+	FileManager::Get().EmptyFileList(resourceFiles);
 }
 
 void DebugMenu::ShowTextInput(const char * a_startingText)

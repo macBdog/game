@@ -290,10 +290,12 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 		Log::Get().WriteEngineErrorNoParams("No scene files or no scenes set to start on load, creating a default scene.");
 		Scene * newScene = new Scene();
 		newScene->SetBeginLoaded(true);
+		newScene->SetName("defaultScene");
 		SceneNode * newSceneNode = new SceneNode();
 		newSceneNode ->SetData(newScene);
 		m_scenes.Insert(newSceneNode);
 		m_currentScene = newScene;
+		newScene->Serialise();
 	}
 
 	return true;
