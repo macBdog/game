@@ -53,7 +53,7 @@ namespace MathUtils
 	//\brief Return a random into between two ranges
 	static int RandIntRange(int a_lowerBound, int a_upperBound)
 	{
-		return (int)RandFloatRange((float)a_lowerBound, (float)a_upperBound);
+		return a_lowerBound + (rand()%(a_upperBound+1 - a_lowerBound));
 	}
 
 	//\brief Return a float a fraction between two bounds
