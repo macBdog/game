@@ -1,6 +1,6 @@
 #include <windows.h>
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glu.h>
 
 #include "../core/MathUtils.h"
@@ -87,7 +87,18 @@ bool RenderManager::Startup(Colour a_clearColour)
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "RenderManager failed to allocate batch/primitive memory!");
 	}
 
-    return batchAlloc;
+	// Setup default shaders
+	#include "Shaders\default.vsh.inc"
+	#include "Shaders\default.fsh.inc"
+	GLenum extensionStartup = glewInit();
+	if (extensionStartup != GLEW_OK)
+	{
+		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
+		return false;
+	} 
+	m_defaultShader = new Shader(defaultVertexShader, defaultFragmentShader);
+
+    return batchAlloc && m_defaultShader->GetShader() > 0;
 }
 
 bool RenderManager::Shutdown()
@@ -105,6 +116,12 @@ bool RenderManager::Shutdown()
 		m_lineCount[i] = 0;
 		m_modelCount[i] = 0;
 		m_fontCharCount[i] = 0;
+	}
+	
+	// Clean up the default shader
+	if (m_defaultShader != NULL)
+	{
+		delete m_defaultShader;
 	}
 
 	return true;
@@ -180,6 +197,9 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
+
+	// Use the default shader
+	m_defaultShader->BindShader();
 
 	// Draw quads for each batch
 	for (unsigned int i = 0; i < eBatchCount; ++i)

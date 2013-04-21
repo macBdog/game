@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -86,9 +86,11 @@
     <ClInclude Include="Gui.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="LuaScript.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelManager.h" />
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="StringHash.h" />
     <ClInclude Include="StringUtils.h" />
@@ -112,6 +114,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -119,6 +122,10 @@
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Widget.cpp" />
     <ClCompile Include="WorldManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\default.fsh.inc" />
+    <None Include="Shaders\default.vsh.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

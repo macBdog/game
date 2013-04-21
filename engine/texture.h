@@ -2,7 +2,7 @@
 #define _ENGINE_TEXTURE_H_
 
 #include <windows.h>
-#include <GL/gl.h>
+#include <GL/glew.h>
 
 #include "StringUtils.h"
 

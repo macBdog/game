@@ -1,5 +1,5 @@
-#ifndef _CORE_SYSTEM_LOG_
-#define _CORE_SYSTEM_LOG_
+#ifndef _ENGINE_SYSTEM_LOG_
+#define _ENGINE_SYSTEM_LOG_
 #pragma once
 
 #include <iostream>
@@ -110,4 +110,4 @@ private:
 	bool m_renderToScreen;									// If log entries should be rendered to the screen
 };
 
-#endif // _CORE_SYSTEM_LOG_
+#endif // _ENGINE_SYSTEM_LOG_

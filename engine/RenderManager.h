@@ -4,9 +4,11 @@
 
 #include "Model.h"
 #include "Singleton.h"
+#include "Shader.h"
 #include "Texture.h"
 
 #include "../core/Colour.h"
+#include "../core/LinkedList.h"
 #include "../core/Matrix.h"
 #include "../core/Vector.h"
 
@@ -172,28 +174,31 @@ private:
 		bool m_2d;
 	};
 
-	Tri	 * m_tris[eBatchCount];								// Pointer to a pool of memory for tris
-	Quad * m_quads[eBatchCount];							// Pointer to a pool of memory for quads
-	Line * m_lines[eBatchCount];							// Lines for each batch
-	RenderModel * m_models[eBatchCount];					// Models for each batch
+	Tri	 * m_tris[eBatchCount];								///< Pointer to a pool of memory for tris
+	Quad * m_quads[eBatchCount];							///< Pointer to a pool of memory for quads
+	Line * m_lines[eBatchCount];							///< Lines for each batch
+	RenderModel * m_models[eBatchCount];					///< Models for each batch
 	FontChar * m_fontChars[eBatchCount];
-	unsigned int m_triCount[eBatchCount];					// Number of tris per batch per frame
-	unsigned int m_quadCount[eBatchCount];					// Number of primitives in each batch per frame
-	unsigned int m_lineCount[eBatchCount];					// Number of lines per frame
-	unsigned int m_modelCount[eBatchCount];					// Number of models to render
-	unsigned int m_fontCharCount[eBatchCount];				// Number for font characters to render
-	unsigned int m_viewWidth;								// Cache of arguments passed to init
-	unsigned int m_viewHeight;								// Cache of arguments passed to init
-	unsigned int m_bpp;										// Cache of arguments passed to init
-	float		 m_aspect;									// Calculated ratio of width to height
-	Colour m_clearColour;									// Cache of arguments passed to init
-	eRenderMode m_renderMode;								// How the scene is to be rendered
+	unsigned int m_triCount[eBatchCount];					///< Number of tris per batch per frame
+	unsigned int m_quadCount[eBatchCount];					///< Number of primitives in each batch per frame
+	unsigned int m_lineCount[eBatchCount];					///< Number of lines per frame
+	unsigned int m_modelCount[eBatchCount];					///< Number of models to render
+	unsigned int m_fontCharCount[eBatchCount];				///< Number for font characters to render
 
-	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		// Flat storage amount for quads
-	static const unsigned int s_maxLines = 1600;						// Storage amount for debug lines
-	static const float s_nearClipPlane;									// Distance from the viewer to the near clipping plane (always positive) 
-	static const float s_farClipPlane;									// Distance from the viewer to the far clipping plane (always positive).
-	static const float s_fovAngleY;										// Field of view angle, in degrees, in the y direction.
+	Shader * m_defaultShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
+	
+	unsigned int m_viewWidth;								///< Cache of arguments passed to init
+	unsigned int m_viewHeight;								///< Cache of arguments passed to init
+	unsigned int m_bpp;										///< Cache of arguments passed to init
+	float		 m_aspect;									///< Calculated ratio of width to height
+	Colour m_clearColour;									///< Cache of arguments passed to init
+	eRenderMode m_renderMode;								///< How the scene is to be rendered
+
+	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		///< Flat storage amount for quads
+	static const unsigned int s_maxLines = 1600;						///< Storage amount for debug lines
+	static const float s_nearClipPlane;									///< Distance from the viewer to the near clipping plane (always positive) 
+	static const float s_farClipPlane;									///< Distance from the viewer to the far clipping plane (always positive).
+	static const float s_fovAngleY;										///< Field of view angle, in degrees, in the y direction.
 };
 
 #endif // _ENGINE_RENDER_MANAGER
