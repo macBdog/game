@@ -200,7 +200,7 @@ const char * GameFile::GetString(const char * a_object, const char * a_property)
 			return prop->GetString();
 		}
 	}
-	return NULL;
+	return "";
 }
 
 int GameFile::GetInt(const char * a_object, const char * a_property)
