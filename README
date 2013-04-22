@@ -1,6 +1,6 @@
 WHAT IS THE CURRENT SHORT TERM GOAL: LUA integration for scenes and GameObjects, providing lifecycle hooks.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
-TASK QUEUE: GLSL Shader support. Write a defragmenting page allocator to rid the codebase of std::new.
+TASK QUEUE: Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 
 What is this project?
 

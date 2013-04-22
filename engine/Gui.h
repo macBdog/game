@@ -17,7 +17,7 @@ class Gui : public Singleton<Gui>
 public:
 
 	// Constructor just for initialisation list
-	Gui() : m_activeMenu(NULL) {}
+	Gui() : m_activeMenu(NULL) { m_guiPath[0] = '\0'; }
 
 	// Destructor cleans up all allocations
 	~Gui() { Shutdown(); }
@@ -66,6 +66,7 @@ private:
 	//\brief Helper function to update selection status of all widgets based on mouse pos
 	void UpdateSelection();
 
+	char m_guiPath[StringUtils::s_maxCharsPerLine];
 	MenuList m_menus;		// All menus loaded from data or created on the fly
 	GameFile m_configFile;	// Base gui config file
 	Widget m_debugRoot;		// All debug menu elements are children of this

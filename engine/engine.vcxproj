@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>

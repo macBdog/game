@@ -2,6 +2,7 @@
 #include "InputManager.h"
 #include "FileManager.h"
 #include "GameFile.h"
+#include "LuaScript.h"
 #include "RenderManager.h"
 #include "TextureManager.h"
 #include "StringUtils.h"
@@ -12,6 +13,9 @@ template<> Gui * Singleton<Gui>::s_instance = NULL;
 
 bool Gui::Startup(const char * a_guiPath)
 {
+	// Cache off the gui path for later use when loading menus
+	strncpy(m_guiPath, a_guiPath, strlen(a_guiPath) + 1);
+
 	// Load in the gui texture
 	char fileName[StringUtils::s_maxCharsPerLine];
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
@@ -300,6 +304,31 @@ bool Gui::LoadMenu(const char * a_menuFile)
 				parentMenu->SetName(menuFile->GetString("menu", "name"));
 				parentMenu->SetFilePath(a_menuFile);
 				parentMenu->SetActive(false);
+
+				// Load the script
+				if (GameFile::Property * scriptProp = menuFile->FindProperty(menuObject, "script"))
+				{
+					lua_State *lua = luaL_newstate();  // Open Lua
+					luaopen_io (lua);              // Load io library
+
+					// Construct path to script using menu path
+					char scriptPath[StringUtils::s_maxCharsPerLine];
+					sprintf(scriptPath, "%sscripts\\%s", m_guiPath, menuFile->GetString("menu", "script"));
+					if (luaL_loadfile(lua, scriptPath) == 0)
+					{
+					   // Call main...
+					   if (lua_pcall(lua, 0, LUA_MULTRET, 0) == 0)
+					   { 
+						  // Push the function name onto the stack
+						  lua_pushstring(lua, "UpdatePower");
+
+						  // Function is located in the Global Table
+						  lua_gettable(lua, -2);  
+						  lua_pcall(lua, 0, 0, 0);
+					   }
+					}
+					lua_close (lua);
+				}
 
 				// Load child elements of the menu
 				GameFile::Object * childWidget = menuObject->m_firstChild;

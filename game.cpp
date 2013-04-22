@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
 	char modelPath[StringUtils::s_maxCharsPerLine];
 	char templatePath[StringUtils::s_maxCharsPerLine];
 	char scenePath[StringUtils::s_maxCharsPerLine];
+	char scriptPath[StringUtils::s_maxCharsPerLine];
 	char shaderPath[StringUtils::s_maxCharsPerLine];
 
 	strcpy(texturePath, configFile.GetString("config", "texturePath"));
@@ -127,6 +128,7 @@ int main(int argc, char *argv[])
 	strcpy(modelPath, configFile.GetString("config", "modelPath"));
 	strcpy(templatePath, configFile.GetString("config", "templatePath"));
 	strcpy(scenePath, configFile.GetString("config", "scenePath"));
+	strcpy(scriptPath,		configFile.GetString("config", "scriptPath"));
 	strcpy(shaderPath, configFile.GetString("config", "shaderPath"));
 
 	// Prefix paths that don't look explicit
@@ -138,6 +140,7 @@ int main(int argc, char *argv[])
 		if (strstr(modelPath, ":") == NULL)		{ StringUtils::PrependString(modelPath, gameDataPath); }
 		if (strstr(templatePath, ":") == NULL)	{ StringUtils::PrependString(templatePath, gameDataPath); }
 		if (strstr(scenePath, ":") == NULL)		{ StringUtils::PrependString(scenePath, gameDataPath); }
+		if (strstr(scriptPath, ":") == NULL)	{ StringUtils::PrependString(scriptPath, gameDataPath); }
 		if (strstr(shaderPath, ":") == NULL)	{ StringUtils::PrependString(shaderPath, gameDataPath); }
 	}
 
