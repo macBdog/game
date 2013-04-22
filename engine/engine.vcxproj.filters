@@ -159,10 +159,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\default.fsh.inc">
+    <None Include="Shaders\colour.fsh.inc">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\default.vsh.inc">
+    <None Include="Shaders\colour.vsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\texture.fsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\texture.vsh.inc">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

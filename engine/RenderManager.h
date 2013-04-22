@@ -185,7 +185,8 @@ private:
 	unsigned int m_modelCount[eBatchCount];					///< Number of models to render
 	unsigned int m_fontCharCount[eBatchCount];				///< Number for font characters to render
 
-	Shader * m_defaultShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
+	Shader * m_colourShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
+	Shader * m_textureShader;								///< Shader for textured objects when no shader specified
 	
 	unsigned int m_viewWidth;								///< Cache of arguments passed to init
 	unsigned int m_viewHeight;								///< Cache of arguments passed to init

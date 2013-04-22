@@ -88,17 +88,20 @@ bool RenderManager::Startup(Colour a_clearColour)
 	}
 
 	// Setup default shaders
-	#include "Shaders\default.vsh.inc"
-	#include "Shaders\default.fsh.inc"
+	#include "Shaders\colour.vsh.inc"
+	#include "Shaders\colour.fsh.inc"
+	#include "Shaders\texture.vsh.inc"
+	#include "Shaders\texture.fsh.inc"
 	GLenum extensionStartup = glewInit();
 	if (extensionStartup != GLEW_OK)
 	{
 		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
 		return false;
 	} 
-	m_defaultShader = new Shader(defaultVertexShader, defaultFragmentShader);
+	m_colourShader = new Shader(colourVertexShader, colourFragmentShader);
+	m_textureShader = new Shader(textureVertexShader, textureFragmentShader);
 
-    return batchAlloc && m_defaultShader->GetShader() > 0;
+    return batchAlloc && m_colourShader->GetShader() > 0 && m_textureShader->GetShader() > 0;
 }
 
 bool RenderManager::Shutdown()
@@ -119,9 +122,13 @@ bool RenderManager::Shutdown()
 	}
 	
 	// Clean up the default shader
-	if (m_defaultShader != NULL)
+	if (m_colourShader != NULL)
 	{
-		delete m_defaultShader;
+		delete m_colourShader;
+	}
+	if (m_textureShader != NULL)
+	{
+		delete m_textureShader;
 	}
 
 	return true;
@@ -195,11 +202,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 
     // Clear the color and depth buffers in preparation for drawing
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glLoadIdentity();
-
-	// Use the default shader
-	m_defaultShader->BindShader();
 
 	// Draw quads for each batch
 	for (unsigned int i = 0; i < eBatchCount; ++i)
@@ -243,6 +246,13 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		{
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
+
+		// Use the textured shader
+		glEnable(GL_TEXTURE_2D);
+		m_textureShader->BindShader();
+		int texUniformLoc = glGetUniformLocation(m_textureShader->GetShader(), "tex");
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(texUniformLoc, 0);
 
 		// Submit the tris
 		Tri * t = m_tris[i];
@@ -308,20 +318,6 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 			q++;
 		}
 
-		// Draw lines in the current batch
-		glDisable(GL_TEXTURE_2D);
-		Line * l = m_lines[i];
-		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
-		{
-			glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
-			glBegin(GL_LINES);
-			glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
-			glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
-			glEnd();
-			++l;
-		}
-		glEnable(GL_TEXTURE_2D);
-
 		// Draw font chars by calling their display lists
 		FontChar * fc = m_fontChars[i];
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
@@ -351,7 +347,23 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 			glPopMatrix();
 			++rm;
 		}
+		
+		// Swith to colour shader for lines as they cannot be textured
+		m_colourShader->BindShader();
 
+		// Draw lines in the current batch
+		glDisable(GL_TEXTURE_2D);
+		Line * l = m_lines[i];
+		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
+		{
+			glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
+			glBegin(GL_LINES);
+			glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
+			glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
+			glEnd();
+			++l;
+		}
+		
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;

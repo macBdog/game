@@ -124,8 +124,10 @@
     <ClCompile Include="WorldManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\default.fsh.inc" />
-    <None Include="Shaders\default.vsh.inc" />
+    <None Include="Shaders\colour.fsh.inc" />
+    <None Include="Shaders\colour.vsh.inc" />
+    <None Include="Shaders\texture.fsh.inc" />
+    <None Include="Shaders\texture.vsh.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
