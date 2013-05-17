@@ -11,6 +11,8 @@
 #include "Singleton.h"
 #include "StringUtils.h"
 
+class Shader;
+
 //\brief A scene is a subset of a world, containing objects that are fixed and floating
 class Scene
 {
@@ -31,7 +33,8 @@ public:
 	Scene() 
 		: m_numObjects(0)
 		, m_state(eSceneState_Unloaded) 
-		, m_beginLoaded(false) 
+		, m_beginLoaded(false)
+		, m_shader(NULL)
 		{ sprintf(m_name, "scene01"); }
 
 	// Cleanup the of objects in the scene on destruction
@@ -66,6 +69,8 @@ public:
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetBeginLoaded(bool a_begin) { m_beginLoaded = a_begin; }
 	inline bool IsBeginLoaded() { return m_beginLoaded; }
+	inline Shader * GetShader() { return m_shader; }
+	bool SetShader(const char * a_shaderFileName);
 
 	//\brief Write all objects in the scene out to a scene file
 	void Serialise();
@@ -85,6 +90,7 @@ private:
 	unsigned int m_numObjects;						///< How many objects are in the default scene
 	SceneState m_state;								///< What state the scene is in
 	bool m_beginLoaded;								///< If the scene should be loaded and rendering on startup
+	Shader * m_shader;								///< Shader for the whole scene
 };
 
 //\brief WorldManager handles object and scene management.

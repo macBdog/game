@@ -44,11 +44,11 @@ public:
 	//\ No work done in the constructor, only Init
 	RenderManager() : m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
-					, m_aspect(1.0f) {}
+					, m_aspect(1.0f) { m_shaderPath[0] = '\0'; }
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Startup(Colour a_clearColour);
+    bool Startup(Colour a_clearColour, const char * a_shaderPath);
 	bool Shutdown();
 
 	//\brief Setup the viewport
@@ -62,11 +62,12 @@ public:
 	//\param a_renderMode the new mode to set
 	inline void SetRenderMode(eRenderMode a_renderMode) { m_renderMode = a_renderMode; }
 
-	//\brief Accessors for the viewport dimensions
+	//\brief Accessors for the viewport dimensions and render properties
 	inline unsigned int GetViewWidth() { return m_viewWidth; }
 	inline unsigned int GetViewHeight() { return m_viewHeight; }
 	inline unsigned int GetViewDepth() { return m_bpp; }
 	inline float GetViewAspect() { return m_aspect; }
+	inline const char * GetShaderPath() { return m_shaderPath; }
 
 	//\brief Set up a display list for a font character so drawing only involves calling a list
 	//\param a_size is an arbitrary width to height to generate the list at
@@ -194,6 +195,7 @@ private:
 	float		 m_aspect;									///< Calculated ratio of width to height
 	Colour m_clearColour;									///< Cache of arguments passed to init
 	eRenderMode m_renderMode;								///< How the scene is to be rendered
+	char m_shaderPath[StringUtils::s_maxCharsPerLine];		///< Path to the shader files
 
 	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		///< Flat storage amount for quads
 	static const unsigned int s_maxLines = 1600;						///< Storage amount for debug lines

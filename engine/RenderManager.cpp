@@ -17,7 +17,7 @@ const float RenderManager::s_nearClipPlane = 0.5f;
 const float RenderManager::s_farClipPlane = 1000.0f;
 const float RenderManager::s_fovAngleY = 50.0f;
 
-bool RenderManager::Startup(Colour a_clearColour)
+bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 {
     // Set the clear colour
     m_clearColour = a_clearColour;
@@ -100,6 +100,12 @@ bool RenderManager::Startup(Colour a_clearColour)
 	} 
 	m_colourShader = new Shader(colourVertexShader, colourFragmentShader);
 	m_textureShader = new Shader(textureVertexShader, textureFragmentShader);
+
+	// Cache off the shader path
+	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
+	{
+		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
+	}
 
     return batchAlloc && m_colourShader->GetShader() > 0 && m_textureShader->GetShader() > 0;
 }

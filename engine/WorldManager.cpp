@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "GameFile.h"
 #include "ModelManager.h"
 
@@ -20,6 +23,12 @@ Scene::~Scene()
 		m_objects.Remove(cur);
 		delete cur->GetData();
 		delete cur;
+	}
+
+	// Clean up shader if set
+	if (m_shader != NULL)
+	{
+		delete m_shader;
 	}
 }
 
@@ -113,6 +122,75 @@ bool Scene::Update(float a_dt)
 	return updateSuccess && drawSuccess;
 }
 
+bool Scene::SetShader(const char * a_shaderFileName)
+{
+	struct stat fileInfo;
+	unsigned int numChars = 0;
+	char * vertexSource = NULL;
+	char * fragmentSource = NULL;
+	char fullShaderPath[StringUtils::s_maxCharsPerLine];
+	char fileLine[StringUtils::s_maxCharsPerLine];
+	
+	// Open file to allocate the correct size string
+	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
+	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	{
+		if (vertexSource = (char *)malloc(fileInfo.st_size))
+		{
+			// Open the vertex shader file and parse each line into a string
+			ifstream vertexShaderFile(fullShaderPath);
+			if (vertexShaderFile.is_open())
+			{
+				// Read till the file has more contents
+				while (vertexShaderFile.good())
+				{
+					vertexShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
+					const int lineSize = strlen(fileLine);
+					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
+					numChars += lineSize;
+				}
+				vertexSource[numChars] = '\0';
+			}
+			vertexShaderFile.close();
+		}
+	}
+
+	// Open the pixel shader file and parse each line into a string
+	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
+	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	{
+		if (fragmentSource = (char *)malloc(fileInfo.st_size))
+		{
+			ifstream fragmentShaderFile(fullShaderPath);
+			if (fragmentShaderFile.is_open())
+			{
+				// Read till the file has more contents
+				numChars = 0;
+				while (fragmentShaderFile.good())
+				{
+					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
+					const int lineSize = strlen(fileLine);
+					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
+					numChars += lineSize;
+				}
+				fragmentSource[numChars] = '\0';
+			}
+			fragmentShaderFile.close();
+		}
+	}
+
+	// Initialise the shader
+	if (vertexSource != NULL && fragmentSource != NULL)
+	{
+		if (m_shader = new Shader(vertexSource, fragmentSource))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void Scene::Serialise()
 {
 	// Construct the path from the scene directory and name of the scene
@@ -186,6 +264,12 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			{
 				a_sceneToLoad_OUT->SetName(sceneFile->GetString("scene", "name"));
 				a_sceneToLoad_OUT->SetBeginLoaded(sceneFile->GetBool("scene", "beginLoaded"));
+
+				// Set whole scene shader if specified
+				if (sceneFile->FindProperty(sceneObject, "shader"))
+				{
+					a_sceneToLoad_OUT->SetShader(sceneFile->GetString("scene", "shader"));
+				}
 			}
 			else
 			{

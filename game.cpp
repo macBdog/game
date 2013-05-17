@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
-    RenderManager::Get().Startup(sc_colourBlack);
+    RenderManager::Get().Startup(sc_colourBlack, shaderPath);
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
