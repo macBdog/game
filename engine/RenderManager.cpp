@@ -98,8 +98,8 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
 		return false;
 	} 
-	m_colourShader = new Shader(colourVertexShader, colourFragmentShader);
-	m_textureShader = new Shader(textureVertexShader, textureFragmentShader);
+	m_colourShader = new Shader("defaultColour", colourVertexShader, colourFragmentShader);
+	m_textureShader = new Shader("defaultTexture", textureVertexShader, textureFragmentShader);
 
 	// Cache off the shader path
 	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')

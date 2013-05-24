@@ -112,11 +112,17 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		char posBuf[StringUtils::s_maxCharsPerName];
 		m_worldMat.GetPos().GetString(posBuf);
 
-		// Output all properties
+		// Output all mandatory properties
 		GameFile::Object * fileObject = outputFile->AddObject("gameObject", a_parent);
 		outputFile->AddProperty(fileObject, "name", m_name);
 		outputFile->AddProperty(fileObject, "template", m_template);
 		outputFile->AddProperty(fileObject, "pos", posBuf);
+
+		// And optional ones
+		if (m_shader != NULL)
+		{
+			outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
+		}
 
 		// Serialise any children of this child
 		GameObject * child = m_child;

@@ -14,6 +14,7 @@
 
 class GameObjectComponent;
 class Model;
+class Shader;
 
 //\brief A GameObject is the container for all entities involved in the gameplay.
 //		 It is lightweight yet has provisions for all basic game related functions like
@@ -52,6 +53,7 @@ public:
 		, m_child(NULL)
 		, m_next(NULL)
 		, m_model(NULL)
+		, m_shader(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
 		, m_clipType(eClipTypeNone)
@@ -133,6 +135,7 @@ public:
 	inline const char * GetTemplate() { return m_template; }
 	inline Model * GetModel() { return m_model; }
 	inline Matrix GetWorldMat() { return m_worldMat; }
+	inline Shader * GetShader() { return m_shader; }
 	inline Vector GetPos() { return m_worldMat.GetPos(); }
 	inline Vector GetClipSize() { return m_clipVolumeSize; }
 	inline bool HasTemplate() { return strlen(m_template) > 0; }
@@ -149,6 +152,7 @@ public:
 
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
+	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
 	//inline void SetScript(Script * a_newScript) { m_script = a_newScript; }
 	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
@@ -177,6 +181,7 @@ private:
 	GameObject *		  m_child;				///< Pointer to first child game obhject
 	GameObject *		  m_next;				///< Pointer to sibling game objects
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
+	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
 	//Script			  m_script;				///< The LUA script for user defined behavior
 	eGameObjectState	  m_state;				///< What state the object is in
 	float				  m_lifeTime;			///< How long this guy has been active

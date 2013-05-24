@@ -171,5 +171,11 @@
     <None Include="Shaders\texture.vsh.inc">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\global.fsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\global.vsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

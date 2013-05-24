@@ -131,13 +131,21 @@ bool Scene::SetShader(const char * a_shaderFileName)
 	char fullShaderPath[StringUtils::s_maxCharsPerLine];
 	char fileLine[StringUtils::s_maxCharsPerLine];
 	
+	// All scene shaders include the global inputs and outputs
+	#include "Shaders\global.fsh.inc"
+	#include "Shaders\global.vsh.inc"
+
 	// Open file to allocate the correct size string
 	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
 	if (stat(&fullShaderPath[0], &fileInfo) == 0)
 	{
-		if (vertexSource = (char *)malloc(fileInfo.st_size))
+		size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
+		if (vertexSource = (char *)malloc(globalVertexSize + fileInfo.st_size))
 		{
-			// Open the vertex shader file and parse each line into a string
+			// Include preamble then open the vertex shader file and parse each line into a string
+			numChars = globalVertexSize;
+			strncpy(vertexSource, globalVertexShader, globalVertexSize);
+			vertexSource[numChars++] = '\n';
 			ifstream vertexShaderFile(fullShaderPath);
 			if (vertexShaderFile.is_open())
 			{
@@ -159,13 +167,17 @@ bool Scene::SetShader(const char * a_shaderFileName)
 	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
 	if (stat(&fullShaderPath[0], &fileInfo) == 0)
 	{
-		if (fragmentSource = (char *)malloc(fileInfo.st_size))
+		size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
+		if (fragmentSource = (char *)malloc(globalFragmentSize + fileInfo.st_size))
 		{
+			// Include preamble and follow with contents of file
+			strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
+			numChars = globalFragmentSize;
+			fragmentSource[numChars++] = '\n';
 			ifstream fragmentShaderFile(fullShaderPath);
 			if (fragmentShaderFile.is_open())
 			{
 				// Read till the file has more contents
-				numChars = 0;
 				while (fragmentShaderFile.good())
 				{
 					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
@@ -182,7 +194,7 @@ bool Scene::SetShader(const char * a_shaderFileName)
 	// Initialise the shader
 	if (vertexSource != NULL && fragmentSource != NULL)
 	{
-		if (m_shader = new Shader(vertexSource, fragmentSource))
+		if (m_shader = new Shader(a_shaderFileName, vertexSource, fragmentSource))
 		{
 			return true;
 		}
