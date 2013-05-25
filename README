@@ -49,17 +49,19 @@ Style:
 
 #include "thisFilesHeader.h"
 
-void Style::WhatIsYourStyle(bool a_tellMeNow, const char *a_tellMeHow_OUT)
+bool Style::WhatIsYourStyle(bool a_tellMeNow, float & a_howManyTimes_OUT)
 {
   // Here we are explaining why this is happening, verbose comments
   // are super nice. Comment lines don't cost anything and we are learning.
   if (a_tellMeNow)
   {
-    sprintf(a_tellMeHow_OUT, "%s", "LiekThis");
+    a_howManyTimes += s_howManyTimeIncrement;
   }
 
   // We update our cached style version here
-  m_styleUpdated &= a_tellMeNow;
+  m_styleDirty &= a_tellMeNow;
+  
+  return !a_tellMeNow && a_howManyTimes_OUT > s_howManyTimesThreshold;
 }
   
 For variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
