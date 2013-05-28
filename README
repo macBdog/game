@@ -34,6 +34,14 @@ Functions required by the engine to perform the basic tasks of running a game - 
 ./
 Game specific functionality. Code here is glue that links engine features to perform compound tasks like controlling an AI agent or responding to player actions.
 
+Keys:
+
+TAB - Switch to in game editor (the rest of the keys only work inside the editor)
+Esc - Release the mouse
+Left click - Select GUI element or GameObject
+Right click - Open context sensitive menu (change object, new object etc)
+x,y,z - Hold to reposition object
+
 Style:
 
 #include <cstandardthings>

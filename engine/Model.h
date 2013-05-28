@@ -19,6 +19,9 @@ public:
 		, m_diffuseTex(NULL)
 		, m_normalTex(NULL)
 		, m_specularTex(NULL)
+		, m_verts(NULL)
+		, m_normals(NULL)
+		, m_uvs(NULL)
 		, m_numFaces(0) 
 		, m_displayListId(0) {}
 

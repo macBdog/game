@@ -44,6 +44,11 @@ public:
 	//\ No work done in the constructor, only Init
 	RenderManager() : m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
+					, m_colourShader(NULL)
+					, m_textureShader(NULL)
+					, m_viewWidth(0)
+					, m_viewHeight(0)
+					, m_bpp(0)
 					, m_aspect(1.0f) { m_shaderPath[0] = '\0'; }
 	~RenderManager() { Shutdown(); }
 

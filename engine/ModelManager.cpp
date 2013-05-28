@@ -16,6 +16,7 @@ ModelManager::ModelManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
 {
+	m_modelPath[0] = '\0';
 }
 
 bool ModelManager::Startup(const char * a_modelPath)

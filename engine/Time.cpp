@@ -4,8 +4,7 @@ using namespace Time;
 
 void Timer::Update()
 {
-    unsigned int currentTime = GetSystemTime();
-
-    // If the timer is running
-
+	// TODO If the timer is running
+    // unsigned int currentTime = GetSystemTime();
+	
 }

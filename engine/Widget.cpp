@@ -334,7 +334,6 @@ void Widget::Orphan()
 		else
 		{
 			Widget * sibling = m_parent->m_firstChild;
-			Widget * prevSibling = NULL;
 			while (sibling != NULL)
 			{
 				if (sibling->m_next == this)

@@ -161,7 +161,6 @@ const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes)
 	// Iterate through the string and remove bad characters
 	if (a_buffer != NULL)
 	{
-		const unsigned int charNewLine = 10;
 		const unsigned int stringLength = strlen(a_buffer);
 
 		 // Allocate memory for the new buffer

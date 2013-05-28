@@ -103,7 +103,7 @@ public:
 	//\brief Ctor calls through to startup
 	WorldManager() 
 		: m_totalSceneNumObjects(0)
-		, m_currentScene(NULL) { }
+		, m_currentScene(NULL) { m_templatePath[0] = '\0'; m_scenePath[0] = '\0'; }
 	~WorldManager() { Shutdown(); }
 
 	//\brief Initialise memory pools on startup, cleanup worlds objects on shutdown
@@ -156,7 +156,9 @@ public:
 				// Add on file extension if not present
 				if (!strstr(fileNameBuf, ".tmp"))
 				{
-					sprintf(fileNameBuf, "%s%s", fileNameBuf, ".tmp");
+					const char * fileExt = ".tmp\0";
+					unsigned char lastChar = strlen(fileNameBuf);
+					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt)+1);
 				}
 			} 
 			else // Already fully qualified
@@ -172,11 +174,12 @@ public:
 				// TODO memory management kill std::new
 				if (T * newGameObject = new T())
 				{
-					bool validObject = true;
 					newGameObject->SetId(m_totalSceneNumObjects++);
 					newGameObject->SetState(GameObject::eGameObjectState_Loading);
 					if (GameFile::Object * object = templateFile.FindObject("gameObject"))
-					{
+					{	
+						bool validObject = true;
+						
 						// Name
 						if (GameFile::Property * name = object->FindProperty("name"))
 						{

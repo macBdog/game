@@ -20,6 +20,8 @@ TextureManager::TextureManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
 {
+	m_texturePath[0] = '\0';
+	m_filterMode = eTextureFilterInvalid;
 }
 
 bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTextureFilter)

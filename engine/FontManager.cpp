@@ -77,7 +77,6 @@ bool FontManager::LoadFont(const char * a_fontName)
 
 	// File stream for font config file
 	ifstream file(fontFilePath);
-	unsigned int lineCount = 0;
 	
 	// Create a new font to be managed
 	RenderManager & renMan = RenderManager::Get();
@@ -99,7 +98,6 @@ bool FontManager::LoadFont(const char * a_fontName)
 		{
 			// Get the number of chars to parse
 			file.getline(line, StringUtils::s_maxCharsPerLine);			// info face="fontname" etc
-		    char * fontName = strstr(line, "\"") + 1;
 			char shortFontName[StringUtils::s_maxCharsPerLine];
 			sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true));
 			newFont->m_fontName.SetCString(shortFontName);

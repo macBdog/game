@@ -109,6 +109,7 @@ public:
 	Widget()
 		: m_fontNameHash(0)
 		, m_selectFlags(0)
+		, m_selection(eSelectionNone)
 		, m_colour(sc_colourWhite)
 		, m_active(true)
 		, m_texture(NULL)
@@ -117,7 +118,7 @@ public:
 		, m_firstChild(NULL)
 		, m_debugRender(false)
 		, m_showFilePath(false)
-		, m_selectedListItemId(0)
+		, m_selectedListItemId(eSelectionNone)
 	{
 		memset(&m_name, 0, sizeof(char) * StringUtils::s_maxCharsPerName);
 		memset(&m_filePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);

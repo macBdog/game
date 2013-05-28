@@ -709,7 +709,7 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 	{
 		InputManager & inMan = InputManager::Get();
 		char newName[StringUtils::s_maxCharsPerName];
-		memset(newName, 0, StringUtils::s_maxCharsPerName);
+		newName[0] = '\0';
 		strncpy(newName, m_textInputField->GetFilePath(), strlen(m_textInputField->GetFilePath()));
 
 		SDLKey lastKey = inMan.GetLastKey();
@@ -784,7 +784,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	m_resourceSelectList->ClearListItems();
 	FileManager & fileMan = FileManager::Get();
 	FileManager::FileList resourceFiles;
-	FileManager::Get().FillFileList(a_startingPath, resourceFiles, a_fileExtensionFilter);
+	fileMan.FillFileList(a_startingPath, resourceFiles, a_fileExtensionFilter);
 
 	// Add each resource file in the directory
 	FileManager::FileListNode * curNode = resourceFiles.GetHead();
@@ -796,7 +796,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	}
 
 	// Clean up file list
-	FileManager::Get().EmptyFileList(resourceFiles);
+	fileMan.EmptyFileList(resourceFiles);
 }
 
 void DebugMenu::ShowTextInput(const char * a_startingText)

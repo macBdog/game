@@ -157,7 +157,6 @@ public:
 			// Merge two lists in this list at the cursor preserving order
 			LinkedListNode<T> * cursor1 = a_list1.m_head;
 			LinkedListNode<T> * cursor2 = a_list2.m_head;
-			LinkedListNode<T> * insert = NULL;
 
 			T & data1 = *cursor1->GetData();
 			T & data2 = *cursor2->GetData();

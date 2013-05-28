@@ -8,14 +8,13 @@ bool GameFile::Load(const char * a_filePath)
 {
 	char line[StringUtils::s_maxCharsPerLine];
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	Object * currentObject = NULL;
 	ifstream file(a_filePath);
-	unsigned int lineCount = 0;
 	
 	// Open the file and parse each line 
 	if (file.is_open())
 	{
 		// Read till the file has more contents or a rule is broken
+		unsigned int lineCount = 0;
 		while (file.good())
 		{
 			file.getline(line, StringUtils::s_maxCharsPerLine);

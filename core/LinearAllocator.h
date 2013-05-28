@@ -118,7 +118,6 @@ public:
 			m_memoryEnd = (T*)newMemoryEnd;
 
 			// Clear the overhang - this should be removed in debug configuration
-			T * ptr = m_memoryEnd;
 			memset(m_memoryEnd, 0, a_allocationSizeBytes);
 		}
 	}

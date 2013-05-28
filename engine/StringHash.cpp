@@ -85,7 +85,7 @@ unsigned int StringHash::GenerateCRCBinary(const unsigned int * a_binaryData, un
 StringHash::StringHash()
 	: m_hash(0)
 {
-
+	m_cString[0] = '\0';
 }
 
 StringHash::StringHash(const char * a_sourceString)

@@ -20,7 +20,7 @@ class FontManager : public Singleton<FontManager>
 {
 public:
 	//\ No work done in the constructor, only Init
-	FontManager() {}
+	FontManager() { m_fontPath[0] = '\0'; }
 	~FontManager() { Shutdown(); }
 
 	//\brief Load all fonts in the supplied argument into memory ready for drawing

@@ -14,7 +14,6 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
         
 	if (!compiled) 
 	{
-		const unsigned int maxErrorLength = 1024;
 		GLint logErrorLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logErrorLength);
 		char * compileError = NULL;

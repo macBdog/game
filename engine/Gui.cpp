@@ -51,15 +51,19 @@ bool Gui::Startup(const char * a_guiPath)
 	m_activeMenu = m_menus.GetHead()->GetData();
 
 	// Setup the mouse cursor element if present in config file
-	if (m_configFile.GetString("config", "mouseCursorTexture"))
+	m_cursor.SetActive(false);
+	if (GameFile::Object * configObj = m_configFile.FindObject("config"))
 	{
-		sprintf(fileName, "%s%s", a_guiPath, m_configFile.GetString("config", "mouseCursorTexture"));
-		m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
-		m_cursor.SetPos(Vector2(0.0f, 0.0f));
-		m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
-		m_cursor.SetActive(true);
+		if (GameFile::Property * mouseCursorProp = configObj->FindProperty("mouseCursorTexture"))
+		{
+			sprintf(fileName, "%s%s", a_guiPath, mouseCursorProp->GetString());
+			m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
+			m_cursor.SetPos(Vector2(0.0f, 0.0f));
+			m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
+			m_cursor.SetActive(true);
+		}
 	}
-
+	
 	// Setup input callbacks for handling events, left mouse buttons activate gui elements
 	InputManager & inMan = InputManager::Get();
 	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonLeft);
@@ -366,7 +370,7 @@ bool Gui::LoadMenus(const char * a_guiPath)
 	// Get a list of menu files in the gui directory
 	FileManager & fileMan = FileManager::Get();
 	FileManager::FileList menuFiles;
-	FileManager::Get().FillFileList(a_guiPath, menuFiles, ".mnu");
+	fileMan.FillFileList(a_guiPath, menuFiles, ".mnu");
 
 	// Load each menu in the directory
 	bool loadSuccess = true;
@@ -380,7 +384,7 @@ bool Gui::LoadMenus(const char * a_guiPath)
 	}
 
 	// Clean up the list of fonts
-	FileManager::Get().EmptyFileList(menuFiles);
+	fileMan.EmptyFileList(menuFiles);
 
 	return loadSuccess;
 }

@@ -63,10 +63,10 @@ public:
 		const unsigned char bits_in_byte[256] = { B6(0), B6(1), B6(1), B6(2) };
 		
 		// Chop up the 32 bits into 4 single byte values
-		char byte0 = m_bits & 0xff;
-		char byte1 = (m_bits >> 8)	& 0xff;
-		char byte2 = (m_bits >> 16) & 0xff;
-		char byte3 = (m_bits >> 24) & 0xff;
+		unsigned int byte0 = (unsigned int)(m_bits & 0xff);
+		unsigned int byte1 = (unsigned int)((m_bits >> 8)	& 0xff);
+		unsigned int byte2 = (unsigned int)((m_bits >> 16) & 0xff);
+		unsigned int byte3 = (unsigned int)((m_bits >> 24) & 0xff);
 
 		return bits_in_byte[byte0] + bits_in_byte[byte1] + bits_in_byte[byte2] + bits_in_byte[byte3];
 	}

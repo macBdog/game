@@ -22,7 +22,7 @@ public:
 	};
 	
 	// Assigned texture IDs start from 0
-	Texture() : m_textureId(-1) {}
+	Texture() : m_textureId(-1) { m_filePath[0] = '\0'; }
 
 	//\brief Load a TGA file into memory and store out the texture ID
 	//\param a_tgaFilePath is a const pointer to a c string with the fully qualified path
