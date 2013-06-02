@@ -44,6 +44,10 @@ public:
 	//\ No work done in the constructor, only Init
 	RenderManager() : m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
+					, m_frameBuffer(0)
+					, m_renderTexture(0)
+					, m_depthBuffer(0)
+					, m_frameBufferQuad(0)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
 					, m_viewWidth(0)
@@ -191,9 +195,18 @@ private:
 	unsigned int m_modelCount[eBatchCount];					///< Number of models to render
 	unsigned int m_fontCharCount[eBatchCount];				///< Number for font characters to render
 
+	unsigned int m_frameBuffer;								///< Identifier for the whole scene framebuffer
+	unsigned int m_renderTexture;							///< Identifier for the texture to render to
+	unsigned int m_depthBuffer;								///< Identifier for the buffer for pixel depth
+	unsigned int m_frameBufferQuad;							///< Identifier for fulslcreen quad FBO
+
 	Shader * m_colourShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;								///< Shader for textured objects when no shader specified
 	
+	// CH:TODO Remove these once the uniform stuff is straight
+	unsigned int texID;
+	unsigned int timeID;
+
 	unsigned int m_viewWidth;								///< Cache of arguments passed to init
 	unsigned int m_viewHeight;								///< Cache of arguments passed to init
 	unsigned int m_bpp;										///< Cache of arguments passed to init

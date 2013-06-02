@@ -92,14 +92,17 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 	#include "Shaders\colour.fsh.inc"
 	#include "Shaders\texture.vsh.inc"
 	#include "Shaders\texture.fsh.inc"
+	//#include "Shaders\passthrough.vsh.inc"
+	//#include "Shaders\passthrough.fsh.inc"
 	GLenum extensionStartup = glewInit();
 	if (extensionStartup != GLEW_OK)
 	{
 		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
 		return false;
 	} 
-	m_colourShader = new Shader("defaultColour", colourVertexShader, colourFragmentShader);
-	m_textureShader = new Shader("defaultTexture", textureVertexShader, textureFragmentShader);
+	m_colourShader = new Shader("colour", colourVertexShader, colourFragmentShader);
+	m_textureShader = new Shader("texture", textureVertexShader, textureFragmentShader);
+	//m_passthroughShader = new Shader("passthrough", passthroughVertexShader, passthroughFragmentShader);
 
 	// Cache off the shader path
 	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
@@ -127,7 +130,7 @@ bool RenderManager::Shutdown()
 		m_fontCharCount[i] = 0;
 	}
 	
-	// Clean up the default shader
+	// Clean up the default shaders
 	if (m_colourShader != NULL)
 	{
 		delete m_colourShader;
@@ -136,6 +139,11 @@ bool RenderManager::Shutdown()
 	{
 		delete m_textureShader;
 	}
+
+	glDeleteFramebuffers(1, &m_frameBuffer);
+    glDeleteTextures(1, &m_renderTexture);
+    glDeleteRenderbuffers(1, &m_depthBuffer);
+    glDeleteBuffers(1, &m_frameBufferQuad);
 
 	return true;
 }
@@ -178,7 +186,65 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
     // Reset The View
     glLoadIdentity();
 
-    return true;
+	// Create the framebuffer for whole scene pixel shaders
+	glGenFramebuffers(1, &m_frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+
+	// The texture to render the scene to
+	glGenTextures(1, &m_renderTexture);
+	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+ 
+	// Filtering for whole scene rendering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	// The depth buffer
+	glGenRenderbuffers(1, &m_depthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
+
+	// Set "m_renderedTexture" as our colour attachement #0
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderTexture, 0);
+ 
+	// Set the list of draw buffers.
+	GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+	// Always check that our framebuffer is ok
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+	{
+		// Now draw the buffer to the screen in a quad
+		GLuint quad_VertexArrayID;
+		glGenVertexArrays(1, &quad_VertexArrayID);
+		glBindVertexArray(quad_VertexArrayID);
+ 
+		static const GLfloat g_quad_vertex_buffer_data[] = {
+			-1.0f, -1.0f, 0.0f,
+			1.0f, -1.0f, 0.0f,
+			-1.0f,  1.0f, 0.0f,
+			-1.0f,  1.0f, 0.0f,
+			1.0f, -1.0f, 0.0f,
+			1.0f,  1.0f, 0.0f,
+		};
+ 
+		// Create FBO for drawing the framebuffer
+		glGenBuffers(1, &m_frameBufferQuad);
+		glBindBuffer(GL_ARRAY_BUFFER, m_frameBufferQuad);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+ 
+		// Create and compile our GLSL program from the shaders
+		texID = glGetUniformLocation(m_textureShader->GetShader(), "tex");
+        timeID = glGetUniformLocation(m_textureShader->GetShader(), "time");
+
+		// Render to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, m_viewWidth, m_viewHeight);
+		return true;
+	}
+
+	return false;
 }
 
 void RenderManager::DrawScene(Matrix & a_viewMatrix)
@@ -206,10 +272,15 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		default: break;
 	}
 
+	// Switch to rendering to the texture framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+	glViewport(0, 0, m_viewWidth, m_viewHeight); 
+
     // Clear the color and depth buffers in preparation for drawing
+	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-
+	
 	// Draw quads for each batch
 	for (unsigned int i = 0; i < eBatchCount; ++i)
 	{
@@ -253,12 +324,9 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
-		// Use the textured shader
+		// Use the texture shader on world objects
 		glEnable(GL_TEXTURE_2D);
-		m_textureShader->BindShader();
-		int texUniformLoc = glGetUniformLocation(m_textureShader->GetShader(), "tex");
-		glActiveTexture(GL_TEXTURE0);
-		glUniform1i(texUniformLoc, 0);
+		m_textureShader->UseShader();
 
 		// Submit the tris
 		Tri * t = m_tris[i];
@@ -355,7 +423,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		}
 		
 		// Swith to colour shader for lines as they cannot be textured
-		m_colourShader->BindShader();
+		m_colourShader->UseShader();
 
 		// Draw lines in the current batch
 		glDisable(GL_TEXTURE_2D);
@@ -376,6 +444,53 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 		m_modelCount[i] = 0;
 		m_fontCharCount[i] = 0;
 	}
+
+	// Switch to rendering to the screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, m_viewWidth, m_viewHeight);
+
+	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
+	m_textureShader->UseShader();
+	glEnable(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
+
+	glUniform1i(texID, 0);
+    glUniform1f(timeID, 10.0f);
+	
+	glBegin (GL_QUADS);
+	glTexCoord2f (0.0, 0.0);
+	glVertex3f (-1.0, -1.0, -2.0);
+	glTexCoord2f (1.0, 0.0);
+	glVertex3f (1.0, -1.0, -2.0);
+	glTexCoord2f (1.0, 1.0);
+	glVertex3f (1.0, 1.0, -2.0);
+	glTexCoord2f (0.0, 1.0);
+	glVertex3f (-1.0, 1.0, -2.0);
+	glEnd ();
+
+   /*
+    // Vertex data for full screen quad
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_frameBufferQuad);
+    glVertexAttribPointer(
+            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+    );
+	
+    // Draw the triangles !
+    glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+
+    glDisableVertexAttribArray(0);
+	*/
+
 }
 
 unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)

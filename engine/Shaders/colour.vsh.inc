@@ -5,4 +5,4 @@
 		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 	}
 */
-const char * colourVertexShader = "void main(void) { gl_Position = ftransform(); gl_FrontColor = gl_Color;  }";
+const char * colourVertexShader = "void main(void) { gl_Position = ftransform(); gl_FrontColor = gl_Color; }";

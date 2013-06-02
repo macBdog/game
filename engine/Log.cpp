@@ -35,6 +35,7 @@ bool Log::Shutdown()
 
 void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
 {
+	const unsigned int maxErrorSize = 4;
     char levelBuf[128];
     char categoryBuf[128];
     memset(levelBuf, 0, sizeof(char)*128);
@@ -42,12 +43,12 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 
 	// Create a preformatted error string
 	PrependLogDetails(a_level, a_category, &levelBuf[0]);
-	char errorString[StringUtils::s_maxCharsPerLine];
+	char errorString[StringUtils::s_maxCharsPerLine*maxErrorSize];
 	memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
 	sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
 
 	// Parse the variable number of arguments
-	char formatString[StringUtils::s_maxCharsPerLine];
+	char formatString[StringUtils::s_maxCharsPerLine*maxErrorSize];
 	memset(&formatString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
 
 	// Grab all the log arguments passed in the elipsis
@@ -55,8 +56,7 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	va_start(formatArgs, a_message);
 	vsprintf(formatString, a_message, formatArgs);
 
-	// Print out both together to standard out
-	char finalString[StringUtils::s_maxCharsPerLine];
+	char finalString[StringUtils::s_maxCharsPerLine*maxErrorSize];
 	sprintf(finalString, "%s %s\n", errorString, formatString);
 	printf("%s", finalString);
 	va_end(formatArgs);
