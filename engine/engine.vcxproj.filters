@@ -177,11 +177,5 @@
     <None Include="Shaders\global.vsh.inc">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\passthrough.fsh.inc">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
-    <None Include="Shaders\passthrough.vsh.inc">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

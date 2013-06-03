@@ -167,11 +167,7 @@ public:
 private:
 
 	//\brief Destruction is private as it should only be handled by object management
-	inline void Destroy() 
-	{
-		// Clean up components
-		RemoveAllComponents();
-	}
+	void Destroy();
 
 	//\ingroup Component management
 	Component * m_components[Component::eComponentTypeCount];

@@ -37,7 +37,7 @@ bool GameObject::Draw()
 
 		if (m_model != NULL && m_model->IsLoaded())
 		{
-			rMan.AddModel(RenderManager::eBatchWorld, m_model, &m_worldMat);
+			rMan.AddModel(RenderManager::eBatchWorld, m_model, &m_worldMat, m_shader);
 		}
 		
 		// Draw the object's name, position, orientation and clip volume over the top
@@ -131,5 +131,16 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			child->Serialise(outputFile, fileObject);
 			child = child->GetChild();
 		}
+	}
+}
+
+void GameObject::Destroy() 
+{
+	// Clean up components
+	RemoveAllComponents();
+
+	if (m_shader != NULL)
+	{
+		delete m_shader;
 	}
 }

@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <windows.h>
 
 #include <GL/glew.h>
@@ -8,8 +11,11 @@
 #include "DebugMenu.h"
 #include "Log.h"
 #include "Texture.h"
+#include "WorldManager.h"
 
 #include "RenderManager.h"
+
+using namespace std;	//< For fstream operations
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_renderDepth2D = -10.0f;
@@ -92,17 +98,20 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 	#include "Shaders\colour.fsh.inc"
 	#include "Shaders\texture.vsh.inc"
 	#include "Shaders\texture.fsh.inc"
-	//#include "Shaders\passthrough.vsh.inc"
-	//#include "Shaders\passthrough.fsh.inc"
 	GLenum extensionStartup = glewInit();
 	if (extensionStartup != GLEW_OK)
 	{
 		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
 		return false;
 	} 
-	m_colourShader = new Shader("colour", colourVertexShader, colourFragmentShader);
-	m_textureShader = new Shader("texture", textureVertexShader, textureFragmentShader);
-	//m_passthroughShader = new Shader("passthrough", passthroughVertexShader, passthroughFragmentShader);
+	if (m_colourShader = new Shader("colour"))
+	{
+		m_colourShader->Init(colourVertexShader, colourFragmentShader);
+	}
+	if (m_textureShader = new Shader("texture"))
+	{
+		m_textureShader->Init(textureVertexShader, textureFragmentShader);
+	}
 
 	// Cache off the shader path
 	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
@@ -110,7 +119,7 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
 	}
 
-    return batchAlloc && m_colourShader->GetShader() > 0 && m_textureShader->GetShader() > 0;
+    return batchAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
 }
 
 bool RenderManager::Shutdown()
@@ -142,8 +151,7 @@ bool RenderManager::Shutdown()
 
 	glDeleteFramebuffers(1, &m_frameBuffer);
     glDeleteTextures(1, &m_renderTexture);
-    glDeleteRenderbuffers(1, &m_depthBuffer);
-    glDeleteBuffers(1, &m_frameBufferQuad);
+    glDeleteRenderbuffers(1, &m_depthBuffer);   
 
 	return true;
 }
@@ -151,7 +159,7 @@ bool RenderManager::Shutdown()
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)
 {
     // Setup viewport ratio avoiding a divide by zero
-    if ( a_viewHeight == 0 )
+    if (a_viewHeight == 0)
 	{
 		a_viewHeight = 1;
 	}
@@ -205,7 +213,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
 
-	// Set "m_renderedTexture" as our colour attachement #0
+	// Set m_renderedTexture as colour attachement #0
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderTexture, 0);
  
 	// Set the list of draw buffers.
@@ -215,29 +223,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	// Always check that our framebuffer is ok
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
 	{
-		// Now draw the buffer to the screen in a quad
-		GLuint quad_VertexArrayID;
-		glGenVertexArrays(1, &quad_VertexArrayID);
-		glBindVertexArray(quad_VertexArrayID);
- 
-		static const GLfloat g_quad_vertex_buffer_data[] = {
-			-1.0f, -1.0f, 0.0f,
-			1.0f, -1.0f, 0.0f,
-			-1.0f,  1.0f, 0.0f,
-			-1.0f,  1.0f, 0.0f,
-			1.0f, -1.0f, 0.0f,
-			1.0f,  1.0f, 0.0f,
-		};
- 
-		// Create FBO for drawing the framebuffer
-		glGenBuffers(1, &m_frameBufferQuad);
-		glBindBuffer(GL_ARRAY_BUFFER, m_frameBufferQuad);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
- 
-		// Create and compile our GLSL program from the shaders
-		texID = glGetUniformLocation(m_textureShader->GetShader(), "tex");
-        timeID = glGetUniformLocation(m_textureShader->GetShader(), "time");
-
 		// Render to the screen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, m_viewWidth, m_viewHeight);
@@ -247,8 +232,12 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	return false;
 }
 
-void RenderManager::DrawScene(Matrix & a_viewMatrix)
+void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 {
+	// Setup fresh data to pass to shaders
+	const Shader::UniformData shaderData(m_renderTime, a_dt, (float)m_viewWidth, (float)m_viewHeight);
+	m_renderTime += a_dt;
+
 	// Handle different rendering modes
 	switch (m_renderMode)
 	{
@@ -326,7 +315,7 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 
 		// Use the texture shader on world objects
 		glEnable(GL_TEXTURE_2D);
-		m_textureShader->UseShader();
+		m_textureShader->UseShader(shaderData);
 
 		// Submit the tris
 		Tri * t = m_tris[i];
@@ -413,8 +402,14 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 
 		// Draw models by calling their display lists
 		RenderModel * rm = m_models[i];
+		Shader * pLastShader = NULL;	
 		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
 		{
+			if (rm->m_shader != pLastShader)
+			{
+				pLastShader = rm->m_shader;
+				pLastShader->UseShader(shaderData);
+			}
 			glPushMatrix();
 			glMultMatrixf(rm->m_mat->GetValues());
 			glCallList(rm->m_model->GetDisplayListId());
@@ -449,48 +444,41 @@ void RenderManager::DrawScene(Matrix & a_viewMatrix)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_viewWidth, m_viewHeight);
 
-	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
+	// Set to ortho
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-
-	m_textureShader->UseShader();
 	glEnable(GL_TEXTURE_2D);
 
+	// Use the full scene shader if specified 
+	bool bUseDefaultShader = true;
+	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
+	{
+		if (Shader * pSceneShader = pCurScene->GetShader())
+		{
+			pSceneShader->UseShader(shaderData);
+			bUseDefaultShader = false;
+		}
+	}
+
+	// Otherwise use the default
+	if (bUseDefaultShader)
+	{	
+		m_textureShader->UseShader(shaderData);
+	}
+
+	// Draw a full screen quad with the render output on it
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
-
-	glUniform1i(texID, 0);
-    glUniform1f(timeID, 10.0f);
-	
-	glBegin (GL_QUADS);
-	glTexCoord2f (0.0, 0.0);
-	glVertex3f (-1.0, -1.0, -2.0);
-	glTexCoord2f (1.0, 0.0);
-	glVertex3f (1.0, -1.0, -2.0);
-	glTexCoord2f (1.0, 1.0);
-	glVertex3f (1.0, 1.0, -2.0);
-	glTexCoord2f (0.0, 1.0);
-	glVertex3f (-1.0, 1.0, -2.0);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f);	glVertex3f(-1.0f, -1.0f, -1.0f);	
+	glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0f, 1.0f, -1.0f);
+	glTexCoord2f(0.0f, 1.0f);	glVertex3f(-1.0f, 1.0f, -1.0f);
 	glEnd ();
-
-   /*
-    // Vertex data for full screen quad
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, m_frameBufferQuad);
-    glVertexAttribPointer(
-            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-            3,                  // size
-            GL_FLOAT,           // type
-            GL_FALSE,           // normalized?
-            0,                  // stride
-            (void*)0            // array buffer offset
-    );
-	
-    // Draw the triangles !
-    glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
-
-    glDisableVertexAttribArray(0);
-	*/
-
 }
 
 unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)
@@ -719,7 +707,7 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
+void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat, Shader * a_shader)
 {
 	// Don't add more models than have been allocated for
 	if (m_modelCount[a_batch] >= s_maxPrimitivesPerBatch)
@@ -739,7 +727,7 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 
 		GLuint displayListId = glGenLists(1);
 		glNewList(displayListId, GL_COMPILE);
-		
+
 		// Bind the texture and set colour
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		if (diffuseTex != NULL)
@@ -770,6 +758,7 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat)
 	r += m_modelCount[a_batch]++;
 	r->m_model = a_model;
 	r->m_mat = a_mat;
+	r->m_shader = a_shader;
 
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())
@@ -869,4 +858,83 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	AddLine(eBatchDebug3D, corners[3], corners[0], a_colour);
 	AddLine(eBatchDebug3D, corners[7], corners[4], a_colour);
 	AddLine(eBatchDebug3D, corners[3], corners[7], a_colour);
+}
+
+bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
+{
+	struct stat fileInfo;
+	unsigned int numChars = 0;
+	char * vertexSource = NULL;
+	char * fragmentSource = NULL;
+	char fullShaderPath[StringUtils::s_maxCharsPerLine];
+	char fileLine[StringUtils::s_maxCharsPerLine];
+	
+	// All scene shaders include the global inputs and outputs
+	#include "Shaders\global.fsh.inc"
+	#include "Shaders\global.vsh.inc"
+
+	// Open file to allocate the correct size string
+	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
+	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	{
+		size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
+		if (vertexSource = (char *)malloc(globalVertexSize + fileInfo.st_size))
+		{
+			// Include preamble then open the vertex shader file and parse each line into a string
+			numChars = globalVertexSize;
+			strncpy(vertexSource, globalVertexShader, globalVertexSize);
+			vertexSource[numChars++] = '\n';
+			ifstream vertexShaderFile(fullShaderPath);
+			if (vertexShaderFile.is_open())
+			{
+				// Read till the file has more contents
+				while (vertexShaderFile.good())
+				{
+					vertexShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
+					const int lineSize = strlen(fileLine);
+					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
+					numChars += lineSize;
+				}
+				vertexSource[numChars] = '\0';
+			}
+			vertexShaderFile.close();
+		}
+	}
+
+	// Open the pixel shader file and parse each line into a string
+	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
+	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	{
+		size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
+		if (fragmentSource = (char *)malloc(globalFragmentSize + fileInfo.st_size))
+		{
+			// Include preamble and follow with contents of file
+			strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
+			numChars = globalFragmentSize;
+			fragmentSource[numChars++] = '\n';
+			ifstream fragmentShaderFile(fullShaderPath);
+			if (fragmentShaderFile.is_open())
+			{
+				// Read till the file has more contents
+				while (fragmentShaderFile.good())
+				{
+					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
+					const int lineSize = strlen(fileLine);
+					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
+					numChars += lineSize;
+				}
+				fragmentSource[numChars] = '\0';
+			}
+			fragmentShaderFile.close();
+		}
+	}
+
+	// Initialise the shader
+	if (vertexSource != NULL && fragmentSource != NULL)
+	{
+		a_shader_OUT.Init(vertexSource, fragmentSource);
+		return a_shader_OUT.IsCompiled();
+	}
+
+	return false;
 }

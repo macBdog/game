@@ -1,12 +1,8 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include "GameFile.h"
 #include "ModelManager.h"
+#include "RenderManager.h"
 
 #include "WorldManager.h"
-
-using namespace std;	//< For fstream operations
 
 template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
 
@@ -124,82 +120,20 @@ bool Scene::Update(float a_dt)
 
 bool Scene::SetShader(const char * a_shaderFileName)
 {
-	struct stat fileInfo;
-	unsigned int numChars = 0;
-	char * vertexSource = NULL;
-	char * fragmentSource = NULL;
-	char fullShaderPath[StringUtils::s_maxCharsPerLine];
-	char fileLine[StringUtils::s_maxCharsPerLine];
-	
-	// All scene shaders include the global inputs and outputs
-	#include "Shaders\global.fsh.inc"
-	#include "Shaders\global.vsh.inc"
-
-	// Open file to allocate the correct size string
-	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
-	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	if (Shader * pNewShader = new Shader(a_shaderFileName))
 	{
-		size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
-		if (vertexSource = (char *)malloc(globalVertexSize + fileInfo.st_size))
+		if (RenderManager::InitShaderFromFile(*pNewShader))
 		{
-			// Include preamble then open the vertex shader file and parse each line into a string
-			numChars = globalVertexSize;
-			strncpy(vertexSource, globalVertexShader, globalVertexSize);
-			vertexSource[numChars++] = '\n';
-			ifstream vertexShaderFile(fullShaderPath);
-			if (vertexShaderFile.is_open())
-			{
-				// Read till the file has more contents
-				while (vertexShaderFile.good())
-				{
-					vertexShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
-					const int lineSize = strlen(fileLine);
-					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
-					numChars += lineSize;
-				}
-				vertexSource[numChars] = '\0';
-			}
-			vertexShaderFile.close();
-		}
-	}
-
-	// Open the pixel shader file and parse each line into a string
-	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shaderFileName);
-	if (stat(&fullShaderPath[0], &fileInfo) == 0)
-	{
-		size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
-		if (fragmentSource = (char *)malloc(globalFragmentSize + fileInfo.st_size))
-		{
-			// Include preamble and follow with contents of file
-			strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
-			numChars = globalFragmentSize;
-			fragmentSource[numChars++] = '\n';
-			ifstream fragmentShaderFile(fullShaderPath);
-			if (fragmentShaderFile.is_open())
-			{
-				// Read till the file has more contents
-				while (fragmentShaderFile.good())
-				{
-					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
-					const int lineSize = strlen(fileLine);
-					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
-					numChars += lineSize;
-				}
-				fragmentSource[numChars] = '\0';
-			}
-			fragmentShaderFile.close();
-		}
-	}
-
-	// Initialise the shader
-	if (vertexSource != NULL && fragmentSource != NULL)
-	{
-		if (m_shader = new Shader(a_shaderFileName, vertexSource, fragmentSource))
-		{
+			m_shader = pNewShader;
 			return true;
+		}	
+		else // Compile error will be reported in the log
+		{
+			delete pNewShader;
+			m_shader = NULL;
 		}
 	}
-
+	
 	return false;
 }
 
@@ -299,6 +233,7 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 						newObject->SetTemplate(prop->GetString());
 						newObject->SetName(childGameObject->FindProperty("name")->GetString());
 						newObject->SetPos(childGameObject->FindProperty("pos")->GetVector());
+
 						a_sceneToLoad_OUT->AddObject(newObject);
 					}
 				}

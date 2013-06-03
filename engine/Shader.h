@@ -26,7 +26,7 @@ public:
 		{
 			if (a_name != NULL && a_name[0] != '\0')
 			{
-				strncpy(m_name, a_name, sizeof(char) * strlen(a_name));
+				strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
 				m_id = glGetUniformLocation(a_sourceShader, m_name);
 				m_output = a_output;
 			}
@@ -43,24 +43,52 @@ public:
 		};
 	};
 
-	//\brief Shaders will compile and link from source upon creation
-    Shader(const char * a_name, const char * a_vertexSource, const char * a_fragmentSource) 
+	//\brief Struct to collect a standard set of data passed to and from shaders
+	struct UniformData
 	{
-		// Quick sanity check on inputs
-		if (a_name == NULL		|| a_vertexSource == NULL		|| a_fragmentSource == NULL ||
-			a_name[0] == '\0'	|| a_vertexSource[0] == '\0'	|| a_fragmentSource[0] == '\0')
+		UniformData(	float a_time,
+						float a_frameTime, 
+						float a_viewWidth,
+						float a_viewHeight)
+						: m_time(a_time)
+						, m_frameTime(a_frameTime)
+						, m_viewWidth(a_viewWidth)
+						, m_viewHeight(a_viewHeight) { }
+
+		float m_time;					///< How much time in seconds has passed since the app has started
+		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
+		float m_viewWidth;				///< Framebuffer render resolution width
+		float m_viewHeight;				///< Framebuffer render resolution height
+	};
+
+	//\brief Shaders will compile and link from source upon creation
+    Shader(const char * a_name)
+		: m_vertexShader(0)
+		, m_fragmentShader(0)
+		, m_shader(0)
+	{
+		if (a_name != NULL || a_name[0] != '\0')
 		{
-			return;
+			// Set data
+			m_name[0] = '\0';
+			strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
+		}
+	}
+
+	inline bool Init(const char * a_vertexSource, const char * a_fragmentSource)
+	{
+		if (m_name == NULL		|| a_vertexSource == NULL		|| a_fragmentSource == NULL ||
+			m_name[0] == '\0'	|| a_vertexSource[0] == '\0'	|| a_fragmentSource[0] == '\0')
+		{
+			return false;
 		}
 
-		// Set data and compile
-		m_name[0] = '\0';
-		strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
+		// Compile the shader components
 		m_vertexShader = Compile(GL_VERTEX_SHADER, a_vertexSource);
 		m_fragmentShader = Compile(GL_FRAGMENT_SHADER, a_fragmentSource);
         
 		// Only proceed if the compilation of both shader components was successful
-		if (m_vertexShader + m_fragmentShader > 1)
+		if (m_vertexShader > 0 && m_fragmentShader > 0)
 		{
 			m_shader = glCreateProgram();
 			glAttachShader(m_shader, m_vertexShader);
@@ -71,22 +99,31 @@ public:
 			m_texture.Init(m_shader, "tex");
 			m_time.Init(m_shader, "time");
 			m_frameTime.Init(m_shader, "frameTime");
+			m_viewWidth.Init(m_shader, "viewWidth");
+			m_viewHeight.Init(m_shader, "viewHeight");
+
+			return true;
 		}
+
+		return false;
     }
 
 	//\brief Accessors and mutators
 	inline GLuint GetShader() { return m_shader; }
 	inline const char * GetName() { return &m_name[0]; }
+	inline bool IsCompiled() { return m_vertexShader > 0 && m_fragmentShader > 0 && m_shader > 0; }
 	
 	//\brief Bind the shader and setup the uniforms
-	inline void UseShader() 
+	inline void UseShader() { glUseProgram(m_shader); glActiveTexture(GL_TEXTURE0); }
+	inline void UseShader(const UniformData & a_data) 
 	{ 
 		glUseProgram(m_shader);
-		
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(m_texture.m_id, 0);
-		glUniform1f(m_time.m_id, 1.0f);				// TODO Use real values
-		glUniform1f(m_frameTime.m_id, 0.03f);		// TODO Use real values
+		glUniform1f(m_time.m_id, a_data.m_time);	
+		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
+		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
+		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
 	}
 
     ~Shader() {
@@ -106,8 +143,10 @@ private:
 	GLuint m_shader;								///< Linked program
 
 	Uniform m_texture;								///< Standard set of uniforms follow
-	Uniform m_frameTime;
 	Uniform m_time;
+	Uniform m_frameTime;
+	Uniform m_viewWidth;
+	Uniform m_viewHeight;
 };
 
 #endif // _ENGINE_RENDER_MANAGER

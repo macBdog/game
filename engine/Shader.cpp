@@ -4,16 +4,17 @@
 
 unsigned int Shader::Compile(GLuint type, const char * a_src)
 {
-	Log & log = Log::Get();
     GLint compiled;
 	const char ** pSrc = (const char **)&a_src;
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, pSrc, NULL);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-        
+    
+	// TODO! There is a heap corruption when a shader fails to compile, fix it!
 	if (!compiled) 
 	{
+		Log & log = Log::Get();
 		GLint logErrorLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logErrorLength);
 		char * compileError = NULL;

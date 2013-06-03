@@ -214,7 +214,22 @@ public:
 						{
 							newGameObject->SetClipSize(clipSize->GetVector());
 						}
-						// TODO Pos, rot, shader, etc
+						// Shader 
+						if (GameFile::Property * shader = object->FindProperty("shader"))
+						{
+							if (Shader * pNewShader = new Shader(shader->GetString()))
+							{
+								if (RenderManager::InitShaderFromFile(*pNewShader))
+								{
+									newGameObject->SetShader(pNewShader);
+								}
+								else // Compile error will be reported in the log
+								{
+									delete pNewShader;
+									newGameObject->SetShader(NULL);
+								}
+							}
+						}
 
 						// Add to currently active scene
 						if (validObject)

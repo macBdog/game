@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Drawing the scene will flush the batches
-        RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix());
+        RenderManager::Get().DrawScene(lastFrameTimeSec, CameraManager::Get().GetCameraMatrix());
 
         // Cycle SDL surface
         SDL_GL_SwapBuffers();
