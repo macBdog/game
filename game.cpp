@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
 
 		// Drawing the scene will flush the batches
         RenderManager::Get().DrawScene(lastFrameTimeSec, CameraManager::Get().GetCameraMatrix());
+		RenderManager::Get().Update(lastFrameTimeSec);
 
         // Cycle SDL surface
         SDL_GL_SwapBuffers();

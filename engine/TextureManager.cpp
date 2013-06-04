@@ -89,7 +89,7 @@ bool TextureManager::Update(float a_dt)
 				{
 					if (curTimeStamp > curTex->m_timeStamp)
 					{
-						Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in %s, reloading.", curTex->m_path);
+						Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in texture %s, reloading.", curTex->m_path);
 						textureReloaded = curTex->m_texture.Load(curTex->m_path);
 						curTex->m_timeStamp = curTimeStamp;
 					}

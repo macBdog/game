@@ -2,6 +2,7 @@
 #define _ENGINE_RENDER_MANAGER_
 #pragma once
 
+#include "FileManager.h"
 #include "Model.h"
 #include "Singleton.h"
 #include "Shader.h"
@@ -42,7 +43,8 @@ public:
 	};
 	
 	//\ No work done in the constructor, only Init
-	RenderManager() : m_renderTime(0.0f)
+	RenderManager(float a_updateFreq = s_updateFreq) 
+					: m_renderTime(0.0f)
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
 					, m_frameBuffer(0)
@@ -53,12 +55,17 @@ public:
 					, m_viewWidth(0)
 					, m_viewHeight(0)
 					, m_bpp(0)
-					, m_aspect(1.0f) { m_shaderPath[0] = '\0'; }
+					, m_aspect(1.0f) 
+					, m_updateFreq(a_updateFreq)
+					, m_updateTimer(0.0f) { m_shaderPath[0] = '\0'; }
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
     bool Startup(Colour a_clearColour, const char * a_shaderPath);
 	bool Shutdown();
+
+	//\brief Update managed texture
+	bool Update(float a_dt);
 
 	//\brief Setup the viewport
     bool Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen = false);
@@ -139,6 +146,9 @@ public:
 	//\param a_colour optional argument for the colour of the box
 	void AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
+	//\brief Add a shader to the list for hotloading on file modification
+	void ManageShader(Shader * a_shader);
+
 	//\brief Helper function to setup a new shader based on the contents of files and the global preamble
 	//\param a_shaderToCreate_OUT is pointer to a shader that will be allocated
 	//\param a_shaderFileName pointer to a cstring containing the path to the shaders with .fsh and .vsh extensions assumed
@@ -191,6 +201,14 @@ private:
 		Colour m_colour;
 		bool m_2d;
 	};
+
+	//\brief A managed shader contains a reference to the shader and the file to reload on change for hot reloading
+	struct ManagedShader
+	{
+		Shader * m_shader;											///< Pointer to the shader
+		FileManager::Timestamp m_vertexTimeStamp;					///< Datestamp for checking a newer version of the geom shader
+		FileManager::Timestamp m_fragmentTimeStamp;					///< Datestamp for checking a newer version of the pixel shader
+	};
 	
 	float m_renderTime;										///< How long the game has been rendering frames for (accumulated frame delta)
 
@@ -211,10 +229,6 @@ private:
 
 	Shader * m_colourShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;								///< Shader for textured objects when no shader specified
-	
-	// CH:TODO Remove these once the uniform stuff is straight
-	unsigned int texID;
-	unsigned int timeID;
 
 	unsigned int m_viewWidth;								///< Cache of arguments passed to init
 	unsigned int m_viewHeight;								///< Cache of arguments passed to init
@@ -224,6 +238,11 @@ private:
 	eRenderMode m_renderMode;								///< How the scene is to be rendered
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];		///< Path to the shader files
 
+	LinkedList<ManagedShader> m_managedShaders;				///< List of managed shaders that are scanned for hot loading
+	float m_updateFreq;										///< How often the render manager should check for changes to shaders
+	float m_updateTimer;									///< If we are due for a scan and update of shaders
+
+	static const float s_updateFreq;									///< How often the render manager should check for shader updates
 	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		///< Flat storage amount for quads
 	static const unsigned int s_maxLines = 1600;						///< Storage amount for debug lines
 	static const float s_nearClipPlane;									///< Distance from the viewer to the near clipping plane (always positive) 

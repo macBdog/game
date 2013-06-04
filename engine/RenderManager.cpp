@@ -18,6 +18,7 @@
 using namespace std;	//< For fstream operations
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
+const float RenderManager::s_updateFreq = 1.0f;
 const float RenderManager::s_renderDepth2D = -10.0f;
 const float RenderManager::s_nearClipPlane = 0.5f;
 const float RenderManager::s_farClipPlane = 1000.0f;
@@ -149,11 +150,73 @@ bool RenderManager::Shutdown()
 		delete m_textureShader;
 	}
 
+	// Clean up the framebuffer resources
 	glDeleteFramebuffers(1, &m_frameBuffer);
     glDeleteTextures(1, &m_renderTexture);
     glDeleteRenderbuffers(1, &m_depthBuffer);   
 
+	// And any managed shaders
+	LinkedListNode<ManagedShader> * next = m_managedShaders.GetHead();
+	while (next != NULL)
+	{
+		// Cache off next pointer
+		LinkedListNode<ManagedShader> * cur = next;
+		next = cur->GetNext();
+
+		m_managedShaders.Remove(cur);
+		delete cur->GetData();
+		delete cur;
+	}
+
 	return true;
+}
+
+bool RenderManager::Update(float a_dt)
+{
+	if (m_updateTimer < m_updateFreq)
+	{
+		m_updateTimer += a_dt;
+		return false;
+	}
+	else // Due for an update, scan all shaders
+	{
+		m_updateTimer = 0.0f;
+		bool shadersReloaded = false;
+
+		// Each texture in the category gets tested
+		LinkedListNode<ManagedShader> * next = m_managedShaders.GetHead();
+		while (next != NULL)
+		{
+			FileManager::Timestamp curTimeStamp;
+			ManagedShader * curManShader = next->GetData();
+			char fullShaderPath[StringUtils::s_maxCharsPerLine];		
+			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), curManShader->m_shader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
+			if (curTimeStamp > curManShader->m_vertexTimeStamp)
+			{
+				shadersReloaded = true;
+				curManShader->m_vertexTimeStamp = curTimeStamp;
+				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
+			}
+
+			// Now check the pixel shader
+			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), curManShader->m_shader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
+			if (curTimeStamp > curManShader->m_fragmentTimeStamp)
+			{
+				shadersReloaded = true;
+				curManShader->m_fragmentTimeStamp = curTimeStamp;
+				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
+			}
+
+			// Advance through the list
+			next = next->GetNext();
+		}
+
+		return shadersReloaded;
+	}
+
+	return false;
 }
 
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)
@@ -170,16 +233,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 
     // Setup our viewport
     glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
-	
-	// Set up fog
-	// TODO Fog and other effects (DOF, blur, colourisation etc) should be configurable in the scene file
-    glFogi(GL_FOG_MODE, GL_LINEAR);                                         // Fog Mode nicest
-    glFogfv(GL_FOG_COLOR, m_clearColour.GetValues());						// Fog colour matches clear colour
-    glFogf(GL_FOG_DENSITY, 0.15f);                                          // How Dense Will The Fog Be
-    glHint(GL_FOG_HINT, GL_DONT_CARE);                                      // Fog Hint Value
-    glFogf(GL_FOG_START, 20.0f);                                            // Fog Start Depth
-    glFogf(GL_FOG_END, 400.0f);                                             // Fog End Depth
-    glEnable(GL_FOG);                                                       // Enables GL_FOG
 
     // Change to the projection matrix and set our viewing volume
     glMatrixMode(GL_PROJECTION);
@@ -858,6 +911,27 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	AddLine(eBatchDebug3D, corners[3], corners[0], a_colour);
 	AddLine(eBatchDebug3D, corners[7], corners[4], a_colour);
 	AddLine(eBatchDebug3D, corners[3], corners[7], a_colour);
+}
+
+void RenderManager::ManageShader(Shader * a_shader)
+{
+	if (a_shader != NULL)
+	{
+		if (ManagedShader * pManShader = new ManagedShader())
+		{
+			pManShader->m_shader = a_shader;		
+			char fullShaderPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, pManShader->m_vertexTimeStamp);
+			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, pManShader->m_fragmentTimeStamp);
+			if (LinkedListNode<ManagedShader> * pManShaderNode = new LinkedListNode<ManagedShader>())
+			{
+				pManShaderNode->SetData(pManShader);
+				m_managedShaders.Insert(pManShaderNode);
+			}
+		}
+	}
 }
 
 bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)

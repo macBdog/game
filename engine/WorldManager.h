@@ -222,6 +222,7 @@ public:
 								if (RenderManager::InitShaderFromFile(*pNewShader))
 								{
 									newGameObject->SetShader(pNewShader);
+									RenderManager::Get().ManageShader(pNewShader);
 								}
 								else // Compile error will be reported in the log
 								{

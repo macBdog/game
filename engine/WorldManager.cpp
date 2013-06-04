@@ -125,6 +125,7 @@ bool Scene::SetShader(const char * a_shaderFileName)
 		if (RenderManager::InitShaderFromFile(*pNewShader))
 		{
 			m_shader = pNewShader;
+			RenderManager::Get().ManageShader(pNewShader);
 			return true;
 		}	
 		else // Compile error will be reported in the log
