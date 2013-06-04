@@ -35,7 +35,7 @@ bool Log::Shutdown()
 
 void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
 {
-	const unsigned int maxErrorSize = 4;
+	const unsigned int maxErrorSize = 4u;
     char levelBuf[128];
     char categoryBuf[128];
     memset(levelBuf, 0, sizeof(char)*128);
@@ -64,9 +64,26 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	// Also add to the list which is diaplyed on screen
 	if (m_renderToScreen)
 	{
-		LogDisplayNode * newLogEntry = new LogDisplayNode();
-		newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
-		m_displayList.Insert(newLogEntry);
+		// Print a single line to the log
+		const unsigned int stringLen = strlen(finalString);
+		if (stringLen < StringUtils::s_maxCharsPerLine)
+		{
+			LogDisplayNode * newLogEntry = new LogDisplayNode();
+			newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
+			m_displayList.Insert(newLogEntry);
+		}
+		else // Split up log entries greater than line length
+		{
+			for (unsigned int i = 0; i < stringLen / StringUtils::s_maxCharsPerLine + 1; ++i)
+			{
+				char * pStart = &finalString[i * StringUtils::s_maxCharsPerLine];
+				char * pEnd = &finalString[((i+1) * StringUtils::s_maxCharsPerLine)-1];
+				*pEnd = '\0';
+				LogDisplayNode * newLogEntry = new LogDisplayNode();
+				newLogEntry->SetData(new LogDisplayEntry(pStart, a_level));
+				m_displayList.Insert(newLogEntry);
+			}
+		}
 	}
 }
 

@@ -11,8 +11,8 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     
-	// TODO! There is a heap corruption when a shader fails to compile, fix it!
-	if (!compiled) 
+	// Print and log the shader compile error
+	if (compiled == GL_FALSE) 
 	{
 		Log & log = Log::Get();
 		GLint logErrorLength;
@@ -20,7 +20,8 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
 		char * compileError = NULL;
         if (compileError = (char *)malloc(logErrorLength))
 		{
-			glGetShaderInfoLog(shader, logErrorLength, &logErrorLength, &compileError[0]);
+			glGetShaderInfoLog(shader, logErrorLength, &logErrorLength, compileError);
+
 			if (type == GL_VERTEX_SHADER)
 			{
 				log.Write(Log::LL_ERROR, Log::LC_ENGINE, "Error compiling shader %s.vsh, compiler output follows:", m_name);
@@ -30,9 +31,9 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
 				log.Write(Log::LL_ERROR, Log::LC_ENGINE, "Error compiling shader %s.fsh, compiler output follows:", m_name);
 			}
 			log.WriteEngineErrorNoParams(compileError);
+			free(compileError);
 		}
-		free(compileError);
-    
+		
         return 0;
     }
     return shader;
