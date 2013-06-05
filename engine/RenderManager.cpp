@@ -389,6 +389,7 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 
 		// Use the texture shader on world objects
 		glEnable(GL_TEXTURE_2D);
+		Shader * pLastShader = m_textureShader;
 		m_textureShader->UseShader(shaderData);
 
 		// Submit the tris
@@ -400,21 +401,37 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 			// Draw a quad with a texture
 			if (t->m_textureId >= 0)
 			{
+				if (pLastShader != m_textureShader)
+				{
+					glEnable(GL_TEXTURE_2D);
+					m_textureShader->UseShader(shaderData);
+					pLastShader = m_textureShader;
+				}
 				glBindTexture(GL_TEXTURE_2D, t->m_textureId);
-	
-				glBegin(GL_TRIANGLES);
-
-				glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
-				glVertex3f(t->m_verts[0].GetX(), t->m_verts[0].GetY(), t->m_verts[0].GetZ());
-
-				glTexCoord2f(t->m_coords[1].GetX(), t->m_coords[1].GetY()); 
-				glVertex3f(t->m_verts[1].GetX(), t->m_verts[1].GetY(), t->m_verts[1].GetZ());
-
-				glTexCoord2f(t->m_coords[2].GetX(), t->m_coords[2].GetY()); 
-				glVertex3f(t->m_verts[2].GetX(), t->m_verts[2].GetY(), t->m_verts[2].GetZ());
-
-				glEnd();
 			}
+			else // Flat colour triangles
+			{
+				if (pLastShader != m_colourShader)
+				{
+					glDisable(GL_TEXTURE_2D);
+					m_colourShader->UseShader(shaderData);
+					pLastShader = m_colourShader;
+				}
+			}
+			
+			glBegin(GL_TRIANGLES);
+
+			glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
+			glVertex3f(t->m_verts[0].GetX(), t->m_verts[0].GetY(), t->m_verts[0].GetZ());
+
+			glTexCoord2f(t->m_coords[1].GetX(), t->m_coords[1].GetY()); 
+			glVertex3f(t->m_verts[1].GetX(), t->m_verts[1].GetY(), t->m_verts[1].GetZ());
+
+			glTexCoord2f(t->m_coords[2].GetX(), t->m_coords[2].GetY()); 
+			glVertex3f(t->m_verts[2].GetX(), t->m_verts[2].GetY(), t->m_verts[2].GetZ());
+
+			glEnd();
+			
 
 			t++;
 		}
@@ -428,12 +445,22 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 			// Draw a quad with a texture
 			if (q->m_textureId >= 0)
 			{
-				glEnable(GL_TEXTURE_2D);
+				if (pLastShader != m_textureShader)
+				{
+					glEnable(GL_TEXTURE_2D);
+					m_textureShader->UseShader(shaderData);
+					pLastShader = m_textureShader;
+				}
 				glBindTexture(GL_TEXTURE_2D, q->m_textureId);
 			}
-			else
+			else // Flat colour quads
 			{
-				glDisable(GL_TEXTURE_2D);
+				if (pLastShader != m_colourShader)
+				{
+					glDisable(GL_TEXTURE_2D);
+					m_colourShader->UseShader(shaderData);
+					pLastShader = m_colourShader;
+				}
 			}
 	
 			glBegin(GL_QUADS);
@@ -456,6 +483,12 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 		}
 
 		// Draw font chars by calling their display lists
+		if (pLastShader != m_textureShader)
+		{
+			glEnable(GL_TEXTURE_2D);
+			m_textureShader->UseShader(shaderData);
+			pLastShader = m_textureShader;
+		}
 		FontChar * fc = m_fontChars[i];
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
 		{
@@ -476,13 +509,13 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 
 		// Draw models by calling their display lists
 		RenderModel * rm = m_models[i];
-		Shader * pLastShader = NULL;	
+		Shader * pLastModelShader = NULL;	
 		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
 		{
 			if (rm->m_shader != pLastShader)
 			{
-				pLastShader = rm->m_shader;
-				pLastShader->UseShader(shaderData);
+				pLastModelShader = rm->m_shader;
+				pLastModelShader->UseShader(shaderData);
 			}
 			glPushMatrix();
 			glMultMatrixf(rm->m_mat->GetValues());
@@ -492,10 +525,10 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 		}
 		
 		// Swith to colour shader for lines as they cannot be textured
+		glDisable(GL_TEXTURE_2D);
 		m_colourShader->UseShader();
 
 		// Draw lines in the current batch
-		glDisable(GL_TEXTURE_2D);
 		Line * l = m_lines[i];
 		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
 		{

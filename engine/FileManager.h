@@ -32,8 +32,30 @@ public:
 		unsigned int m_totalDays;
 		unsigned int m_totalSeconds;
 		
-		bool operator > (const Timestamp & a_val) { return m_totalDays > a_val.m_totalDays || (m_totalDays >= a_val.m_totalDays && m_totalSeconds > a_val.m_totalSeconds); }
-		bool operator < (const Timestamp & a_val) { return m_totalDays < a_val.m_totalDays || (m_totalDays <= a_val.m_totalDays && m_totalSeconds < a_val.m_totalSeconds); }
+		inline bool operator > (const Timestamp & a_val) 
+		{ 
+			if (m_totalDays > a_val.m_totalDays) 
+			{ 
+				return true;	
+			} 
+			else if (m_totalDays == a_val.m_totalDays) 
+			{ 
+				return m_totalSeconds > a_val.m_totalSeconds; 
+			} 
+			return false;
+		}
+		inline bool operator < (const Timestamp & a_val) 
+		{ 
+			if (m_totalDays < a_val.m_totalDays) 
+			{ 
+				return true;	
+			} 
+			else if (m_totalDays == a_val.m_totalDays) 
+			{ 
+				return m_totalSeconds < a_val.m_totalSeconds; 
+			} 
+			return false;
+		}
 	};
 
 	//\brief Types of file modification

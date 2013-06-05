@@ -190,7 +190,7 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 		FileTimeToSystemTime(&lpFileInformation.ftLastWriteTime, &times);
 		SystemTimeToTzSpecificLocalTime(NULL, &times, &stLocal);
 
-		a_timestamp_OUT.m_totalDays = stLocal.wYear*365 + stLocal.wMonth*12 + stLocal.wDay*31;
+		a_timestamp_OUT.m_totalDays = stLocal.wYear*365 + stLocal.wMonth*31 + stLocal.wDay;
 		a_timestamp_OUT.m_totalSeconds = stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;
 		return true;
 	}
