@@ -118,26 +118,6 @@ bool Scene::Update(float a_dt)
 	return updateSuccess && drawSuccess;
 }
 
-bool Scene::SetShader(const char * a_shaderFileName)
-{
-	if (Shader * pNewShader = new Shader(a_shaderFileName))
-	{
-		if (RenderManager::InitShaderFromFile(*pNewShader))
-		{
-			m_shader = pNewShader;
-			RenderManager::Get().ManageShader(pNewShader);
-			return true;
-		}	
-		else // Compile error will be reported in the log
-		{
-			delete pNewShader;
-			m_shader = NULL;
-		}
-	}
-	
-	return false;
-}
-
 void Scene::Serialise()
 {
 	// Construct the path from the scene directory and name of the scene
@@ -215,7 +195,18 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 				// Set whole scene shader if specified
 				if (sceneFile->FindProperty(sceneObject, "shader"))
 				{
-					a_sceneToLoad_OUT->SetShader(sceneFile->GetString("scene", "shader"));
+					if (Shader * pNewShader = new Shader(sceneFile->GetString("scene", "shader")))
+					{
+						if (RenderManager::InitShaderFromFile(*pNewShader))
+						{
+							a_sceneToLoad_OUT->SetShader(pNewShader);
+							RenderManager::Get().ManageShader(a_sceneToLoad_OUT);
+						}	
+						else // Compile error will be reported in the log
+						{
+							delete pNewShader;
+						}
+					}
 				}
 			}
 			else

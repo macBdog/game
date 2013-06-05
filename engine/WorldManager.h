@@ -70,8 +70,8 @@ public:
 	inline void SetBeginLoaded(bool a_begin) { m_beginLoaded = a_begin; }
 	inline bool IsBeginLoaded() { return m_beginLoaded; }
 	inline Shader * GetShader() { return m_shader; }
-	bool SetShader(const char * a_shaderFileName);
-
+	inline void SetShader(Shader * a_shader) { m_shader = a_shader; }
+	
 	//\brief Write all objects in the scene out to a scene file
 	void Serialise();
 
@@ -222,7 +222,7 @@ public:
 								if (RenderManager::InitShaderFromFile(*pNewShader))
 								{
 									newGameObject->SetShader(pNewShader);
-									RenderManager::Get().ManageShader(pNewShader);
+									RenderManager::Get().ManageShader(newGameObject);
 								}
 								else // Compile error will be reported in the log
 								{

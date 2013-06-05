@@ -13,6 +13,9 @@
 #include "../core/Matrix.h"
 #include "../core/Vector.h"
 
+class GameObject;
+class Scene;
+
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
 //		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
@@ -147,7 +150,8 @@ public:
 	void AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
 	//\brief Add a shader to the list for hotloading on file modification
-	void ManageShader(Shader * a_shader);
+	void ManageShader(GameObject * a_gameObject);
+	void ManageShader(Scene * a_scene);
 
 	//\brief Helper function to setup a new shader based on the contents of files and the global preamble
 	//\param a_shaderToCreate_OUT is pointer to a shader that will be allocated
@@ -156,8 +160,6 @@ public:
 	static bool InitShaderFromFile(Shader & a_shader_OUT);
 
 private:
-
-	static const float s_renderDepth2D;			// Z value for ortho rendered primitives
 
 	//\brief Fixed size structure for queing line primitives
 	struct Line
@@ -205,49 +207,62 @@ private:
 	//\brief A managed shader contains a reference to the shader and the file to reload on change for hot reloading
 	struct ManagedShader
 	{
-		Shader * m_shader;											///< Pointer to the shader
+		ManagedShader() 
+			: m_shaderScene(NULL)
+			, m_shaderObject(NULL)
+			, m_vertexTimeStamp()
+			, m_fragmentTimeStamp() { }
+		Scene * m_shaderScene;										///< Pointer the scene that references the shader
+		GameObject * m_shaderObject;								///< Pointer to the object that references the shader
 		FileManager::Timestamp m_vertexTimeStamp;					///< Datestamp for checking a newer version of the geom shader
 		FileManager::Timestamp m_fragmentTimeStamp;					///< Datestamp for checking a newer version of the pixel shader
 	};
 	
-	float m_renderTime;										///< How long the game has been rendering frames for (accumulated frame delta)
+	//\brief Add a shader to the list of managed shaders
+	void AddManagedShader(ManagedShader * a_newManShader);
 
-	Tri	 * m_tris[eBatchCount];								///< Pointer to a pool of memory for tris
-	Quad * m_quads[eBatchCount];							///< Pointer to a pool of memory for quads
-	Line * m_lines[eBatchCount];							///< Lines for each batch
-	RenderModel * m_models[eBatchCount];					///< Models for each batch
+	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
+
+	Tri	 * m_tris[eBatchCount];										///< Pointer to a pool of memory for tris
+	Quad * m_quads[eBatchCount];									///< Pointer to a pool of memory for quads
+	Line * m_lines[eBatchCount];									///< Lines for each batch
+	RenderModel * m_models[eBatchCount];							///< Models for each batch
 	FontChar * m_fontChars[eBatchCount];
-	unsigned int m_triCount[eBatchCount];					///< Number of tris per batch per frame
-	unsigned int m_quadCount[eBatchCount];					///< Number of primitives in each batch per frame
-	unsigned int m_lineCount[eBatchCount];					///< Number of lines per frame
-	unsigned int m_modelCount[eBatchCount];					///< Number of models to render
-	unsigned int m_fontCharCount[eBatchCount];				///< Number for font characters to render
+	unsigned int m_triCount[eBatchCount];							///< Number of tris per batch per frame
+	unsigned int m_quadCount[eBatchCount];							///< Number of primitives in each batch per frame
+	unsigned int m_lineCount[eBatchCount];							///< Number of lines per frame
+	unsigned int m_modelCount[eBatchCount];							///< Number of models to render
+	unsigned int m_fontCharCount[eBatchCount];						///< Number for font characters to render
 
-	unsigned int m_frameBuffer;								///< Identifier for the whole scene framebuffer
-	unsigned int m_renderTexture;							///< Identifier for the texture to render to
-	unsigned int m_depthBuffer;								///< Identifier for the buffer for pixel depth
+	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
+	unsigned int m_renderTexture;									///< Identifier for the texture to render to
+	unsigned int m_depthBuffer;										///< Identifier for the buffer for pixel depth
 
-	Shader * m_colourShader;								///< Vertex and pixel shader used when no shader is specified in a scene or model
-	Shader * m_textureShader;								///< Shader for textured objects when no shader specified
+	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
+	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
 
-	unsigned int m_viewWidth;								///< Cache of arguments passed to init
-	unsigned int m_viewHeight;								///< Cache of arguments passed to init
-	unsigned int m_bpp;										///< Cache of arguments passed to init
-	float		 m_aspect;									///< Calculated ratio of width to height
-	Colour m_clearColour;									///< Cache of arguments passed to init
-	eRenderMode m_renderMode;								///< How the scene is to be rendered
-	char m_shaderPath[StringUtils::s_maxCharsPerLine];		///< Path to the shader files
+	unsigned int m_viewWidth;										///< Cache of arguments passed to init
+	unsigned int m_viewHeight;										///< Cache of arguments passed to init
+	unsigned int m_bpp;												///< Cache of arguments passed to init
+	float		 m_aspect;											///< Calculated ratio of width to height
+	Colour m_clearColour;											///< Cache of arguments passed to init
+	eRenderMode m_renderMode;										///< How the scene is to be rendered
+	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
-	LinkedList<ManagedShader> m_managedShaders;				///< List of managed shaders that are scanned for hot loading
-	float m_updateFreq;										///< How often the render manager should check for changes to shaders
-	float m_updateTimer;									///< If we are due for a scan and update of shaders
+	typedef LinkedListNode<ManagedShader> ManagedShaderNode;		///< Alias for a linked list node that points to a managed shader
+	typedef LinkedList<ManagedShader> ManagedShaderList;			///< Alias for a linked list of managed shaders
 
-	static const float s_updateFreq;									///< How often the render manager should check for shader updates
-	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1000;		///< Flat storage amount for quads
-	static const unsigned int s_maxLines = 1600;						///< Storage amount for debug lines
-	static const float s_nearClipPlane;									///< Distance from the viewer to the near clipping plane (always positive) 
-	static const float s_farClipPlane;									///< Distance from the viewer to the far clipping plane (always positive).
-	static const float s_fovAngleY;										///< Field of view angle, in degrees, in the y direction.
+	ManagedShaderList m_managedShaders;								///< List of managed shaders that are scanned for hot loading
+	float m_updateFreq;												///< How often the render manager should check for changes to shaders
+	float m_updateTimer;											///< If we are due for a scan and update of shaders
+
+	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
+	static const float s_updateFreq;								///< How often the render manager should check for shader updates
+	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1024;	///< Flat storage amount for quads
+	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
+	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
+	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
+	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction.
 };
 
 #endif // _ENGINE_RENDER_MANAGER

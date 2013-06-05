@@ -156,11 +156,11 @@ bool RenderManager::Shutdown()
     glDeleteRenderbuffers(1, &m_depthBuffer);   
 
 	// And any managed shaders
-	LinkedListNode<ManagedShader> * next = m_managedShaders.GetHead();
+	ManagedShaderNode * next = m_managedShaders.GetHead();
 	while (next != NULL)
 	{
 		// Cache off next pointer
-		LinkedListNode<ManagedShader> * cur = next;
+		ManagedShaderNode * cur = next;
 		next = cur->GetNext();
 
 		m_managedShaders.Remove(cur);
@@ -184,38 +184,59 @@ bool RenderManager::Update(float a_dt)
 		bool shadersReloaded = false;
 
 		// Each texture in the category gets tested
-		LinkedListNode<ManagedShader> * next = m_managedShaders.GetHead();
+		ManagedShaderNode * next = m_managedShaders.GetHead();
 		while (next != NULL)
 		{
+			bool curShaderReloaded = false;
 			FileManager::Timestamp curTimeStamp;
 			ManagedShader * curManShader = next->GetData();
-			char fullShaderPath[StringUtils::s_maxCharsPerLine];		
-			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), curManShader->m_shader->GetName());
+			char fullShaderPath[StringUtils::s_maxCharsPerLine];
+			Shader * pShader = curManShader->m_shaderObject != NULL ? curManShader->m_shaderObject->GetShader() : curManShader->m_shaderScene->GetShader();
+			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
 			FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
 			if (curTimeStamp > curManShader->m_vertexTimeStamp)
 			{
-				shadersReloaded = true;
+				curShaderReloaded = true;
 				curManShader->m_vertexTimeStamp = curTimeStamp;
 				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
 			}
 
 			// Now check the pixel shader
-			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), curManShader->m_shader->GetName());
+			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
 			FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
 			if (curTimeStamp > curManShader->m_fragmentTimeStamp)
 			{
-				shadersReloaded = true;
+				curShaderReloaded = true;
 				curManShader->m_fragmentTimeStamp = curTimeStamp;
 				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
 			}
 
+			if (curShaderReloaded)
+			{
+				// Recreate the shader
+				shadersReloaded = true;
+				if (Shader * pReloadedShader = new Shader(pShader->GetName()))
+				{
+					if (InitShaderFromFile(*pReloadedShader))
+					{
+						// Reassign shader to source object
+						if (curManShader->m_shaderObject != NULL)
+						{
+							curManShader->m_shaderObject->SetShader(pReloadedShader);
+						}
+						else if (curManShader->m_shaderScene != NULL)
+						{
+							curManShader->m_shaderScene->SetShader(pReloadedShader);
+						}
+						delete pShader;
+					}
+				}
+			}
 			// Advance through the list
 			next = next->GetNext();
 		}
-
 		return shadersReloaded;
 	}
-
 	return false;
 }
 
@@ -913,23 +934,26 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	AddLine(eBatchDebug3D, corners[3], corners[7], a_colour);
 }
 
-void RenderManager::ManageShader(Shader * a_shader)
+void RenderManager::ManageShader(GameObject * a_gameObject)
 {
-	if (a_shader != NULL)
+	if (a_gameObject != NULL)
 	{
 		if (ManagedShader * pManShader = new ManagedShader())
-		{
-			pManShader->m_shader = a_shader;		
-			char fullShaderPath[StringUtils::s_maxCharsPerLine];
-			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shader->GetName());
-			FileManager::Get().GetFileTimeStamp(fullShaderPath, pManShader->m_vertexTimeStamp);
-			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shader->GetName());
-			FileManager::Get().GetFileTimeStamp(fullShaderPath, pManShader->m_fragmentTimeStamp);
-			if (LinkedListNode<ManagedShader> * pManShaderNode = new LinkedListNode<ManagedShader>())
-			{
-				pManShaderNode->SetData(pManShader);
-				m_managedShaders.Insert(pManShaderNode);
-			}
+		{	
+			pManShader->m_shaderObject = a_gameObject;
+			AddManagedShader(pManShader);
+		}
+	}
+}
+
+void RenderManager::ManageShader(Scene * a_scene)
+{
+	if (a_scene != NULL)
+	{
+		if (ManagedShader * pManShader = new ManagedShader())
+		{	
+			pManShader->m_shaderScene = a_scene;
+			AddManagedShader(pManShader);
 		}
 	}
 }
@@ -1011,4 +1035,22 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	}
 
 	return false;
+}
+
+void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
+{
+	if (a_newManShader)
+	{
+		Shader * pShader = a_newManShader->m_shaderObject != NULL ? a_newManShader->m_shaderObject->GetShader() : a_newManShader->m_shaderScene->GetShader();
+		char fullShaderPath[StringUtils::s_maxCharsPerLine];
+		sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+		FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_vertexTimeStamp);
+		sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+		FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_fragmentTimeStamp);
+		if (ManagedShaderNode * pManShaderNode = new ManagedShaderNode())
+		{
+			pManShaderNode->SetData(a_newManShader);
+			m_managedShaders.Insert(pManShaderNode);
+		}
+	}
 }
