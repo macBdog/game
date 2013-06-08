@@ -133,14 +133,6 @@ public:
 				cur = cur->GetNext();
 			}
 
-			// Output siblings of this child
-			Object * nextSibling = m_next;
-			while(nextSibling != NULL)
-			{
-				nextSibling->Serialise(a_stream, a_indentLevel);
-				nextSibling = nextSibling->m_next;
-			}
-
 			// Now the children of this child
 			if (m_firstChild)
 			{
@@ -151,6 +143,14 @@ public:
 			--a_indentLevel;
 			GameFile::WriteTabs(a_stream, a_indentLevel);
 			a_stream << "}" << StringUtils::s_charLineEnd;
+
+			// Output siblings of this child outside the object
+			Object * nextSibling = m_next;
+			while(nextSibling != NULL)
+			{
+				nextSibling->Serialise(a_stream, a_indentLevel);
+				nextSibling = nextSibling->m_next;
+			}
 		}
 
 		StringHash m_name;					// Literal declared before the open brace

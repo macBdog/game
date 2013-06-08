@@ -87,10 +87,27 @@ void Widget::Draw()
 			{
 				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, batch);
 
-				// Some widgets also display their path (for text input for example)
-				if (m_showFilePath)
+				// Some widgets also text like labels and buttons
+				if (m_text[0] != '\0')
 				{
-					FontManager::Get().DrawDebugString2D(m_filePath, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
+					if (m_showTextCursor)
+					{
+						// Draw the string with a cursor
+						char cursorText[StringUtils::s_maxCharsPerLine];
+						if (Gui::GetTextCursorBlink())
+						{
+							sprintf(cursorText, "%s|", m_text);
+						}
+						else
+						{
+							sprintf(cursorText, "%s", m_text);
+						}
+						FontManager::Get().DrawDebugString2D(cursorText, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
+					}
+					else // Draw the string on it's own
+					{
+						FontManager::Get().DrawDebugString2D(m_text, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
+					}
 				}
 			}	
 		}

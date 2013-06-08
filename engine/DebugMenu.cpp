@@ -130,16 +130,16 @@ bool DebugMenu::Startup()
 
 	curItem.m_size = WidgetVector(0.8f, 0.15f);
 	curItem.m_colour = sc_colourGrey;
-	curItem.m_name = "Enter Name";
+	curItem.m_name = "Value";
 	m_textInputField = gui.CreateWidget(curItem, m_textInput, false);
+	m_textInputField->SetShowTextCursor(true);
 	m_textInputField->SetDebugWidget();
-	m_textInputField->SetShowFilePath();
 
 	// Ok and Cancel buttons on the text input dialog
 	m_btnTextInputOk = CreateButton("Ok", sc_colourOrange, m_textInput);
 	m_btnTextInputCancel = CreateButton("Cancel", sc_colourGrey, m_textInput);
 	
-	// Register global key and mnouse listeners - note these will be processed after the button callbacks
+	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
 	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKey, InputManager::eInputTypeKeyDown); 
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
@@ -527,7 +527,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				// Editing the name of a widget
 				if (m_widgetToEdit != NULL)
 				{
-					m_widgetToEdit->SetName(m_textInputField->GetFilePath());
+					m_widgetToEdit->SetName(m_textInputField->GetText());
 					m_dirtyFlags.Set(eDirtyFlagGUI);
 				}
 			}
@@ -539,7 +539,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 			{
 				if (m_gameObjectToEdit != NULL)
 				{
-					m_gameObjectToEdit->SetName(m_textInputField->GetFilePath());
+					m_gameObjectToEdit->SetName(m_textInputField->GetText());
 					m_dirtyFlags.Set(eDirtyFlagScene);
 				}
 			}
@@ -548,7 +548,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				// Editing the template of an object
 				if (m_gameObjectToEdit != NULL)
 				{
-					m_gameObjectToEdit->SetTemplate(m_textInputField->GetFilePath());
+					m_gameObjectToEdit->SetTemplate(m_textInputField->GetText());
 					m_dirtyFlags.Set(eDirtyFlagScene);
 				}
 			}
@@ -723,7 +723,7 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 		InputManager & inMan = InputManager::Get();
 		char newName[StringUtils::s_maxCharsPerName];
 		newName[0] = '\0';
-		strncpy(newName, m_textInputField->GetFilePath(), strlen(m_textInputField->GetFilePath()));
+		strncpy(newName, m_textInputField->GetText(), sizeof(char) * strlen(m_textInputField->GetText()) + 1);
 
 		SDLKey lastKey = inMan.GetLastKey();
 		if (lastKey == SDLK_BACKSPACE)
@@ -733,7 +733,7 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 			if (nameLength > 0)
 			{
 				newName[nameLength - 1] = '\0';
-				m_textInputField->SetFilePath(newName);
+				m_textInputField->SetText(newName);
 			}
 		}
 		else // Some other alpha key, append to the name
@@ -755,8 +755,8 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 					keyVal -= 32;
 				}
 
-				sprintf(newName, "%s%c", m_textInputField->GetFilePath(), keyVal);
-				m_textInputField->SetFilePath(newName);
+				sprintf(newName, "%s%c", m_textInputField->GetText(), keyVal);
+				m_textInputField->SetText(newName);
 			}
 		}
 
@@ -842,7 +842,7 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	// Show the starting text if reqd
 	if (a_startingText != NULL)
 	{
-		m_textInputField->SetFilePath(a_startingText);
+		m_textInputField->SetText(a_startingText);
 	}
 }
 

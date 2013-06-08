@@ -46,7 +46,7 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 
 	// Cache off the texture path for non qualified loading of textures
 	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_texturePath, a_texturePath, strlen(a_texturePath));
+	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
 
 	// Set filtering rule
 	m_filterMode = a_useLinearTextureFilter ? eTextureFilterLinear : eTextureFilterNearest;

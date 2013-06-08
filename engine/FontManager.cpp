@@ -29,7 +29,7 @@ bool FontManager::Startup(const char * a_fontPath)
 
 	// Cache off the font path as textures are relative to fonts
 	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_fontPath, a_fontPath, strlen(a_fontPath));
+	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
 
 	// Load each font in the directory
 	bool loadSuccess = true;

@@ -142,8 +142,8 @@ void Scene::Serialise()
 		childGameObject->Serialise(sceneFile, sceneObject);
 		curObject = curObject->GetNext();
 	}
-
-	// Write all the data to a file
+	
+	// Write all the game file data to a file
 	sceneFile->Write(scenePath);
 	delete sceneFile;
 }
@@ -250,11 +250,11 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 {
 	// Cache off the template path for non qualified loading of game object
 	memset(&m_templatePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_templatePath, a_templatePath, strlen(a_templatePath));
+	strncpy(m_templatePath, a_templatePath, sizeof(char) * strlen(a_templatePath) + 1);
 
 	// Generate list to iterate through all scenes in the scenepath and load them
 	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_scenePath, a_scenePath, strlen(a_scenePath));
+	strncpy(m_scenePath, a_scenePath, sizeof(char) * strlen(a_scenePath) + 1);
 	FileManager::FileList sceneFiles;
 	FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".scn");
 

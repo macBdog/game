@@ -302,7 +302,11 @@ GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_par
 		}
 	}
 	
-	m_objects.Insert(newObject);
+	// Only top level objects stored in m_object, children of children are accessed through their parent
+	if (a_parent == NULL)
+	{
+		m_objects.Insert(newObject);
+	}
 
 	return newObject->GetData();
 }

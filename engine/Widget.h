@@ -111,17 +111,18 @@ public:
 		, m_selectFlags(0)
 		, m_selection(eSelectionNone)
 		, m_colour(sc_colourWhite)
+		, m_showTextCursor(false)
 		, m_active(true)
 		, m_texture(NULL)
 		, m_parent(NULL)
 		, m_next(NULL)
 		, m_firstChild(NULL)
 		, m_debugRender(false)
-		, m_showFilePath(false)
 		, m_selectedListItemId(eSelectionNone)
 	{
-		memset(&m_name, 0, sizeof(char) * StringUtils::s_maxCharsPerName);
-		memset(&m_filePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+		m_name[0] = '\0';
+		m_text[0] = '\0';
+		m_filePath[0] = '\0';
 	}
 
 	//\brief Removes and deallocates all list items
@@ -190,14 +191,16 @@ public:
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
-	inline void SetShowFilePath() { m_showFilePath = true; }
+	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
 	
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
 	inline const char * GetName() { return m_name; }
+	inline const char * GetText() { return m_text; }
 	inline const char * GetFilePath() { return m_filePath; }
 
 	//\brief Execute the callback if defined
@@ -240,6 +243,7 @@ private:
 	WidgetVector m_pos;					// Where in the parent container the element resides
 	Colour m_colour;					// What the base colour of the widget is, will tint texture
 	bool m_active;						// If the widget should be drawn and reactive
+	bool m_showTextCursor;				// If the cursor should be shown on a text field
 	unsigned int m_fontNameHash;		// Hash of the name of the font to render with
 	Texture * m_texture;				// What to draw
 	Widget * m_parent;					// Who's ya daddy
@@ -249,9 +253,9 @@ private:
 	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
 	bool m_debugRender;					// If the widget should be rendered using the debug batch
-	bool m_showFilePath;				// If the widget should display the file path
-	char m_name[StringUtils::s_maxCharsPerName];		// Display name or label
-	char m_filePath[StringUtils::s_maxCharsPerLine];	// Path for loading and saving, only menus should have this property
+	char m_name[StringUtils::s_maxCharsPerName];			// Display name or label
+	char m_text[StringUtils::s_maxCharsPerLine];			// Text for drawing labels and buttons
+	char m_filePath[StringUtils::s_maxCharsPerLine];		// Path for loading and saving, only menus should have this property
 
 	LinkedList<StringHash> m_listItems;						// Any string items that belong to this widget for lists and combo boxes
 	unsigned int m_selectedListItemId;						// Which item is currently selected

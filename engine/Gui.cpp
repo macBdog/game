@@ -11,6 +11,10 @@
 
 template<> Gui * Singleton<Gui>::s_instance = NULL;
 
+bool Gui::s_cursorBlink = false;
+float Gui::s_cursorBlinkTimer = 0.0f;
+const float Gui::s_cursorBlinkTime = 0.55f;
+
 bool Gui::Startup(const char * a_guiPath)
 {
 	// Cache off the gui path for later use when loading menus
@@ -101,6 +105,15 @@ bool Gui::Update(float a_dt)
 	{
 		m_cursor.Draw();
 	}
+
+	// Blink the text cursor
+	s_cursorBlinkTimer += a_dt;
+	if (s_cursorBlinkTimer >= s_cursorBlinkTime)
+	{
+		s_cursorBlink = !s_cursorBlink;
+		s_cursorBlinkTimer = 0.0f;
+	}
+
 	return true;
 }
 

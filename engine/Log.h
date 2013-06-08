@@ -69,7 +69,7 @@ private:
 		//\brief Set up the basic properties of a log display message
 		LogDisplayEntry(const char * a_message, LogLevel a_level)
 		{
-			strncpy(m_message, a_message, strlen(a_message));
+			strncpy(m_message, a_message, sizeof(char) * strlen(a_message) + 1);
 			m_lifeTime = s_logDisplayTime[a_level];
 			m_colour = s_logDisplayColour[a_level];
 		}

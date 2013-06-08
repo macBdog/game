@@ -50,6 +50,9 @@ public:
 	//brief Return the top widget with different selection flags
 	Widget * GetActiveWidget();
 
+	//brief Get the visible status of the global blinking cursor
+	static bool GetTextCursorBlink() { return s_cursorBlink; }
+
 private:
 
 	//\brief Shortcut to access lists of menu items
@@ -66,6 +69,11 @@ private:
 	//\brief Helper function to update selection status of all widgets based on mouse pos
 	void UpdateSelection();
 
+	// Cursor blink is global across the application
+	static bool s_cursorBlink;
+	static float s_cursorBlinkTimer;
+	static const float s_cursorBlinkTime;
+	
 	char m_guiPath[StringUtils::s_maxCharsPerLine];
 	MenuList m_menus;		// All menus loaded from data or created on the fly
 	GameFile m_configFile;	// Base gui config file
