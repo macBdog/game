@@ -339,7 +339,7 @@ void Widget::Orphan()
 				if (sibling->m_next == this)
 				{
 					sibling->m_next = sibling->m_next->m_next;
-					break;
+					return;
 				}
 				sibling = sibling->m_next;
 			}

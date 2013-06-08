@@ -514,7 +514,7 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 		{
 			if (rm->m_shader != pLastShader)
 			{
-				pLastModelShader = rm->m_shader;
+				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
 				pLastModelShader->UseShader(shaderData);
 			}
 			glPushMatrix();

@@ -157,6 +157,7 @@ bool DebugMenu::Startup()
 void DebugMenu::Update(float a_dt)
 {
 	// Handle editing actions tied to mouse move
+	bool bSaveReqd = false;
 	InputManager & inMan = InputManager::Get();
 	if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
 	{
@@ -167,6 +168,7 @@ void DebugMenu::Update(float a_dt)
 			{	
 				m_widgetToEdit->SetPos(mousePos);
 				m_dirtyFlags.Set(eDirtyFlagGUI);
+				bSaveReqd = true;
 				break;
 			}
 			case eEditModeShape:	
@@ -174,6 +176,7 @@ void DebugMenu::Update(float a_dt)
 				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
 												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
 				m_dirtyFlags.Set(eDirtyFlagGUI);
+				bSaveReqd = true;
 				break;
 			}
 			default: break;
@@ -191,16 +194,19 @@ void DebugMenu::Update(float a_dt)
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
 				m_dirtyFlags.Set(eDirtyFlagScene);
+				bSaveReqd = true;
 			} 
 			else if (inMan.IsKeyDepressed(SDLK_y))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
 				m_dirtyFlags.Set(eDirtyFlagScene);
+				bSaveReqd = true;
 			}
 			else if (inMan.IsKeyDepressed(SDLK_z))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
 				m_dirtyFlags.Set(eDirtyFlagScene);
+				bSaveReqd = true;
 			}
 		}
 	}
@@ -210,6 +216,12 @@ void DebugMenu::Update(float a_dt)
 	
 	// Cache off the last mouse pos
 	m_lastMousePosRelative = inMan.GetMousePosRelative();
+
+	// Save to disk file
+	if (bSaveReqd)
+	{
+		SaveChanges();
+	}
 }
 
 bool DebugMenu::SaveChanges()
@@ -387,6 +399,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_editType = eEditTypeNone;
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
+		m_dirtyFlags.Set(eDirtyFlagGUI);
 	}
 	else if (a_widget == m_btnChangeObjectRoot)
 	{

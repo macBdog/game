@@ -50,12 +50,12 @@ bool GameObject::Draw()
 			{
 				case eClipTypeSphere:
 				{
-					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourPink); 
+					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourGrey); 
 					break;
 				}
 				case eClipTypeAxisBox:
 				{
-					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourPink); 
+					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourGrey); 
 				}
 				default: break;
 			}

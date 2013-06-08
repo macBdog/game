@@ -176,6 +176,7 @@ public:
 				{
 					newGameObject->SetId(m_totalSceneNumObjects++);
 					newGameObject->SetState(GameObject::eGameObjectState_Loading);
+					newGameObject->SetTemplate(a_templatePath);
 					if (GameFile::Object * object = templateFile.FindObject("gameObject"))
 					{	
 						bool validObject = true;

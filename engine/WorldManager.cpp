@@ -80,7 +80,7 @@ GameObject * Scene::GetSceneObject(Vector a_worldPos)
 	return NULL;
 }
 
-GameObject *Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
+GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 {
 	// Iterate through all objects in the scene
 	SceneObject * curObject = m_objects.GetHead();
@@ -122,7 +122,7 @@ void Scene::Serialise()
 {
 	// Construct the path from the scene directory and name of the scene
 	char scenePath[StringUtils::s_maxCharsPerLine];
-	sprintf(scenePath, "%s/%s.scn", WorldManager::Get().GetScenePath(), m_name);
+	sprintf(scenePath, "%s%s.scn", WorldManager::Get().GetScenePath(), m_name);
 
 	// Create an output stream
 	GameFile * sceneFile = new GameFile();
@@ -138,17 +138,8 @@ void Scene::Serialise()
 		// Alias the game object in the scene
 		GameObject * childGameObject = curObject->GetData();
 		
-		// Only if the object has a template for loading can it be saved
-		if (childGameObject->HasTemplate())
-		{
-			// Add the object to the game file
-			childGameObject->Serialise(sceneFile, sceneObject);
-		}
-		else
-		{
-			Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Game object called %s will not be saved in the scene as it does not have a source template.", childGameObject->GetName());
-		}
-			
+		// Add the object to the game file
+		childGameObject->Serialise(sceneFile, sceneObject);
 		curObject = curObject->GetNext();
 	}
 
@@ -220,13 +211,13 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			{
 				if (GameFile::Property * prop = childGameObject->FindProperty("template"))
 				{
+					// Create object from template values and add to the scene
 					if (GameObject * newObject = CreateObject<GameObject>(prop->GetString(), a_sceneToLoad_OUT))
 					{
+						// Override any template values
 						newObject->SetTemplate(prop->GetString());
 						newObject->SetName(childGameObject->FindProperty("name")->GetString());
 						newObject->SetPos(childGameObject->FindProperty("pos")->GetVector());
-
-						a_sceneToLoad_OUT->AddObject(newObject);
 					}
 				}
 				
