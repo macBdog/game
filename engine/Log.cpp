@@ -6,7 +6,7 @@ const float	Log::s_logDisplayTime[LL_COUNT] =
 {
 	1.0f,	// LL_INFO
 	2.0f,	// LL_WARNING
-	99.0f	// LL_ERROR
+	9.0f	// LL_ERROR
 };
 
 const Colour Log::s_logDisplayColour[LL_COUNT]=
