@@ -1064,10 +1064,19 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	if (vertexSource != NULL && fragmentSource != NULL)
 	{
 		a_shader_OUT.Init(vertexSource, fragmentSource);
-		return a_shader_OUT.IsCompiled();
+		
 	}
-
-	return false;
+	
+	// Free the memory for shader sources
+	if (vertexSource != NULL)
+	{
+		free(vertexSource);
+	}
+	if (fragmentSource != NULL)
+	{
+		free(fragmentSource);
+	}
+	return a_shader_OUT.IsCompiled();
 }
 
 void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
