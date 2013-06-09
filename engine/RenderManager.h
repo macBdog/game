@@ -50,6 +50,7 @@ public:
 					: m_renderTime(0.0f)
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
+					, m_vr(false)
 					, m_frameBuffer(0)
 					, m_renderTexture(0)
 					, m_depthBuffer(0)
@@ -87,6 +88,8 @@ public:
 	inline unsigned int GetViewDepth() { return m_bpp; }
 	inline float GetViewAspect() { return m_aspect; }
 	inline const char * GetShaderPath() { return m_shaderPath; }
+	inline bool GetVrSupport() { return m_vr; }
+	inline void SetVrSupport(bool a_vr) { m_vr = a_vr; } 
 
 	//\brief Set up a display list for a font character so drawing only involves calling a list
 	//\param a_size is an arbitrary width to height to generate the list at
@@ -249,6 +252,7 @@ private:
 	float		 m_aspect;											///< Calculated ratio of width to height
 	Colour m_clearColour;											///< Cache of arguments passed to init
 	eRenderMode m_renderMode;										///< How the scene is to be rendered
+	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
 	typedef LinkedListNode<ManagedShader> ManagedShaderNode;		///< Alias for a linked list node that points to a managed shader

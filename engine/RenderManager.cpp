@@ -563,9 +563,18 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 	}
 
 	// Switch to rendering to the screen
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, m_viewWidth, m_viewHeight);
-
+	if (!m_vr)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, m_viewWidth, m_viewHeight);
+	}
+	else // Render the left eye viewport first
+	{
+		const GLsizei viewWidth = m_viewWidth / 2;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0,viewWidth, m_viewHeight);
+	}
+	
 	// Set to ortho
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -600,7 +609,32 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 	glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0f, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 1.0f);	glVertex3f(-1.0f, 1.0f, -1.0f);
-	glEnd ();
+	glEnd();
+
+	// Render the right eye viewport for vr mode
+	if (m_vr)
+	{
+		const GLsizei viewWidth = m_viewWidth / 2;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(viewWidth, 0, m_viewWidth - viewWidth, m_viewHeight);
+
+		// Set to ortho
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		// Draw a full screen quad with the render output on it
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glBindTexture(GL_TEXTURE_2D, m_renderTexture);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f);	glVertex3f(-1.0f, -1.0f, -1.0f);	
+		glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0f, 1.0f, -1.0f);
+		glTexCoord2f(0.0f, 1.0f);	glVertex3f(-1.0f, 1.0f, -1.0f);
+		glEnd();
+	}
 }
 
 unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)

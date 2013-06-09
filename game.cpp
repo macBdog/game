@@ -156,6 +156,12 @@ int main(int argc, char *argv[])
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
 
+	// Oculus Rift support
+	if (configFile.GetBool("render", "vr"))
+	{
+		RenderManager::Get().SetVrSupport(true);
+	}
+
     // Game main loop
 	unsigned int lastFrameTime = 0;
 	float lastFrameTimeSec = 0.0f;
