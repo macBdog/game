@@ -448,6 +448,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_editType = eEditTypeNone;
 		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
+		m_dirtyFlags.Set(eDirtyFlagScene);
 	}
 	else if (a_widget == m_btnResourceSelectOk)
 	{

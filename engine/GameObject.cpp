@@ -139,4 +139,11 @@ void GameObject::Destroy()
 {
 	// Clean up components
 	RemoveAllComponents();
+
+	// Remove references to managed resources
+	if (m_shader != NULL)
+	{
+		RenderManager::Get().UnManageShader(this);
+		delete m_shader;
+	}
 }

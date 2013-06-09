@@ -6,6 +6,8 @@
 
 #include <GL/glew.h>
 
+#include "../core/Matrix.h"
+
 #include "StringUtils.h"
 
 //\brief Abstraction of a simple GLSL shader framework
@@ -49,16 +51,19 @@ public:
 		UniformData(	float a_time,
 						float a_frameTime, 
 						float a_viewWidth,
-						float a_viewHeight)
+						float a_viewHeight,
+						Matrix * a_mat)
 						: m_time(a_time)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
-						, m_viewHeight(a_viewHeight) { }
+						, m_viewHeight(a_viewHeight) 
+						, m_mat(a_mat) { }
 
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
+		Matrix * m_mat;					///< Pointer to matrix containing game object position
 	};
 
 	//\brief Shaders will compile and link from source upon creation
@@ -101,7 +106,7 @@ public:
 			m_frameTime.Init(m_shader, "frameTime");
 			m_viewWidth.Init(m_shader, "viewWidth");
 			m_viewHeight.Init(m_shader, "viewHeight");
-
+			m_objectMatrix.Init(m_shader, "objMat");
 			return true;
 		}
 
@@ -124,6 +129,7 @@ public:
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
+		glUniformMatrix4fv(m_objectMatrix.m_id, 4, GL_FALSE, a_data.m_mat->GetValues());
 	}
 
     ~Shader() {
@@ -147,6 +153,7 @@ private:
 	Uniform m_frameTime;
 	Uniform m_viewWidth;
 	Uniform m_viewHeight;
+	Uniform m_objectMatrix;
 };
 
 #endif // _ENGINE_RENDER_MANAGER

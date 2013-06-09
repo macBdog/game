@@ -149,9 +149,11 @@ public:
 	//\param a_colour optional argument for the colour of the box
 	void AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
-	//\brief Add a shader to the list for hotloading on file modification
+	//\brief Add and remove a shader to the list for hotloading on file modification
 	void ManageShader(GameObject * a_gameObject);
 	void ManageShader(Scene * a_scene);
+	void UnManageShader(GameObject * a_gameObject);
+	void UnManageShader(Scene * a_scene);
 
 	//\brief Helper function to setup a new shader based on the contents of files and the global preamble
 	//\param a_shaderToCreate_OUT is pointer to a shader that will be allocated
