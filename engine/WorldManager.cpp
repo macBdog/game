@@ -42,6 +42,26 @@ void Scene::AddObject(GameObject * a_newObject)
 	}
 }
 
+bool Scene::RemoveObject(unsigned int a_objectId)
+{
+	SceneObject * curObject = m_objects.GetHead();
+	while (curObject != NULL)
+	{
+		// Delete a target with a specific id
+		GameObject * gameObject = curObject->GetData();
+		if (gameObject->GetId() == a_objectId)
+		{
+			m_objects.Remove(curObject);
+			delete curObject;
+			return true;
+		}
+	
+		curObject = curObject->GetNext();
+	}
+
+	return false;
+}
+
 GameObject * Scene::GetSceneObject(unsigned int a_objectId)
 {
 	// Iterate through all objects in the scene
@@ -348,6 +368,19 @@ bool WorldManager::Update(float a_dt)
 	}
 
 	return updateOk;
+}
+
+bool WorldManager::DestroyObject(unsigned int a_objectId) 
+{ 
+	if (GameObject * obj = GetGameObject(a_objectId))
+	{
+		m_currentScene->RemoveObject(a_objectId);
+		obj->Shutdown();
+		delete obj;
+		return true;
+	}
+	
+	return false; 
 }
 
 GameObject * WorldManager::GetGameObject(unsigned int a_objectId)

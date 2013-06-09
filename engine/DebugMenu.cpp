@@ -889,7 +889,20 @@ void DebugMenu::Draw()
 		// Draw selection box around objects
 		if (m_gameObjectToEdit != NULL)
 		{
-			renMan.AddDebugAxisBox(m_gameObjectToEdit->GetPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
+			switch (m_gameObjectToEdit->GetClipType())
+			{
+				case GameObject::eClipTypeAxisBox:
+				{
+					renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
+					break;
+				}
+				case GameObject::eClipTypeSphere:
+				{
+					renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX(), sc_colourRed); 
+					break;
+				}
+				default: break;
+			}
 		}
 	}
 	

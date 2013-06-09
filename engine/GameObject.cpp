@@ -56,6 +56,7 @@ bool GameObject::Draw()
 				case eClipTypeAxisBox:
 				{
 					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourGrey); 
+					break;
 				}
 				default: break;
 			}
@@ -138,9 +139,4 @@ void GameObject::Destroy()
 {
 	// Clean up components
 	RemoveAllComponents();
-
-	if (m_shader != NULL)
-	{
-		delete m_shader;
-	}
 }

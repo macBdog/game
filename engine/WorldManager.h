@@ -42,6 +42,7 @@ public:
 
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
+	bool RemoveObject(unsigned int a_objectId);
 	GameObject * GetSceneObject(unsigned int a_objectId);
 	
 	//\brief Get the first object in the scene that intersects with a point in worldspace
@@ -281,8 +282,8 @@ public:
 		return NULL;
 	}
 	
-	//\brief Remove a created object from the world, will not be destroyed right away
-	bool DestroyObject(unsigned int a_objectId) { return false; }
+	//\brief Remove a created object from the world
+	bool DestroyObject(unsigned int a_objectId);
 
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object

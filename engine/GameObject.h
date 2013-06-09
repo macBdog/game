@@ -134,11 +134,13 @@ public:
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
 	inline Model * GetModel() { return m_model; }
-	inline Matrix GetWorldMat() { return m_worldMat; }
-	inline Shader * GetShader() { return m_shader; }
-	inline Vector GetPos() { return m_worldMat.GetPos(); }
-	inline Vector GetClipSize() { return m_clipVolumeSize; }
-	inline bool HasTemplate() { return strlen(m_template) > 0; }
+	inline Matrix GetWorldMat() const { return m_worldMat; }
+	inline Shader * GetShader() const { return m_shader; }
+	inline Vector GetPos() const { return m_worldMat.GetPos(); }
+	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_clipVolumeOffset; }
+	inline Vector GetClipSize() const { return m_clipVolumeSize; }
+	inline eClipType GetClipType() const { return m_clipType; }
+	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }

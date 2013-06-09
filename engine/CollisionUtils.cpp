@@ -101,8 +101,34 @@ extern bool CollisionUtils::IntersectLineAxisBox(Vector a_lineStart, Vector a_li
 
 extern bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lineEnd, Vector a_spherePos, float a_sphereRadius)
 {
-	// TODO actually implement this
-	return false;
+	// Early out if the start or end or the line segment is inside the radius
+	const float sphRadSq = a_sphereRadius * a_sphereRadius;
+	const Vector lineSeg = a_lineEnd - a_lineStart;
+	if ((a_spherePos - a_lineStart).LengthSquared() <= sphRadSq)
+	{
+		return true;
+	}
+	if ((a_spherePos - a_lineEnd).LengthSquared() <= sphRadSq)
+	{
+		return true;	
+	}
+
+	float proj = (a_spherePos - a_lineStart).Dot(lineSeg) / lineSeg.Dot(lineSeg);
+	float distanceToSphereSq = 0.0f;
+	if(proj <= 0.0f)    // closest point on the line segment is the tailPoint
+	{
+	   distanceToSphereSq = (a_spherePos - a_lineEnd).LengthSquared();
+	}
+	else if(proj >= 1.0f)    // closest point on the line segment is the headPoint
+	{
+		distanceToSphereSq = (a_lineStart - a_spherePos).LengthSquared();
+	}
+	else    // closest point lies on the line segment itself
+	{
+		Vector closestPoint = a_lineStart + (lineSeg*proj);
+		distanceToSphereSq = (closestPoint - a_spherePos).LengthSquared(); 
+	}
+	return distanceToSphereSq <= a_sphereRadius;
 }
 
 extern bool CollisionUtils::IntersectPointAxisBox(Vector a_point, Vector a_boxPos, Vector a_boxDimensions)
