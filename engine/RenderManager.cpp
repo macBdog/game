@@ -23,8 +23,9 @@ const float RenderManager::s_renderDepth2D = -10.0f;
 const float RenderManager::s_nearClipPlane = 0.5f;
 const float RenderManager::s_farClipPlane = 1000.0f;
 const float RenderManager::s_fovAngleY = 50.0f;
+const float RenderManager::s_vrIpd = .065f;
 
-bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
+bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, bool a_vr)
 {
     // Set the clear colour
     m_clearColour = a_clearColour;
@@ -120,6 +121,13 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath)
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
 	}
 
+	// Set multipass rendering for vr suport
+	if (a_vr)
+	{
+		m_numRenderPasses = 2;
+		m_vr = true;
+	}
+
     return batchAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
 }
 
@@ -151,9 +159,12 @@ bool RenderManager::Shutdown()
 	}
 
 	// Clean up the framebuffer resources
-	glDeleteFramebuffers(1, &m_frameBuffer);
-    glDeleteTextures(1, &m_renderTexture);
-    glDeleteRenderbuffers(1, &m_depthBuffer);   
+	for (unsigned int i = 0; i < m_numRenderPasses; ++i)
+	{
+		glDeleteFramebuffers(1, &m_frameBuffer[i]);
+		glDeleteTextures(1, &m_renderTexture[i]);
+		glDeleteRenderbuffers(1, &m_depthBuffer[i]);   
+	}
 
 	// And any managed shaders
 	ManagedShaderNode * next = m_managedShaders.GetHead();
@@ -283,39 +294,28 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
     glLoadIdentity();
 
 	// Create the framebuffer for whole scene pixel shaders
-	glGenFramebuffers(1, &m_frameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
-
-	// The texture to render the scene to
-	glGenTextures(1, &m_renderTexture);
-	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
- 
-	// Filtering for whole scene rendering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-	// The depth buffer
-	glGenRenderbuffers(1, &m_depthBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
-
-	// Set m_renderedTexture as colour attachement #0
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderTexture, 0);
- 
-	// Set the list of draw buffers.
-	GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
-
-	// Always check that our framebuffer is ok
-	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+	for (unsigned int i = 0; i < m_numRenderPasses; ++i)
 	{
-		// Render to the screen
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, m_viewWidth, m_viewHeight);
-		return true;
+		glGenFramebuffers(1, &m_frameBuffer[i]);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer[i]);
+
+		// The texture to render the scene to
+		glGenTextures(1, &m_renderTexture[i]);
+		glBindTexture(GL_TEXTURE_2D, m_renderTexture[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+ 
+		// Filtering for whole scene rendering
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+		// The depth buffer
+		glGenRenderbuffers(1, &m_depthBuffer[i]);
+		glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer[i]);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer[i]);
 	}
+
+	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 
 	return false;
 }
@@ -327,307 +327,315 @@ void RenderManager::DrawScene(float a_dt, Matrix & a_viewMatrix)
 	Shader::UniformData shaderData(m_renderTime, a_dt, (float)m_viewWidth, (float)m_viewHeight, &identity);
 	m_renderTime += a_dt;
 
-	// Handle different rendering modes
-	switch (m_renderMode)
+	// Render twice for vr mode
+	for (unsigned int iRenderPass = 0; iRenderPass < m_numRenderPasses; ++iRenderPass)
 	{
-		case eRenderModeNone:
+		// Switch to rendering to the texture framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer[iRenderPass]);
+		glViewport(0, 0, m_viewWidth, m_viewHeight); 
+
+		// Set the texture for the rendering pass as colour attachement 0 and upwards
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + iRenderPass, m_renderTexture[iRenderPass], 0);
+ 
+		// Set the list of draw buffers.
+		GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0 + iRenderPass };
+		glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+		// Handle different rendering modes
+		switch (m_renderMode)
 		{
-			// Clear the queues as the rest of the system will continue to add primitives
-			for (unsigned int i = 0; i < eBatchCount; ++i)
+			case eRenderModeNone:
 			{
-				m_triCount[i] = 0;
-				m_quadCount[i] = 0;
-				m_lineCount[i] = 0;
-				m_modelCount[i] = 0;
-				m_fontCharCount[i] = 0;
+				// Clear the queues as the rest of the system will continue to add primitives
+				for (unsigned int i = 0; i < eBatchCount; ++i)
+				{
+					m_triCount[i] = 0;
+					m_quadCount[i] = 0;
+					m_lineCount[i] = 0;
+					m_modelCount[i] = 0;
+					m_fontCharCount[i] = 0;
+				}
+				return;
 			}
-			return;
-		}
-		case eRenderModeWireframe:
-		{
-			// TODO
-		}
-		default: break;
-	}
-
-	// Switch to rendering to the texture framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
-	glViewport(0, 0, m_viewWidth, m_viewHeight); 
-
-    // Clear the color and depth buffers in preparation for drawing
-	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-	
-	// Draw quads for each batch
-	for (unsigned int i = 0; i < eBatchCount; ++i)
-	{
-		// Switch render mode for each batch
-		switch ((eBatch)i)
-		{
-			case eBatchWorld:
-			case eBatchDebug3D:
+			case eRenderModeWireframe:
 			{
-				// Setup projection matrix stack to transform eye space to clip coordinates
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
-
-				// Setup the inverse of the camera transformation in the modelview matrix
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-                glLoadMatrixf(a_viewMatrix.GetValues());
-
-				// Setup other world only rendering flags
-				glEnable(GL_DEPTH_TEST);
-
-				break;
-			}
-			case eBatchGui:
-			case eBatchDebug2D:
-			{
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-				break;
+				// TODO
 			}
 			default: break;
 		}
 
-		// Ensure debug text renders on top of everything
-		if ((eBatch)i >= eBatchDebug2D)
-		{
-			glClear(GL_DEPTH_BUFFER_BIT);
-		}
-
-		// Use the texture shader on world objects
-		glEnable(GL_TEXTURE_2D);
-		Shader * pLastShader = m_textureShader;
-		m_textureShader->UseShader(shaderData);
-
-		// Submit the tris
-		Tri * t = m_tris[i];
-		for (unsigned int j = 0; j < m_triCount[i]; ++j)
-		{
-			glColor4f(t->m_colour.GetR(), t->m_colour.GetG(), t->m_colour.GetB(), t->m_colour.GetA());
-
-			// Draw a quad with a texture
-			if (t->m_textureId >= 0)
-			{
-				if (pLastShader != m_textureShader)
-				{
-					glEnable(GL_TEXTURE_2D);
-					m_textureShader->UseShader(shaderData);
-					pLastShader = m_textureShader;
-				}
-				glBindTexture(GL_TEXTURE_2D, t->m_textureId);
-			}
-			else // Flat colour triangles
-			{
-				if (pLastShader != m_colourShader)
-				{
-					glDisable(GL_TEXTURE_2D);
-					m_colourShader->UseShader(shaderData);
-					pLastShader = m_colourShader;
-				}
-			}
-			
-			glBegin(GL_TRIANGLES);
-
-			glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
-			glVertex3f(t->m_verts[0].GetX(), t->m_verts[0].GetY(), t->m_verts[0].GetZ());
-
-			glTexCoord2f(t->m_coords[1].GetX(), t->m_coords[1].GetY()); 
-			glVertex3f(t->m_verts[1].GetX(), t->m_verts[1].GetY(), t->m_verts[1].GetZ());
-
-			glTexCoord2f(t->m_coords[2].GetX(), t->m_coords[2].GetY()); 
-			glVertex3f(t->m_verts[2].GetX(), t->m_verts[2].GetY(), t->m_verts[2].GetZ());
-
-			glEnd();
-			
-			t++;
-		}
-
-		// Submit the quad
-		Quad * q = m_quads[i];
-		for (unsigned int j = 0; j < m_quadCount[i]; ++j)
-		{
-			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
-
-			// Draw a quad with a texture
-			if (q->m_textureId >= 0)
-			{
-				if (pLastShader != m_textureShader)
-				{
-					glEnable(GL_TEXTURE_2D);
-					m_textureShader->UseShader(shaderData);
-					pLastShader = m_textureShader;
-				}
-				glBindTexture(GL_TEXTURE_2D, q->m_textureId);
-			}
-			else // Flat colour quads
-			{
-				if (pLastShader != m_colourShader)
-				{
-					glDisable(GL_TEXTURE_2D);
-					m_colourShader->UseShader(shaderData);
-					pLastShader = m_colourShader;
-				}
-			}
+		// Clear the color and depth buffers in preparation for drawing
+		glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
 	
-			glBegin(GL_QUADS);
-
-			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
-			glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
-
-			glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
-			glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
-
-			glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
-			glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
-
-			glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
-			glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
-
-			glEnd();
-			
-			q++;
-		}
-
-		// Draw font chars by calling their display lists
-		if (pLastShader != m_textureShader)
+		// Draw quads for each batch
+		for (unsigned int i = 0; i < eBatchCount; ++i)
 		{
+			// Switch render mode for each batch
+			switch ((eBatch)i)
+			{
+				case eBatchWorld:
+				case eBatchDebug3D:
+				{
+					// Setup projection matrix stack to transform eye space to clip coordinates
+					glMatrixMode(GL_PROJECTION);
+					glLoadIdentity();
+					gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
+
+					// Setup the inverse of the camera transformation in the modelview matrix
+					glMatrixMode(GL_MODELVIEW);
+					glLoadIdentity();
+
+					// Scene is rendered twice from eye different positions for VR
+					if (!m_vr)
+					{
+						glLoadMatrixf(a_viewMatrix.GetValues());
+					}
+					else // Move the eye position half way to the left
+					{
+						if (iRenderPass == 0)
+						{
+							Vector vrDist(-m_vrIpd*0.5f, 0.0f, 0.0f);
+							a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
+						}
+						else if (iRenderPass == 1)
+						{
+							Vector vrDist(m_vrIpd*0.5f, 0.0f, 0.0f);
+							a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
+						}
+						glLoadMatrixf(a_viewMatrix.GetValues());
+					}
+
+					// Setup other world only rendering flags
+					glEnable(GL_DEPTH_TEST);
+
+					break;
+				}
+				case eBatchGui:
+				case eBatchDebug2D:
+				{
+					glMatrixMode(GL_PROJECTION);
+					glLoadIdentity();
+					glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
+					glMatrixMode(GL_MODELVIEW);
+					glLoadIdentity();
+					break;
+				}
+				default: break;
+			}
+
+			// Ensure debug text renders on top of everything
+			if ((eBatch)i >= eBatchDebug2D)
+			{
+				glClear(GL_DEPTH_BUFFER_BIT);
+			}
+
+			// Use the texture shader on world objects
 			glEnable(GL_TEXTURE_2D);
+			Shader * pLastShader = m_textureShader;
 			m_textureShader->UseShader(shaderData);
-			pLastShader = m_textureShader;
-		}
-		FontChar * fc = m_fontChars[i];
-		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
-		{
-			glPushMatrix();
-			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
 
-			if (!fc->m_2d)
+			// Submit the tris
+			Tri * t = m_tris[i];
+			for (unsigned int j = 0; j < m_triCount[i]; ++j)
 			{
-				glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-			}
+				glColor4f(t->m_colour.GetR(), t->m_colour.GetG(), t->m_colour.GetB(), t->m_colour.GetA());
+
+				// Draw a quad with a texture
+				if (t->m_textureId >= 0)
+				{
+					if (pLastShader != m_textureShader)
+					{
+						glEnable(GL_TEXTURE_2D);
+						m_textureShader->UseShader(shaderData);
+						pLastShader = m_textureShader;
+					}
+					glBindTexture(GL_TEXTURE_2D, t->m_textureId);
+				}
+				else // Flat colour triangles
+				{
+					if (pLastShader != m_colourShader)
+					{
+						glDisable(GL_TEXTURE_2D);
+						m_colourShader->UseShader(shaderData);
+						pLastShader = m_colourShader;
+					}
+				}
 			
-			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
-			glScalef(fc->m_size, fc->m_size, 0.0f);
-			glCallList(fc->m_displayListId);
-			glPopMatrix();
-			++fc;
-		}
+				glBegin(GL_TRIANGLES);
 
-		// Draw models by calling their display lists
-		RenderModel * rm = m_models[i];
-		Shader * pLastModelShader = NULL;	
-		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
-		{
-			if (rm->m_shader != pLastShader)
-			{
-				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-				shaderData.m_mat = rm->m_mat;
-				pLastModelShader->UseShader(shaderData);
+				glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
+				glVertex3f(t->m_verts[0].GetX(), t->m_verts[0].GetY(), t->m_verts[0].GetZ());
+
+				glTexCoord2f(t->m_coords[1].GetX(), t->m_coords[1].GetY()); 
+				glVertex3f(t->m_verts[1].GetX(), t->m_verts[1].GetY(), t->m_verts[1].GetZ());
+
+				glTexCoord2f(t->m_coords[2].GetX(), t->m_coords[2].GetY()); 
+				glVertex3f(t->m_verts[2].GetX(), t->m_verts[2].GetY(), t->m_verts[2].GetZ());
+
+				glEnd();
+			
+				t++;
 			}
-			glPushMatrix();
-			glMultMatrixf(rm->m_mat->GetValues());
-			glCallList(rm->m_model->GetDisplayListId());
-			glPopMatrix();
-			++rm;
-		}
-		
-		// Swith to colour shader for lines as they cannot be textured
-		glDisable(GL_TEXTURE_2D);
-		m_colourShader->UseShader();
 
-		// Draw lines in the current batch
-		Line * l = m_lines[i];
-		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
-		{
-			glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
-			glBegin(GL_LINES);
-			glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
-			glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
-			glEnd();
-			++l;
-		}
-		
-		m_triCount[i] = 0;
-		m_quadCount[i] = 0;
-		m_lineCount[i] = 0;
-		m_modelCount[i] = 0;
-		m_fontCharCount[i] = 0;
-	}
+			// Submit the quad
+			Quad * q = m_quads[i];
+			for (unsigned int j = 0; j < m_quadCount[i]; ++j)
+			{
+				glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
 
-	// Switch to rendering to the screen
-	if (!m_vr)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, m_viewWidth, m_viewHeight);
-	}
-	else // Render the left eye viewport first
-	{
-		const GLsizei viewWidth = m_viewWidth / 2;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0,viewWidth, m_viewHeight);
-	}
+				// Draw a quad with a texture
+				if (q->m_textureId >= 0)
+				{
+					if (pLastShader != m_textureShader)
+					{
+						glEnable(GL_TEXTURE_2D);
+						m_textureShader->UseShader(shaderData);
+						pLastShader = m_textureShader;
+					}
+					glBindTexture(GL_TEXTURE_2D, q->m_textureId);
+				}
+				else // Flat colour quads
+				{
+					if (pLastShader != m_colourShader)
+					{
+						glDisable(GL_TEXTURE_2D);
+						m_colourShader->UseShader(shaderData);
+						pLastShader = m_colourShader;
+					}
+				}
 	
-	// Set to ortho
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_TEXTURE_2D);
+				glBegin(GL_QUADS);
 
-	// Use the full scene shader if specified 
-	bool bUseDefaultShader = true;
-	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
-	{
-		if (Shader * pSceneShader = pCurScene->GetShader())
-		{
-			pSceneShader->UseShader(shaderData);
-			bUseDefaultShader = false;
+				glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
+				glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+
+				glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
+				glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
+
+				glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
+				glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
+
+				glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
+				glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+
+				glEnd();
+			
+				q++;
+			}
+
+			// Draw font chars by calling their display lists
+			if (pLastShader != m_textureShader)
+			{
+				glEnable(GL_TEXTURE_2D);
+				m_textureShader->UseShader(shaderData);
+				pLastShader = m_textureShader;
+			}
+			FontChar * fc = m_fontChars[i];
+			for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
+			{
+				glPushMatrix();
+				glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
+
+				if (!fc->m_2d)
+				{
+					glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+				}
+			
+				glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
+				glScalef(fc->m_size, fc->m_size, 0.0f);
+				glCallList(fc->m_displayListId);
+				glPopMatrix();
+				++fc;
+			}
+
+			// Draw models by calling their display lists
+			RenderModel * rm = m_models[i];
+			Shader * pLastModelShader = NULL;	
+			for (unsigned int j = 0; j < m_modelCount[i]; ++j)
+			{
+				if (rm->m_shader != pLastShader)
+				{
+					pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
+					shaderData.m_mat = rm->m_mat;
+					pLastModelShader->UseShader(shaderData);
+				}
+				glPushMatrix();
+				glMultMatrixf(rm->m_mat->GetValues());
+				glCallList(rm->m_model->GetDisplayListId());
+				glPopMatrix();
+				++rm;
+			}
+		
+			// Swith to colour shader for lines as they cannot be textured
+			glDisable(GL_TEXTURE_2D);
+			m_colourShader->UseShader();
+
+			// Draw lines in the current batch
+			Line * l = m_lines[i];
+			for (unsigned int j = 0; j < m_lineCount[i]; ++j)
+			{
+				glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
+				glBegin(GL_LINES);
+				glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
+				glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
+				glEnd();
+				++l;
+			}
+		
+			m_triCount[i] = 0;
+			m_quadCount[i] = 0;
+			m_lineCount[i] = 0;
+			m_modelCount[i] = 0;
+			m_fontCharCount[i] = 0;
 		}
-	}
 
-	// Otherwise use the default
-	if (bUseDefaultShader)
-	{	
-		m_textureShader->UseShader(shaderData);
-	}
-
-	// Draw a full screen quad with the render output on it
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);	glVertex3f(-1.0f, -1.0f, -1.0f);	
-	glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0f, 1.0f, -1.0f);
-	glTexCoord2f(0.0f, 1.0f);	glVertex3f(-1.0f, 1.0f, -1.0f);
-	glEnd();
-
-	// Render the right eye viewport for vr mode
-	if (m_vr)
-	{
-		const GLsizei viewWidth = m_viewWidth / 2;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(viewWidth, 0, m_viewWidth - viewWidth, m_viewHeight);
-
+		// Switch to rendering to the screen
+		if (!m_vr)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glViewport(0, 0, m_viewWidth, m_viewHeight);
+		}
+		else // Render the left eye viewport first
+		{
+			const GLsizei viewWidth = m_viewWidth / m_numRenderPasses;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glViewport(iRenderPass * viewWidth, 0, viewWidth, m_viewHeight);
+		}
+	
 		// Set to ortho
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
+		glEnable(GL_TEXTURE_2D);
+		if (iRenderPass == 0)
+		{
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+		
+		// Use the full scene shader if specified 
+		bool bUseDefaultShader = true;
+		if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
+		{
+			if (Shader * pSceneShader = pCurScene->GetShader())
+			{
+				pSceneShader->UseShader(shaderData);
+				bUseDefaultShader = false;
+			}
+		}
+
+		// Otherwise use the default
+		if (bUseDefaultShader)
+		{	
+			m_textureShader->UseShader(shaderData);
+		}
 
 		// Draw a full screen quad with the render output on it
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, m_renderTexture);
+		glBindTexture(GL_TEXTURE_2D, m_renderTexture[0]);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);	glVertex3f(-1.0f, -1.0f, -1.0f);	
 		glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);

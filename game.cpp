@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
-    RenderManager::Get().Startup(sc_colourBlack, shaderPath);
+    RenderManager::Get().Startup(sc_colourBlack, shaderPath, configFile.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
@@ -155,12 +155,6 @@ int main(int argc, char *argv[])
 	ModelManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
-
-	// Oculus Rift support
-	if (configFile.GetBool("render", "vr"))
-	{
-		RenderManager::Get().SetVrSupport(true);
-	}
 
     // Game main loop
 	unsigned int lastFrameTime = 0;

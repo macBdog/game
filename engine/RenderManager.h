@@ -51,9 +51,8 @@ public:
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
 					, m_vr(false)
-					, m_frameBuffer(0)
-					, m_renderTexture(0)
-					, m_depthBuffer(0)
+					, m_vrIpd(s_vrIpd)
+					, m_numRenderPasses(1)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
 					, m_viewWidth(0)
@@ -61,11 +60,20 @@ public:
 					, m_bpp(0)
 					, m_aspect(1.0f) 
 					, m_updateFreq(a_updateFreq)
-					, m_updateTimer(0.0f) { m_shaderPath[0] = '\0'; }
+					, m_updateTimer(0.0f) 
+	{ 
+		m_shaderPath[0] = '\0'; 
+		for (unsigned int i = 0; i < s_maxRenderPasses; ++i)
+		{
+			m_frameBuffer[i] = 0;
+			m_renderTexture[i] = 0;
+			m_depthBuffer[i] = 0;
+		}
+	}
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Startup(Colour a_clearColour, const char * a_shaderPath);
+    bool Startup(Colour a_clearColour, const char * a_shaderPath, bool a_vr = false);
 	bool Shutdown();
 
 	//\brief Update managed texture
@@ -89,7 +97,6 @@ public:
 	inline float GetViewAspect() { return m_aspect; }
 	inline const char * GetShaderPath() { return m_shaderPath; }
 	inline bool GetVrSupport() { return m_vr; }
-	inline void SetVrSupport(bool a_vr) { m_vr = a_vr; } 
 
 	//\brief Set up a display list for a font character so drawing only involves calling a list
 	//\param a_size is an arbitrary width to height to generate the list at
@@ -226,6 +233,16 @@ private:
 	//\brief Add a shader to the list of managed shaders
 	void AddManagedShader(ManagedShader * a_newManShader);
 
+	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
+	static const float s_updateFreq;								///< How often the render manager should check for shader updates
+	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1024;	///< Flat storage amount for quads
+	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
+	static const unsigned int s_maxRenderPasses = 2;				///< Number of times the scene can be rendered max
+	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
+	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
+	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
+	static const float s_vrIpd;										///< Default inter pupillary distance for vr rendering
+
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 
 	Tri	 * m_tris[eBatchCount];										///< Pointer to a pool of memory for tris
@@ -239,9 +256,9 @@ private:
 	unsigned int m_modelCount[eBatchCount];							///< Number of models to render
 	unsigned int m_fontCharCount[eBatchCount];						///< Number for font characters to render
 
-	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
-	unsigned int m_renderTexture;									///< Identifier for the texture to render to
-	unsigned int m_depthBuffer;										///< Identifier for the buffer for pixel depth
+	unsigned int m_frameBuffer[s_maxRenderPasses];					///< Identifier for the whole scene framebuffer
+	unsigned int m_renderTexture[s_maxRenderPasses];				///< Identifier for the texture to render to
+	unsigned int m_depthBuffer[s_maxRenderPasses];					///< Identifier for the buffer for pixel depth
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
@@ -252,7 +269,11 @@ private:
 	float		 m_aspect;											///< Calculated ratio of width to height
 	Colour m_clearColour;											///< Cache of arguments passed to init
 	eRenderMode m_renderMode;										///< How the scene is to be rendered
+
 	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
+	float m_vrIpd;													///< Inter pupillary distance to render at
+	unsigned int m_numRenderPasses;									///< Number of times the scene should be rendered
+
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
 	typedef LinkedListNode<ManagedShader> ManagedShaderNode;		///< Alias for a linked list node that points to a managed shader
@@ -261,14 +282,6 @@ private:
 	ManagedShaderList m_managedShaders;								///< List of managed shaders that are scanned for hot loading
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
-
-	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
-	static const float s_updateFreq;								///< How often the render manager should check for shader updates
-	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1024;	///< Flat storage amount for quads
-	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
-	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
-	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
-	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction.
 };
 
 #endif // _ENGINE_RENDER_MANAGER
