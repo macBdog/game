@@ -205,9 +205,9 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 	}
 
 	// Process the global callbacks
-	if (m_alphaKeys.m_type == eInputTypeKeyUp)
+	if (m_alphaKeysUp.m_type == eInputTypeKeyUp)
 	{
-		m_alphaKeys.m_delegate.Execute(false);
+		m_alphaKeysUp.m_delegate.Execute(false);
 	}
 
 	bool foundEvent = false;
@@ -258,9 +258,9 @@ bool InputManager::ProcessKeyDown(SDLKey a_key)
 	}
 
 	// Process the global callbacks
-	if (m_alphaKeys.m_type == eInputTypeKeyDown)
+	if (m_alphaKeysDown.m_type == eInputTypeKeyDown)
 	{
-		m_alphaKeys.m_delegate.Execute(true);
+		m_alphaKeysDown.m_delegate.Execute(true);
 	}
 
 	InputEventNode * curEvent = m_events.GetHead();

@@ -48,13 +48,18 @@ public:
 	//\ No work done in the constructor, only Init
 	RenderManager(float a_updateFreq = s_updateFreq) 
 					: m_renderTime(0.0f)
+					, m_lastRenderTime(0.0f)
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(eRenderModeFull)
 					, m_vr(false)
 					, m_vrIpd(s_vrIpd)
+					, m_renderPass(0)
 					, m_numRenderPasses(1)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
+					, m_frameBuffer(0)
+					, m_renderTexture(0)
+					, m_depthBuffer(0)
 					, m_viewWidth(0)
 					, m_viewHeight(0)
 					, m_bpp(0)
@@ -63,12 +68,6 @@ public:
 					, m_updateTimer(0.0f) 
 	{ 
 		m_shaderPath[0] = '\0'; 
-		for (unsigned int i = 0; i < s_maxRenderPasses; ++i)
-		{
-			m_frameBuffer[i] = 0;
-			m_renderTexture[i] = 0;
-			m_depthBuffer[i] = 0;
-		}
 	}
 	~RenderManager() { Shutdown(); }
 
@@ -84,7 +83,7 @@ public:
 
 	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
-	void DrawScene(float a_dt, Matrix & a_viewMatrix);
+	bool DrawScene(Matrix & a_viewMatrix);
 
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set
@@ -244,6 +243,7 @@ private:
 	static const float s_vrIpd;										///< Default inter pupillary distance for vr rendering
 
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
+	float m_lastRenderTime;											///< How long the last frame took
 
 	Tri	 * m_tris[eBatchCount];										///< Pointer to a pool of memory for tris
 	Quad * m_quads[eBatchCount];									///< Pointer to a pool of memory for quads
@@ -256,9 +256,9 @@ private:
 	unsigned int m_modelCount[eBatchCount];							///< Number of models to render
 	unsigned int m_fontCharCount[eBatchCount];						///< Number for font characters to render
 
-	unsigned int m_frameBuffer[s_maxRenderPasses];					///< Identifier for the whole scene framebuffer
-	unsigned int m_renderTexture[s_maxRenderPasses];				///< Identifier for the texture to render to
-	unsigned int m_depthBuffer[s_maxRenderPasses];					///< Identifier for the buffer for pixel depth
+	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
+	unsigned int m_renderTexture;									///< Identifier for the texture to render to
+	unsigned int m_depthBuffer;										///< Identifier for the buffer for pixel depth
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
@@ -273,6 +273,7 @@ private:
 	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
 	float m_vrIpd;													///< Inter pupillary distance to render at
 	unsigned int m_numRenderPasses;									///< Number of times the scene should be rendered
+	unsigned int m_renderPass;										///< Which render pass is currently being affected
 
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 

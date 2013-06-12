@@ -138,10 +138,11 @@ bool DebugMenu::Startup()
 	// Ok and Cancel buttons on the text input dialog
 	m_btnTextInputOk = CreateButton("Ok", sc_colourOrange, m_textInput);
 	m_btnTextInputCancel = CreateButton("Cancel", sc_colourGrey, m_textInput);
-	
+
 	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
-	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKey, InputManager::eInputTypeKeyDown); 
+	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyDown, InputManager::eInputTypeKeyDown); 
+	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyUp, InputManager::eInputTypeKeyUp); 
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
 
@@ -157,7 +158,6 @@ bool DebugMenu::Startup()
 void DebugMenu::Update(float a_dt)
 {
 	// Handle editing actions tied to mouse move
-	bool bSaveReqd = false;
 	InputManager & inMan = InputManager::Get();
 	if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
 	{
@@ -168,7 +168,6 @@ void DebugMenu::Update(float a_dt)
 			{	
 				m_widgetToEdit->SetPos(mousePos);
 				m_dirtyFlags.Set(eDirtyFlagGUI);
-				bSaveReqd = true;
 				break;
 			}
 			case eEditModeShape:	
@@ -176,7 +175,6 @@ void DebugMenu::Update(float a_dt)
 				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
 												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
 				m_dirtyFlags.Set(eDirtyFlagGUI);
-				bSaveReqd = true;
 				break;
 			}
 			default: break;
@@ -194,19 +192,16 @@ void DebugMenu::Update(float a_dt)
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
 				m_dirtyFlags.Set(eDirtyFlagScene);
-				bSaveReqd = true;
 			} 
 			else if (inMan.IsKeyDepressed(SDLK_y))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
-				m_dirtyFlags.Set(eDirtyFlagScene);
-				bSaveReqd = true;
+				m_dirtyFlags.Set(eDirtyFlagScene);				
 			}
 			else if (inMan.IsKeyDepressed(SDLK_z))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
 				m_dirtyFlags.Set(eDirtyFlagScene);
-				bSaveReqd = true;
 			}
 		}
 	}
@@ -216,12 +211,6 @@ void DebugMenu::Update(float a_dt)
 	
 	// Cache off the last mouse pos
 	m_lastMousePosRelative = inMan.GetMousePosRelative();
-
-	// Save to disk file
-	if (bSaveReqd)
-	{
-		SaveChanges();
-	}
 }
 
 bool DebugMenu::SaveChanges()
@@ -716,7 +705,7 @@ bool DebugMenu::OnEnable(bool a_toggle)
 	return m_enabled;
 }
 
-bool DebugMenu::OnAlphaKey(bool a_unused)
+bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 {
 	// Only useful if typing in a text input box
 	if (m_textInput->IsActive())
@@ -765,6 +754,12 @@ bool DebugMenu::OnAlphaKey(bool a_unused)
 	}
 
 	return false;
+}
+
+bool DebugMenu::OnAlphaKeyUp(bool a_unused)
+{
+	// Save to disk file at the end of an action
+	return SaveChanges();	
 }
 
 void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter)

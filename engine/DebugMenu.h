@@ -62,7 +62,8 @@ public:
 
 	//\brief Listener function for typing alpha keys
 	//\param a_unused
-	bool OnAlphaKey(bool a_unused);
+	bool OnAlphaKeyDown(bool a_unused);
+	bool OnAlphaKeyUp(bool a_unused);
 
 	//\brief Debug menu enabled means are we in edit mode, has TAB been toggled
 	bool IsDebugMenuEnabled() const { return m_enabled; }

@@ -129,10 +129,20 @@ public:
 	void RegisterAlphaKeyCallback(TObj * a_callerObject, TMethod a_callback, eInputType a_type = eInputTypeKeyDown, bool a_oneShot = false)
 	{
 		// Set data for the new global event
-		m_alphaKeys.m_src.m_key = SDLK_CLEAR;
-		m_alphaKeys.m_type = a_type;
-		m_alphaKeys.m_oneShot = a_oneShot;
-		m_alphaKeys.m_delegate.SetCallback(a_callerObject, a_callback);
+		if (a_type == eInputTypeKeyDown)
+		{
+			m_alphaKeysDown.m_src.m_key = SDLK_CLEAR;
+			m_alphaKeysDown.m_type = a_type;
+			m_alphaKeysDown.m_oneShot = a_oneShot;
+			m_alphaKeysDown.m_delegate.SetCallback(a_callerObject, a_callback);
+		}
+		else if (a_type == eInputTypeKeyUp)
+		{
+			m_alphaKeysUp.m_src.m_key = SDLK_CLEAR;
+			m_alphaKeysUp.m_type = a_type;
+			m_alphaKeysUp.m_oneShot = a_oneShot;
+			m_alphaKeysUp.m_delegate.SetCallback(a_callerObject, a_callback);
+		}
 	}
 
 private:
@@ -186,7 +196,8 @@ private:
 
 	static const unsigned int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
 
-	InputEvent m_alphaKeys;		///< Special input event to catch all keys being pressed
+	InputEvent m_alphaKeysDown;	///< Special input event to catch all keys being pressed
+	InputEvent m_alphaKeysUp;	///< Special input event to catch all keys being released
 	InputEventList m_events;	///< List of events to match up to actions
 	bool m_focus;				///< If the app currently has OS focus
 	bool m_fullScreen;			///< If the app is fullscreen, input manager needs to handle focus
