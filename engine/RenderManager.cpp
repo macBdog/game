@@ -43,11 +43,13 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
     glClearDepth(1.0f);
 
 	// Used for debug render mode
-	glLineWidth(1.0f);
-	glPointSize(1.0f);
+	glLineWidth(2.0f);
+	glPointSize(2.0f);
+	glEnable(GL_LINE_SMOOTH);
 
     // Depth testing and alpha blending
     glEnable(GL_DEPTH_TEST);
+	glFrontFace(GL_CW);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -126,6 +128,19 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 	{
 		m_numRenderPasses = 2;
 		m_vr = true;
+
+		// VR shader support
+		#include "Shaders\vr.vsh.inc"
+		#include "Shaders\vr.fsh.inc"
+		if (m_vrShader = new Shader("vr"))
+		{
+			m_vrShader->Init(vrVertexShader, vrFragmentShader);
+			hmdWarpParamId = glGetUniformLocation(m_vrShader->GetShader(), "HmdWarpParam"); 
+			lensCenterId = glGetUniformLocation(m_vrShader->GetShader(), "LensCenter");
+			screenCenterId = glGetUniformLocation(m_vrShader->GetShader(), "ScreenCenter");
+			scaleId = glGetUniformLocation(m_vrShader->GetShader(), "Scale");
+			scaleInId = glGetUniformLocation(m_vrShader->GetShader(), "ScaleIn");
+		}
 	}
 
     return batchAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
@@ -157,12 +172,15 @@ bool RenderManager::Shutdown()
 	{
 		delete m_textureShader;
 	}
+	if (m_vrShader != NULL)
+	{
+		delete m_vrShader;
+	}
 
 	// Clean up the framebuffer resources
 	glDeleteFramebuffers(1, &m_frameBuffer);
 	glDeleteTextures(1, &m_renderTexture);
 	glDeleteRenderbuffers(1, &m_depthBuffer);   
-	
 
 	// And any managed shaders
 	ManagedShaderNode * next = m_managedShaders.GetHead();
@@ -304,8 +322,8 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
  
 	// Filtering for whole scene rendering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// The depth buffer
 	glGenRenderbuffers(1, &m_depthBuffer);
@@ -314,8 +332,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
 	
 	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-
-	return false;
 }
 
 bool RenderManager::DrawScene(Matrix & a_viewMatrix)
@@ -392,12 +408,12 @@ bool RenderManager::DrawScene(Matrix & a_viewMatrix)
 				{
 					if (m_renderPass == 0)
 					{
-						Vector vrDist(-m_vrIpd, 0.0f, 0.0f);
+						Vector vrDist(-m_vrIpd*0.5f, 0.0f, 0.0f);
 						a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
 					}
 					else if (m_renderPass == 1)
 					{
-						Vector vrDist(m_vrIpd, 0.0f, 0.0f);
+						Vector vrDist(m_vrIpd*0.5f, 0.0f, 0.0f);
 						a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
 					}
 					glLoadMatrixf(a_viewMatrix.GetValues());
@@ -592,19 +608,24 @@ bool RenderManager::DrawScene(Matrix & a_viewMatrix)
 	}
 
 	// Switch to rendering to the screen
-	if (!m_vr)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, m_viewWidth, m_viewHeight);
-	}
-	else // Render the left eye viewport first
+	float vpX = 0.0f;
+	float vpY = 0.0f;
+	float vpWidth = (float)m_viewWidth;
+	float vpHeight = (float)m_viewHeight;
+	
+	// Render multiple viewports multipass rendering
+	if (m_vr)
 	{
 		const GLsizei viewWidth = m_viewWidth / m_numRenderPasses;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(m_renderPass * viewWidth, 0, viewWidth, m_viewHeight);
+		vpX = (float)m_renderPass * viewWidth;
+		vpY = 0.0f;
+		vpWidth = (float)viewWidth;
+		vpHeight = (float)m_viewHeight;
 	}
 	
-	// Set to ortho
+	// Set viewport and matrix to ortho
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport((GLsizei)vpX, (GLsizei)vpY, (GLint)vpWidth, (GLint)vpHeight);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
@@ -633,13 +654,20 @@ bool RenderManager::DrawScene(Matrix & a_viewMatrix)
 		m_textureShader->UseShader(shaderData);
 	}
 
+	// VR support requires correction for optics
+	if (m_vr && m_vrShader)
+	{
+		m_vrShader->UseShader(shaderData);
+		SetupVrShader(vpX, vpY, vpWidth, vpHeight);
+	}
+
 	// Draw a full screen quad with the render output on it
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBindTexture(GL_TEXTURE_2D, m_renderTexture);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);	glVertex3f(-1.0f, -1.0f, -1.0f);	
-	glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0f, 1.0f, -1.0f);
+	glTexCoord2f(1.0f, 0.0f);	glVertex3f(1.0, -1.0f, -1.0f);
+	glTexCoord2f(1.0f, 1.0f);	glVertex3f(1.0, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 1.0f);	glVertex3f(-1.0f, 1.0f, -1.0f);
 	glEnd();
 	
@@ -1164,7 +1192,6 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	if (vertexSource != NULL && fragmentSource != NULL)
 	{
 		a_shader_OUT.Init(vertexSource, fragmentSource);
-		
 	}
 	
 	// Free the memory for shader sources
@@ -1195,4 +1222,27 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 			m_managedShaders.Insert(pManShaderNode);
 		}
 	}
+}
+
+void RenderManager::SetupVrShader(float a_viewportX, float a_viewportY, float a_viewportWidth, float a_viewportHeight)
+{
+    float w = a_viewportWidth / (float)m_viewWidth,
+          h = a_viewportHeight / (float)m_viewHeight,
+          x = a_viewportX / float(m_viewWidth),
+          y = a_viewportY / float(m_viewHeight);
+
+    float aspect = float(a_viewportWidth) / float(a_viewportHeight);
+
+	const float distortionOffsetX = 0.15197642f;
+	const float distortionCoefficients[4] = {1.0f, 0.22f, 0.239f, 0.0f};
+	const float distortionScale = 1.7146056f;
+
+    // We are using 1/4 of DistortionCenter offset value here, since it is
+    // relative to [-1,1] range that gets mapped to [0, 0.5].
+	glUniform2f(lensCenterId, x + (w + distortionOffsetX * 0.5f)*0.5f, y + h*0.5f);
+    glUniform2f(screenCenterId, x + w*0.5f, y + h*0.5f);
+	float scaleFactor = 1.0f / distortionScale;
+	glUniform2f(scaleId, (w/2) * scaleFactor, (h/2) * scaleFactor * aspect);
+	glUniform2f(scaleInId, (2/w),               (2/h) / aspect);
+	glUniform4f(hmdWarpParamId, distortionCoefficients[0], distortionCoefficients[1], distortionCoefficients[2], distortionCoefficients[3]);
 }

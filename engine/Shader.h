@@ -32,11 +32,11 @@ public:
 				m_id = glGetUniformLocation(a_sourceShader, m_name);
 				m_output = a_output;
 			}
-			return m_id > 0;
+			return m_id >= 0;
 		}
 
 		bool m_output;									///< If the uniform is for input or output
-		unsigned int m_id;								///< Identifier for the uniform
+		int m_id;										///< Identifier for the uniform
 		char m_name[StringUtils::s_maxCharsPerName];	///< Name of the variable referenced in the shader
 		union											///< The value to be passed or received
 		{

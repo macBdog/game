@@ -57,6 +57,7 @@ public:
 					, m_numRenderPasses(1)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
+					, m_vrShader(NULL)
 					, m_frameBuffer(0)
 					, m_renderTexture(0)
 					, m_depthBuffer(0)
@@ -231,6 +232,10 @@ private:
 	
 	//\brief Add a shader to the list of managed shaders
 	void AddManagedShader(ManagedShader * a_newManShader);
+	
+	//\brief Helper function to setup the inputs of the Vr shader
+	//\param The coordinates and dimensions of the viewport to correct for
+	void SetupVrShader(float a_viewportX, float a_viewportY, float a_viewportWidth, float a_viewportHeight);	
 
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
@@ -262,6 +267,7 @@ private:
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
+	Shader * m_vrShader;											///< Shader for vr optics correction
 
 	unsigned int m_viewWidth;										///< Cache of arguments passed to init
 	unsigned int m_viewHeight;										///< Cache of arguments passed to init
@@ -283,6 +289,13 @@ private:
 	ManagedShaderList m_managedShaders;								///< List of managed shaders that are scanned for hot loading
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
+
+	unsigned int lensCenterId;
+	unsigned int screenCenterId;
+	unsigned int scaleId;
+	unsigned int scaleInId;
+	unsigned int hmdWarpParamId;
+	unsigned int testboyId;
 };
 
 #endif // _ENGINE_RENDER_MANAGER
