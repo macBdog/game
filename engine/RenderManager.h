@@ -53,13 +53,11 @@ public:
 					, m_renderMode(eRenderModeFull)
 					, m_vr(false)
 					, m_vrIpd(s_vrIpd)
-					, m_renderPass(0)
-					, m_numRenderPasses(1)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
 					, m_vrShader(NULL)
 					, m_frameBuffer(0)
-					, m_renderTexture(0)
+					, m_colourBuffer(0)
 					, m_depthBuffer(0)
 					, m_viewWidth(0)
 					, m_viewHeight(0)
@@ -84,8 +82,11 @@ public:
 
 	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
-	bool DrawScene(Matrix & a_viewMatrix);
-
+	void DrawToScreen(Matrix & a_viewMatrix);
+	void RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft = true, bool a_flushBuffers = true);
+	void RenderFramebuffer();
+	void RenderFramebufferEye(float a_viewportX, float a_viewportY, float a_viewportWidth, float a_viewportHeight, bool a_eyeLeft = true);
+	
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set
 	inline void SetRenderMode(eRenderMode a_renderMode) { m_renderMode = a_renderMode; }
@@ -232,16 +233,11 @@ private:
 	
 	//\brief Add a shader to the list of managed shaders
 	void AddManagedShader(ManagedShader * a_newManShader);
-	
-	//\brief Helper function to setup the inputs of the Vr shader
-	//\param The coordinates and dimensions of the viewport to correct for
-	void SetupVrShader(float a_viewportX, float a_viewportY, float a_viewportWidth, float a_viewportHeight);	
 
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1024;	///< Flat storage amount for quads
 	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
-	static const unsigned int s_maxRenderPasses = 2;				///< Number of times the scene can be rendered max
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
@@ -262,7 +258,7 @@ private:
 	unsigned int m_fontCharCount[eBatchCount];						///< Number for font characters to render
 
 	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
-	unsigned int m_renderTexture;									///< Identifier for the texture to render to
+	unsigned int m_colourBuffer;									///< Identifier for the texture to render to
 	unsigned int m_depthBuffer;										///< Identifier for the buffer for pixel depth
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
@@ -278,8 +274,6 @@ private:
 
 	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
 	float m_vrIpd;													///< Inter pupillary distance to render at
-	unsigned int m_numRenderPasses;									///< Number of times the scene should be rendered
-	unsigned int m_renderPass;										///< Which render pass is currently being affected
 
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
@@ -290,12 +284,11 @@ private:
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
 
-	unsigned int lensCenterId;
-	unsigned int screenCenterId;
-	unsigned int scaleId;
-	unsigned int scaleInId;
-	unsigned int hmdWarpParamId;
-	unsigned int testboyId;
+	unsigned int m_lensCenterId;
+	unsigned int m_screenCenterId;
+	unsigned int m_scaleId;
+	unsigned int m_scaleInId;
+	unsigned int m_hmdWarpParamId;
 };
 
 #endif // _ENGINE_RENDER_MANAGER

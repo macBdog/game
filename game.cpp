@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 	float fps = 0.0f;
 
     bool active = true;
-	bool render = true;
+
     while (active)
     {
 		// Start counting time
@@ -177,54 +177,45 @@ int main(int argc, char *argv[])
             active = InputManager::Get().Update(event);
         }
 
-		// Don't update unless we are rendering
-		if (render)
+
+		// Update the camera first
+		CameraManager::Get().Update(lastFrameTimeSec);
+
+		// Update the world first, other systems rely on object positions/states etc
+		WorldManager::Get().Update(lastFrameTimeSec);
+		
+		// Draw the Gui
+		Gui::Get().Update(lastFrameTimeSec);
+		
+		// Draw the debug menu
+		DebugMenu::Get().Update(lastFrameTimeSec);
+
+		// Update the texture manager so it can do it's auto refresh of textures
+		TextureManager::Get().Update(lastFrameTimeSec);
+
+		// Draw log entries on top of the gui
+		Log::Get().Update(lastFrameTimeSec);
+
+		// Draw FPS on top of everything
+		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
-			// Update the camera first
-			CameraManager::Get().Update(lastFrameTimeSec);
-
-			// Update the world first, other systems rely on object positions/states etc
-			WorldManager::Get().Update(lastFrameTimeSec);
-		
-			// Draw the Gui
-			Gui::Get().Update(lastFrameTimeSec);
-		
-			// Draw the debug menu
-			DebugMenu::Get().Update(lastFrameTimeSec);
-
-			// Update the texture manager so it can do it's auto refresh of textures
-			TextureManager::Get().Update(lastFrameTimeSec);
-
-			// Draw log entries on top of the gui
-			Log::Get().Update(lastFrameTimeSec);
-
-			// Draw FPS on top of everything
-			if (DebugMenu::Get().IsDebugMenuEnabled())
-			{
-				char buf[32];
-				sprintf(buf, "FPS: %u", lastFps);
-				FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
-			}
-
-			// Drawing the scene will flush the batches
-			RenderManager::Get().Update(lastFrameTimeSec);
+			char buf[32];
+			sprintf(buf, "FPS: %u", lastFps);
+			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
 		}
 
+		// Drawing the scene will flush the batches
+		RenderManager::Get().Update(lastFrameTimeSec);
+		
 		// Only swap the buffers at the end of all the rendering passes
-		if (RenderManager::Get().DrawScene(CameraManager::Get().GetCameraMatrix()))
-		{
-			SDL_GL_SwapBuffers();
+		RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix());
+		
+		SDL_GL_SwapBuffers();
 
-			// Finished a frame, count time and calc FPS
-			lastFrameTime = Time::GetSystemTime() - startFrame;
-			lastFrameTimeSec = lastFrameTime / 1000.0f;
-			if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
-			render = true;
-		}
-		else
-		{
-			render = false;
-		}
+		// Finished a frame, count time and calc FPS
+		lastFrameTime = Time::GetSystemTime() - startFrame;
+		lastFrameTimeSec = lastFrameTime / 1000.0f;
+		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
 
 	// Singletons are shutdown by their destructors
