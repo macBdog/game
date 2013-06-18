@@ -129,7 +129,7 @@ public:
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
-		glUniformMatrix4fv(m_objectMatrix.m_id, 4, GL_FALSE, a_data.m_mat->GetValues());
+		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_FALSE, a_data.m_mat->GetValues());
 	}
 
     ~Shader() {

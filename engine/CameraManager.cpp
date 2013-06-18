@@ -5,7 +5,7 @@
 #include "CameraManager.h"
 #include "InputManager.h"
 
-const float CameraManager::sc_debugCameraSpeed = 1.0f;
+const float CameraManager::sc_debugCameraSpeed = 2.5f;
 const float CameraManager::sc_debugCameraRot = 360.0f;
 const float CameraManager::sc_debugCameraRotSpeed = 0.01f;
 
@@ -53,14 +53,27 @@ void CameraManager::Update(float a_dt)
 
 void CameraManager::CalculateCameraMatrix()
 {
-        // Create the matrix
-		m_mat = Matrix::Identity();
-		m_mat.SetPos(m_pos);
+    // Create the matrix
+	m_mat = Matrix::Identity();
+	m_mat.SetPos(m_pos);
 
-        // Rotate the matrix about two axis defined by the mouse coords
-        float angleX = (PI * 0.5f) + m_orientation.GetY() * 0.01f;
-        float angleY = m_orientation.GetX() * 0.01f;
+    // Rotate the matrix about two axis defined by the mouse coords
+    float angleX = (PI * 0.5f) + m_orientation.GetY() * 0.01f;
+    float angleY = m_orientation.GetX() * 0.01f;
 
-        m_mat = m_mat.Multiply(Matrix::GetRotateZ(-angleY));
-        m_mat = m_mat.Multiply(Matrix::GetRotateX(-angleX));
+    m_mat = m_mat.Multiply(Matrix::GetRotateZ(-angleY));
+    m_mat = m_mat.Multiply(Matrix::GetRotateX(-angleX));
+}
+
+void CameraManager::GetInverseMat(Matrix & a_mat_OUT)
+{
+	a_mat_OUT = Matrix::Identity();
+	a_mat_OUT.SetPos(Vector(-m_pos.GetX(), m_pos.GetY(), m_pos.GetZ()));
+
+    // Rotate the matrix about two axis defined by the mouse coords
+    float angleX = (PI * 0.5f) + m_orientation.GetY() * 0.01f;
+    float angleY = m_orientation.GetX() * 0.01f;
+
+    a_mat_OUT = a_mat_OUT.Multiply(Matrix::GetRotateZ(angleY));
+    a_mat_OUT = a_mat_OUT.Multiply(Matrix::GetRotateX(-angleX));
 }

@@ -33,6 +33,8 @@ public:
 		inline Matrix GetViewMatrix() { return m_viewMat; }
 		inline Vector GetWorldPos() { return Vector(-m_pos.GetX(), -m_pos.GetY(), -m_pos.GetZ()); }
 
+		void GetInverseMat(Matrix & a_mat_OUT);
+
 private:
 
 		//\brief Update the camera matrix from the inputs

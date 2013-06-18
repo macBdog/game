@@ -8,6 +8,7 @@
 
 #include "../core/MathUtils.h"
 
+#include "CameraManager.h"
 #include "DebugMenu.h"
 #include "Log.h"
 #include "Texture.h"
@@ -132,6 +133,8 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 		if (m_vrShader = new Shader("vr"))
 		{
 			m_vrShader->Init(vrVertexShader, vrFragmentShader);
+			m_viewMatId = glGetUniformLocation(m_vrShader->GetShader(), "View");
+			m_texMatId = glGetUniformLocation(m_vrShader->GetShader(), "Texm");
 			m_hmdWarpParamId = glGetUniformLocation(m_vrShader->GetShader(), "HmdWarpParam"); 
 			m_lensCenterId = glGetUniformLocation(m_vrShader->GetShader(), "LensCenter");
 			m_screenCenterId = glGetUniformLocation(m_vrShader->GetShader(), "ScreenCenter");
@@ -343,12 +346,12 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	if (m_vr)
 	{
 		// Move left for left eye and leave the buffers full for the next render pass
-		Vector vrDist(-m_vrIpd, 0.0f, 0.0f);
+		Vector vrDist(-m_vrIpd*0.5f, 0.0f, 0.0f);
 		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
 		RenderScene(a_viewMatrix, true, false);
 
 		// Move right for the right eye
-		vrDist = Vector(m_vrIpd*2.0f, 0.0f, 0.0f);
+		vrDist = Vector(m_vrIpd, 0.0f, 0.0f);
 		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
 		RenderScene(a_viewMatrix, false, true);
 	}
@@ -458,11 +461,37 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glLoadIdentity();
 				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
 
+				// Add projection center correction
+				if (m_vr && false)
+				{
+					Matrix projectionOffset = Matrix::Identity();
+					projectionOffset.Translate(Vector(a_eyeLeft ? m_vrSeparation : m_vrSeparation, 0.0f, 0.0f));
+					glMultMatrixf(projectionOffset.GetValues());
+					glMatrixMode(GL_MODELVIEW);
+				}
+
 				// Setup the inverse of the camera transformation in the modelview matrix
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
 				glLoadMatrixf(a_viewMatrix.GetValues());
-				
+
+				// Correct for left/right eye reversal
+				if (m_vr)
+				{
+					if (!a_eyeLeft)
+					{
+						// Reverse camera
+						Matrix camMat = Matrix::Identity();
+						CameraManager::Get().GetInverseMat(camMat);
+						glLoadMatrixf(camMat.GetValues());
+
+						// Reverse geo
+						Matrix xRev = Matrix::Identity();
+						xRev.SetRight(Vector(-1.0f, 0.0f, 0.0f));
+						glMultMatrixf(xRev.GetValues());
+					}
+				}
+
 				// Setup other world only rendering flags
 				glEnable(GL_DEPTH_TEST);
 
@@ -476,6 +505,18 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
+
+				// Correct for left/right eye reversal
+				if (m_vr)
+				{
+					if (!a_eyeLeft)
+					{
+						Matrix xRev = Matrix::Identity();
+						xRev.SetRight(Vector(-1.0f, 0.0f, 0.0f));
+						glMultMatrixf(xRev.GetValues());
+					}
+				}
+
 				break;
 			}
 			default: break;
@@ -702,7 +743,14 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
     const float distortionScale = 1.7146056f;
 	float scaleFactor = 1.0f / distortionScale;
         
-	// Set warp shader parameters
+	// Set vert shader params
+    Matrix texMat(w, 0, 0, x,
+                  0, h, 0, y,
+                  0, 0, 0, 0,
+                  0, 0, 0, 1);
+    glUniformMatrix4fv(m_texMatId, 1, GL_FALSE, texMat.GetValues());
+	
+	// Set warp pixel shader parameters
     glUniform2f(m_lensCenterId, x + (w + distortionXCenterOffset * 0.5f)*0.5f, y + h*0.5f);
     glUniform2f(m_screenCenterId, x + w*0.5f, y + h*0.5f);
     glUniform2f(m_scaleId, (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * aspect);
@@ -713,19 +761,19 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
     if (a_eyeLeft) 
 	{
         glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, -1.0f);
-            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f+m_vrSeparation, -1.0f, -1.0f);
+            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f+m_vrSeparation, -1.0f, -1.0f);
+            glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f+m_vrSeparation, 1.0f, -1.0f);
+            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f+m_vrSeparation, 1.0f, -1.0f);
         glEnd();
     }
     else 
 	{	
 		glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(1.0f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-			glTexCoord2f(0.5f, 0.0f);   glVertex3f(1.0f, -1.0f, -1.0f);
-			glTexCoord2f(1.0f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
-			glTexCoord2f(0.5f, 1.0f);   glVertex3f(1.0f, 1.0f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f);   glVertex3f(0.0f-m_vrSeparation, -1.0f, -1.0f);
+            glTexCoord2f(0.5f, 0.0f);   glVertex3f(1.0f-m_vrSeparation, -1.0f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f);   glVertex3f(0.0f-m_vrSeparation, 1.0f, -1.0f);
+            glTexCoord2f(0.5f, 1.0f);   glVertex3f(1.0f-m_vrSeparation, 1.0f, -1.0f);
         glEnd();
     }
 }

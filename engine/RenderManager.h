@@ -65,6 +65,7 @@ public:
 					, m_aspect(1.0f) 
 					, m_updateFreq(a_updateFreq)
 					, m_updateTimer(0.0f) 
+					, m_vrSeparation(0.0544f)
 	{ 
 		m_shaderPath[0] = '\0'; 
 	}
@@ -284,11 +285,16 @@ private:
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
 
+	unsigned int m_viewMatId;
+	unsigned int m_texMatId;
 	unsigned int m_lensCenterId;
 	unsigned int m_screenCenterId;
 	unsigned int m_scaleId;
 	unsigned int m_scaleInId;
 	unsigned int m_hmdWarpParamId;
+
+	public:
+	float m_vrSeparation;
 };
 
 #endif // _ENGINE_RENDER_MANAGER
