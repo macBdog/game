@@ -50,7 +50,6 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 
     // Depth testing and alpha blending
     glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CW);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -443,9 +442,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	}
 
 	// Clear the color and depth buffers in preparation for drawing
-	glDisable(GL_DEPTH_TEST);
 	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Draw primitives for each batch
 	for (unsigned int i = 0; i < eBatchCount; ++i)
@@ -460,15 +458,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
-
-				// Add projection center correction
-				if (m_vr && false)
-				{
-					Matrix projectionOffset = Matrix::Identity();
-					projectionOffset.Translate(Vector(a_eyeLeft ? m_vrSeparation : m_vrSeparation, 0.0f, 0.0f));
-					glMultMatrixf(projectionOffset.GetValues());
-					glMatrixMode(GL_MODELVIEW);
-				}
 
 				// Setup the inverse of the camera transformation in the modelview matrix
 				glMatrixMode(GL_MODELVIEW);
@@ -491,10 +480,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 						glMultMatrixf(xRev.GetValues());
 					}
 				}
-
-				// Setup other world only rendering flags
-				glEnable(GL_DEPTH_TEST);
-
 				break;
 			}
 			case eBatchGui:
@@ -523,7 +508,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		}
 
 		// Ensure debug text renders on top of everything
-		if ((eBatch)i >= eBatchDebug2D)
+		if ((eBatch)i >= eBatchGui)
 		{
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
@@ -606,16 +591,16 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			glBegin(GL_QUADS);
 
 			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
-			glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
+			glVertex2f(q->m_verts[0].GetX(), q->m_verts[0].GetY()/*, q->m_verts[0].GetZ()*/);
 
 			glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
-			glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
+			glVertex2f(q->m_verts[1].GetX(), q->m_verts[1].GetY()/*, q->m_verts[1].GetZ()*/);
 
 			glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
-			glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
+			glVertex2f(q->m_verts[2].GetX(), q->m_verts[2].GetY()/*, q->m_verts[2].GetZ()*/);
 
 			glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
-			glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
+			glVertex2f(q->m_verts[3].GetX(), q->m_verts[3].GetY()/*, q->m_verts[3].GetZ()*/);
 
 			glEnd();
 			
@@ -722,6 +707,7 @@ void RenderManager::RenderFramebuffer()
 	}
 
 	// Draw whole screen triangle pair
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBegin(GL_TRIANGLE_STRIP);
 		glTexCoord2f(0.0f, 0.0f);   glVertex2f(-1.0f, -1.0f);
 		glTexCoord2f(1.0f, 0.0f);   glVertex2f(1.0f, -1.0f);
@@ -738,6 +724,7 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
         y = a_vpY / float(m_viewHeight);
 
 	const float distortionXCenterOffset = 0.15197642f;
+	const float projectionXCenterOffset = 0.0544f * (1.0f + distortionXCenterOffset);
 	const float distortionCoefficients[4] = {1.0f, 0.22f, 0.239f, 0.0f};
     const float aspect = float(m_viewWidth * 0.5f) / float(m_viewHeight);
     const float distortionScale = 1.7146056f;
@@ -761,19 +748,19 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
     if (a_eyeLeft) 
 	{
         glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f+m_vrSeparation, -1.0f, -1.0f);
-            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f+m_vrSeparation, -1.0f, -1.0f);
-            glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f+m_vrSeparation, 1.0f, -1.0f);
-            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f+m_vrSeparation, 1.0f, -1.0f);
+            glTexCoord2f(0.0f-projectionXCenterOffset, 0.0f);   glVertex3f(-1.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.5f-projectionXCenterOffset, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.0f-projectionXCenterOffset, 1.0f);   glVertex3f(-1.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.5f-projectionXCenterOffset, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
         glEnd();
     }
     else 
 	{	
 		glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(1.0f, 0.0f);   glVertex3f(0.0f-m_vrSeparation, -1.0f, -1.0f);
-            glTexCoord2f(0.5f, 0.0f);   glVertex3f(1.0f-m_vrSeparation, -1.0f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f);   glVertex3f(0.0f-m_vrSeparation, 1.0f, -1.0f);
-            glTexCoord2f(0.5f, 1.0f);   glVertex3f(1.0f-m_vrSeparation, 1.0f, -1.0f);
+            glTexCoord2f(1.0f-projectionXCenterOffset, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.5f-projectionXCenterOffset, 0.0f);   glVertex3f(1.0f, -1.0f, -1.0f);
+            glTexCoord2f(1.0f-projectionXCenterOffset, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.5f-projectionXCenterOffset, 1.0f);   glVertex3f(1.0f, 1.0f, -1.0f);
         glEnd();
     }
 }

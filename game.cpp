@@ -202,15 +202,6 @@ int main(int argc, char *argv[])
 			sprintf(buf, "FPS: %u", lastFps);
 			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
 		}
-		
-		if (InputManager::Get().IsKeyDepressed(SDLK_LCTRL))
-			{
-				RenderManager::Get().m_vrSeparation -= 0.01f;
-			}
-			if (InputManager::Get().IsKeyDepressed(SDLK_LALT))
-			{
-				RenderManager::Get().m_vrSeparation += 0.01f;
-			}
 
 		// Drawing the scene will flush the batches
 		RenderManager::Get().Update(lastFrameTimeSec);

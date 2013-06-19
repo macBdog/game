@@ -1,7 +1,8 @@
 const char * textureVertexShader = 
+"varying vec2 outputTexCoord;\n"
 "void main(void)\n"
 "{\n"
 "	gl_FrontColor = gl_Color;\n"
-"	gl_TexCoord[0] = gl_MultiTexCoord0;\n"
+"	outputTexCoord = gl_MultiTexCoord0.xy;\n"
 "	gl_Position = gl_Vertex;\n"
 "}\n";
