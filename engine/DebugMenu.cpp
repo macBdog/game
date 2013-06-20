@@ -1,4 +1,5 @@
 #include "../core/Colour.h"
+#include "../core/MathUtils.h"
 
 #include "CameraManager.h"
 #include "FontManager.h"
@@ -879,8 +880,10 @@ void DebugMenu::Draw()
 			renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
 		}
 
-		// Draw an identity matrix at the origin
-		renMan.AddDebugMatrix(Matrix::Identity());
+		// Draw an identity matrix nearby the origin (not directly on to avoid Z fighting)
+		Matrix fakeIdentity = Matrix::Identity();
+		fakeIdentity.Translate(Vector(0.0f, 0.0f, EPSILON));
+		renMan.AddDebugMatrix(fakeIdentity);
 
 		// Draw selection box around objects
 		if (m_gameObjectToEdit != NULL)
