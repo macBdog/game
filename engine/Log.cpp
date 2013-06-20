@@ -83,7 +83,9 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 			for (unsigned int i = 0; i < stringLen / StringUtils::s_maxCharsPerLine + 1; ++i)
 			{
 				char * pStart = &finalString[i * StringUtils::s_maxCharsPerLine];
-				char * pEnd = &finalString[((i+1) * StringUtils::s_maxCharsPerLine)-1];
+				unsigned int endOfLine = (i+1) * StringUtils::s_maxCharsPerLine;
+				endOfLine = endOfLine > stringLen ? stringLen : endOfLine;
+				char * pEnd = &finalString[(endOfLine)-1];
 				*pEnd = '\0';
 				LogDisplayNode * newLogEntry = new LogDisplayNode();
 				newLogEntry->SetData(new LogDisplayEntry(pStart, a_level));

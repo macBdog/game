@@ -101,12 +101,12 @@ public:
 			glLinkProgram(m_shader);
 
 			// Set up the standard uniforms
-			m_texture.Init(m_shader, "tex");
-			m_time.Init(m_shader, "time");
-			m_frameTime.Init(m_shader, "frameTime");
-			m_viewWidth.Init(m_shader, "viewWidth");
-			m_viewHeight.Init(m_shader, "viewHeight");
-			m_objectMatrix.Init(m_shader, "objMat");
+			m_texture.Init(m_shader, "Texture0");
+			m_time.Init(m_shader, "Time");
+			m_frameTime.Init(m_shader, "FrameTime");
+			m_viewWidth.Init(m_shader, "ViewWidth");
+			m_viewHeight.Init(m_shader, "ViewHeight");
+			m_objectMatrix.Init(m_shader, "ObjMat");
 			return true;
 		}
 

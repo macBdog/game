@@ -1,4 +1,4 @@
 const char * globalVertexShader = 
-"attribute vec2 outputTexCoord;\n"
-"uniform float time;\n" 
-"uniform mat4 objMat;\n";
+"uniform float Time; \n" 
+"uniform mat4 ObjMat; \n"
+"varying vec2 OutTexCoord; \n";

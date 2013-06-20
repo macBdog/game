@@ -1,11 +1,7 @@
 const char * textureFragmentShader = 
-"uniform sampler2D tex; \n"
-"uniform float time; \n"
-"uniform float frameTime; \n"
-"uniform float viewWidth; \n"
-"uniform float viewHeight; \n"
-"varying vec2 outputTexCoord;\n"
+"uniform sampler2D Texture0; \n"
+"varying vec2 OutTexCoord; \n"
 "void main(void) \n"
 "{ \n"
-"	gl_FragColor = texture2D(tex, outputTexCoord) * gl_Color; \n"
+"	gl_FragColor = texture2D(Texture0, OutTexCoord) * gl_Color; \n"
 "}\n";

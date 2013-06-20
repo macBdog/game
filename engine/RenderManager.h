@@ -284,8 +284,6 @@ private:
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
 
-	unsigned int m_viewMatId;
-	unsigned int m_texMatId;
 	unsigned int m_lensCenterId;
 	unsigned int m_screenCenterId;
 	unsigned int m_scaleId;
