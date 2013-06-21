@@ -56,8 +56,8 @@ public:
 		, m_shader(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
-		, m_clipType(eClipTypeNone)
-		, m_clipVolumeSize(0.0f)
+		, m_clipType(eClipTypeAxisBox)
+		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_worldMat(Matrix::Identity())
 		{ 
