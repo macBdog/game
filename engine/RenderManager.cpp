@@ -468,23 +468,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
 				glLoadMatrixf(a_viewMatrix.GetValues());
-
-				// Correct for left/right eye reversal
-				if (m_vr)
-				{
-					if (!a_eyeLeft)
-					{
-						// Reverse camera
-						Matrix camMat = Matrix::Identity();
-						CameraManager::Get().GetInverseMat(camMat);
-						glLoadMatrixf(camMat.GetValues());
-
-						// Reverse geo
-						Matrix xRev = Matrix::Identity();
-						xRev.SetRight(Vector(-1.0f, 0.0f, 0.0f));
-						glMultMatrixf(xRev.GetValues());
-					}
-				}
 				break;
 			}
 			case eBatchGui:
@@ -494,18 +477,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
-
-				// Correct for left/right eye reversal
-				if (m_vr)
-				{
-					if (!a_eyeLeft)
-					{
-						Matrix xRev = Matrix::Identity();
-						xRev.SetRight(Vector(-1.0f, 0.0f, 0.0f));
-						glMultMatrixf(xRev.GetValues());
-					}
-				}
-
 				break;
 			}
 			default: break;
@@ -728,8 +699,7 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
         x = a_vpX / float(m_viewWidth),
         y = a_vpY / float(m_viewHeight);
 
-	const float distortionXCenterOffset = 0.15197642f;
-	const float projectionXCenterOffset = 0.0544f * (1.0f + distortionXCenterOffset);
+	const float distortionXCenterOffset = a_eyeLeft ? 0.15197642f : -0.15197642f;
 	const float distortionCoefficients[4] = {1.0f, 0.22f, 0.239f, 0.0f};
     const float aspect = float(m_viewWidth * 0.5f) / float(m_viewHeight);
     const float distortionScale = 1.7146056f;
@@ -741,24 +711,24 @@ void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWid
     glUniform2f(m_scaleId, (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * aspect);
     glUniform2f(m_scaleInId, (2.0f/w), (2.0f/h) / aspect);
     glUniform4f(m_hmdWarpParamId, distortionCoefficients[0], distortionCoefficients[1], distortionCoefficients[2], distortionCoefficients[3]);
-        
+
 	// Draw whole screen triangle pair for each eye
     if (a_eyeLeft) 
 	{
         glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(0.0f-projectionXCenterOffset, 0.0f);   glVertex3f(-1.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.5f-projectionXCenterOffset, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.0f-projectionXCenterOffset, 1.0f);   glVertex3f(-1.0f, 1.0f, -1.0f);
-            glTexCoord2f(0.5f-projectionXCenterOffset, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
         glEnd();
     }
     else 
 	{	
 		glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(1.0f-projectionXCenterOffset, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.5f-projectionXCenterOffset, 0.0f);   glVertex3f(1.0f, -1.0f, -1.0f);
-            glTexCoord2f(1.0f-projectionXCenterOffset, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
-            glTexCoord2f(0.5f-projectionXCenterOffset, 1.0f);   glVertex3f(1.0f, 1.0f, -1.0f);
+            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, -1.0f);
+            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, -1.0f);
         glEnd();
     }
 }
