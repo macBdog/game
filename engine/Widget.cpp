@@ -433,6 +433,10 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuOutput << "menu"	<< StringUtils::s_charLineEnd;
 			menuOutput << "{"		<< StringUtils::s_charLineEnd;
 			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
+			if (m_script[0] != '\0')
+			{
+				menuOutput << StringUtils::s_charTab		<< "script: "	<< m_script << StringUtils::s_charLineEnd;
+			}
 			
 			// Write the siblings out
 			if (m_next != NULL)

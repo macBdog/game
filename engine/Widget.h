@@ -121,6 +121,7 @@ public:
 		, m_selectedListItemId(eSelectionNone)
 	{
 		m_name[0] = '\0';
+		m_script[0] = '\0';
 		m_text[0] = '\0';
 		m_filePath[0] = '\0';
 	}
@@ -191,6 +192,7 @@ public:
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetScript(const char * a_script) { sprintf(m_script, "%s", a_script); }
 	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
@@ -200,6 +202,7 @@ public:
 	inline WidgetVector GetPos() { return m_pos; }
 	inline WidgetVector GetSize() { return m_size; }
 	inline const char * GetName() { return m_name; }
+	inline const char * GetScript() { return m_script; }
 	inline const char * GetText() { return m_text; }
 	inline const char * GetFilePath() { return m_filePath; }
 
@@ -254,6 +257,7 @@ private:
 	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
 	bool m_debugRender;					// If the widget should be rendered using the debug batch
 	char m_name[StringUtils::s_maxCharsPerName];			// Display name or label
+	char m_script[StringUtils::s_maxCharsPerName];			// Script filename
 	char m_text[StringUtils::s_maxCharsPerLine];			// Text for drawing labels and buttons
 	char m_filePath[StringUtils::s_maxCharsPerLine];		// Path for loading and saving, only menus should have this property
 

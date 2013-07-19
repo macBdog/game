@@ -81,6 +81,25 @@ GameObject * Scene::GetSceneObject(unsigned int a_objectId)
 	return NULL;
 }
 
+GameObject * Scene::GetSceneObject(const char * a_objName)
+{
+	// Iterate through all objects in the scene
+	SceneObject * curObject = m_objects.GetHead();
+	while (curObject != NULL)
+	{
+		// To find a target with a specific id
+		GameObject * gameObject = curObject->GetData();
+		if (strstr(gameObject->GetName(),a_objName) != 0)
+		{
+			return gameObject;
+		}
+	
+		curObject = curObject->GetNext();
+	}
+
+	return NULL;
+}
+
 GameObject * Scene::GetSceneObject(Vector a_worldPos)
 {
 	// Iterate through all objects in the scene
@@ -396,6 +415,30 @@ GameObject * WorldManager::GetGameObject(unsigned int a_objectId)
 		while(next != NULL)
 		{
 			if (GameObject * foundObject = next->GetData()->GetSceneObject(a_objectId))
+			{
+				return foundObject;
+			}
+			next = next->GetNext();
+		}
+	}
+
+	// Failure case
+	return NULL;
+}
+
+GameObject * WorldManager::GetGameObject(const char * a_objName)
+{
+	// First try to find the object in the current scene
+	if (GameObject * foundObject = m_currentScene->GetSceneObject(a_objName))
+	{
+		return foundObject;
+	}
+	else // Look through each scene for the target object
+	{
+		SceneNode * next = m_scenes.GetHead();
+		while(next != NULL)
+		{
+			if (GameObject * foundObject = next->GetData()->GetSceneObject(a_objName))
 			{
 				return foundObject;
 			}

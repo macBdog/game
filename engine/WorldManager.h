@@ -43,7 +43,16 @@ public:
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
 	bool RemoveObject(unsigned int a_objectId);
+
+	//\brief Get an object by it's ID
+	//\param a_objectId is the ID of the object to get
+	//\return a pointer a game object if one exists with that name, otherwise NULL
 	GameObject * GetSceneObject(unsigned int a_objectId);
+
+	//\brief Get an object by name
+	//\param a_objName is the string name of object to get
+	//\return a pointer a game object if one exists with that name, otherwise NULL
+	GameObject * GetSceneObject(const char * a_objName);
 	
 	//\brief Get the first object in the scene that intersects with a point in worldspace
 	//\param a vector of the point to check agains
@@ -289,6 +298,7 @@ public:
 	//\param a_objectId the unique game id for this object
 	//\return Pointer to a game object in the world
 	GameObject * GetGameObject(unsigned int a_objectId);
+	GameObject * GetGameObject(const char * a_objName);
 
 	//\brief Get the scene that the world is currently showing
 	//\return A pointer to a scene

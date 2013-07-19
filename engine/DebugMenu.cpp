@@ -860,48 +860,48 @@ void DebugMenu::Draw()
 		// Draw 2D gridlines
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+	}
 
-		// Draw 3D gridlines
-		const unsigned int gridSize = 10;
-		const float gridMeasurement = 1.0f;
-		Vector gridStart(-((float)gridSize * 0.5f) * gridMeasurement, -((float)gridSize * 0.5f) * gridMeasurement, 0.0f);	
+	// Draw 3D gridlines
+	const unsigned int gridSize = 10;
+	const float gridMeasurement = 1.0f;
+	Vector gridStart(-((float)gridSize * 0.5f) * gridMeasurement, -((float)gridSize * 0.5f) * gridMeasurement, 0.0f);	
 	
-		// Gridlines on the X axis
-		for (unsigned int x = 0; x < gridSize+1; ++x)
-		{
-			Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
-			renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
-		}
+	// Gridlines on the X axis
+	for (unsigned int x = 0; x < gridSize+1; ++x)
+	{
+		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
+		renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
+	}
 
-		// Gridlines on the Y axis
-		for (unsigned int y = 0; y < gridSize+1; ++y)
-		{
-			Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
-			renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
-		}
+	// Gridlines on the Y axis
+	for (unsigned int y = 0; y < gridSize+1; ++y)
+	{
+		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
+		renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
+	}
 
-		// Draw an identity matrix nearby the origin (not directly on to avoid Z fighting)
-		Matrix fakeIdentity = Matrix::Identity();
-		fakeIdentity.Translate(Vector(0.0f, 0.0f, EPSILON));
-		renMan.AddDebugMatrix(fakeIdentity);
+	// Draw an identity matrix nearby the origin (not directly on to avoid Z fighting)
+	Matrix fakeIdentity = Matrix::Identity();
+	fakeIdentity.Translate(Vector(0.0f, 0.0f, EPSILON));
+	renMan.AddDebugMatrix(fakeIdentity);
 
-		// Draw selection box around objects
-		if (m_gameObjectToEdit != NULL)
+	// Draw selection box around objects
+	if (m_gameObjectToEdit != NULL)
+	{
+		switch (m_gameObjectToEdit->GetClipType())
 		{
-			switch (m_gameObjectToEdit->GetClipType())
+			case GameObject::eClipTypeAxisBox:
 			{
-				case GameObject::eClipTypeAxisBox:
-				{
-					renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
-					break;
-				}
-				case GameObject::eClipTypeSphere:
-				{
-					renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX(), sc_colourRed); 
-					break;
-				}
-				default: break;
+				renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
+				break;
 			}
+			case GameObject::eClipTypeSphere:
+			{
+				renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX(), sc_colourRed); 
+				break;
+			}
+			default: break;
 		}
 	}
 	

@@ -2,9 +2,9 @@
 #include "InputManager.h"
 #include "FileManager.h"
 #include "GameFile.h"
-#include "LuaScript.h"
 #include "RenderManager.h"
 #include "TextureManager.h"
+#include "ScriptManager.h"
 #include "StringUtils.h"
 
 #include "Gui.h"
@@ -325,32 +325,11 @@ bool Gui::LoadMenu(const char * a_menuFile)
 				// Load the script
 				if (GameFile::Property * scriptProp = menuFile->FindProperty(menuObject, "script"))
 				{
-					// Open Lua and load the standard libraries
-					lua_State *lua = luaL_newstate();	
-					luaL_requiref(lua, "io", luaopen_io, 1);
-					luaL_requiref(lua, "base", luaopen_base, 1);
-					luaL_requiref(lua, "table", luaopen_table, 1);
-					luaL_requiref(lua, "string", luaopen_string, 1);
-					luaL_requiref(lua, "math", luaopen_math, 1);
-
 					// Construct path to script using menu path
 					char scriptPath[StringUtils::s_maxCharsPerLine];
+					parentMenu->SetScript(menuFile->GetString("menu", "script"));
 					sprintf(scriptPath, "%sscripts\\%s", m_guiPath, menuFile->GetString("menu", "script"));
-					if (luaL_loadfile(lua, scriptPath) == 0)
-					{
-					   // Call code located in script file...
-					   if (lua_pcall(lua, 0, LUA_MULTRET, 0) != 0)
-					   {
-						   // Report ant remove error message from stack
-						   Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, lua_tostring(lua, -1));
-						   lua_pop(lua, 1);
-					   }
-					}
-					else
-					{
-						Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, "Cannot find script file %s referred to by gui file %s.", scriptPath, a_menuFile);
-					}
-					lua_close (lua);
+					ScriptManager::Get().Load(scriptPath);
 				}
 
 				// Load child elements of the menu

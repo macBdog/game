@@ -16,6 +16,7 @@
 #include "engine/Log.h"
 #include "engine/ModelManager.h"
 #include "engine/RenderManager.h"
+#include "engine/ScriptManager.h"
 #include "engine/StringUtils.h"
 #include "engine/TextureManager.h"
 #include "engine/WorldManager.h"
@@ -146,6 +147,7 @@ int main(int argc, char *argv[])
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
+	ScriptManager::Get().Startup();
     RenderManager::Get().Startup(sc_colourBlack, shaderPath, configFile.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));

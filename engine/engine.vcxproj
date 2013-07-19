@@ -90,6 +90,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelManager.h" />
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="StringHash.h" />
@@ -114,6 +115,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="StringUtils.cpp" />
