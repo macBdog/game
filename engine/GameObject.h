@@ -54,6 +54,7 @@ public:
 		, m_next(NULL)
 		, m_model(NULL)
 		, m_shader(NULL)
+		, m_script(-1)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
 		, m_clipType(eClipTypeAxisBox)
@@ -136,6 +137,7 @@ public:
 	inline Model * GetModel() { return m_model; }
 	inline Matrix GetWorldMat() const { return m_worldMat; }
 	inline Shader * GetShader() const { return m_shader; }
+	inline int GetScript() const { return m_script; }
 	inline Vector GetPos() const { return m_worldMat.GetPos(); }
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
@@ -155,7 +157,7 @@ public:
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
-	//inline void SetScript(Script * a_newScript) { m_script = a_newScript; }
+	inline void SetScript(int a_scriptId) { m_script = a_scriptId; }
 	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
@@ -180,7 +182,7 @@ private:
 	GameObject *		  m_next;				///< Pointer to sibling game objects
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
-	//Script			  m_script;				///< The LUA script for user defined behavior
+	int					  m_script;				///< Reference ID of the LUA registry for the game object if any
 	eGameObjectState	  m_state;				///< What state the object is in
 	float				  m_lifeTime;			///< How long this guy has been active
 	eClipType			  m_clipType;			///< What kind of shape represents the bounds of the object

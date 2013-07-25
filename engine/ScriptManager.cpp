@@ -63,6 +63,76 @@ bool ScriptManager::Load(const char * a_scriptPath, bool a_execute)
 	return false;
 }
 
+bool ScriptManager::LoadGameObjectScript(const char * a_scriptName, GameObject * a_gameObject)
+{
+	// Check if a reference has already been generated
+	int ref = a_gameObject->GetScript();
+	if (ref != LUA_NOREF && ref != LUA_REFNIL) 
+	{
+		lua_pushinteger(m_lua, ref);
+		lua_gettable(m_lua, LUA_REGISTRYINDEX);
+	} 
+	else 
+	{
+		unsigned int * userData = (unsigned int *)lua_newuserdata(m_lua, sizeof(GameObject));
+		*userData = a_gameObject->GetId();
+		luaL_getmetatable(m_lua, "GameObject");
+		lua_setmetatable(m_lua, -2);
+
+		// Generate the registry reference
+		lua_pushinteger(m_lua, -1);
+		ref = luaL_ref(m_lua, LUA_REGISTRYINDEX);
+		a_gameObject->SetScript(ref);
+	}
+
+	return ref != LUA_NOREF && ref != LUA_REFNIL;
+}
+
+bool ScriptManager::GameObjectUpdate(GameObject * a_gameObject, float a_dt)
+{
+	// Early out for bad script reference
+	if(a_gameObject == NULL || a_gameObject->GetScript() < 0)
+	{
+		return false;
+	}
+	
+	// Call update
+	lua_pushinteger(m_lua, a_gameObject->GetId());
+	lua_gettable(m_lua, LUA_REGISTRYINDEX);
+
+	// Push delta time argument and call function
+	lua_pushnumber(m_lua, a_dt);
+	if (lua_pcall(m_lua, 1, 1, 0) != 0)
+	{
+		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_GAME, "Missing script Update function for game object called %s", a_gameObject->GetName());
+		return false;
+	}
+	
+    // Return result from script
+	bool luaRetVal = lua_toboolean(m_lua, -1) == 0;
+    lua_pop(m_lua, 1);
+     
+	return luaRetVal;
+}
+
+bool ScriptManager::FreeGameObjectScript(GameObject * a_gameObject)
+{
+	if (a_gameObject != NULL)
+	{
+		// Clear the registry reference out if set
+		if (a_gameObject->GetScript() != LUA_NOREF && a_gameObject->GetScript() != LUA_REFNIL) 
+		{
+			lua_pushinteger(m_lua, a_gameObject->GetScript());
+			lua_pushnil(m_lua);
+			lua_settable(m_lua, LUA_REGISTRYINDEX);
+			a_gameObject->SetScript(-1);
+		}
+	}
+
+	return false;
+}
+
+
 bool ScriptManager::Update(float a_dt)
 {
 	return false;

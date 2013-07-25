@@ -2,6 +2,7 @@
 #include "DebugMenu.h"
 #include "FontManager.h"
 #include "RenderManager.h"
+#include "ScriptManager.h"
 
 #include "GameObject.h"
 
@@ -13,6 +14,12 @@ bool GameObject::Update(float a_dt)
 	if (m_state == eGameObjectState_Active)
 	{
 		m_lifeTime += a_dt;
+	}
+
+	// Update script
+	if (m_script >= 0)
+	{
+		ScriptManager::Get().GameObjectUpdate(this, a_dt);
 	}
 
 	// Update components
@@ -124,7 +131,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		{
 			outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
 		}
-
+		
 		// Serialise any children of this child
 		GameObject * child = m_child;
 		while (child != NULL)
@@ -145,5 +152,11 @@ void GameObject::Destroy()
 	{
 		RenderManager::Get().UnManageShader(this);
 		delete m_shader;
+	}
+
+	// Clean up script reference
+	if (m_script >= 0)
+	{
+		ScriptManager::Get().FreeGameObjectScript(this);
 	}
 }

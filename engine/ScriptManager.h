@@ -4,6 +4,7 @@
 
 #include "Singleton.h"
 
+class GameObject;
 struct lua_State;
 
 //\brief ScriptManager provides access from LUA to C++ functions
@@ -19,8 +20,13 @@ public:
     bool Startup();
 	bool Shutdown();
 
-	//\brief Load a script and optionally call it
+	//\brief Load a script into the global lua context and optionally call it
 	bool Load(const char * a_scriptPath, bool a_execute = true);
+
+	//\brief Load a game object script into it's own registry table
+	bool LoadGameObjectScript(const char * a_scriptName, GameObject * a_gameObject);
+	bool GameObjectUpdate(GameObject * a_gameObject, float a_dt);
+	bool FreeGameObjectScript(GameObject * a_gameObject);
 
 	//\brief Update managed texture
 	bool Update(float a_dt);
