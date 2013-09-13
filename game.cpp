@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	// Hide the mouse cursor
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_GrabInput(SDL_GRAB_ON);
-
+	
 	// Process resource paths
 	char texturePath[StringUtils::s_maxCharsPerLine];
 	char fontPath[StringUtils::s_maxCharsPerLine];
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
-	ScriptManager::Get().Startup();
+	ScriptManager::Get().Startup(scriptPath);
     RenderManager::Get().Startup(sc_colourBlack, shaderPath, configFile.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
@@ -182,7 +182,8 @@ int main(int argc, char *argv[])
 		// Update the camera first
 		CameraManager::Get().Update(lastFrameTimeSec);
 
-		// Update the world first, other systems rely on object positions/states etc
+		// Update the world and scripts first, other systems rely on object positions/states etc
+		ScriptManager::Get().Update(lastFrameTimeSec);
 		WorldManager::Get().Update(lastFrameTimeSec);
 		
 		// Draw the Gui
@@ -224,3 +225,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+

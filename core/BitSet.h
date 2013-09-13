@@ -77,7 +77,22 @@ public:
 		return ((numBits + (numBits >> 3)) & 030707070707) % 63;
 	}
 
+	//\brief Utility function for unpacking an arbitrary crunched number of bits
+	//\param a_src pointer to the packed data
+	//\param a_dest_OUT ref to an int to write to
+	//\param a_startOffset the bit number to begin the mask
+	//\param a_endOffset the last bit of the packed data
+	static void UnpackBits(unsigned int * a_src, unsigned int & a_dest_OUT, unsigned int a_startOffset, unsigned int a_endOffset)
+	{		
+		// Precalc fixed offset
+		const unsigned int offset = ~(0xFF << (a_endOffset - a_startOffset));
+
+		// Unpack in bit order
+		a_dest_OUT = (*a_src >> a_startOffset) & offset;
+	}
+
 private:
+
 	unsigned int m_bits; ///< Storage for 32 of the finest bits
 };
 

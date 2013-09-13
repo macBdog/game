@@ -2,7 +2,6 @@
 #include "DebugMenu.h"
 #include "FontManager.h"
 #include "RenderManager.h"
-#include "ScriptManager.h"
 
 #include "GameObject.h"
 
@@ -14,12 +13,6 @@ bool GameObject::Update(float a_dt)
 	if (m_state == eGameObjectState_Active)
 	{
 		m_lifeTime += a_dt;
-	}
-
-	// Update script
-	if (m_script >= 0)
-	{
-		ScriptManager::Get().GameObjectUpdate(this, a_dt);
 	}
 
 	// Update components
@@ -152,11 +145,5 @@ void GameObject::Destroy()
 	{
 		RenderManager::Get().UnManageShader(this);
 		delete m_shader;
-	}
-
-	// Clean up script reference
-	if (m_script >= 0)
-	{
-		ScriptManager::Get().FreeGameObjectScript(this);
 	}
 }

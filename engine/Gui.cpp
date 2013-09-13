@@ -329,7 +329,7 @@ bool Gui::LoadMenu(const char * a_menuFile)
 					char scriptPath[StringUtils::s_maxCharsPerLine];
 					parentMenu->SetScript(menuFile->GetString("menu", "script"));
 					sprintf(scriptPath, "%sscripts\\%s", m_guiPath, menuFile->GetString("menu", "script"));
-					ScriptManager::Get().Load(scriptPath);
+					ScriptManager::Get().LoadGUIScript(scriptPath);
 				}
 
 				// Load child elements of the menu

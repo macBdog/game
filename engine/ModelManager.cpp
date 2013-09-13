@@ -36,7 +36,6 @@ bool ModelManager::Startup(const char * a_modelPath)
 	memset(m_modelPool.GetHead(), 0, m_modelPool.GetAllocationSizeBytes());
 
 	// Cache off the model path for non qualified addressing of models
-	memset(&m_modelPath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_modelPath, a_modelPath, sizeof(char) * strlen(a_modelPath) + 1);
 
 	return true;

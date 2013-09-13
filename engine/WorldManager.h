@@ -8,6 +8,7 @@
 
 #include "GameObject.h"
 #include "Log.h"
+#include "ModelManager.h"
 #include "ScriptManager.h"
 #include "Singleton.h"
 #include "StringUtils.h"
@@ -242,11 +243,6 @@ public:
 									newGameObject->SetShader(NULL);
 								}
 							}
-						}
-						// Script
-						if (GameFile::Property * scriptName = object->FindProperty("script"))
-						{
-							ScriptManager::Get().LoadGameObjectScript(scriptName->GetString(), newGameObject);
 						}
 
 						// Add to currently active scene
