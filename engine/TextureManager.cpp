@@ -106,7 +106,16 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
 	if (!strstr(a_tgaPath, ":\\"))
 	{
-		sprintf(fileNameBuf, "%s%s", m_texturePath, a_tgaPath);
+		// Strip out any leading slashes
+		const char * filenameOnly = strstr(a_tgaPath, "\\");
+		if (filenameOnly != NULL)
+		{
+			sprintf(fileNameBuf, "%s%s", m_texturePath, filenameOnly);
+		} 
+		else
+		{
+			sprintf(fileNameBuf, "%s%s", m_texturePath, a_tgaPath);
+		}
 	} 
 	else // Already fully qualified
 	{

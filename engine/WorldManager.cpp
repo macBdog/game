@@ -176,9 +176,14 @@ void Scene::Serialise()
 	{
 		// Alias the game object in the scene
 		GameObject * childGameObject = curObject->GetData();
-		
-		// Add the object to the game file
-		childGameObject->Serialise(sceneFile, sceneObject);
+
+		// Do not save out objects created by script
+		if (!childGameObject->IsScriptOwned())
+		{
+			// Add the object to the game file
+			childGameObject->Serialise(sceneFile, sceneObject);
+		}
+
 		curObject = curObject->GetNext();
 	}
 	

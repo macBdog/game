@@ -57,6 +57,12 @@ namespace StringUtils
 	//\return the lower case equivalent char
 	extern unsigned char ConvertToLower(unsigned char a_char);
 
+	//\brief Count the number of character occurances in a string
+	//\param a_string is the string to search
+	//\param a_searchChar is the character to search for
+	//\return the number of times a_searchChar is found in the string
+	extern unsigned int CountCharacters(const char * a_string, const char & a_searchChar);
+
 	//\brief Modify a c string argument by adding on another string in front of it
 	//\param a_buffer is the c string to modify
 	//\param a_prefix is the string add to the start

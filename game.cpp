@@ -147,16 +147,16 @@ int main(int argc, char *argv[])
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
-	ScriptManager::Get().Startup(scriptPath);
     RenderManager::Get().Startup(sc_colourBlack, shaderPath, configFile.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
-	Gui::Get().Startup(guiPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
+	ScriptManager::Get().Startup(scriptPath);
+	Gui::Get().Startup(guiPath);
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
 		CameraManager::Get().Update(lastFrameTimeSec);
 
 		// Update the world and scripts first, other systems rely on object positions/states etc
-		ScriptManager::Get().Update(lastFrameTimeSec);
 		WorldManager::Get().Update(lastFrameTimeSec);
+		ScriptManager::Get().Update(lastFrameTimeSec);
 		
 		// Draw the Gui
 		Gui::Get().Update(lastFrameTimeSec);

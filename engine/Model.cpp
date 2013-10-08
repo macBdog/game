@@ -165,21 +165,29 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 					return false;
 				}
 
-				// Extract and store out which vertices are used for the faces of the model
-				sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
-				&vertIndices[0], &uvIndices[0], &normIndices[0], 
-				&vertIndices[1], &uvIndices[1], &normIndices[1], 
-				&vertIndices[2], &uvIndices[2], &normIndices[2]);
+				// Ignore face definitions without the correct format
+				if (StringUtils::CountCharacters(line, '/') == 6)
+				{
+					// Extract and store out which vertices are used for the faces of the model
+					sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+					&vertIndices[0], &uvIndices[0], &normIndices[0], 
+					&vertIndices[1], &uvIndices[1], &normIndices[1], 
+					&vertIndices[2], &uvIndices[2], &normIndices[2]);
 
-				// File format specifies vertices are indexed from 1 instead of 0 so fix that
-				--vertIndices[0];	--vertIndices[1];	--vertIndices[2];
-				--uvIndices[0];		--uvIndices[1];		--uvIndices[2];
-				--normIndices[0];	--normIndices[1];	--normIndices[2];
+					// File format specifies vertices are indexed from 1 instead of 0 so fix that
+					--vertIndices[0];	--vertIndices[1];	--vertIndices[2];
+					--uvIndices[0];		--uvIndices[1];		--uvIndices[2];
+					--normIndices[0];	--normIndices[1];	--normIndices[2];
 
-				// Advance to the next face
-				vertIndices+=3;
-				uvIndices+=3;
-				normIndices+=3;
+					// Advance to the next face
+					vertIndices+=3;
+					uvIndices+=3;
+					normIndices+=3;
+				}
+				else // Remove invalid face
+				{
+					--m_numFaces;
+				}
 			}
 		}
 

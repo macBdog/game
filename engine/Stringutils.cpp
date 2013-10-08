@@ -228,6 +228,27 @@ extern unsigned char StringUtils::ConvertToLower(unsigned char a_char)
 	return a_char;
 }
 
+extern unsigned int StringUtils::CountCharacters(const char * a_string, const char & a_searchChar)
+{
+	// Early out for bad input
+	if (a_string == NULL || a_string[0] == '\0')
+	{
+		return 0;
+	}
+
+	// O(n) search through each character
+	unsigned int numOccurances = 0;
+	const unsigned int strLen = strlen(a_string);
+	for (unsigned int i = 0; i < strLen; ++i)
+	{
+		if (a_string[i] == a_searchChar)
+		{
+			++numOccurances;
+		}
+	}
+	return numOccurances;
+}
+
 extern bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefix)
 {
 	char tempString[s_maxCharsPerLine];
