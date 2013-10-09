@@ -60,7 +60,7 @@ public:
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_worldMat(Matrix::Identity())
-		, m_scriptOwned(false)
+		, m_scriptRef(-1)
 		{ 
 			SetName("UNAMED_GAME_OBJECT");
 			SetTemplate("");
@@ -131,7 +131,7 @@ public:
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
-	inline void SetScriptOwned(bool a_isOwned = true) { m_scriptOwned = a_isOwned; }
+	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
@@ -143,7 +143,8 @@ public:
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline eClipType GetClipType() const { return m_clipType; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
-	inline bool IsScriptOwned() const { return m_scriptOwned; }
+	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
+	inline int GetScriptReference() const { return m_scriptRef; }
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }
@@ -190,7 +191,7 @@ private:
 	Matrix				  m_worldMat;			///< Position and orientation in the world
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
-	bool				  m_scriptOwned;		///< If the object is created and managed by script
+	int					  m_scriptRef;			///< If the object is created and managed by script, the ID on the script side is stored here
 };
 
 #endif // _ENGINE_GAME_OBJECT_

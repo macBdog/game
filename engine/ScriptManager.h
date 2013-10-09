@@ -32,10 +32,15 @@ public:
 	//\brief Update managed texture
 	bool Update(float a_dt);
 
+	//\brief Remove the script side version of an object so the script isn't left hanging
+	//\param a_gameObject pointer to object to unbind and set null on script side
+	void DestroyObjectScriptBindings(GameObject * a_gameObj);
+
 private:
 
 	static const char * s_mainScriptName;						///< Constant name of the main game script file
-	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for game objects
+	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global
+	static const luaL_Reg s_gameObjectMethods[];				///< Constant array of functions registered for game object members
 
 	//\brief Called by LUA during each update to allow the game to run
 	static int YieldLuaEnvironment(lua_State * a_luaState);
@@ -44,7 +49,7 @@ private:
 	//\param a_luaState pointer to the LUA state to interrogate
 	//\param a_index the id of the user data pointer in the LUA registry
 	//\return a pointer to a GameObject or null if unvalid
-	static GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState, int a_index);
+	static GameObject * CheckGameObject(lua_State * a_luaState);
 
 	//\brief Register a new metatable with LUA for gameobject lookups
 	//\param a_luaState pointer to the LUA state to operate on

@@ -7,13 +7,20 @@ template<> ScriptManager * Singleton<ScriptManager>::s_instance = NULL;
 
 const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
 
-// Registration of game object class members
+// Registration of game object functions
 const luaL_Reg ScriptManager::s_gameObjectFuncs[] = {
 	{"Create", CreateGameObject},
+	{NULL, NULL}
+};
+
+// Registration of game object class member functions
+const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"GetPosition", GetGameObjectPosition},
 	{"SetPosition", SetGameObjectPosition},
 	{"GetName", GetGameObjectName},
 	{"SetName", SetGameObjectName},
+	{"DestroyGameObject", DestroyGameObject},
+	{"__gc", DestroyGameObject},
 	{NULL, NULL}
 };
 
@@ -35,14 +42,20 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "DestroyGameObject", DestroyGameObject);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 
-		// Register C++ functions for GameObjects referenced with : in LUA
-		luaL_requiref(m_globalLua, "GameObject", RegisterGameObject, 1);
-		
-		// Register metatable for user data in registry
-		/*luaL_newmetatable(a_luaState, "GameObject.Registry");
-		lua_pushvalue(a_luaState, -1);
-		lua_setfield(a_luaState, -2, "__index"); */
+		// Register C++ functions available on the global GameObject
+		lua_newtable(m_globalLua);
+		luaL_setfuncs(m_globalLua, s_gameObjectFuncs, 0);
+		lua_setglobal(m_globalLua, "GameObject");
 
+		// Register metatable for user data in registry
+		luaL_newmetatable(m_globalLua, "GameObject.Registry");
+		lua_pushstring(m_globalLua, "__index");
+		lua_pushvalue(m_globalLua, -2);
+		lua_settable(m_globalLua, -3);
+
+		// Register C++ methods for game object members referenced with : in LUA
+		luaL_setfuncs(m_globalLua, s_gameObjectMethods, 0);
+		
 		// Cache off path and look for the main game lua file
 		strncpy(m_scriptPath, a_scriptPath, sizeof(char) * strlen(a_scriptPath) + 1);
 
@@ -136,6 +149,18 @@ bool ScriptManager::Update(float a_dt)
 	return false;
 }
 
+void ScriptManager::DestroyObjectScriptBindings(GameObject * a_gameObject)
+{
+	// Called when a GameObject is destroyed by the engine
+	if (a_gameObject->GetScriptReference() > 0) 
+	{
+		lua_pushinteger(m_globalLua, a_gameObject->GetScriptReference());
+		lua_pushnil(m_globalLua);
+		lua_settable(m_globalLua, LUA_REGISTRYINDEX);
+		a_gameObject->SetScriptReference(-1);
+	}
+}
+
 int ScriptManager::YieldLuaEnvironment(lua_State * a_luaState)
 {
 	 return lua_yield(a_luaState, 0);
@@ -154,16 +179,12 @@ int ScriptManager::RegisterGameObject(lua_State * a_luaState)
 	return 1;	
 }
 
-GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState, int a_index)
+GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState)
 {
-	// Check the userdata passed from LUA matches the registered format
-	void * userData = 0;
-	luaL_checktype(a_luaState, a_index, LUA_TTABLE); 
-	lua_getfield(a_luaState, a_index, "__self");
-	userData = luaL_checkudata(a_luaState, a_index, "GameObject.Registry");
-	luaL_argcheck(a_luaState, userData != 0, 0, "GameObject.Registry expected");  
-  
-	return *((GameObject**)userData);      
+	// Retrieve the object from a userdata reference
+	luaL_checktype(a_luaState, 1, LUA_TUSERDATA);
+	unsigned int * objId = (unsigned int*)(lua_touserdata(a_luaState, 1));
+	return WorldManager::Get().GetGameObject(*objId);	
 }
 
 int ScriptManager::CreateGameObject(lua_State * a_luaState)
@@ -192,43 +213,22 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 		strcpy(templatePath, templateName);
 	}
 
-	// First argument is now a table that represent the class to instantiate
-	luaL_checktype(a_luaState, 1, LUA_TTABLE);   
-	
-	// Create table to represent instance
-    lua_newtable(a_luaState);    
-
-    // Set first argument of new to metatable of instance
-    lua_pushvalue(a_luaState, 1);       
-    lua_setmetatable(a_luaState, -2);
-
-    // Do function lookups in metatable
-    lua_pushvalue(a_luaState, 1);
-    lua_setfield(a_luaState, 1, "__index");  
-
-    // Allocate memory for a pointer to to object
-	GameObject **gameObjectUserData = (GameObject **)lua_newuserdata(a_luaState, sizeof(GameObject *));
-	
 	// Create the new object
 	if (GameObject * newGameObject = WorldManager::Get().CreateObject<GameObject>(templatePath))
 	{
-		// Make sure the object is not managed by the scene
-		newGameObject->SetScriptOwned();
-		*gameObjectUserData = newGameObject;
+		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
+		*userData = newGameObject->GetId();
 
-		// Get metatable 'GameObject.Registry' store in the registry
 		luaL_getmetatable(a_luaState, "GameObject.Registry");
+		lua_setmetatable(a_luaState, -2);
 
-		// Set user data for Sprite to use this metatable
-		lua_setmetatable(a_luaState, -2);       
-    
-		// Set field '__self' of instance table to the sprite user data
-		lua_setfield(a_luaState, -2, "__self");  
-
-		// TODO - Potential memory leak here from the new user data never being released, see game object destruction
+		// Generate the registry reference
+		lua_pushvalue(a_luaState, -1);
+		int ref = luaL_ref(a_luaState, LUA_REGISTRYINDEX);
+		newGameObject->SetScriptReference(ref);
 	}
 
-	return 1;
+	return 1; // Userdata is returned
 }
 
 int ScriptManager::GetGameObject(lua_State * a_luaState)
@@ -238,17 +238,55 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 
 int ScriptManager::DestroyGameObject(lua_State * a_luaState)
 {
-	return 1;
+	return 0;
 }
 
 int ScriptManager::GetGameObjectPosition(lua_State * a_luaState)
 {
-	return 1;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			Vector pos = gameObj->GetPos();
+			lua_pushnumber(a_luaState, pos.GetX());
+			lua_pushnumber(a_luaState, pos.GetY());
+			lua_pushnumber(a_luaState, pos.GetZ());
+			return 3;
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("GetGameObjectPosition cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GetGameObjectPosition expects no parameters.");
+	}
+	return 0;
 }
 
 int ScriptManager::SetGameObjectPosition(lua_State * a_luaState)
-{
-	return 1;
+{ 
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector newPos((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4)); 
+			gameObj->SetPos(newPos);
+		}
+		else // Object not found, destroyed?
+		{
+			Log::Get().WriteGameErrorNoParams("SetGameObjectPosition could not find game object referred to.");
+		}
+	}
+	else // Wrong number of parms
+	{
+		Log::Get().WriteGameErrorNoParams("SetGameObjectPosition expects 3 number parameters.");
+	}
+	return 0;
 }
 
 int ScriptManager::GetGameObjectName(lua_State * a_luaState)
@@ -258,21 +296,18 @@ int ScriptManager::GetGameObjectName(lua_State * a_luaState)
 
 int ScriptManager::SetGameObjectName(lua_State * a_luaState)
 {
-	int n = lua_gettop(a_luaState);  // Number of arguments
-  
-	if (n == 2) 
+	if (lua_gettop(a_luaState) == 2)
 	{
-		// Retrieve the game object from the LUA metatable using the index
-		lua_Number gameObjectIndex = luaL_checknumber(a_luaState, 1);
-		if (GameObject * gameObj = CheckGameObject(a_luaState, (int)gameObjectIndex))
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
 		{
-			gameObj->SetName(luaL_checkstring(a_luaState, 2));
+			luaL_checktype(a_luaState, 2, LUA_TSTRING);
+			const char * newName = lua_tostring(a_luaState, 2);
+			gameObj->SetName(newName);
+			return 0;
 		}
 	}
-	else
-	{
-		luaL_error(a_luaState, "SetGameObjectName Got %d arguments, execting 2 (self, name)", n); 
-	}
-  
-  return 1;
+	 
+	// Log error to user
+	Log::Get().WriteGameErrorNoParams("SetGameObjectName expects 1 string parameter.");
+	return 0;
 }

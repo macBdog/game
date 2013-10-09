@@ -398,6 +398,13 @@ bool WorldManager::DestroyObject(unsigned int a_objectId)
 { 
 	if (GameObject * obj = GetGameObject(a_objectId))
 	{
+		// Make sure the script reference is cleaned up as well
+		if (obj->IsScriptOwned())
+		{
+			ScriptManager::Get().DestroyObjectScriptBindings(obj);
+		}
+
+		// Remove from scene
 		m_currentScene->RemoveObject(a_objectId);
 		obj->Shutdown();
 		delete obj;
