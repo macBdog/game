@@ -1,6 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <assert.h>
+
 #include <windows.h>
 
 #include <GL/glew.h>
@@ -210,11 +212,12 @@ bool RenderManager::Update(float a_dt)
 		m_updateTimer = 0.0f;
 		bool shadersReloaded = false;
 
-		// Test all shaders
+		// Test all shaders for modification
 		ManagedShaderNode * next = m_managedShaders.GetHead();
 		while (next != NULL)
 		{
-			bool curShaderReloaded = false;
+			bool curFragShaderReloaded = false;
+			bool curVertShaderReloaded = false;
 			FileManager::Timestamp curTimeStamp;
 			ManagedShader * curManShader = next->GetData();
 			char fullShaderPath[StringUtils::s_maxCharsPerLine];
@@ -236,7 +239,7 @@ bool RenderManager::Update(float a_dt)
 				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
 				if (curTimeStamp > curManShader->m_vertexTimeStamp)
 				{
-					curShaderReloaded = true;
+					curVertShaderReloaded = true;
 					curManShader->m_vertexTimeStamp = curTimeStamp;
 					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
@@ -246,12 +249,12 @@ bool RenderManager::Update(float a_dt)
 				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
 				if (curTimeStamp > curManShader->m_fragmentTimeStamp)
 				{
-					curShaderReloaded = true;
+					curFragShaderReloaded = true;
 					curManShader->m_fragmentTimeStamp = curTimeStamp;
 					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
 
-				if (curShaderReloaded)
+				if (curVertShaderReloaded || curFragShaderReloaded)
 				{
 					// Recreate the shader
 					shadersReloaded = true;
@@ -268,6 +271,54 @@ bool RenderManager::Update(float a_dt)
 							{
 								curManShader->m_shaderScene->SetShader(pReloadedShader);
 							}
+
+							// Reassign the shader for any other managed objects that shared the reloaded shader
+							ManagedShaderNode * sharedShader = m_managedShaders.GetHead();
+							while (sharedShader != NULL)
+							{
+								// First check for game object owning shader
+								Shader * existingShader = NULL;
+								if (sharedShader->GetData()->m_shaderObject != NULL)
+								{
+									existingShader = sharedShader->GetData()->m_shaderObject->GetShader();
+									if (existingShader != NULL && existingShader == pShader)
+									{
+										sharedShader->GetData()->m_shaderObject->SetShader(pReloadedShader);
+										
+										// Reset timestamps for shared shader resources
+										if (curFragShaderReloaded)
+										{
+											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStamp;
+										}
+										if (curVertShaderReloaded)
+										{
+											sharedShader->GetData()->m_vertexTimeStamp = curTimeStamp;
+										}
+									}
+								}
+								// Now check for scene owning shader
+								else if (sharedShader->GetData()->m_shaderScene != NULL)
+								{
+									existingShader = sharedShader->GetData()->m_shaderScene->GetShader();
+									if (existingShader != NULL && existingShader == pShader)
+									{
+										sharedShader->GetData()->m_shaderScene->SetShader(pReloadedShader);
+
+										// Reset timestamps for shared shader resources
+										if (curFragShaderReloaded)
+										{
+											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStamp;
+										}
+										if (curVertShaderReloaded)
+										{
+											sharedShader->GetData()->m_vertexTimeStamp = curTimeStamp;
+										}
+									}
+								}
+								sharedShader = sharedShader->GetNext();
+							}
+
+							// Finally safe to delete deprecated shader
 							delete pShader;
 						}
 					}
@@ -1136,6 +1187,25 @@ void RenderManager::ManageShader(Scene * a_scene)
 	}
 }
 
+Shader * RenderManager::GetManagedShader(const char * a_shaderName)
+{
+	// Iterate through all shaders looking for the named program
+	ManagedShaderNode * next = m_managedShaders.GetHead();
+	while (next != NULL)
+	{
+		if (Shader * curShader = next->GetData()->m_shaderObject->GetShader())
+		{
+			if (strcmp(curShader->GetName(), a_shaderName) == 0)
+			{
+				return curShader;
+			}
+		}
+		next = next->GetNext();
+	}
+
+	return NULL;
+}
+
 void RenderManager::UnManageShader(GameObject * a_gameObject)
 {
 	if (a_gameObject != NULL)
@@ -1267,7 +1337,15 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 {
 	if (a_newManShader)
 	{
+		// Expecting a game object OR scene with a valid shader already set
 		Shader * pShader = a_newManShader->m_shaderObject != NULL ? a_newManShader->m_shaderObject->GetShader() : a_newManShader->m_shaderScene->GetShader();
+		if (pShader == NULL)
+		{
+			assert(!"AddManagedShader called without an valid shader assigned to an object or scene");
+			return;
+		}
+
+		// Now add the object to the list of managed items
 		char fullShaderPath[StringUtils::s_maxCharsPerLine];
 		sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
 		FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_vertexTimeStamp);

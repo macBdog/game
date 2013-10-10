@@ -163,6 +163,7 @@ public:
 	//\brief Add and remove a shader to the list for hotloading on file modification
 	void ManageShader(GameObject * a_gameObject);
 	void ManageShader(Scene * a_scene);
+	Shader * GetManagedShader(const char * a_shaderName);
 	void UnManageShader(GameObject * a_gameObject);
 	void UnManageShader(Scene * a_scene);
 
@@ -232,6 +233,7 @@ private:
 	};
 	
 	//\brief Add a shader to the list of managed shaders
+	//\param a_newManShader is a pointer to the manager shader struct pre-filled by the rendermanager
 	void AddManagedShader(ManagedShader * a_newManShader);
 
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives

@@ -230,7 +230,15 @@ public:
 						// Shader 
 						if (GameFile::Property * shader = object->FindProperty("shader"))
 						{
-							if (Shader * pNewShader = new Shader(shader->GetString()))
+							// First try to find if the shader is already loaded
+							Shader * existingShader = RenderManager::Get().GetManagedShader(shader->GetString());
+							if (existingShader != NULL)
+							{
+								newGameObject->SetShader(existingShader);
+								RenderManager::Get().ManageShader(newGameObject);
+							}
+							// If not, create the shader
+							else if (Shader * pNewShader = new Shader(shader->GetString()))
 							{
 								if (RenderManager::InitShaderFromFile(*pNewShader))
 								{

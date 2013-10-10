@@ -71,6 +71,9 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		{
 			Log::Get().WriteEngineErrorNoParams("Fatal script error! Game script must yield to engine, or there is an error in game.lua");
 		}
+
+		// Also watch all the scripts in the dir for changes to trigger a reload
+
 	}
 
 	return m_globalLua != NULL;

@@ -1,4 +1,8 @@
 const char * globalVertexShader = 
 "uniform float Time; \n" 
 "uniform mat4 ObjMat; \n"
-"varying vec2 OutTexCoord; \n";
+"varying vec2 OutTexCoord; \n"
+"float rand(vec2 co) \n"
+"{ \n"
+"	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); \n"
+"} \n";
