@@ -1,3 +1,5 @@
+#include "DebugMenu.h"
+#include "InputManager.h"
 #include "LuaScript.h"
 #include "WorldManager.h"
 
@@ -5,6 +7,7 @@
 
 template<> ScriptManager * Singleton<ScriptManager>::s_instance = NULL;
 
+const float ScriptManager::s_updateFreq = 1.0f;								///< How often the script manager should check for updates to scripts
 const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
 
 // Registration of game object functions
@@ -40,6 +43,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
 		lua_register(m_globalLua, "GetGameObject", GetGameObject);
 		lua_register(m_globalLua, "DestroyGameObject", DestroyGameObject);
+		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 
 		// Register C++ functions available on the global GameObject
@@ -72,8 +76,34 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 			Log::Get().WriteEngineErrorNoParams("Fatal script error! Game script must yield to engine, or there is an error in game.lua");
 		}
 
-		// Also watch all the scripts in the dir for changes to trigger a reload
+		// Scan all the scripts in the dir for changes to trigger a reload
+		FileManager & fileMan = FileManager::Get();
+		FileManager::FileList scriptFiles;
+		fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua");
 
+		// Add each script in the directory
+		FileManager::FileListNode * curNode = scriptFiles.GetHead();
+		while(curNode != NULL)
+		{
+			// Get a fresh timestamp on the new script
+			char fullPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullPath, "%s%s", m_scriptPath, curNode->GetData()->m_name);
+			FileManager::Timestamp curTimeStamp;
+			FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
+
+			// Add managed script to the list
+			ManagedScript * manScript = new ManagedScript(fullPath, curTimeStamp);
+			ManagedScriptNode * manScriptNode = new ManagedScriptNode();
+			if (manScript != NULL && manScriptNode != NULL)
+			{
+				manScriptNode->SetData(manScript);
+				m_managedScripts.Insert(manScriptNode);
+			}
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of fonts
+		fileMan.EmptyFileList(scriptFiles);
 	}
 
 	return m_globalLua != NULL;
@@ -92,6 +122,20 @@ bool ScriptManager::Shutdown()
 	{
 		lua_close(m_globalLua);
 	}
+
+	// And any managed scripts
+	ManagedScriptNode * next = m_managedScripts.GetHead();
+	while (next != NULL)
+	{
+		// Cache off next pointer
+		ManagedScriptNode * cur = next;
+		next = cur->GetNext();
+
+		m_managedScripts.Remove(cur);
+		delete cur->GetData();
+		delete cur;
+	}
+
 	return true;
 }
 
@@ -142,6 +186,43 @@ bool ScriptManager::Update(float a_dt)
 {
 	// Cache off last delta
 	m_lastFrameDelta = a_dt;
+
+	// Check if a script needs updating
+	if (m_updateTimer < m_updateFreq)
+	{
+		m_updateTimer += a_dt;
+	}
+	else // Due for an update, scan all scripts
+	{
+		m_updateTimer = 0.0f;
+		bool scriptsReloaded = false;
+
+		// Test all scripts for modification
+		ManagedScriptNode * next = m_managedScripts.GetHead();
+		while (next != NULL)
+		{
+			// Get a fresh timestampt and test it against the stored timestamp
+			FileManager::Timestamp curTimeStamp;
+			ManagedScript * curScript = next->GetData();
+			FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
+			if (curTimeStamp > curScript->m_timeStamp)
+			{
+				scriptsReloaded = true;
+				curScript->m_timeStamp = curTimeStamp;
+				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in script %s, reloading.", curScript->m_path);
+
+				// TODO actual script reload functionality
+			}
+
+			next = next->GetNext();
+		}
+	}
+
+	// Don't update scripts while debugging
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return true;
+	}
 
 	// Call back to LUA main thread
 	if (m_gameLua != NULL)
@@ -242,6 +323,23 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 int ScriptManager::DestroyGameObject(lua_State * a_luaState)
 {
 	return 0;
+}
+
+int ScriptManager::IsKeyDown(lua_State * a_luaState)
+{
+	bool keyIsDown = false;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int keyCode = (int)lua_tonumber(a_luaState, 1);
+		keyIsDown = InputManager::Get().IsKeyDepressed((SDLKey)keyCode);
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("IsKeyDown expects 1 parameter of the key code to test.");
+	}
+
+	lua_pushboolean(a_luaState, keyIsDown);
+	return 1; // One bool returned
 }
 
 int ScriptManager::GetGameObjectPosition(lua_State * a_luaState)

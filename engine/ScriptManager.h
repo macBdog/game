@@ -2,6 +2,9 @@
 #define _ENGINE_SCRIPT_MANAGER_
 #pragma once
 
+#include "../core/LinkedList.h"
+
+#include "FileManager.h"
 #include "Singleton.h"
 
 class GameObject;
@@ -14,11 +17,13 @@ class ScriptManager : public Singleton<ScriptManager>
 public:
 
 	//\ No work done in the constructor, only Init
-	ScriptManager() 
+	ScriptManager(float a_updateFreq = s_updateFreq) 
 		: m_globalLua(NULL)
 		, m_gameLua(NULL)
 		, m_guiLua(NULL) 
 		, m_lastFrameDelta(0.0f)
+		, m_updateFreq(a_updateFreq)
+		, m_updateTimer(0.0f)
 		{ m_scriptPath[0] = '\0'; }
 	~ScriptManager() { Shutdown(); }
 
@@ -38,6 +43,7 @@ public:
 
 private:
 
+	static const float s_updateFreq;							///< How often the script manager should check for script updates
 	static const char * s_mainScriptName;						///< Constant name of the main game script file
 	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global
 	static const luaL_Reg s_gameObjectMethods[];				///< Constant array of functions registered for game object members
@@ -60,6 +66,7 @@ private:
 	static int CreateGameObject(lua_State * a_luaState);
 	static int GetGameObject(lua_State * a_luaState);
 	static int DestroyGameObject(lua_State * a_luaState);
+	static int IsKeyDown(lua_State * a_luaState);
 
 	//brief LUA versions of game object functions
 	static int GetGameObjectPosition(lua_State * a_luaState);
@@ -67,11 +74,26 @@ private:
 	static int GetGameObjectName(lua_State * a_luaState);
 	static int SetGameObjectName(lua_State * a_luaState);
 
+	//\brief A managed script stores info critical to the hot reloading of scripts
+	struct ManagedScript
+	{
+		ManagedScript(const char * a_scriptPath, const FileManager::Timestamp & a_timeStamp)
+			: m_timeStamp(a_timeStamp)	{ strcpy(&m_path[0], a_scriptPath);	}
+		FileManager::Timestamp m_timeStamp;						///< When the script file was last edited
+		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the script resides for reloading
+	};
+
+	typedef LinkedListNode<ManagedScript> ManagedScriptNode;	///< Alias for a linked list node that points to a managed script
+	typedef LinkedList<ManagedScript> ManagedScriptList;		///< Alias for a linked list of managed scripts
+
+	ManagedScriptList m_managedScripts;							///< List of all the scripts found on disk at startup
 	lua_State * m_globalLua;									///< Globally scoped LUA environment for game and GUI
 	lua_State * m_gameLua;										///< Seperate LUA execution process for the game thread to run on
 	lua_State * m_guiLua;										///< Separate LUA execution process for the GUI thread to run on
 	char m_scriptPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to scripts 
 	float m_lastFrameDelta;										///< Cache of the delta for the last update received by the script manager
+	float m_updateFreq;											///< How often the script manager should check for changes to shaders
+	float m_updateTimer;										///< If we are due for a scan and update of scripts
 };
 
 #endif // _ENGINE_SCRIPT_MANAGER
