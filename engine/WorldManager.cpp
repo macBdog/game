@@ -394,24 +394,67 @@ bool WorldManager::Update(float a_dt)
 	return updateOk;
 }
 
-bool WorldManager::DestroyObject(unsigned int a_objectId) 
+bool WorldManager::DestroyObject(unsigned int a_objectId, bool a_destroyScriptBindings) 
 { 
 	if (GameObject * obj = GetGameObject(a_objectId))
 	{
-		// Make sure the script reference is cleaned up as well
-		if (obj->IsScriptOwned())
+		// Make sure the script reference is cleaned up as well, if flag is set
+		if (obj->IsScriptOwned() && a_destroyScriptBindings)
 		{
 			ScriptManager::Get().DestroyObjectScriptBindings(obj);
 		}
 
 		// Remove from scene
-		m_currentScene->RemoveObject(a_objectId);
 		obj->Shutdown();
-		delete obj;
-		return true;
+		return m_currentScene->RemoveObject(a_objectId);
 	}
 	
 	return false; 
+}
+
+bool WorldManager::DestoryAllObjects(bool a_destroyScriptOwned)
+{
+	// Iterate through all objects in the scene
+	bool objectDestroyed = false;
+	LinkedListNode<GameObject> * curObject = m_currentScene->GetHeadObject();
+	while (curObject != NULL)
+	{
+		// Cache off next pointer as destruction will unlink the destroyed object from the list
+		LinkedListNode<GameObject> * nextObj = curObject->GetNext();
+
+		// Test if script owned before destruction
+		GameObject * gameObject = curObject->GetData();
+		bool destroyObject = !a_destroyScriptOwned && gameObject->IsScriptOwned() ? false : true;
+		if (destroyObject)
+		{
+			objectDestroyed &= DestroyObject(gameObject->GetId());
+		}
+		curObject = nextObj;
+	}
+	
+	return objectDestroyed;
+}
+
+bool WorldManager::DestoryAllScriptsOwnedObjects(bool a_destroyScriptBindings)
+{
+	// Iterate through all objects in the scene
+	bool objectDestroyed = false;
+	LinkedListNode<GameObject> * curObject = m_currentScene->GetHeadObject();
+	while (curObject != NULL)
+	{
+		// Cache off next pointer as destruction will unlink the destroyed object from the list
+		LinkedListNode<GameObject> * nextObj = curObject->GetNext();
+
+		// Only destroy script owned objects
+		GameObject * gameObject = curObject->GetData();
+		if (gameObject->IsScriptOwned())
+		{
+			objectDestroyed &= DestroyObject(gameObject->GetId(), a_destroyScriptBindings);
+		}
+		curObject = nextObj;
+	}
+	
+	return objectDestroyed;
 }
 
 GameObject * WorldManager::GetGameObject(unsigned int a_objectId)

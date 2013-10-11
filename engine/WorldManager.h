@@ -15,9 +15,11 @@
 
 class Shader;
 
-//\brief A scene is a subset of a world, containing objects that are fixed and floating
+//\brief A scene is a subset of a world, containing objects that are fixed and created by the engine and script objects
 class Scene
 {
+	// WorldManager has access to the scene's objects
+	friend class WorldManager;	
 
 public:
 	
@@ -86,6 +88,11 @@ public:
 	
 	//\brief Write all objects in the scene out to a scene file
 	void Serialise();
+
+protected:
+
+	//\brief Accessor for the world to remove all objects
+	inline LinkedListNode<GameObject> * GetHeadObject() { return m_objects.GetHead(); }
 
 private:
 
@@ -302,7 +309,19 @@ public:
 	}
 	
 	//\brief Remove a created object from the world
-	bool DestroyObject(unsigned int a_objectId);
+	//\param a_destroyScriptBindings true if the script management bindings should be killed
+	//\return true if an object is destroyed
+	bool DestroyObject(unsigned int a_objectId, bool a_destroyScriptBindings = true);
+
+	//\brief Destroy all objects in the current scene
+	//\param a_destroyScriptOwned bool to specify destruction of scripts owned objects
+	//\return true if any objects were destroyed
+	bool DestoryAllObjects(bool a_destroyScriptOwned = false);
+
+	//\brief Destroy all objects owned by script in the current scene
+	//\param a_destroyScriptBindings bool to specify destruction of bindings to scripts, usually unwanted as script is going bye bye
+	//\return true if any objects were destroyed
+	bool DestoryAllScriptsOwnedObjects(bool a_destroyScriptBindings = false);
 
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object

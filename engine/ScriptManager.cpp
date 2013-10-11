@@ -29,6 +29,12 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 
 bool ScriptManager::Startup(const char * a_scriptPath)
 {
+	// As this method is called when scripts reload, make sure the global state is dead
+	if (m_globalLua != NULL || m_managedScripts.GetLength() > 0)
+	{
+		Shutdown();
+	}
+	
 	// Open Lua and load the standard libraries
 	if (m_globalLua = luaL_newstate())
 	{
@@ -111,16 +117,12 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 
 bool ScriptManager::Shutdown()
 {
-	// Clean up game thread
-	if (m_gameLua != NULL)
-	{
-		lua_close(m_gameLua);
-	}
-
-	// Clean up global lua object
+	// Clean up global lua object which will clean up the game thread
 	if (m_globalLua != NULL)
 	{
 		lua_close(m_globalLua);
+		m_globalLua = NULL;
+		m_gameLua = NULL;
 	}
 
 	// And any managed scripts
@@ -211,7 +213,13 @@ bool ScriptManager::Update(float a_dt)
 				curScript->m_timeStamp = curTimeStamp;
 				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in script %s, reloading.", curScript->m_path);
 
-				// TODO actual script reload functionality
+				// Clean up any script-owned objects
+				WorldManager::Get().DestoryAllScriptsOwnedObjects();
+
+				// Kick the script VM in the guts
+				Shutdown();
+				Startup(m_scriptPath);
+				return true;
 			}
 
 			next = next->GetNext();
