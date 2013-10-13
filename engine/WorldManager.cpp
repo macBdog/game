@@ -340,7 +340,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	}
 
 	// Clean up the list of fonts
-	FileManager::Get().EmptyFileList(sceneFiles);
+	FileManager::Get().CleanupFileList(sceneFiles);
 
 	// If no scenes, setup the default scene
 	if (numSceneFiles == 0)

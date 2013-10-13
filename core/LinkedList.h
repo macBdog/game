@@ -56,12 +56,13 @@ public:
 	, m_length(0)
 	{}
 
-	// Accessors for head and tail
+	//\brief Accessors for head and tail
 	inline LinkedListNode<T> * GetHead() const { return m_head; }
 	inline LinkedListNode<T> * GetTail() const { return m_tail; }
 	inline bool IsEmpty() const { return m_length == 0; }
 	inline unsigned int GetLength() const { return m_length; }
 
+	//\brief Add a node to the list
 	inline void Insert(LinkedListNode<T> * a_node)
 	{
 		// First item in the list
@@ -85,7 +86,7 @@ public:
 		m_length++;
 	}
 
-	// Link next to prev and vice versa
+	//\brief Link next to prev and vice versa
 	inline void Remove(LinkedListNode<T> * a_node) 
 	{
 		// Update new head of list
@@ -120,6 +121,23 @@ public:
 		}
 	}
 	
+	//\brief Iterative search
+	inline LinkedListNode<T> * Find(T * a_data)
+	{
+		LinkedListNode<T> * foundNode = NULL;
+		LinkedListNode<T> * curNode = m_head;
+		while (curNode != NULL)
+		{
+			if (curNode->GetData() == a_data)
+			{
+				foundNode = curNode;
+				break;
+			}
+			curNode = curNode->m_next;
+		}
+		return foundNode;
+	}
+
 	inline void Swap(LinkedListNode<T> * a_node1, LinkedListNode<T> * a_node2)
 	{
 		// Copy nodes to be swapped so we dont write over neighbour addresses

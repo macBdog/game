@@ -131,7 +131,7 @@ extern bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lin
 	return distanceToSphereSq <= a_sphereRadius;
 }
 
-extern bool CollisionUtils::IntersectPointAxisBox(Vector a_point, Vector a_boxPos, Vector a_boxDimensions)
+extern bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const Vector & a_boxPos, const Vector & a_boxDimensions)
 {
 	const Vector halfDim = a_boxDimensions * 0.5f;
 	if (a_point.GetX() >= a_boxPos.GetX() - halfDim.GetX() && 

@@ -35,7 +35,7 @@ namespace CollisionUtils
 	//\param a_boxPos the middle of the box
 	//\param a_boxDimensions the size of the box in x,y,z order
 	//\return true if the point is on or inside the box
-	extern bool IntersectPointAxisBox(Vector a_point, Vector a_boxPos, Vector a_boxDimensions);
+	extern bool IntersectPointAxisBox(const Vector & a_point, const Vector & a_boxPos, const Vector & a_boxDimensions);
 
 	//\brief Intersection between a point and a sphere
 	//\param a_point worldpos vector of the point

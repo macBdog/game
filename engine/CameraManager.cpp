@@ -5,7 +5,7 @@
 #include "CameraManager.h"
 #include "InputManager.h"
 
-const float CameraManager::sc_debugCameraSpeed = 2.5f;
+const float CameraManager::sc_debugCameraSpeed = 16.0f;
 const float CameraManager::sc_debugCameraRot = 360.0f;
 const float CameraManager::sc_debugCameraRotSpeed = 0.01f;
 

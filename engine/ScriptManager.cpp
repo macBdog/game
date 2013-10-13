@@ -13,16 +13,25 @@ const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant nam
 // Registration of game object functions
 const luaL_Reg ScriptManager::s_gameObjectFuncs[] = {
 	{"Create", CreateGameObject},
+	{"Destroy", DestroyGameObject},
 	{NULL, NULL}
 };
 
 // Registration of game object class member functions
 const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
-	{"GetPosition", GetGameObjectPosition},
-	{"SetPosition", SetGameObjectPosition},
+	{"GetId", GetGameObjectId},
 	{"GetName", GetGameObjectName},
 	{"SetName", SetGameObjectName},
-	{"DestroyGameObject", DestroyGameObject},
+	{"GetPosition", GetGameObjectPosition},
+	{"SetPosition", SetGameObjectPosition},
+	{"GetRotation", GetGameObjectPosition},
+	{"SetRotation", SetGameObjectPosition},
+	{"EnableCollision", EnableGameObjectCollision},
+	{"DisableCollision", DisableGameObjectCollision},
+	{"AddCollider", AddGameObjectCollider},
+	{"RemoveCollider", RemoveGameObjectCollider},
+	{"HasCollided", TestGameObjectCollisions},
+	{"GetCollisions", GetGameObjectCollisions},
 	{"__gc", DestroyGameObject},
 	{NULL, NULL}
 };
@@ -109,7 +118,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		}
 
 		// Clean up the list of fonts
-		fileMan.EmptyFileList(scriptFiles);
+		fileMan.CleanupFileList(scriptFiles);
 	}
 
 	return m_globalLua != NULL;
@@ -271,11 +280,11 @@ int ScriptManager::RegisterGameObject(lua_State * a_luaState)
 	return 1;	
 }
 
-GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState)
+GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState, unsigned int a_argumentId)
 {
 	// Retrieve the object from a userdata reference
-	luaL_checktype(a_luaState, 1, LUA_TUSERDATA);
-	unsigned int * objId = (unsigned int*)(lua_touserdata(a_luaState, 1));
+	luaL_checktype(a_luaState, a_argumentId, LUA_TUSERDATA);
+	unsigned int * objId = (unsigned int*)(lua_touserdata(a_luaState, a_argumentId));
 	return WorldManager::Get().GetGameObject(*objId);	
 }
 
@@ -350,6 +359,68 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 	return 1; // One bool returned
 }
 
+int ScriptManager::GetGameObjectId(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			lua_pushnumber(a_luaState, gameObj->GetId());
+			return 1;
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("GetGameObjectId cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GetGameObjectId expects no parameters.");
+	}
+	
+	return 0;
+}
+
+int ScriptManager::GetGameObjectName(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			lua_pushstring(a_luaState, gameObj->GetName());
+			return 1;
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("GetGameObjectName cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GetGameObjectName expects no parameters.");
+	}
+	
+	return 0;
+}
+
+int ScriptManager::SetGameObjectName(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TSTRING);
+			const char * newName = lua_tostring(a_luaState, 2);
+			gameObj->SetName(newName);
+			return 0;
+		}
+	}
+	 
+	// Log error to user
+	Log::Get().WriteGameErrorNoParams("SetGameObjectName expects 1 string parameter.");
+	return 0;
+}
+
 int ScriptManager::GetGameObjectPosition(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -398,25 +469,171 @@ int ScriptManager::SetGameObjectPosition(lua_State * a_luaState)
 	return 0;
 }
 
-int ScriptManager::GetGameObjectName(lua_State * a_luaState)
+int ScriptManager::GetGameObjectRotation(lua_State * a_luaState)
 {
-	return 1;
-}
-
-int ScriptManager::SetGameObjectName(lua_State * a_luaState)
-{
-	if (lua_gettop(a_luaState) == 2)
+	if (lua_gettop(a_luaState) == 1)
 	{
 		if (GameObject * gameObj = CheckGameObject(a_luaState))
 		{
-			luaL_checktype(a_luaState, 2, LUA_TSTRING);
-			const char * newName = lua_tostring(a_luaState, 2);
-			gameObj->SetName(newName);
-			return 0;
+			Vector rot = gameObj->GetRot();
+			lua_pushnumber(a_luaState, rot.GetX());
+			lua_pushnumber(a_luaState, rot.GetY());
+			lua_pushnumber(a_luaState, rot.GetZ());
+			return 3;
+		}
+		else // Object not found, destroyed?
+		{
+			Log::Get().WriteGameErrorNoParams("GetGameObjectRotation cannot find the game object referred to.");
 		}
 	}
-	 
-	// Log error to user
-	Log::Get().WriteGameErrorNoParams("SetGameObjectName expects 1 string parameter.");
+	else // Wrong number of args
+	{
+		Log::Get().WriteGameErrorNoParams("GetGameObjectRotation expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectRotation(lua_State * a_luaState)
+{ 
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector newRot((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4)); 
+			gameObj->SetRot(newRot);
+		}
+		else // Object not found, destroyed?
+		{
+			Log::Get().WriteGameErrorNoParams("SetGameObjectRotation could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		Log::Get().WriteGameErrorNoParams("SetGameObjectRotation expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::EnableGameObjectCollision(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->SetClipping(true);
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("EnableGameObjectCollision cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("EnableGameObjectCollision expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::DisableGameObjectCollision(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->SetClipping(false);
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("DisableGameObjectCollision cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("DisableGameObjectCollision expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::AddGameObjectCollider(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		GameObject * gameObj = CheckGameObject(a_luaState);
+		GameObject * colGameObj = CheckGameObject(a_luaState, 2);
+		if (gameObj != NULL && colGameObj != NULL)
+		{
+			gameObj->AddCollider(colGameObj);
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("AddGameObjectCollider cannot find the game objects referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("AddGameObjectCollider expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::RemoveGameObjectCollider(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		GameObject * gameObj = CheckGameObject(a_luaState);
+		GameObject * colGameObj = CheckGameObject(a_luaState, 2);
+		if (gameObj != NULL && colGameObj != NULL)
+		{
+			gameObj->RemoveCollider(colGameObj);
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("RemoveGameObjectCollider cannot find the game objects referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("RemoveGameObjectCollider expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::TestGameObjectCollisions(lua_State * a_luaState)
+{
+	// Check the list of collisions
+	bool foundCollisions = false;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			GameObject::CollisionList colList;
+			gameObj->GetCollisions(colList);
+			if (!colList.IsEmpty())
+			{
+				gameObj->CleanupCollisionList(colList);
+				foundCollisions = true;
+			}
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("TestGameObjectCollisions cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("TestGameObjectCollisions expects no parameters.");
+	}
+
+	// Push if we found any collisions
+	lua_pushboolean(a_luaState, foundCollisions);
+	return 1;
+}
+
+int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
+{
+	// TODO
 	return 0;
 }

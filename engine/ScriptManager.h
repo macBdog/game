@@ -53,9 +53,9 @@ private:
 
 	//\brief Verify a user data pointer passed by script is a valid GameObject pointer
 	//\param a_luaState pointer to the LUA state to interrogate
-	//\param a_index the id of the user data pointer in the LUA registry
+	//\param a_argumentId the id of the user data pointer in the LUA registry
 	//\return a pointer to a GameObject or null if unvalid
-	static GameObject * CheckGameObject(lua_State * a_luaState);
+	static GameObject * CheckGameObject(lua_State * a_luaState, unsigned int a_argumentId = 1U);
 
 	//\brief Register a new metatable with LUA for gameobject lookups
 	//\param a_luaState pointer to the LUA state to operate on
@@ -69,10 +69,19 @@ private:
 	static int IsKeyDown(lua_State * a_luaState);
 
 	//brief LUA versions of game object functions
-	static int GetGameObjectPosition(lua_State * a_luaState);
-	static int SetGameObjectPosition(lua_State * a_luaState);
+	static int GetGameObjectId(lua_State * a_luaState);
 	static int GetGameObjectName(lua_State * a_luaState);
 	static int SetGameObjectName(lua_State * a_luaState);
+	static int GetGameObjectPosition(lua_State * a_luaState);
+	static int SetGameObjectPosition(lua_State * a_luaState);
+	static int GetGameObjectRotation(lua_State * a_luaState);
+	static int SetGameObjectRotation(lua_State * a_luaState);
+	static int EnableGameObjectCollision(lua_State * a_luaState);
+	static int DisableGameObjectCollision(lua_State * a_luaState);
+	static int AddGameObjectCollider(lua_State * a_luaState);
+	static int RemoveGameObjectCollider(lua_State * a_luaState);
+	static int TestGameObjectCollisions(lua_State * a_luaState);
+	static int GetGameObjectCollisions(lua_State * a_luaState);
 
 	//\brief A managed script stores info critical to the hot reloading of scripts
 	struct ManagedScript

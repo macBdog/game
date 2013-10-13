@@ -59,6 +59,7 @@ public:
 		, m_clipType(eClipTypeAxisBox)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
+		, m_clipping(false)
 		, m_worldMat(Matrix::Identity())
 		, m_scriptRef(-1)
 		{ 
@@ -130,6 +131,7 @@ public:
 	inline void SetClipType(eClipType a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
+	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline unsigned int GetId() { return m_id; }
@@ -145,17 +147,8 @@ public:
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline int GetScriptReference() const { return m_scriptRef; }
-
-	//\brief Child object accessors
-	inline GameObject * GetChild() { return m_child; }
-	inline GameObject * GetNext() { return m_next; }
-
-	//\brief Collision functions
-	//\param The vector(s) to check intersection against the game object
-	//\return bool true if there is an intersection, false if none
-	bool CollidesWith(Vector a_worldPos);
-	bool CollidesWith(Vector a_lineStart, Vector a_lineEnd);
-
+	Vector GetRot() const;
+	
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
@@ -163,6 +156,37 @@ public:
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
+	void SetRot(const Vector & a_newRot);
+
+	//\brief Child object accessors
+	inline GameObject * GetChild() { return m_child; }
+	inline GameObject * GetNext() { return m_next; }
+
+	//\ingroup Collision
+	typedef LinkedListNode<GameObject> Collider;		///< Alias for passing lists of game objects around
+	typedef LinkedList<GameObject> CollisionList;		///< Alias for passing lists of game objects around
+
+	//\ingroup Collision list functions
+	//\brief Find any colliding game objects this frame
+	//\param a_list_OUT ref to a collision linked list to be modified, memory will be allocated
+	//\return bool true if nodes were added to the linked list and memory was allocated
+	bool GetCollisions(CollisionList & a_list_OUT);
+
+	//\brief Clean up memory for a collision list, MUST be called after GetCollisions returns true
+	//\param a_list_OUT ref to a collision linked list to be modified, memory will be ede-allocated
+	bool CleanupCollisionList(CollisionList & a_list_OUT);
+
+	//\brief Collision utility functions
+	inline bool HasColliders() { return !m_colliders.IsEmpty(); }
+	bool AddCollider(GameObject * a_colObj);
+	bool RemoveCollider(GameObject * a_colObj);
+	
+	//\brief Realtime collision functions
+	//\param The vector(s) to check intersection against the game object
+	//\return bool true if there is an intersection, false if none
+	bool CollidesWith(Vector a_worldPos);
+	bool CollidesWith(GameObject * a_collider);
+	bool CollidesWith(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Add the game object, all instance properties and children to game file object
 	//\param a_outputFile is a gamefile object that will be appended
@@ -181,6 +205,7 @@ private:
 	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids
 	GameObject *		  m_child;				///< Pointer to first child game obhject
 	GameObject *		  m_next;				///< Pointer to sibling game objects
+	CollisionList		  m_colliders;			///< List of objects that this game object will process collisions with every frame
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
 	eGameObjectState	  m_state;				///< What state the object is in
@@ -188,6 +213,7 @@ private:
 	eClipType			  m_clipType;			///< What kind of shape represents the bounds of the object
 	Vector				  m_clipVolumeSize;		///< Dimensions of the clipping volume for culling and picking
 	Vector				  m_clipVolumeOffset;	///< How far from the pivot of the object the clip volume is
+	bool				  m_clipping;			///< If collision is enabled
 	Matrix				  m_worldMat;			///< Position and orientation in the world
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template

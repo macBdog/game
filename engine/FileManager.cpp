@@ -156,7 +156,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 }
 #endif
 
-void FileManager::EmptyFileList(FileList & a_fileList_OUT)
+void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 {
 	// Iterate through all objects in this file and clean up memory
 	FileListNode * next = a_fileList_OUT.GetHead();

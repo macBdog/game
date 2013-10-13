@@ -74,7 +74,7 @@ public:
 	//\param a_keyPress if the last key to be pressed or released is required, optional
 	inline SDLKey GetLastKey(bool a_keyPress = true) { return a_keyPress ? m_lastKeyPress : m_lastKeyRelease; }
 
-	//\brief Utility function to find if an arbitrary key is pressed or release
+	//\brief Utility function to find if an arbitrary key is pressed or released
 	//\param a_keyVal the SDL key value of the key to check
 	//\return bool true if the button is currently down
 	bool IsKeyDepressed(SDLKey a_key);

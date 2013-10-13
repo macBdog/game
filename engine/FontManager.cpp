@@ -40,7 +40,7 @@ bool FontManager::Startup(const char * a_fontPath)
 	}
 
 	// Clean up the list of fonts
-	FileManager::Get().EmptyFileList(fontFiles);
+	FileManager::Get().CleanupFileList(fontFiles);
 
 	return loadSuccess;
 }

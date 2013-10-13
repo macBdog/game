@@ -382,7 +382,7 @@ bool Gui::LoadMenus(const char * a_guiPath)
 	}
 
 	// Clean up the list of fonts
-	fileMan.EmptyFileList(menuFiles);
+	fileMan.CleanupFileList(menuFiles);
 
 	return loadSuccess;
 }

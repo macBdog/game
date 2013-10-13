@@ -79,7 +79,7 @@ public:
 	//\param a_fileSubstring optionally exclude all files without this substring in the path
 	bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = NULL);
 	bool CheckFilePath(const char * a_filePath);
-	void EmptyFileList(FileList & a_fileList_OUT);
+	void CleanupFileList(FileList & a_fileList_OUT);
 
 	//\brief Convenience functions for file lists
 	//\param a_fileList const ref to the fileList being counted
@@ -135,7 +135,7 @@ public:
 		// The filelist itself is regular
 		return FillFileList(a_filePath, a_fileList_OUT, a_fileSubstring);
 	}
-	inline void EmptyManagedFileList(FileList & a_fileList_OUT) { EmptyFileList(a_fileList_OUT); }
+	inline void CleanupManagedFileList(FileList & a_fileList_OUT) { CleanupFileList(a_fileList_OUT); }
 
 	//\brief Utility function to return a file's time stamp, is RELATIVE to each day.
 	//\param a_path the path to the file to be interrogated
