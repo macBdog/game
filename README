@@ -1,12 +1,13 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: LUA integration for scenes and GameObjects, providing lifecycle hooks.
+WHAT IS THE CURRENT SHORT TERM GOAL: Lighting in default shaders. Animation system.
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 TASK QUEUE: Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 
 What is this project?
 
-1. A lightweight, simple framework for gamejamming and indie 2D and 3D PC games.
+1. A lightweight, simple framework for gamejamming indie 2D and 3D PC games.
 2. Well organised and easy to read and understand.
-3. Focused on making games easier to develop by using only in-engine tools.
+3. Focused on making games easier to develop by using only in-engine tools and hotloading.
+4. Compatable with VR displays like the Oculus Rift.
 
 What isn't this project?
 
