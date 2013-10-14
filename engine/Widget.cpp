@@ -110,7 +110,12 @@ void Widget::Draw()
 					}
 				}
 			}	
+		} 
+		else if (m_text[0] != '\0') // Always display text
+		{
+			FontManager::Get().DrawString(m_text, m_fontNameHash, 1.07f, m_pos, m_colour, batch);
 		}
+
 
 		// Draw any list items
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
@@ -366,6 +371,38 @@ void Widget::Orphan()
 	}
 }
 
+Widget * Widget::Find(const char * a_name)
+{
+	// Non search cases
+	if (strcmp(m_name, a_name) == 0)
+	{
+		return this;
+	}
+	if (m_firstChild == NULL)
+	{
+		return NULL;
+	}
+
+	// Exhaustive search through child and siblings to find widget with name
+	Widget * foundWidget = NULL;
+	Widget * curWidget = m_firstChild;
+	while (curWidget != NULL && foundWidget == NULL)
+	{
+		if (strcmp(curWidget->GetName(), a_name) == 0)
+		{
+			return curWidget;
+		}
+		// Recurse into children's family to find the widget
+		if (curWidget->m_firstChild != NULL)
+		{
+			foundWidget = curWidget->Find(a_name);
+		}
+		// Keep searching the widget list
+		curWidget = curWidget->GetNext();
+	}
+	return foundWidget;
+}
+
 void Widget::Activate() 
 { 
 	// Check then call the callback
@@ -395,7 +432,13 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		menuStream << tabs << "widget" << StringUtils::s_charLineEnd;
 		menuStream << tabs << "{" << StringUtils::s_charLineEnd;
 		menuStream << tabs << StringUtils::s_charTab << "name: "	<< m_name				<< StringUtils::s_charLineEnd;
+
+		strncpy(outBuf, m_text, strlen(m_text) + 1);
+		menuStream << tabs << StringUtils::s_charTab << "text: " << outBuf << StringUtils::s_charLineEnd;
 		
+		m_colour.GetString(outBuf);
+		menuStream << tabs << StringUtils::s_charTab << "colour: "	<< outBuf	<< StringUtils::s_charLineEnd;
+
 		m_pos.GetString(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "pos: "	<< outBuf	<< StringUtils::s_charLineEnd;
 

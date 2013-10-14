@@ -147,6 +147,29 @@ extern bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const 
 	return false;
 }
 
+extern bool CollisionUtils::IntersectAxisBoxes(const Vector & a_box1Pos, const Vector & a_box1Dim, const Vector & a_box2Pos, const Vector & a_box2Dim)
+{
+	// TODO: Fix this, for ALL intersection cases
+	// Exhaustively test each corner of the game object passed in against our volume
+	Vector halfSize = a_box1Dim * 0.5f;
+	Vector corners[8] = {	a_box1Pos + Vector(halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), 
+							a_box1Pos + Vector(halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), 
+							a_box1Pos + Vector(-halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), 
+							a_box1Pos + Vector(-halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), 
+							a_box1Pos + Vector(halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), 
+							a_box1Pos + Vector(halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ()), 
+							a_box1Pos + Vector(-halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), 
+							a_box1Pos + Vector(-halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ())};
+	for (int i = 0; i < 8; ++i)
+	{
+		if (CollisionUtils::IntersectPointAxisBox(corners[i], a_box2Pos, a_box2Dim))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 extern bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_spherePos, float a_sphereRadius)
 {
 	return (a_point - a_spherePos).LengthSquared() <= (a_sphereRadius * a_sphereRadius);

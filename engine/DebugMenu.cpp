@@ -43,6 +43,7 @@ DebugMenu::DebugMenu()
 , m_btnChangeGUIPos(NULL)
 , m_btnChangeGUIShape(NULL)
 , m_btnChangeGUIName(NULL)
+, m_btnChangeGUIText(NULL)
 , m_btnChangeGUITexture(NULL)
 , m_btnDeleteGUI(NULL)
 , m_btnChangeObjectRoot(NULL)
@@ -82,6 +83,7 @@ bool DebugMenu::Startup()
 	m_btnChangeGUIPos = CreateButton("Position", sc_colourPurple, m_btnChangeGUIRoot);
 	m_btnChangeGUIShape = CreateButton("Shape", sc_colourBlue, m_btnChangeGUIRoot);
 	m_btnChangeGUIName = CreateButton("Name", sc_colourOrange, m_btnChangeGUIRoot);
+	m_btnChangeGUIText = CreateButton("Text", sc_colourGreen, m_btnChangeGUIRoot);
 	m_btnChangeGUITexture = CreateButton("Texture", sc_colourYellow, m_btnChangeGUIRoot);
 	m_btnDeleteGUI = CreateButton("Delete", sc_colourGrey, m_btnChangeGUIRoot);
 
@@ -344,6 +346,9 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_btnChangeGUIName->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
+		m_btnChangeGUIText->SetPos(right + height);
+
+		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
 		m_btnChangeGUITexture->SetPos(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
@@ -365,9 +370,16 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUIName)
-	{		
+	{
 		m_editMode = eEditModeName;
 		ShowTextInput(m_widgetToEdit->GetName());
+		ShowChangeGUIMenu(false);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnChangeGUIText)
+	{		
+		m_editMode = eEditModeText;
+		ShowTextInput(m_widgetToEdit->GetText());
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
@@ -519,6 +531,15 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				if (m_widgetToEdit != NULL)
 				{
 					m_widgetToEdit->SetName(m_textInputField->GetText());
+					m_dirtyFlags.Set(eDirtyFlagGUI);
+				}
+			}
+			else if (m_editMode == eEditModeText)
+			{
+				// Editing the text of a widget
+				if (m_widgetToEdit != NULL)
+				{
+					m_widgetToEdit->SetText(m_textInputField->GetText());
 					m_dirtyFlags.Set(eDirtyFlagGUI);
 				}
 			}
@@ -970,6 +991,7 @@ void DebugMenu::ShowChangeGUIMenu(bool a_show)
 	m_btnChangeGUIPos->SetActive(a_show);
 	m_btnChangeGUIShape->SetActive(a_show);
 	m_btnChangeGUIName->SetActive(a_show);
+	m_btnChangeGUIText->SetActive(a_show);
 	m_btnChangeGUITexture->SetActive(a_show);
 	m_btnDeleteGUI->SetActive(a_show);
 }

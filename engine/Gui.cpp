@@ -161,13 +161,17 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 
 	// Get properties from the file that correspond to widget definitions
 	Widget::WidgetDef defFromFile;
-	if (GameFile::Property * size = a_widgetFile->FindProperty("size"))
+	if (GameFile::Property * colour = a_widgetFile->FindProperty("colour"))
 	{
-		defFromFile.m_size = size->GetVector2();
+		defFromFile.m_colour = colour->GetColour();
 	}
 	if (GameFile::Property * pos = a_widgetFile->FindProperty("pos"))
 	{
 		defFromFile.m_pos = pos->GetVector2();
+	}
+	if (GameFile::Property * size = a_widgetFile->FindProperty("size"))
+	{
+		defFromFile.m_size = size->GetVector2();
 	}
 	if (GameFile::Property * fontName = a_widgetFile->FindProperty("font"))
 	{
@@ -190,6 +194,17 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		{
 			newWidget->SetName(name->GetString());
 		}
+
+		if (GameFile::Property * text = a_widgetFile->FindProperty("text"))
+		{
+			newWidget->SetText(text->GetString());
+		}
+
+		if (GameFile::Property * colour = a_widgetFile->FindProperty("colour"))
+		{
+			newWidget->SetColour(colour->GetColour());
+		}
+
 		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
 			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureManager::eCategoryGui))
@@ -202,6 +217,29 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	}
 
 	return NULL;
+}
+
+Widget * Gui::FindWidget(const char * a_widgetName)
+{
+	// Search the active menu first
+	Widget * foundWidget = NULL;
+	if (m_activeMenu != NULL)
+	{
+		foundWidget = m_activeMenu->Find(a_widgetName);
+	}
+
+	// Search through all menus if not found
+	if (foundWidget == NULL)
+	{
+		MenuListNode * cur = m_menus.GetHead();
+		while(cur != NULL && foundWidget == NULL)
+		{
+			foundWidget = cur->GetData()->Find(a_widgetName);
+			cur = cur->GetNext();
+		}
+	}
+
+	return foundWidget;
 }
 
 void Gui::DestroyWidget(Widget * a_widget)

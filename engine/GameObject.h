@@ -59,7 +59,7 @@ public:
 		, m_clipType(eClipTypeAxisBox)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
-		, m_clipping(false)
+		, m_clipping(true)
 		, m_worldMat(Matrix::Identity())
 		, m_scriptRef(-1)
 		{ 

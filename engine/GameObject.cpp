@@ -226,25 +226,10 @@ bool GameObject::CollidesWith(GameObject * a_colObj)
 		{
 			return false;
 		}
-
-		// Otherwise exhaustively test each corner of the game object argument against our volume
-		Vector halfSize = a_colObj->GetClipSize() * 0.5f;
-		Vector corners[8] = {	colCentre + Vector(halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), 
-								colCentre + Vector(halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), 
-								colCentre + Vector(-halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), 
-								colCentre + Vector(-halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), 
-								colCentre + Vector(halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), 
-								colCentre + Vector(halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ()), 
-								colCentre + Vector(-halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), 
-								colCentre + Vector(-halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ())};
-		for (int i = 0; i < 8; ++i)
+		else // TODO: remove this! Need proper AABB test
 		{
-			if (CollisionUtils::IntersectPointAxisBox(corners[i], myCentre, m_clipVolumeSize))
-			{
-				return true;
-			}
+			return true;
 		}
-		return false;		
 	}
 	return false;
 }

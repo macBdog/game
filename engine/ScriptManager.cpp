@@ -10,6 +10,13 @@ template<> ScriptManager * Singleton<ScriptManager>::s_instance = NULL;
 const float ScriptManager::s_updateFreq = 1.0f;								///< How often the script manager should check for updates to scripts
 const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
 
+// Registration of gui functions
+const luaL_Reg ScriptManager::s_guiFuncs[] = {
+	{"GetValue", GUIGetValue},
+	{"SetValue", GUISetValue},
+	{NULL, NULL}
+};
+
 // Registration of game object functions
 const luaL_Reg ScriptManager::s_gameObjectFuncs[] = {
 	{"Create", CreateGameObject},
@@ -60,6 +67,11 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "DestroyGameObject", DestroyGameObject);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
+
+		// Register C++ functions available on the global GUI
+		lua_newtable(m_globalLua);
+		luaL_setfuncs(m_globalLua, s_guiFuncs, 0);
+		lua_setglobal(m_globalLua, "GUI");
 
 		// Register C++ functions available on the global GameObject
 		lua_newtable(m_globalLua);
@@ -357,6 +369,56 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, keyIsDown);
 	return 1; // One bool returned
+}
+
+int ScriptManager::GUIGetValue(lua_State * a_luaState)
+{
+	char strValue[StringUtils::s_maxCharsPerName];
+	strValue[0] = '\0';
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		if (const char * guiName = lua_tostring(a_luaState, 2))
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				strncpy(strValue, foundElem->GetText(), strlen(foundElem->GetText()) + 1);
+			}
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GUIGetValue expects 1 parameter: name of the element to get.");
+	}
+	
+	lua_pushstring(a_luaState, strValue);
+	return 1;
+}
+
+int ScriptManager::GUISetValue(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		const char * newText = lua_tostring(a_luaState, 3);
+		if (guiName != NULL && newText != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetText(newText);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GUISetValue expects 2 parameters: name of the element to set and the string to set.");
+	}
+
+	Log::Get().WriteGameErrorNoParams("GUISetValue could not find the GUI element to set a value on.");
+	return 0;
 }
 
 int ScriptManager::GetGameObjectId(lua_State * a_luaState)

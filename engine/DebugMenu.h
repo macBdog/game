@@ -112,6 +112,7 @@ private:
 		eEditModeShape,			///< Widget bottom right stuck to mouse pos
 		eEditModeTexture,		///< File selection dialog active
 		eEditModeName,			///< Cursor keys bound to display name
+		eEditModeText,			///< Cursor keys bound to text value
 		eEditModeModel,			///< Setting the model for an object
 		eEditModeTemplate,		///< Create an object from a template
 		eEditModeSaveTemplate,	///< Set the template name for an object
@@ -171,6 +172,7 @@ private:
 		Widget * m_btnChangeGUIPos;
 		Widget * m_btnChangeGUIShape;
 		Widget * m_btnChangeGUIName;
+		Widget * m_btnChangeGUIText;
 		Widget * m_btnChangeGUITexture;
 		Widget * m_btnDeleteGUI;
 

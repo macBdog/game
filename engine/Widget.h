@@ -183,6 +183,7 @@ public:
 	inline Widget * GetNext() { return m_next; }
 	inline Widget * GetChild() { return m_firstChild; }
 	inline Widget * GetParent() { return m_parent; }
+	Widget * Find(const char * a_name);
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }

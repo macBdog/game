@@ -45,6 +45,7 @@ private:
 
 	static const float s_updateFreq;							///< How often the script manager should check for script updates
 	static const char * s_mainScriptName;						///< Constant name of the main game script file
+	static const luaL_Reg s_guiFuncs[];							///< Constant array of functions registered for for the GUI global
 	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global
 	static const luaL_Reg s_gameObjectMethods[];				///< Constant array of functions registered for game object members
 
@@ -67,6 +68,8 @@ private:
 	static int GetGameObject(lua_State * a_luaState);
 	static int DestroyGameObject(lua_State * a_luaState);
 	static int IsKeyDown(lua_State * a_luaState);
+	static int GUIGetValue(lua_State * a_luaState);
+	static int GUISetValue(lua_State * a_luaState);
 
 	//brief LUA versions of game object functions
 	static int GetGameObjectId(lua_State * a_luaState);

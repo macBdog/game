@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "../core/Colour.h"
 #include "../core/LinkedList.h"
 #include "../core/Vector.h"
 
@@ -63,6 +64,18 @@ public:
 		{
 			const char * vecString = (const char *)m_data;
 			return strstr(vecString, "true") != NULL;
+		}
+
+		inline Colour GetColour()
+		{
+			const char * colString = (const char *)m_data;
+			if (strstr(colString, ","))
+			{
+				int r, g, b, a = 0;
+				sscanf(StringUtils::TrimString(colString), "%d,%d,%d,%d", &r, &g, &b, &a);
+				return Colour(r, g, b, a);
+			}
+			return sc_colourWhite;
 		}
 
 		inline Vector GetVector()
