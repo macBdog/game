@@ -1,6 +1,6 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Lighting in default shaders. Animation system.
+WHAT IS THE CURRENT SHORT TERM GOAL: Rewrite WorldManager object lookup to be constant time.
+TASK QUEUE: Lighting in default shaders. Animation system. Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
-TASK QUEUE: Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 
 What is this project?
 
