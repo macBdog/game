@@ -45,6 +45,7 @@ public:
 	//\param pointer to a cstring of the font name to retreieve
 	//\return pointer to a StringHash or NULL for failure
 	StringHash * GetLoadedFontName(const char * a_fontName);
+	const char * GetLoadedFontName(unsigned int a_fontNameHash);
 
 	//\brief Get a default font name
 	StringHash * GetDebugFontName();

@@ -11,6 +11,19 @@
 
 using namespace std;	//< For fstream operations
 
+const char * WidgetVector::s_alignXNames[eAlignXCount] = 
+{
+	"left",
+	"middle",
+	"right"
+};
+const char * WidgetVector::s_alignYNames[eAlignYCount] =
+{
+	"top",
+	"centre",
+	"bottom"
+};
+
 const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.05f, 0.2f, 0.2f, 0.2f);
@@ -104,16 +117,14 @@ void Widget::Draw()
 						}
 						FontManager::Get().DrawDebugString2D(cursorText, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
 					}
-					else // Draw the string on it's own
-					{
-						FontManager::Get().DrawDebugString2D(m_text, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
-					}
 				}
 			}	
 		} 
-		else if (m_text[0] != '\0') // Always display text
+
+		// Always display text for a widget
+		if (m_text[0] != '\0') 
 		{
-			FontManager::Get().DrawString(m_text, m_fontNameHash, 1.07f, m_pos, m_colour, batch);
+			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, m_pos, m_colour, batch);
 		}
 
 
@@ -439,11 +450,23 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		m_colour.GetString(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "colour: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
+		sprintf(outBuf, "%s", FontManager::Get().GetLoadedFontName(m_fontNameHash));
+		menuStream << tabs << StringUtils::s_charTab << "font: " << outBuf	 << StringUtils::s_charLineEnd;
+
+		sprintf(outBuf, "%f", m_fontSize);
+		menuStream << tabs << StringUtils::s_charTab << "fontSize: " << outBuf << StringUtils::s_charLineEnd;
+
 		m_pos.GetString(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "pos: "	<< outBuf	<< StringUtils::s_charLineEnd;
+		menuStream << tabs << StringUtils::s_charTab << "offset: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
 		m_size.GetString(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "size: "	<< outBuf	<< StringUtils::s_charLineEnd;
+
+		m_pos.GetAlignment().GetStringX(outBuf);
+		menuStream << tabs << StringUtils::s_charTab << "alignX: "	<< outBuf	<< StringUtils::s_charLineEnd;
+
+		m_pos.GetAlignment().GetStringY(outBuf);
+		menuStream << tabs << StringUtils::s_charTab << "alignY: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
 		if (m_texture != NULL)
 		{

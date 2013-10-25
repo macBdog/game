@@ -25,7 +25,7 @@ public:
 	inline float GetB() const { return b; }
 	inline float GetA() const { return a; }
 	inline float * GetValues() { return &r; }
-	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%d, %d, %d, %d", r, g, b, a); }
+	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%d, %d, %d, %d", (int)(r*255.0f), (int)(g*255.0f), (int)(b*255.0f), (int)(a*255.0f)); }
 
 	//\brief Standard arithmatic operator overloads
 	Colour operator + (const Colour & a_val) const { return Colour(r + a_val.r, g + a_val.g, b + a_val.b, a + a_val.a); }

@@ -20,7 +20,7 @@ bool Gui::Startup(const char * a_guiPath)
 	// Cache off the gui path for later use when loading menus
 	strncpy(m_guiPath, a_guiPath, strlen(a_guiPath) + 1);
 
-	// Load in the gui texture
+	// Load in the gui config file
 	char fileName[StringUtils::s_maxCharsPerLine];
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
 	m_configFile.Load(fileName);
@@ -62,7 +62,8 @@ bool Gui::Startup(const char * a_guiPath)
 		{
 			sprintf(fileName, "%s%s", a_guiPath, mouseCursorProp->GetString());
 			m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
-			m_cursor.SetPos(Vector2(0.0f, 0.0f));
+			m_cursor.SetAlignment(WidgetVector::eAlignMiddle, WidgetVector::eAlignCentre);
+			m_cursor.SetOffset(Vector2(0.0f, 0.0f));
 			m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
 			m_cursor.SetActive(true);
 		}
@@ -86,7 +87,7 @@ bool Gui::Shutdown()
 bool Gui::Update(float a_dt)
 {
 	// Update mouse position
-	m_cursor.SetPos(InputManager::Get().GetMousePosRelative()); 
+	m_cursor.SetOffset(InputManager::Get().GetMousePosRelative()); 
 
 	// Process mouse position for selection of widgets
 	UpdateSelection();
@@ -131,8 +132,10 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	newWidget->SetName(a_def.m_name);
 	newWidget->SetColour(a_def.m_colour);
 	newWidget->SetSize(a_def.m_size);
-	newWidget->SetPos(a_def.m_pos);
+	newWidget->SetOffset(a_def.m_pos);
+	newWidget->SetAlignment(a_def.m_pos.GetAlignment());
 	newWidget->SetFontName(a_def.m_fontNameHash);
+	newWidget->SetFontSize(a_def.m_fontSize <= 0.5f ? 1.0f : a_def.m_fontSize);
 	newWidget->SetSelectFlags(a_def.m_selectFlags);
 	newWidget->SetActive(a_startActive);
 
@@ -165,13 +168,25 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	{
 		defFromFile.m_colour = colour->GetColour();
 	}
-	if (GameFile::Property * pos = a_widgetFile->FindProperty("pos"))
+	if (GameFile::Property * pos = a_widgetFile->FindProperty("offset"))
 	{
 		defFromFile.m_pos = pos->GetVector2();
 	}
 	if (GameFile::Property * size = a_widgetFile->FindProperty("size"))
 	{
 		defFromFile.m_size = size->GetVector2();
+	}
+	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignX"))
+	{
+		defFromFile.m_pos.SetAlignment(WidgetVector::eAlignLeft, WidgetVector::eAlignTop);
+	}
+	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignY"))
+	{
+		defFromFile.m_pos.SetAlignment(WidgetVector::eAlignLeft, WidgetVector::eAlignTop);
+	}
+	if (GameFile::Property * fontSize = a_widgetFile->FindProperty("fontSize"))
+	{
+		defFromFile.m_fontSize = fontSize->GetFloat();
 	}
 	if (GameFile::Property * fontName = a_widgetFile->FindProperty("font"))
 	{
@@ -194,17 +209,14 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		{
 			newWidget->SetName(name->GetString());
 		}
-
 		if (GameFile::Property * text = a_widgetFile->FindProperty("text"))
 		{
 			newWidget->SetText(text->GetString());
 		}
-
 		if (GameFile::Property * colour = a_widgetFile->FindProperty("colour"))
 		{
 			newWidget->SetColour(colour->GetColour());
 		}
-
 		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
 			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureManager::eCategoryGui))
@@ -212,10 +224,8 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 				newWidget->SetTexture(tex);
 			}
 		}
-
 		return newWidget;
 	}
-
 	return NULL;
 }
 
@@ -359,16 +369,6 @@ bool Gui::LoadMenu(const char * a_menuFile)
 				parentMenu->SetName(menuFile->GetString("menu", "name"));
 				parentMenu->SetFilePath(a_menuFile);
 				parentMenu->SetActive(false);
-
-				// Load the script
-				if (GameFile::Property * scriptProp = menuFile->FindProperty(menuObject, "script"))
-				{
-					// Construct path to script using menu path
-					char scriptPath[StringUtils::s_maxCharsPerLine];
-					parentMenu->SetScript(menuFile->GetString("menu", "script"));
-					sprintf(scriptPath, "%sscripts\\%s", m_guiPath, menuFile->GetString("menu", "script"));
-					ScriptManager::Get().LoadGUIScript(scriptPath);
-				}
 
 				// Load child elements of the menu
 				GameFile::Object * childWidget = menuObject->m_firstChild;

@@ -286,6 +286,22 @@ StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
 		{
 			return &curFont->GetData()->m_fontName;
 		}
+		curFont = curFont->GetNext();
+	}
+
+	return NULL;
+}
+
+const char * FontManager::GetLoadedFontName(unsigned int a_fontNameHash)
+{
+	FontListNode * curFont = m_fonts.GetHead();
+	while(curFont != NULL)
+	{
+		if (StringHash(curFont->GetData()->m_fontName) == a_fontNameHash)
+		{
+			return curFont->GetData()->m_fontName.GetCString();
+		}
+		curFont = curFont->GetNext();
 	}
 
 	return NULL;

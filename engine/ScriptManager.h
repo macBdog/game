@@ -20,7 +20,6 @@ public:
 	ScriptManager(float a_updateFreq = s_updateFreq) 
 		: m_globalLua(NULL)
 		, m_gameLua(NULL)
-		, m_guiLua(NULL) 
 		, m_lastFrameDelta(0.0f)
 		, m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
@@ -30,9 +29,6 @@ public:
 	//\brief Set clear colour buffer and depth buffer setup 
     bool Startup(const char * a_scriptPath);
 	bool Shutdown();
-
-	//\brief Load a script into the GUI specific lua context and optionally call it
-	bool LoadGUIScript(const char * a_scriptPath, bool a_execute = true);
 
 	//\brief Update managed texture
 	bool Update(float a_dt);
@@ -101,7 +97,6 @@ private:
 	ManagedScriptList m_managedScripts;							///< List of all the scripts found on disk at startup
 	lua_State * m_globalLua;									///< Globally scoped LUA environment for game and GUI
 	lua_State * m_gameLua;										///< Seperate LUA execution process for the game thread to run on
-	lua_State * m_guiLua;										///< Separate LUA execution process for the GUI thread to run on
 	char m_scriptPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to scripts 
 	float m_lastFrameDelta;										///< Cache of the delta for the last update received by the script manager
 	float m_updateFreq;											///< How often the script manager should check for changes to shaders

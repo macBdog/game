@@ -162,49 +162,6 @@ bool ScriptManager::Shutdown()
 	return true;
 }
 
-bool ScriptManager::LoadGUIScript(const char * a_scriptPath, bool a_execute)
-{
-	if (m_globalLua == NULL)
-	{
-		Log::Get().WriteEngineErrorNoParams("GUI Script executed before global LUA setup!");
-		return false;
-	}
-
-	// Create the GUI thread 
-	if (m_guiLua == NULL)
-	{
-		m_guiLua = lua_newthread(m_globalLua);
-	}
-
-	// Failed to create thread 
-	if (m_guiLua == NULL)
-	{
-		Log::Get().WriteEngineErrorNoParams("Failed to create thread for GUI script!");
-		return false;
-	}
-
-	// Call code located in script file...
-	if (luaL_loadfile(m_guiLua, a_scriptPath) == 0)
-	{
-		if (a_execute)
-		{
-			// Note: for later execution, call lua_pcall(m_globalLua, 0, LUA_MULTRET, 0)
-		}
-		else
-		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, "Cannot find script file %s.", a_scriptPath);
-		}
-	}
-	else
-	{
-		// Report and remove error message from stack
-		Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, lua_tostring(m_guiLua, -1));
-		lua_pop(m_guiLua, 1);	
-	}
-
-	return true;
-}
-
 bool ScriptManager::Update(float a_dt)
 {
 	// Cache off last delta

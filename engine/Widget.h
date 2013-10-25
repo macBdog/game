@@ -20,21 +20,46 @@ class WidgetVector : public Vector2
 {
 public: 
 
-	//brief Corordinate types allow element positioning relative to other elements
-	enum eCoordType
+	//\brief Alignment types are used as every widget is relative to another
+	enum eAlignmentX
 	{
-	  eCoordTypeRelative = 0,	// -1.0 to 1.0 means the edge of the container 
-	  eCoordTypeAbsolute, 		// 1.0 means 1 pixel from the edge of the container
+		eAlignLeft = 0,
+		eAlignMiddle,
+		eAlignRight,
 
-	  eCoordTypeCount
+		eAlignXCount,
+	};
+	enum eAlignmentY
+	{
+		eAlignTop = 0,
+		eAlignCentre,
+		eAlignBottom,
+
+		eAlignYCount,
+	};
+	struct Alignment
+	{
+		Alignment() : m_x(eAlignLeft), m_y(eAlignTop) {}
+		
+		//\brief String equivalents for  alignment constants written in gui files
+		inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
+		inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
+		inline void SetFromStringX(const char * a_alignString) { for (int i = 0; i < eAlignXCount; ++i) { if (strcmp(a_alignString, s_alignXNames[m_x]) == 0) { m_x = (eAlignmentX)i; break; } } }
+		inline void SetFromStringY(const char * a_alignString) { for (int i = 0; i < eAlignYCount; ++i) { if (strcmp(a_alignString, s_alignYNames[m_y]) == 0) { m_y = (eAlignmentY)i; break; } } }
+		
+		eAlignmentX m_x;		///< Is widget position relative to left, middle or right
+		eAlignmentY m_y;		///< Is widget position relative to top, centre or bottom
 	};
 
-	//\brief Two float ctor for convenience, default to absolute positioning
-	inline WidgetVector() { x = 0.0f; y = 0.0f; m_type = eCoordTypeAbsolute; }
-	inline WidgetVector(float a_x, float a_y) { x = a_x; y = a_y; m_type = eCoordTypeAbsolute; }
+	//\brief Two float ctor for convenience, default to top left
+	inline WidgetVector() : m_align() { x = 0.0f; y = 0.0f; }
+	inline WidgetVector(float a_x, float a_y) : m_align() { x = a_x; y = a_y; }
 
-	void SetCoordType(eCoordType a_type) { m_type = a_type; }
+	//\brief Mutators
 	inline Vector2 GetVector() { return Vector2(x, y); }
+	inline Alignment GetAlignment() const { return m_align; }
+	inline void SetAlignment(const Alignment & a_align) { m_align.m_x = a_align.m_x; m_align.m_y = a_align.m_y; }
+	inline void SetAlignment(eAlignmentX a_x, eAlignmentY a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
 
 	// Operator overloads are not inherited by default
 	void operator = (const Vector2 & a_val) { x = a_val.GetX(); y = a_val.GetY(); }
@@ -46,27 +71,19 @@ public:
 	using Vector2::operator -;
 	using Vector2::operator *;
 
-private:
+	//\brief Literal names for alignment types
+	static const char * s_alignXNames[eAlignXCount];
+	static const char * s_alignYNames[eAlignYCount];
 
-	eCoordType m_type;
+private:
+	Alignment m_alignAnchor;				///< Where the widget is relative to it's parent
+	Alignment m_align;						///< How the widget is aligned
 };
 
 //\brief Widgets are the base 2D elements that make up the GUI system
 class Widget
 {
 public:
-
-	//\brief Alignment types are used when coords are relative to anothe widget
-	enum eAlignment
-	{
-	  eAlignNone = 0,	// Placed wherever it's position dictates
-	  eAlignLeft,
-	  eAlignRight,
-	  eAlignTop,
-	  eAlignBtm,
-
-	  eAlignCount
-	};
 
 	//\brief Represents states of element selection
 	enum eSelectionFlags
@@ -107,7 +124,9 @@ public:
 
 	//\brief Ctor nulls all pointers out for safety
 	Widget()
-		: m_fontNameHash(0)
+		: m_pos(0.0f, 0.0f)
+		, m_fontNameHash(0)
+		, m_fontSize(1.0f)
 		, m_selectFlags(0)
 		, m_selection(eSelectionNone)
 		, m_colour(sc_colourWhite)
@@ -139,6 +158,7 @@ public:
 			, m_colour(sc_colourWhite)
 			, m_name(NULL)
 			, m_fontNameHash(0)
+			, m_fontSize(0.0f)
 			, m_selectFlags(eSelectionRollover) {}
 
 		WidgetVector m_size;
@@ -146,6 +166,7 @@ public:
 		Colour m_colour;
 		const char * m_name;
 		unsigned int m_fontNameHash;
+		float m_fontSize;
 		eSelectionFlags m_selectFlags;
 	};
 		
@@ -187,11 +208,14 @@ public:
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
-	inline void SetPos(Vector2 a_pixelPos, WidgetVector::eCoordType a_type = WidgetVector::eCoordTypeAbsolute) { m_pos = a_pixelPos; m_pos.SetCoordType(a_type); }
-	inline void SetSize(Vector2 a_relPos, WidgetVector::eCoordType a_type = WidgetVector::eCoordTypeAbsolute) { m_size = a_relPos, m_size.SetCoordType(a_type); }
+	inline void SetOffset(Vector2 a_pctOffset) { m_pos = a_pctOffset; }
+	inline void SetAlignment(const WidgetVector::Alignment & a_align) { m_pos.SetAlignment(a_align); } 
+	inline void SetAlignment(WidgetVector::eAlignmentX a_alignX, WidgetVector::eAlignmentY a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); } 
+	inline void SetSize(Vector2 a_pctSize) { m_size = a_pctSize; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
+	inline void SetFontSize(float a_newSize) { m_fontSize = a_newSize; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetScript(const char * a_script) { sprintf(m_script, "%s", a_script); }
 	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
@@ -243,27 +267,28 @@ private:
 	static const Colour sc_editRolloverColour;
 	static const Colour sc_editSelectedColour;
 
-	WidgetVector m_size;				// How much of the parent container the element takes up
-	WidgetVector m_pos;					// Where in the parent container the element resides
-	Colour m_colour;					// What the base colour of the widget is, will tint texture
-	bool m_active;						// If the widget should be drawn and reactive
-	bool m_showTextCursor;				// If the cursor should be shown on a text field
-	unsigned int m_fontNameHash;		// Hash of the name of the font to render with
-	Texture * m_texture;				// What to draw
-	Widget * m_parent;					// Who's ya daddy
-	Widget * m_next;					// Conitiguous widgets are stored as a linked list
-	Widget * m_firstChild;				// And each widget can have multiple children
-	unsigned int m_selectFlags;			// Bit mask of kind of selection this widget supports
-	eSelectionFlags m_selection;		// The current type of selection that that is current applied to the widget
-	Delegate<bool, Widget *> m_action;  // What to call when the widget is activated
-	bool m_debugRender;					// If the widget should be rendered using the debug batch
-	char m_name[StringUtils::s_maxCharsPerName];			// Display name or label
-	char m_script[StringUtils::s_maxCharsPerName];			// Script filename
-	char m_text[StringUtils::s_maxCharsPerLine];			// Text for drawing labels and buttons
-	char m_filePath[StringUtils::s_maxCharsPerLine];		// Path for loading and saving, only menus should have this property
+	WidgetVector m_size;				///< How much of the parent container the element takes up
+	WidgetVector m_pos;					///< Where in the parent container the element resides
+	Colour m_colour;					///< What the base colour of the widget is, will tint texture
+	bool m_active;						///< If the widget should be drawn and reactive
+	bool m_showTextCursor;				///< If the cursor should be shown on a text field
+	unsigned int m_fontNameHash;		///< Hash of the name of the font to render with
+	float m_fontSize;					///< How large to draw text on this widget 
+	Texture * m_texture;				///< What to draw
+	Widget * m_parent;					///< Who's ya daddy
+	Widget * m_next;					///< Conitiguous widgets are stored as a linked list
+	Widget * m_firstChild;				///< And each widget can have multiple children
+	unsigned int m_selectFlags;			///< Bit mask of kind of selection this widget supports
+	eSelectionFlags m_selection;		///< The current type of selection that that is current applied to the widget
+	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
+	bool m_debugRender;					///< If the widget should be rendered using the debug batch
+	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
+	char m_script[StringUtils::s_maxCharsPerName];			///< Script filename
+	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
+	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property
 
-	LinkedList<StringHash> m_listItems;						// Any string items that belong to this widget for lists and combo boxes
-	unsigned int m_selectedListItemId;						// Which item is currently selected
+	LinkedList<StringHash> m_listItems;						///< Any string items that belong to this widget for lists and combo boxes
+	unsigned int m_selectedListItemId;						///< Which item is currently selected
 };
 
 

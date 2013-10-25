@@ -169,7 +169,7 @@ void DebugMenu::Update(float a_dt)
 		{
 			case eEditModePos:
 			{	
-				m_widgetToEdit->SetPos(mousePos);
+				m_widgetToEdit->SetOffset(mousePos);
 				m_dirtyFlags.Set(eDirtyFlagGUI);
 				break;
 			}
@@ -266,11 +266,11 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		WidgetVector right = m_btnCreateRoot->GetPos() + WidgetVector(m_btnCreateRoot->GetSize().GetX(), 0.0f);
 		WidgetVector height = m_btnCreateRoot->GetSize();
 		height.SetX(0.0f);
-		m_btnCreateWidget->SetPos(right);
-		m_btnCreateGameObject->SetPos(right - height);
+		m_btnCreateWidget->SetOffset(right);
+		m_btnCreateGameObject->SetOffset(right - height);
 
 		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
-		m_btnCreateGameObject->SetPos(right + height);
+		m_btnCreateGameObject->SetOffset(right + height);
 
 		ShowCreateMenu(true);
 		m_handledCommand = true;
@@ -294,7 +294,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		// Parent is the active menu
 		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
-		newWidget->SetPos(m_btnCreateRoot->GetPos());
+		newWidget->SetOffset(m_btnCreateRoot->GetPos());
 		m_dirtyFlags.Set(eDirtyFlagGUI);
 		
 		// Cancel menu display
@@ -307,8 +307,8 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		WidgetVector right = m_btnCreateGameObject->GetPos() + WidgetVector(m_btnCreateGameObject->GetSize().GetX(), -m_btnCreateGameObject->GetSize().GetY());
 		WidgetVector height = m_btnCreateGameObject->GetSize();
 		height.SetX(0.0f);
-		m_btnCreateGameObjectFromTemplate->SetPos(right);
-		m_btnCreateGameObjectNew->SetPos(right + height);
+		m_btnCreateGameObjectFromTemplate->SetOffset(right);
+		m_btnCreateGameObjectNew->SetOffset(right + height);
 
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
@@ -339,20 +339,20 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		WidgetVector right = m_btnChangeGUIRoot->GetPos() + WidgetVector(m_btnChangeGUIRoot->GetSize().GetX(), -m_btnChangeGUIRoot->GetSize().GetY());
 		WidgetVector height = m_btnChangeGUIRoot->GetSize();
 		height.SetX(0.0f);
-		m_btnChangeGUIPos->SetPos(right);
-		m_btnChangeGUIShape->SetPos(right + height);
+		m_btnChangeGUIPos->SetOffset(right);
+		m_btnChangeGUIShape->SetOffset(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
-		m_btnChangeGUIName->SetPos(right + height);
+		m_btnChangeGUIName->SetOffset(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnChangeGUIText->SetPos(right + height);
+		m_btnChangeGUIText->SetOffset(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnChangeGUITexture->SetPos(right + height);
+		m_btnChangeGUITexture->SetOffset(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnDeleteGUI->SetPos(right + height);
+		m_btnDeleteGUI->SetOffset(right + height);
 
 		ShowChangeGUIMenu(true);
 		m_handledCommand = true;
@@ -409,14 +409,14 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		WidgetVector right = m_btnChangeObjectRoot->GetPos() + WidgetVector(m_btnChangeObjectRoot->GetSize().GetX(), -m_btnChangeObjectRoot->GetSize().GetY());
 		WidgetVector height = m_btnChangeObjectRoot->GetSize();
 		height.SetX(0.0f);
-		m_btnChangeObjectName->SetPos(right);
-		m_btnChangeObjectModel->SetPos(right + height);
+		m_btnChangeObjectName->SetOffset(right);
+		m_btnChangeObjectModel->SetOffset(right + height);
 		
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
-		m_btnSaveObjectTemplate->SetPos(right + height);
+		m_btnSaveObjectTemplate->SetOffset(right + height);
 
 		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnDeleteObject->SetPos(right + height);
+		m_btnDeleteObject->SetOffset(right + height);
 
 		ShowChangeObjectMenu(true);
 		m_handledCommand = true;
@@ -605,7 +605,7 @@ bool DebugMenu::OnActivate(bool a_active)
 	{
 		if (!IsDebugMenuActive())
 		{
-			m_btnChangeGUIRoot->SetPos(inMan.GetMousePosRelative());
+			m_btnChangeGUIRoot->SetOffset(inMan.GetMousePosRelative());
 			m_btnChangeGUIRoot->SetActive(a_active);
 		}
 	}
@@ -614,13 +614,13 @@ bool DebugMenu::OnActivate(bool a_active)
 		if (!IsDebugMenuActive())
 		{
 			// TODO Get object pos from world pos of object
-			m_btnChangeObjectRoot->SetPos(Vector2(0.0f, 0.0f));
+			m_btnChangeObjectRoot->SetOffset(Vector2(0.0f, 0.0f));
 			m_btnChangeObjectRoot->SetActive(a_active);
 		}
 	}
 	else if (!m_btnCreateRoot->IsActive())
 	{
-		m_btnCreateRoot->SetPos(inMan.GetMousePosRelative());
+		m_btnCreateRoot->SetOffset(inMan.GetMousePosRelative());
 		m_btnCreateRoot->SetActive(a_active);
 	}
 
@@ -797,19 +797,19 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
 	Vector2 parentSize = m_resourceSelect->GetSize();
 	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
-	m_resourceSelect->SetPos(parentPos);
+	m_resourceSelect->SetOffset(parentPos);
 
 	// Position the list of resources
-	m_resourceSelectList->SetPos(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
+	m_resourceSelectList->SetOffset(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
 
 	// Position the Ok and Cancel buttons
 	Vector2 buttonSize = m_btnResourceSelectOk->GetSize();
 	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
 								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
-	m_btnResourceSelectOk->SetPos(buttonPos);
+	m_btnResourceSelectOk->SetOffset(buttonPos);
 
 	buttonPos.SetX(parentPos.GetX() + parentSize.GetX() - buttonSize.GetX() - buttonSpacingX);
-	m_btnResourceSelectCancel->SetPos(buttonPos);
+	m_btnResourceSelectCancel->SetOffset(buttonPos);
 
 	// Add resource list to widget
 	m_resourceSelectList->ClearListItems();
@@ -843,19 +843,19 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
 	Vector2 parentSize = m_textInput->GetSize();
 	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
-	m_textInput->SetPos(parentPos);
+	m_textInput->SetOffset(parentPos);
 
 	// Position the list of resources
-	m_textInputField->SetPos(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
+	m_textInputField->SetOffset(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
 
 	// Position the Ok and Cancel buttons
 	Vector2 buttonSize = m_btnTextInputOk->GetSize();
 	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
 								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
-	m_btnTextInputOk->SetPos(buttonPos);
+	m_btnTextInputOk->SetOffset(buttonPos);
 
 	buttonPos.SetX(parentPos.GetX() + parentSize.GetX() - buttonSize.GetX() - buttonSpacingX);
-	m_btnTextInputCancel->SetPos(buttonPos);
+	m_btnTextInputCancel->SetOffset(buttonPos);
 
 	// Show the starting text if reqd
 	if (a_startingText != NULL)
