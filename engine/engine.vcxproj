@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -89,6 +89,7 @@
     <ClInclude Include="LuaScript.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelManager.h" />
+    <ClInclude Include="PhysicsManager.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Shader.h" />
@@ -114,6 +115,7 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelManager.cpp" />
+    <ClCompile Include="PhysicsManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="Shader.cpp" />

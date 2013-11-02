@@ -50,20 +50,35 @@ void Widget::Draw()
 	if (m_active && // Should be drawn
 		!(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled()))	// Is a debug widget and the debug menu is on
 	{
-		// Determine colour from selection
+		// Determine draw style from selection
 		Colour selectColour = m_colour;
+		RenderManager & rMan = RenderManager::Get();
+		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug2D : RenderManager::eBatchGui;
 		switch (m_selection)
 		{
 			case eSelectionRollover:		selectColour -= sc_rolloverColour;		break;
 			case eSelectionSelected:		selectColour -= sc_selectedColour;		break;
-			case eSelectionEditRollover:	selectColour -= sc_editRolloverColour;	break;
-			case eSelectionEditSelected:	selectColour -= sc_editSelectedColour;	break;
+			
+			// Draw a selection box around a selected
+			case eSelectionEditRollover:	
+			case eSelectionEditSelected:
+			{
+				selectColour -= sc_editSelectedColour;
+				const float extraSelectionSize = 0.05f;
+				const Vector2 selectSize = m_size + (m_size * extraSelectionSize);
+				Vector2 startVec = m_pos.GetVector();
+				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
+				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
+				Vector2 endVec = Vector2(startVec.GetX() + selectSize.GetX(), startVec.GetY());  rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(selectSize.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec += Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);	
+				break;
+			}
 			default: break;
 		}
 
 		// Draw the quad in various states of activation
-		RenderManager & rMan = RenderManager::Get();
-		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug2D : RenderManager::eBatchGui;
 		if (m_texture != NULL)
 		{
 			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture, Texture::eOrientationNormal, selectColour);
@@ -83,7 +98,6 @@ void Widget::Draw()
 			Colour boxColour = selectColour;
 			boxColour.SetA(0.1f);
 			Vector2 startVec = m_pos.GetVector();
-			Vector2 size = m_size.GetVector();
 			Vector2 endVec = Vector2(startVec.GetX() + m_size.GetX(), startVec.GetY());
 			rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
 			
@@ -126,7 +140,6 @@ void Widget::Draw()
 		{
 			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, m_pos, m_colour, batch);
 		}
-
 
 		// Draw any list items
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();

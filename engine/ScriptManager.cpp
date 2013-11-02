@@ -100,7 +100,6 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		luaL_loadfile(m_gameLua, gameScriptPath);
 		if (lua_resume(m_gameLua, NULL, 0) != LUA_YIELD)
 		{
-			
 			Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
 		}
 

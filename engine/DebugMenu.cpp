@@ -190,7 +190,7 @@ void DebugMenu::Update(float a_dt)
 		{
 			// Move object in all dimensions separately
 			Vector curPos = m_gameObjectToEdit->GetPos();
-			Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative);
+			Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
 			if (inMan.IsKeyDepressed(SDLK_x))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
@@ -259,6 +259,20 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
 	m_handledCommand = false;
+
+	// Make sure the menu is not being drawn off the screen
+	Vector2 drawDir(-1.0f, -1.0f);
+	const Vector2 screenSideLimit(0.15f, 0.15f);
+	const Vector2 menuDrawSize(m_btnCreateRoot->GetSize());
+	const Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
+	if (menuDrawPos.GetX() + menuDrawSize.GetX() > screenSideLimit.GetX())
+	{
+		drawDir.SetX(-drawDir.GetX());
+	}
+	if (menuDrawPos.GetY() - menuDrawSize.GetY() < screenSideLimit.GetY())
+	{
+		drawDir.SetY(-drawDir.GetY());
+	}
 
 	if (a_widget == m_btnCreateRoot)
 	{
@@ -907,19 +921,20 @@ void DebugMenu::Draw()
 	fakeIdentity.Translate(Vector(0.0f, 0.0f, EPSILON));
 	renMan.AddDebugMatrix(fakeIdentity);
 
-	// Draw selection box around objects
+	// Draw selection box around objects - slightly larger than clip size so there is no z fighting
+	const float extraSelectionSize = 0.5f;
 	if (m_gameObjectToEdit != NULL)
 	{
 		switch (m_gameObjectToEdit->GetClipType())
 		{
 			case GameObject::eClipTypeAxisBox:
 			{
-				renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize(), sc_colourRed);
+				renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize() + extraSelectionSize, sc_colourRed);
 				break;
 			}
 			case GameObject::eClipTypeSphere:
 			{
-				renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX(), sc_colourRed); 
+				renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX() + extraSelectionSize, sc_colourRed); 
 				break;
 			}
 			default: break;
