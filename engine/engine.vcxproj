@@ -59,6 +59,7 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Lib>
+    <ProjectReference />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

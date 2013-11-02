@@ -7,21 +7,39 @@
 
 #include "Singleton.h"
 
+class btBroadphaseInterface;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
+class btCollisionShape;
+struct btDefaultMotionState;
+class btRigidBody;
+
 class PhysicsManager : public Singleton<PhysicsManager>
 {
 
 public:
 
-        PhysicsManager() { }
-		~PhysicsManager() { Shutdown(); }
+	PhysicsManager() { }
+	~PhysicsManager() { Shutdown(); }
 
-		//\brief Stubbed out
-		void Startup() {};
-		void Shutdown() {};
-        void Update(float a_dt);
+	//\brief Lifecycle functions
+	bool Startup();
+	bool Shutdown();
+	void Update(float a_dt);
 
 private:
 
+	btBroadphaseInterface * m_broadphase;
+	btDefaultCollisionConfiguration * m_collisionConfiguration;
+	btCollisionDispatcher * m_dispatcher;
+	btSequentialImpulseConstraintSolver* m_solver;
+	btDiscreteDynamicsWorld * m_dynamicsWorld;
+
+	btDefaultMotionState * m_groundMotionState;
+	btCollisionShape * m_groundCollision;
+	btRigidBody * m_groundPlane;
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER

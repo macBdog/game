@@ -265,7 +265,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	const Vector2 screenSideLimit(0.15f, 0.15f);
 	const Vector2 menuDrawSize(m_btnCreateRoot->GetSize());
 	const Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
-	if (menuDrawPos.GetX() + menuDrawSize.GetX() > screenSideLimit.GetX())
+	if (menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX())
 	{
 		drawDir.SetX(-drawDir.GetX());
 	}
@@ -613,13 +613,19 @@ bool DebugMenu::OnActivate(bool a_active)
 		m_gameObjectToEdit = NULL;
 	}
 
-	// Set the creation root element to visible if it isn't already
+	// Set the position to draw the menu with respect to where the user clicked
 	InputManager & inMan = InputManager::Get();
+	Vector2 menuDrawPos = inMan.GetMousePosRelative();
+	const Vector2 menuSize = m_btnChangeObjectRoot->GetSize();
+	menuDrawPos.SetX(menuDrawPos.GetX() > 1.0f - menuSize.GetX() ? 1.0f - menuSize.GetX() - 0.05f : menuDrawPos.GetX());
+	menuDrawPos.SetY(menuDrawPos.GetY() < -1.0f + menuSize.GetY() ? -1.0f + menuSize.GetY() + 0.05f : menuDrawPos.GetY());
+
+	// Set the creation root element to visible if it isn't already
 	if (m_widgetToEdit != NULL)
 	{
 		if (!IsDebugMenuActive())
 		{
-			m_btnChangeGUIRoot->SetOffset(inMan.GetMousePosRelative());
+			m_btnChangeGUIRoot->SetOffset(menuDrawPos);
 			m_btnChangeGUIRoot->SetActive(a_active);
 		}
 	}
@@ -634,7 +640,7 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 	else if (!m_btnCreateRoot->IsActive())
 	{
-		m_btnCreateRoot->SetOffset(inMan.GetMousePosRelative());
+		m_btnCreateRoot->SetOffset(menuDrawPos);
 		m_btnCreateRoot->SetActive(a_active);
 	}
 

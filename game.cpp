@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 
         // Message processing loop
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (active && SDL_PollEvent(&event))
         {
             active = InputManager::Get().Update(event);
         }
