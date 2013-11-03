@@ -27,7 +27,12 @@ public:
 
 	PhysicsObject() : m_collision(NULL), m_rigidBody(NULL) { }
 	~PhysicsObject();
+	inline bool HasCollision() { return m_collision != NULL; }
 	inline bool HasPhysics() { return m_rigidBody != NULL; }
+	inline btCollisionShape * GetCollision() { return m_collision; }
+	inline btRigidBody * GetPhysics() { return m_rigidBody; }
+	inline void SetCollision(btCollisionShape * a_col) { if (m_collision == NULL) { m_collision = a_col; } }
+	inline void SetPhysics(btRigidBody * a_phy) { if (m_rigidBody == NULL) { m_rigidBody = a_phy; } }
 
 private:
 
@@ -69,17 +74,13 @@ protected:
 
 private:
 
-	typedef LinkedListNode<PhysicsObject> PhysicsObjectNode;	///< Alias for a linked list node that points to physics object
-	typedef LinkedList<PhysicsObject> PhysicsObjects;			///< Alias for a linked list of objects
-
 	btBroadphaseInterface * m_broadphase;
 	btDefaultCollisionConfiguration * m_collisionConfiguration;
 	btCollisionDispatcher * m_dispatcher;
-	btSequentialImpulseConstraintSolver* m_solver;
+	btSequentialImpulseConstraintSolver * m_solver;
 	btDiscreteDynamicsWorld * m_dynamicsWorld;
 
 	PhysicsObject * m_groundPlane;
-	PhysicsObjects m_objects;
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER

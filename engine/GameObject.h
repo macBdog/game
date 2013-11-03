@@ -14,6 +14,7 @@
 
 class GameObjectComponent;
 class Model;
+class PhysicsObject;
 class Shader;
 
 //\brief A GameObject is the container for all entities involved in the gameplay.
@@ -54,6 +55,7 @@ public:
 		, m_next(NULL)
 		, m_model(NULL)
 		, m_shader(NULL)
+		, m_physics(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
 		, m_clipType(eClipTypeBox)
@@ -134,6 +136,7 @@ public:
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
+	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
 	inline unsigned int GetId() { return m_id; }
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
@@ -147,6 +150,7 @@ public:
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline int GetScriptReference() const { return m_scriptRef; }
+	inline PhysicsObject * GetPhysics() const { return m_physics; }
 	Vector GetRot() const;
 	
 	//\brief Resource mutators and accessors
@@ -208,6 +212,7 @@ private:
 	CollisionList		  m_colliders;			///< List of objects that this game object will process collisions with every frame
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
+	PhysicsObject *		  m_physics;			///< Pointer to physics manager object for collisions and dynamics
 	eGameObjectState	  m_state;				///< What state the object is in
 	float				  m_lifeTime;			///< How long this guy has been active
 	eClipType			  m_clipType;			///< What kind of shape represents the bounds of the object

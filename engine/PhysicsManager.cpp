@@ -1,5 +1,6 @@
 #include <btBulletDynamicsCommon.h>
 
+#include "GameObject.h"
 #include "Log.h"
 
 #include "PhysicsManager.h"
@@ -55,6 +56,7 @@ bool PhysicsManager::Shutdown()
 		return false;
 	}
 
+	// Clean up objects;
 	delete m_groundPlane;
 	
 	// Clean up world
@@ -64,8 +66,6 @@ bool PhysicsManager::Shutdown()
     delete m_collisionConfiguration;
     delete m_broadphase;
 
-	
-	
 	return true;
 }
 
@@ -81,12 +81,62 @@ void PhysicsManager::Update(float a_dt)
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 {
-	// Stubbed out
-	return false;
+	if (a_gameObj == NULL)
+	{
+		return false;
+	}
+
+	btCollisionShape * collision = NULL;
+	switch (a_gameObj->GetClipType())
+	{
+		case GameObject::eClipTypeBox: 
+		{	
+			const Vector halfBoxSize = a_gameObj->GetClipSize() * 0.5f;
+			btVector3 halfExt(halfBoxSize.GetX(), halfBoxSize.GetY(), halfBoxSize.GetZ());
+			collision = new btBoxShape(halfExt);
+			break;
+		}
+		case GameObject::eClipTypeSphere:
+		{
+			collision = new btSphereShape(a_gameObj->GetClipSize().GetX());
+			break;
+		}
+		default: break;
+	}
+
+	if (collision != NULL)
+	{
+		if (PhysicsObject * newObj = new PhysicsObject())
+		{
+			newObj->SetCollision(collision);
+			a_gameObj->SetPhysics(newObj);
+		}
+	}
+	
+	return a_gameObj->GetPhysics() != NULL;
 }
 
 bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 {
-	// Stubbed out
+	if (a_gameObj == NULL || a_gameObj->GetPhysics() == NULL)
+	{
+		return false;
+	}
+
+	PhysicsObject * phys = a_gameObj->GetPhysics();
+	if (!phys->HasPhysics() && m_dynamicsWorld)
+	{
+		// Setup motion state and construction info for game object shape
+		btVector3 bodyShape(a_gameObj->GetClipSize().GetX(), a_gameObj->GetClipSize().GetY(), a_gameObj->GetClipSize().GetZ());
+		btQuaternion bodyRotation(0, 0, 0, 1);
+		btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyShape));
+		btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, phys->GetCollision(), btVector3(0,0,0));
+		btRigidBody * newBody = new btRigidBody(rigidBodyCI);
+		phys->SetPhysics(newBody);
+
+		// Add ground to physics world
+		m_dynamicsWorld->addRigidBody(newBody);
+	}
+
 	return false;
 }
