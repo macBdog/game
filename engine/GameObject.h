@@ -40,9 +40,9 @@ public:
 	enum eClipType
 	{
 		eClipTypeNone = 0,			///< Always rendered, can't be picked
+		eClipTypeAxisBox,
 		eClipTypeSphere,			///< Sphere bounding volume
-		eClipTypeAxisBox,			///< Box with three seperate dimensions aligned to world XYZ (can't rotate)
-		eClipTypeBox,				///< Box with thrree seperate dimensions
+		eClipTypeBox,				///< Box with three seperate dimensions
 
 		eClipTypeCount,
 	};
@@ -56,7 +56,7 @@ public:
 		, m_shader(NULL)
 		, m_state(eGameObjectState_New)
 		, m_lifeTime(0.0f)
-		, m_clipType(eClipTypeAxisBox)
+		, m_clipType(eClipTypeBox)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_clipping(true)

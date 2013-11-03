@@ -48,16 +48,22 @@ bool GameObject::Draw()
 			// Draw different debug render shapes accoarding to clip type
 			switch (m_clipType)
 			{
-				case eClipTypeSphere:
-				{
-					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourGrey); 
-					break;
-				}
 				case eClipTypeAxisBox:
 				{
 					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourGrey); 
 					break;
 				}
+				case eClipTypeBox:
+				{
+					//rMan.AddDebugBox(m_worldMat.GetPos() + m_clipVolumeOffset, sc_colourGrey);
+					break;
+				}
+				case eClipTypeSphere:
+				{
+					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourGrey); 
+					break;
+				}
+				
 				default: break;
 			}
 

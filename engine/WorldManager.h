@@ -9,6 +9,7 @@
 #include "GameObject.h"
 #include "Log.h"
 #include "ModelManager.h"
+#include "PhysicsManager.h"
 #include "ScriptManager.h"
 #include "Singleton.h"
 #include "StringUtils.h"
@@ -224,9 +225,14 @@ public:
 							{
 								newGameObject->SetClipType(GameObject::eClipTypeSphere);
 							}
-							else if (strstr(clipType->GetString(), "axisbox") != NULL)
+							else if (strstr(clipType->GetString(), "box") != NULL)
 							{
-								newGameObject->SetClipType(GameObject::eClipTypeAxisBox);
+								newGameObject->SetClipType(GameObject::eClipTypeBox);
+							}
+							else
+							{
+								newGameObject->SetClipType(GameObject::eClipTypeBox);
+								Log::Get().Write(Log::LL_WARNING, Log::LC_GAME, "Invalid clip type of %s specified for template %s", clipType->GetString(), a_templatePath);
 							}
 						}
 						// Clipping size
@@ -257,6 +263,23 @@ public:
 									delete pNewShader;
 									newGameObject->SetShader(NULL);
 								}
+							}
+						}
+
+						// Add collision
+						PhysicsManager & pMan = PhysicsManager::Get();
+						if (newGameObject->GetClipType() > GameObject::eClipTypeNone &&
+							newGameObject->GetClipSize().LengthSquared() > 0.0f)
+						{
+							pMan.AddCollisionObject(newGameObject);
+						}
+
+						// Add to physics world
+						if (GameFile::Property * physics = object->FindProperty("physics"))
+						{
+							if (physics->GetBool())
+							{
+								pMan.AddPhysicsObject(newGameObject);
 							}
 						}
 

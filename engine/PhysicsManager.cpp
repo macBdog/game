@@ -6,6 +6,26 @@
 
 template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = NULL;
 
+PhysicsObject::~PhysicsObject()
+{
+	// Clean up physics if present
+	if (m_rigidBody != NULL)
+	{
+		if (btDiscreteDynamicsWorld * dynWorld = PhysicsManager::Get().GetDynamicsWorld())
+		{
+			dynWorld->removeRigidBody(m_rigidBody);
+		}
+		delete m_rigidBody->getMotionState();
+		delete m_rigidBody;
+	}
+
+	// Clean up collision
+	if (m_collision != NULL)
+	{
+		delete m_collision;
+	}
+}
+
 bool PhysicsManager::Startup()
 {
 	// Initialise physics world
@@ -35,12 +55,8 @@ bool PhysicsManager::Shutdown()
 		return false;
 	}
 
-	// Remove ground plane and clean up
-	m_dynamicsWorld->removeRigidBody(m_groundPlane);
-	delete m_groundMotionState;
 	delete m_groundPlane;
-	delete m_groundCollision;
-
+	
 	// Clean up world
 	delete m_dynamicsWorld;
     delete m_solver;
@@ -63,3 +79,14 @@ void PhysicsManager::Update(float a_dt)
 	m_dynamicsWorld->stepSimulation(a_dt, 10);
 }
 
+bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
+{
+	// Stubbed out
+	return false;
+}
+
+bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
+{
+	// Stubbed out
+	return false;
+}
