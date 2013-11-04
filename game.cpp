@@ -226,6 +226,19 @@ int main(int argc, char *argv[])
 	// Singletons are shutdown by their destructors
     Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Exited cleanly");
 
+	// Shut everything down
+	WorldManager::Get().Shutdown();
+	PhysicsManager::Get().Shutdown();
+	FontManager::Get().Shutdown();
+	ScriptManager::Get().Shutdown();
+	ModelManager::Get().Shutdown();
+	TextureManager::Get().Shutdown();
+	ScriptManager::Get().Shutdown();
+	CameraManager::Get().Shutdown();
+	Gui::Get().Shutdown();
+	RenderManager::Get().Shutdown();
+	InputManager::Get().Shutdown();
+
     return 0;
 }
 

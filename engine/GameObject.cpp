@@ -1,6 +1,7 @@
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
+#include "PhysicsManager.h"
 #include "RenderManager.h"
 
 #include "GameObject.h"
@@ -13,6 +14,12 @@ bool GameObject::Update(float a_dt)
 	if (m_state == eGameObjectState_Active)
 	{
 		m_lifeTime += a_dt;
+	}
+
+	// Update physics world
+	if (m_physics != NULL)
+	{
+		PhysicsManager::Get().UpdateGameObject(this);
 	}
 
 	// Update components
@@ -290,6 +297,12 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 
 void GameObject::Destroy() 
 {
+	// Clean up physics
+	if (m_physics != NULL)
+	{
+		PhysicsManager::Get().RemovePhysicsObject(this);
+	}
+
 	// Clean up components
 	RemoveAllComponents();
 

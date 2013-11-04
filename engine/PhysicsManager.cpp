@@ -37,15 +37,6 @@ bool PhysicsManager::Startup()
 	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
 	m_dynamicsWorld->setGravity(btVector3(0.0f, 0.0f, -10.0f));
 
-	// Add ground plane physics and collision
-	btCollisionShape* m_groundCollision = new btStaticPlaneShape(btVector3(0,0,1),1);
-	btDefaultMotionState* groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,-1)));
-	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, groundMotionState, m_groundCollision, btVector3(0,0,0));
-    btRigidBody* m_groundPlane = new btRigidBody(groundRigidBodyCI);
-
-	// Add ground to physics world
-	m_dynamicsWorld->addRigidBody(m_groundPlane);
-
 	return m_dynamicsWorld != NULL;
 }
 
@@ -56,9 +47,6 @@ bool PhysicsManager::Shutdown()
 		return false;
 	}
 
-	// Clean up objects;
-	delete m_groundPlane;
-	
 	// Clean up world
 	delete m_dynamicsWorld;
     delete m_solver;
@@ -134,9 +122,38 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 		btRigidBody * newBody = new btRigidBody(rigidBodyCI);
 		phys->SetPhysics(newBody);
 
-		// Add ground to physics world
+		// Add object to physics world
 		m_dynamicsWorld->addRigidBody(newBody);
 	}
 
+	return false;
+}
+
+void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
+{
+	if (a_gameObj == NULL)
+	{
+		return;
+	}
+
+	PhysicsObject * phys = a_gameObj->GetPhysics();
+	btTransform newWorldTrans;
+	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
+	newWorldTrans.setOrigin(trans);
+	phys->GetPhysics()->setWorldTransform(newWorldTrans);
+}
+
+bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
+{
+	if (a_gameObj != NULL)
+	{
+		PhysicsObject * phys = a_gameObj->GetPhysics();
+		if (phys != NULL)
+		{
+			delete phys;
+			a_gameObj->SetPhysics(NULL);
+			return true;
+		}
+	}
 	return false;
 }

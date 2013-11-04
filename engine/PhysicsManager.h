@@ -51,8 +51,7 @@ public:
 		, m_collisionConfiguration(NULL)
 		, m_dispatcher(NULL)
 		, m_solver(NULL)
-		, m_dynamicsWorld(NULL)
-		, m_groundPlane() { }
+		, m_dynamicsWorld(NULL) { }
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
@@ -61,12 +60,23 @@ public:
 	void Update(float a_dt);
 
 	//\brief Add a bullet collision object
+	//\param a_gameObj pointer to the game object to change
 	//\return true if an object was added to the simulation
 	bool AddCollisionObject(GameObject * a_gameObj);
 
 	//\brief Add a bullet physically simulated object
+	//\param a_gameObj pointer to the game object to change
 	//\return true if an object was added to the simulation
 	bool AddPhysicsObject(GameObject * a_gameObj);
+
+	//\brief Sync transform of physics world object with game object
+	//\param a_gameObj pointer to the game object to change
+	void UpdateGameObject(GameObject * a_gameObj);
+
+	//\brief Remove collision and rigid body physics for an object from the world
+	//\param a_gameObj pointer to the game object to change
+	//\return true if the physics world was affected
+	bool RemovePhysicsObject(GameObject * a_gameObj);
 
 protected:
 
@@ -79,8 +89,6 @@ private:
 	btCollisionDispatcher * m_dispatcher;
 	btSequentialImpulseConstraintSolver * m_solver;
 	btDiscreteDynamicsWorld * m_dynamicsWorld;
-
-	PhysicsObject * m_groundPlane;
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER
