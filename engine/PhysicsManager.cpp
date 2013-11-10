@@ -75,6 +75,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	}
 
 	btCollisionShape * collision = NULL;
+	btRigidBody * rigidBody = NULL;
 	switch (a_gameObj->GetClipType())
 	{
 		case GameObject::eClipTypeBox: 
@@ -89,14 +90,26 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			collision = new btSphereShape(a_gameObj->GetClipSize().GetX());
 			break;
 		}
-		default: break;
+		default: return false;
 	}
 
+	// Setup motion state and construction info for game object shape
+	btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
+	btQuaternion bodyRotation(0, 0, 0, 1);
+	btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
+	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collision, btVector3(0,0,0));
+	rigidBody = new btRigidBody(rigidBodyCI);
+
+	// Add object to physics world
+	m_dynamicsWorld->addRigidBody(rigidBody);
+	
+	// Assign the physics object to the game object
 	if (collision != NULL)
 	{
 		if (PhysicsObject * newObj = new PhysicsObject())
 		{
 			newObj->SetCollision(collision);
+			newObj->SetPhysics(rigidBody);
 			a_gameObj->SetPhysics(newObj);
 		}
 	}
@@ -111,21 +124,7 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 		return false;
 	}
 
-	PhysicsObject * phys = a_gameObj->GetPhysics();
-	if (!phys->HasPhysics() && m_dynamicsWorld)
-	{
-		// Setup motion state and construction info for game object shape
-		btVector3 bodyShape(a_gameObj->GetClipSize().GetX(), a_gameObj->GetClipSize().GetY(), a_gameObj->GetClipSize().GetZ());
-		btQuaternion bodyRotation(0, 0, 0, 1);
-		btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyShape));
-		btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, phys->GetCollision(), btVector3(0,0,0));
-		btRigidBody * newBody = new btRigidBody(rigidBodyCI);
-		phys->SetPhysics(newBody);
-
-		// Add object to physics world
-		m_dynamicsWorld->addRigidBody(newBody);
-	}
-
+	// TODO activate physical properties like mass and intertia
 	return false;
 }
 
@@ -140,7 +139,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	btTransform newWorldTrans;
 	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
 	newWorldTrans.setOrigin(trans);
-	//phys->GetPhysics()->setWorldTransform(newWorldTrans);
+	phys->GetPhysics()->setWorldTransform(newWorldTrans);
 }
 
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)

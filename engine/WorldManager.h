@@ -229,10 +229,14 @@ public:
 							{
 								newGameObject->SetClipType(GameObject::eClipTypeBox);
 							}
+							else if (strstr(clipType->GetString(), "none") != NULL)
+							{
+								newGameObject->SetClipType(GameObject::eClipTypeNone);
+							}
 							else
 							{
 								newGameObject->SetClipType(GameObject::eClipTypeBox);
-								Log::Get().Write(Log::LL_WARNING, Log::LC_GAME, "Invalid clip type of %s specified for template %s", clipType->GetString(), a_templatePath);
+								Log::Get().Write(Log::LL_WARNING, Log::LC_GAME, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
 							}
 						}
 						// Clipping size
