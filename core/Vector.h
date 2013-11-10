@@ -31,7 +31,7 @@ public:
 	bool IsEqualZero() const { return x + y + z == 0.0f; }
 	float Dot(const Vector & a_vec) const { return x * a_vec.x + y * a_vec.y + z * a_vec.z; }
 	Vector Cross(const Vector & a_vec) const { return Vector(((y * a_vec.z) - (z * a_vec.y)),  ((z * a_vec.x) - (x * a_vec.z)), ((x * a_vec.y) - (y * a_vec.x))); }
-	void Normalize() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; z = z / fLen; } }
+	void Normalise() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; z = z / fLen; } }
 	static Vector Zero() { return Vector(0.0f, 0.0f, 0.0f); }
 	bool IsSmallerMagnitude (const Vector & a_compare) const { return LengthSquared() < a_compare.LengthSquared(); }
 	bool IsGreaterMagnitude (const Vector & a_compare) const { return LengthSquared() > a_compare.LengthSquared(); }

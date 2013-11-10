@@ -1,3 +1,5 @@
+#include "../core/Quaternion.h"
+
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
@@ -85,14 +87,14 @@ bool GameObject::Draw()
 
 Vector GameObject::GetRot() const
 {
-	// TODO
+	// TODO? Maybe not even required
 	return Vector::Zero();
 }
 
 void GameObject::SetRot(const Vector & a_newRot)
 {
-	// TODO
-	//m_worldMat.SetR
+	Quaternion q(Vector(MathUtils::Deg2Rad(a_newRot.GetX()), MathUtils::Deg2Rad(a_newRot.GetY()), MathUtils::Deg2Rad(a_newRot.GetZ())));
+	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
 }
 
 bool GameObject::AddCollider(GameObject * a_colObj)

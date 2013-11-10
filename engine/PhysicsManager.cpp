@@ -140,7 +140,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	btTransform newWorldTrans;
 	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
 	newWorldTrans.setOrigin(trans);
-	phys->GetPhysics()->setWorldTransform(newWorldTrans);
+	//phys->GetPhysics()->setWorldTransform(newWorldTrans);
 }
 
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)

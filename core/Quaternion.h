@@ -20,20 +20,47 @@ public:
 			const float & a_y, 
 			const float & a_z, 
 			const float & a_w) : x(a_x), y(a_y), z(a_z), w(a_w) { }
-	Quaternion(Vector a_axis, float a_angle) 
+	Quaternion(const Vector & a_axis, float a_angle) {	w = cosf(a_angle*0.5f);
+							x = a_axis.GetX() * sinf(a_angle*0.5f);
+							y = a_axis.GetY() * sinf(a_angle*0.5f);
+							z = a_axis.GetZ() * sinf(a_angle*0.5f);  }
+	Quaternion(const Vector & a_eulerAngles) { *this = FromEulerAngles(a_eulerAngles); }
+	Quaternion(const Vector & a_vec1, const Vector & a_vec2) { *this = FromAngles(a_vec1, a_vec2); }
+
+	// Mutators
+	void Normalise() { const float magRecip = 1.0f / GetMagnitude(); w *= magRecip; x *= magRecip; y *= magRecip; z *= magRecip; }
+
+	// Utility functions
+	float GetMagnitude() const { return sqrt((w*w) + (x*x) + (y*y) + (z*z)); }
+	float GetMagnitudeSquared() const { return (w*w) + (x*x) + (y*y) + (z*z); }
+	void GetAxisAngle(Vector & a_axis, float & a_angle) const
+	{
+	  float len;
+
+	  len = x*x + y*y + z*z;
+
+	  if (len > EPSILON) 
+	  {
+		float lenRecip = 1.0f / len;
+		a_axis = Vector(x * lenRecip, y * lenRecip, z * lenRecip);
+		a_axis.Normalise();
+		// Limit due to floating point error in max range for acos
+		a_angle = (2.0f * acos(MathUtils::Clamp(-1.0f, w, 1.0f)));
+	  }
+	  else
+	  {
+		a_axis = Vector(0.0f, 0.0f, 1.0f);
+		a_angle = 0;
+	  }
+	}
+	Quaternion FromAxisAngle(Vector a_axis, float a_angle) 
 	{ 
-		// From axis angle
 		float sin_a = sinf(a_angle / 2.0f);
 		float cos_a = cosf(a_angle / 2.0f);
 		return Quaternion(a_axis * sin_a, cos_a);
 	}
-	Quaternion(const Vector & a_eulerAngles)
+	Quaternion FromEulerAngles(const float & a_x, const float & a_y, const float & a_z)
 	{
-		return Quaternion(a_eulerAngles.GetX(), a_eulerAngles.GetY(), a_eulerAngles.GetZ())
-	}
-	Quaternion(const float & a_x, const float & a_y, const float & a_z)
-	{
-		// From euler degrees
 		float cos_z_2 = cosf(0.5f * a_z);
 		float cos_y_2 = cosf(0.5f * a_y);
 		float cos_x_2 = cosf(0.5f * a_x);
@@ -48,29 +75,20 @@ public:
 			sin_z_2*cos_y_2*cos_x_2 - cos_z_2*sin_y_2*sin_x_2,
 			cos_z_2*cos_y_2*cos_x_2 + sin_z_2*sin_y_2*sin_x_2);
 	}
-	Quaternion(const Vector & a_u, const Vector & a_v)
+	Quaternion FromEulerAngles(const Vector & a_eulerAngles)
 	{
-		// From two vectors
-	    	Vector w = a_u.Cross(a_v);
-	    	Quaternion q = Quaternion(1.0f + a_u.Dot(v), w.x, w.y, w.z);
-	    	q.Normalise();
-	    	return q;
+		return Quaternion::FromEulerAngles(a_eulerAngles.GetX(), a_eulerAngles.GetY(), a_eulerAngles.GetZ());
 	}
-	
-	Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) { }
-	Quaternion(float a_w, float a_x, float a_y, float a_z) : w(a_w), x(a_x), y(a_y), z(a_z) { }
-	Quaternion(Vector a_axis, float a_angle) {	w = cosf(a_angle*0.5f);
-							x = a_axis.GetX() * sinf(a_angle*0.5f);
-							y = a_axis.GetY() * sinf(a_angle*0.5f);
-							z = a_axis.GetZ() * sinf(a_angle*0.5f);  }
+	Quaternion FromAngles(const Vector & a_u, const Vector & a_v)
+	{
+	    Vector w = a_u.Cross(a_v);
+	    Quaternion q = Quaternion(1.0f + a_u.Dot(a_v), w.GetX(), w.GetY(), w.GetZ());
+	    q.Normalise();
+	    return q;
+	}
 
-	// Utility functions
-	float GetMagnitude() const { return sqrt((w*w) + (x*x) + (y*y) + (z*z)); }
 	bool IsUnit() const { return abs(1.0f - ((w*w) + (x*x) + (y*y) + (z*z))) > EPSILON; }
-		inline ApplyToMatrix(Matrix & a_mat) 
-	{
-
-	}
+	inline void ApplyToMatrix(Matrix & a_mat) { a_mat = a_mat.Multiply(GetRotationMatrix()); }
 	inline Vector GetXYZ() const { return Vector(x, y, z); }
 	inline bool GetAxisAngle(Vector & a_axis_OUT, float & a_angle_OUT)
 	{
@@ -80,7 +98,7 @@ public:
 		// Early out for no rotation
 		if (r <= 0.0f) 
 		{
-			a_axis_OUT = Vectormath::Aos::Vector3(1.0f, 0.0f, 0.0f);
+			a_axis_OUT = Vector(1.0f, 0.0f, 0.0f);
 			a_angle_OUT = 0.0f;
 			return false;
 		}
@@ -90,18 +108,31 @@ public:
 		{
 			sin_a = 1.0f;
 		}
-		a_angle_OUT = acosf(paMath::ClampValue(cos_a, 0.9999f)) * 2.0f;
+		a_angle_OUT = acosf(MathUtils::Clamp(-1.0f, cos_a, 0.9999f)) * 2.0f;
 		a_axis_OUT = Vector(x, y, z) / sin_a;
 		return true;
 	}
-	Matrix GetRotationMatrix() const { return Matrix(	(w*w)+(x*x)-(y*y)-(z*z),	(2.0f*x*y)-(2.0f*w*z),		(2.0f*x*z)+(2.0f*w*y),		0.0f,
-														(2.0f*x*y)+(2.0f*w*z),		(w*w)-(x*x)+(y*y)-(z*z),	(2.0f*y*z)+(2.0f*w*x),		0.0f,
-														(2.0f*x*z)-(2.0f*w*y),		(2.0f*y*z)-(2.0f*w*x),		(w*2)-(x*x)-(y*y)+(z*z),	0.0f,
-														0.0f,						0.0f						0.0f,						1.0f); }
 
-	// Mutators
-	void Normalize() { float mag = GetMagnitude(); w /= mag; x /= mag; y /= mag; z /= mag; }
-	void Set(Vector a_axis, float a_angle) { Quaternion newQ(a_axis, f_angle); w = newQ.w; x = newQ.x; y = newQ.y; z = newQ.z; }
+	Matrix GetRotationMatrix() const { 
+
+		float tx = 2.0f * x;
+		float ty = 2.0f * y;
+		float tz = 2.0f * z;
+		float twx = tx * w;
+		float twy = ty * w;
+		float twz = tz * w;
+		float txx = tx * x;
+		float txy = ty * x;
+		float txz = tz * x;
+		float tyy = ty * y;
+		float tyz = tz * y;
+		float tzz = tz * z;
+  
+		return Matrix(	1.0f - (tyy + tzz),	txy - twz,			txz + twy,			0.0f,
+						txy + twz,			1.0f - (txx + tzz),	tyz - twx,			0.0f,
+						txz - twy,			tyz + twx,			1.0f - (txx + tyy), 0.0f,
+						0.0f,				0.0f,				0.0f,				1.0f);
+	}
 
 	// Operator overloads
 	Quaternion operator * (const Quaternion & a_quat) const { return Quaternion(	(w*a_quat.w - x*a_quat.x - y*a_quat.y - z*a_quat.z), 

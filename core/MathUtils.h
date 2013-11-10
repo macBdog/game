@@ -75,15 +75,21 @@ namespace MathUtils
 	}
 	
 	//\brief Convert between degrees and radians
-	static float Deg2Rad(float a_degrees)
+	static float Deg2Rad(const float & a_degrees)
 	{
 		return a_degrees * (PI / 180.0f);
 	}
 
-	//\brief Compare a float value to close to zero
-	static bool IsZeroEpsilon(float a_val)
+	//\brief Compare a float value  to close to zero
+	static bool IsZeroEpsilon(const float & a_val)
 	{
 		return fabsf(a_val) < EPSILON;
+	}
+
+	//\brief Reduce a value to a set minimum or maximum
+	static float Clamp(const float & a_min, const float & a_val, const float & a_max)
+	{
+		return (a_val < a_min) ? a_min : (a_val > a_max) ? a_max : a_val;
 	}
 }
 
