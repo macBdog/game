@@ -11,17 +11,6 @@
 #include "Gui.h"
 #include "Singleton.h"
 
-///\brief This macro creates a debug menu element for an arbitrary variable to enable easy and quick tuning
-#define DEBUG_TUNABLE_BOOL(varName)										\
-	bool varName = false;												\
-	inline void SetvarName(bool a_val)									\
-	{																	\
-		varName = a_val;												\
-		DebugMenu::Get().Set											\
-	}																	\
-	inline bool GetvarName() const { return varName; }					\
-	DebugMenu::Get().RegisterVarCallback_Bool(varName);	
-
 class Widget;
 
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
@@ -32,13 +21,18 @@ public:
 
 	//\brief Ctor calls startup
 	DebugMenu();
+	~DebugMenu() { Shutdown(); }
 
 	//\brief Startup registers input callbacks for mouse clicks
 	bool Startup();
+	void Shutdown() {};
 
 	//\brief Update will draw all debug menu items
 	//\param a_dt float of time since the last frame in seconds
 	void Update(float a_dt);
+
+	//\brief Perform any tasks after the scene is drawn, in this case, clear script debug widgets
+	void PostRender();
 
 	//\brief Write any changed resources to disk
 	//\return bool true if anything was written, will not write if dirty
@@ -92,6 +86,9 @@ public:
 	//\param a_startingText An optional pointer to a c string with the text that should be displayed
 	void ShowTextInput(const char * a_startingText = NULL);
 
+	//\brief Show a debug menu widget for a frame, called from script
+	bool ShowScriptDebugText(const char * a_text, float a_posX = -0.5f, float a_posY = 0.5f);
+
 private:
 
 	//\brief When editing we can change properties of GUI widgets and also game objects
@@ -136,6 +133,8 @@ private:
 
 	static const float sc_cursorSize;				// Size of debug mouse cursor
 	static Vector2 sc_vectorCursor[4];				// Debug menu does not have textures so it draws mouse cursors by vectors
+	static const int sc_numScriptDebugWidgets = 8;	// Number of debug widgets the script system owns
+	Widget * m_scriptDebugWidgets[sc_numScriptDebugWidgets];
 
 	//\brief All debug menu visuals are drawn here, called from Update()
 	void Draw();

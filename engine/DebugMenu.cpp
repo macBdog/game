@@ -60,6 +60,11 @@ DebugMenu::DebugMenu()
 , m_btnTextInputOk(NULL)
 , m_btnTextInputCancel(NULL)
 {
+	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
+	{
+		m_scriptDebugWidgets[i] = NULL;
+	}
+
 	if (!Startup())
 	{
 		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "DebugMenu failed to startup correctly!");
@@ -141,6 +146,22 @@ bool DebugMenu::Startup()
 	// Ok and Cancel buttons on the text input dialog
 	m_btnTextInputOk = CreateButton("Ok", sc_colourOrange, m_textInput);
 	m_btnTextInputCancel = CreateButton("Cancel", sc_colourGrey, m_textInput);
+
+	// Widgets to be used by script
+	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
+	{
+		curItem.m_selectFlags = Widget::eSelectionRollover;
+		curItem.m_colour = sc_colourWhite;
+		curItem.m_name = "ScriptDebugWidget";
+		curItem.m_fontSize = 2.0f;
+		if (m_scriptDebugWidgets[i] = gui.CreateWidget(curItem, gui.GetDebugRoot(), false))
+		{
+			m_scriptDebugWidgets[i]->SetDebugWidget();
+			m_scriptDebugWidgets[i]->SetActive(false);
+			m_scriptDebugWidgets[i]->SetDebugWidget();
+			m_scriptDebugWidgets[i]->SetAlwaysDraw();
+		}
+	}
 
 	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
@@ -884,6 +905,24 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	}
 }
 
+bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_posY)
+{
+	Gui & gui = Gui::Get();
+	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
+	{
+		if (m_scriptDebugWidgets[i] != NULL && !m_scriptDebugWidgets[i]->IsActive())
+		{
+			m_scriptDebugWidgets[i]->SetText(a_text);
+			m_scriptDebugWidgets[i]->SetOffset(WidgetVector(a_posX, a_posY - (i*0.5f*m_scriptDebugWidgets[i]->GetSize().GetY())));
+			m_scriptDebugWidgets[i]->SetActive(true);
+			return true;
+		}
+	}
+
+	Log::Get().WriteGameErrorNoParams("Ran out of debug DebugPrint resources!");
+	return false;
+}
+
 void DebugMenu::Draw()
 {
 	// Draw nothing if the debug menu isn't enabled
@@ -960,6 +999,19 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+}
+
+void DebugMenu::PostRender()
+{
+	// Clear the debug widgets, script will have to add text next frame for them
+	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
+	{
+		if (m_scriptDebugWidgets[i] != NULL)
+		{
+			m_scriptDebugWidgets[i]->SetActive(false);
+			m_scriptDebugWidgets[i]->SetText("");
+		}
+	}
 }
 
 Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)

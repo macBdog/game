@@ -47,8 +47,8 @@ Widget::~Widget()
 
 void Widget::Draw()
 {
-	if (m_active && // Should be drawn
-		!(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled()))	// Is a debug widget and the debug menu is on
+	bool shouldDraw =  !(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled());
+	if (m_active && (shouldDraw || m_alwaysRender))	// Is a debug widget and the debug menu is on or should we always draw it
 	{
 		// Determine draw style from selection
 		Colour selectColour = m_colour;

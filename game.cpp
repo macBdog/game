@@ -215,6 +215,9 @@ int main(int argc, char *argv[])
 		// Only swap the buffers at the end of all the rendering passes
 		RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix());
 		
+		// Perform and post rendering tasks for subsystems
+		DebugMenu::Get().PostRender();
+
 		SDL_GL_SwapBuffers();
 
 		// Finished a frame, count time and calc FPS

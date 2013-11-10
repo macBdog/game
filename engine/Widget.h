@@ -137,6 +137,7 @@ public:
 		, m_next(NULL)
 		, m_firstChild(NULL)
 		, m_debugRender(false)
+		, m_alwaysRender(false)
 		, m_selectedListItemId(eSelectionNone)
 	{
 		m_name[0] = '\0';
@@ -222,6 +223,7 @@ public:
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
+	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
 	
 	inline WidgetVector GetPos() { return m_pos; }
@@ -282,6 +284,7 @@ private:
 	eSelectionFlags m_selection;		///< The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
 	bool m_debugRender;					///< If the widget should be rendered using the debug batch
+	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
 	char m_script[StringUtils::s_maxCharsPerName];			///< Script filename
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons

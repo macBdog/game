@@ -161,6 +161,7 @@ public:
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	void SetRot(const Vector & a_newRot);
+	void AddRot(const Vector & a_rot);
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }

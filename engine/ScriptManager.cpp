@@ -67,6 +67,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "DestroyGameObject", DestroyGameObject);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
+		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 
 		// Register C++ functions available on the global GUI
 		lua_newtable(m_globalLua);
@@ -375,6 +376,25 @@ int ScriptManager::GUISetValue(lua_State * a_luaState)
 	}
 
 	Log::Get().WriteGameErrorNoParams("GUISetValue could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::DebugPrint(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * debugText = lua_tostring(a_luaState, 1);
+		if (debugText != NULL && debugText != NULL)
+		{
+			DebugMenu::Get().ShowScriptDebugText(debugText);
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("DebugPrint at least one parameter to show on the screen.");
+	}
+
 	return 0;
 }
 
