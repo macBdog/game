@@ -35,7 +35,7 @@ void Scene::AddObject(GameObject * a_newObject)
 	{
 		newSceneObject->SetData(a_newObject);
 		a_newObject->Startup();
-		a_newObject->SetState(GameObject::eGameObjectState_Active);
+		a_newObject->SetState(GameObjectState::Active);
 		m_objects.Insert(newSceneObject);
 
 		++m_numObjects;
@@ -271,13 +271,13 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			// No properties present
 			if (!propsOk) 
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Error loading scene file %s, scene does not have required properties.", a_scenePath);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, scene does not have required properties.", a_scenePath);
 				return false;
 			}
 		}
 		else // Unexpected file format, no root element
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Error loading scene file %s, no valid scene parent element.", a_scenePath);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, no valid scene parent element.", a_scenePath);
 			return false;
 		}
 	}

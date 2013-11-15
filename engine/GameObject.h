@@ -17,6 +17,33 @@ class Model;
 class PhysicsObject;
 class Shader;
 
+//\brief GameObject state determines how the update effects related subsystems
+namespace GameObjectState
+{
+	enum Enum
+	{
+		New = 0,	///< Object is created but not ready for life
+		Loading,	///< Loading resources, shaders, models etc
+		Active,		///< Out and about in the world
+		Sleep,		///< Hibernation, no updates or rendering, can come back from sleep
+		Death,		///< Unloading and cleaning up before destruction, no coming back from death
+		Count,
+	};
+}
+
+//\brief Clipping is for render culling and simple collisions for picking 
+namespace ClipType
+{
+	enum Enum
+	{
+		None = 0,	///< Always rendered, can't be picked
+		AxisBox,	//< Box that can't be rotated
+		Sphere,		///< Sphere bounding volume
+		Box,		///< Box with three seperate dimensions
+		Count,
+	};
+}
+	
 //\brief A GameObject is the container for all entities involved in the gameplay.
 //		 It is lightweight yet has provisions for all basic game related functions like
 //		 2D sprites, 3D models, events and collision.
@@ -24,29 +51,6 @@ class GameObject
 {
 
 public:
-
-	//\brief GameObject state determines how the update effects related subsystems
-	enum eGameObjectState
-	{
-		eGameObjectState_New = 0,	///< Object is created but not ready for life
-		eGameObjectState_Loading,	///< Loading resources, shaders, models etc
-		eGameObjectState_Active,	///< Out and about in the world
-		eGameObjectState_Sleep,		///< Hibernation, no updates or rendering, can come back from sleep
-		eGameObjectState_Death,		///< Unloading and cleaning up before destruction, no coming back from death
-
-		eGameObjectState_Count,
-	};
-
-	//\brief Clipping is for render culling and simple collisions for picking 
-	enum eClipType
-	{
-		eClipTypeNone = 0,			///< Always rendered, can't be picked
-		eClipTypeAxisBox,
-		eClipTypeSphere,			///< Sphere bounding volume
-		eClipTypeBox,				///< Box with three seperate dimensions
-
-		eClipTypeCount,
-	};
 
 	//\brief Creation and destruction
 	GameObject() 
@@ -56,9 +60,9 @@ public:
 		, m_model(NULL)
 		, m_shader(NULL)
 		, m_physics(NULL)
-		, m_state(eGameObjectState_New)
+		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
-		, m_clipType(eClipTypeBox)
+		, m_clipType(ClipType::None)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_clipping(true)
@@ -67,7 +71,7 @@ public:
 		{ 
 			SetName("UNAMED_GAME_OBJECT");
 			SetTemplate("");
-			memset(&m_components[0], 0, sizeof(Component *) * Component::eComponentTypeCount);
+			memset(&m_components[0], 0, sizeof(Component *) * (int)ComponentType::Count);
 		}
 
 	~GameObject() { Destroy(); }
@@ -90,12 +94,12 @@ public:
 		}
 		return false;
 	}
-	inline bool HasComponent(Component::eComponentType a_type)
+	inline bool HasComponent(ComponentType::Enum a_type)
 	{
 		return m_components[(unsigned int)a_type] != NULL;
 	}
 	template <typename T>
-	inline T * GetComponent(Component::eComponentType a_type)
+	inline T * GetComponent(ComponentType::Enum a_type)
 	{
 		Component * curComp = m_components[(unsigned int)a_type];
 		if (curComp != NULL)
@@ -104,7 +108,7 @@ public:
 		}
 		return NULL;
 	}
-	inline bool RemoveComponent(Component::eComponentType a_type)
+	inline bool RemoveComponent(ComponentType::Enum a_type)
 	{
 		Component * curComp = m_components[(unsigned int)a_type];
 		if (curComp != NULL)
@@ -118,19 +122,19 @@ public:
 	}
 	inline void RemoveAllComponents()
 	{
-		for (unsigned int i = 0; i < Component::eComponentTypeCount; ++i)
+		for (unsigned int i = 0; i < ComponentType::Count; ++i)
 		{
-			RemoveComponent((Component::eComponentType)i);
+			RemoveComponent((ComponentType::Enum)i);
 		}
 	}
 
 	//\brief State mutators and accessors
-	inline void SetSleeping() { if (m_state == eGameObjectState_Active) m_state = eGameObjectState_Sleep; }
-	inline void SetActive()	  { if (m_state == eGameObjectState_Sleep) m_state = eGameObjectState_Active; }
-	inline bool IsActive()	  { return m_state == eGameObjectState_Active; }
-	inline bool IsSleeping()  { return m_state == eGameObjectState_Sleep; }
+	inline void SetSleeping() { if (m_state == GameObjectState::Active) m_state = GameObjectState::Sleep; }
+	inline void SetActive()	  { if (m_state == GameObjectState::Sleep) m_state = GameObjectState::Active; }
+	inline bool IsActive()	  { return m_state == GameObjectState::Active; }
+	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
-	inline void SetClipType(eClipType a_newClipType) { m_clipType = a_newClipType; }
+	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
@@ -146,7 +150,7 @@ public:
 	inline Vector GetPos() const { return m_worldMat.GetPos(); }
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
-	inline eClipType GetClipType() const { return m_clipType; }
+	inline ClipType::Enum GetClipType() const { return m_clipType; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline int GetScriptReference() const { return m_scriptRef; }
@@ -156,7 +160,7 @@ public:
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
-	inline void SetState(eGameObjectState a_newState) { m_state = a_newState; }
+	inline void SetState(GameObjectState::Enum a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
@@ -204,7 +208,7 @@ private:
 	void Destroy();
 
 	//\ingroup Component management
-	Component * m_components[Component::eComponentTypeCount];
+	Component * m_components[ComponentType::Count];
 
 	//\ingroup Local properties
 	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids
@@ -214,9 +218,9 @@ private:
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
 	PhysicsObject *		  m_physics;			///< Pointer to physics manager object for collisions and dynamics
-	eGameObjectState	  m_state;				///< What state the object is in
+	GameObjectState::Enum m_state;				///< What state the object is in
 	float				  m_lifeTime;			///< How long this guy has been active
-	eClipType			  m_clipType;			///< What kind of shape represents the bounds of the object
+	ClipType::Enum		  m_clipType;			///< What kind of shape represents the bounds of the object
 	Vector				  m_clipVolumeSize;		///< Dimensions of the clipping volume for culling and picking
 	Vector				  m_clipVolumeOffset;	///< How far from the pivot of the object the clip volume is
 	bool				  m_clipping;			///< If collision is enabled

@@ -9,21 +9,23 @@
 
 #include "Component.h"
 
+//\brief eMoveType is the type of movement supported
+namespace MoveType
+{
+	enum Enum
+	{
+		Linear = 0,
+		Accelerate,
+		Decelerate,
+		AccelAndDecel,
+		Count,
+	};
+}
+
 /// \brief Root motion component can move game objects about in the world over time.
 class ComponentRootMotion : public Component
 {
 public:
-
-	//\brief eMoveType is the type of movement supported
-	enum eMoveType
-	{
-		eMoveTypeLinear = 0,
-		eMoveTypeAccelerate,
-		eMoveTypeDecelerate,
-		eMoveTypeAccelAndDecel,
-		
-		eMoveTypeCount,
-	};
 
 	ComponentRootMotion()
 		: m_numMoves(0)
@@ -32,7 +34,7 @@ public:
 		, m_currentMove(NULL)
 	{ }
 	
-	virtual Component::eComponentType GetComponentType() { return Component::eComponentTypeRootMotion; }
+	virtual Component::ComponentType::Enum GetComponentType() { return Component::ComponentType::RootMotion; }
 
 	virtual bool Update(float a_dt)
 	{

@@ -28,17 +28,17 @@ public:
 	bool Startup(const char * a_fontPath);
 	bool Shutdown();
 
-	//\brief Draw a string using the orthogonal gui render batch
+	//\brief Draw a string using the orthogonal gui render renderLayer
 	//\param a_string pointer to cstring with the character to render
 	//\param a_fontName name of the loaded font to render with, will fail if not present or unloaded
 	//\param a_size float of the height of character boxes, width is derived from this
 	//\param a_pos 2D screen space coords to draw the font at, from the top left
 	//\param a_colour The colour to tint the font texture to
 	//\return true if the glyph quads were submitted to the render manager
-	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
-	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchGui);
-	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchWorld);
-	bool DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderManager::eBatch a_batch = RenderManager::eBatchDebug2D);
+	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Gui);
+	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Gui);
+	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::World);
+	bool DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Debug2D);
 	bool DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 
 	//\brief Get the symbol for a loaded font name

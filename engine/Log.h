@@ -14,28 +14,32 @@
 #include "StringUtils.h"
 #include "Time.h"
 
+//\brief The importance of the entry being logged
+namespace LogLevel
+{
+	enum Enum
+	{
+		Info = 0,
+		Warning,
+		Error,
+		Count,
+	};
+}
+
+//\brief What part of the system logged the entry
+namespace LogCategory
+{
+	enum Enum
+	{
+		Engine = 0,
+		Game,
+		Count,
+	};
+}
+
 class Log : public Singleton<Log>
 {
 public:
-
-	//\brief The importance of the entry being logged
-    enum LogLevel
-    {
-        LL_INFO = 0,
-        LL_WARNING,
-        LL_ERROR,
-
-        LL_COUNT
-    };
-
-	//\brief What part of the system logged the entry
-    enum LogCategory
-    {
-        LC_ENGINE = 0,
-        LC_GAME,
-
-        LC_COUNT
-    };
 
 	// Log does nothing on startup but needs to cleanup
 	Log() : m_renderToScreen(true) {};
@@ -46,12 +50,12 @@ public:
 	bool Shutdown();
 
 	//\brief Create a log entry that is written to standard out and displayed on screen
-	void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
-	void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
+	void Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...);
+	void WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...);
 
 	//\brief Some handy overrides for common usage
-	inline void WriteEngineErrorNoParams(const char * a_message) { Write(LL_ERROR, LC_ENGINE, a_message); }
-	inline void WriteGameErrorNoParams(const char * a_message) { Write(LL_ERROR, LC_GAME, a_message); }
+	inline void WriteEngineErrorNoParams(const char * a_message) { Write(LogLevel::Error, LogCategory::Engine, a_message); }
+	inline void WriteGameErrorNoParams(const char * a_message) { Write(LogLevel::Error, LogCategory::Game, a_message); }
 
 	//\brief Update will draw all log entries that need to be displayed
 	//\param a_dt float of the time that has passed since the last update call
@@ -67,7 +71,7 @@ private:
 	struct LogDisplayEntry
 	{
 		//\brief Set up the basic properties of a log display message
-		LogDisplayEntry(const char * a_message, LogLevel a_level)
+		LogDisplayEntry(const char * a_message, LogLevel::Enum a_level)
 		{
 			strncpy(m_message, a_message, sizeof(char) * strlen(a_message) + 1);
 			m_lifeTime = s_logDisplayTime[a_level];
@@ -80,20 +84,20 @@ private:
 	};
 
 	//\brief Utility function to stringify log constants
-	static void PrependLogDetails(LogLevel a_level, LogCategory a_category, char * a_string_OUT)
+	static void PrependLogDetails(LogLevel::Enum a_level, LogCategory::Enum a_category, char * a_string_OUT)
 	{
 		switch (a_level)
 		{
-			case LL_INFO:       sprintf(a_string_OUT, "%s", "INFO"); break;
-			case LL_WARNING:    sprintf(a_string_OUT, "%s", "WARNING"); break;
-			case LL_ERROR:      sprintf(a_string_OUT, "%s", "ERROR"); break;
+			case LogLevel::Info:       sprintf(a_string_OUT, "%s", "INFO"); break;
+			case LogLevel::Warning:    sprintf(a_string_OUT, "%s", "WARNING"); break;
+			case LogLevel::Error:      sprintf(a_string_OUT, "%s", "ERROR"); break;
 			default: break;
 		}
 
 		switch (a_category)
 		{
-			case LC_ENGINE:     sprintf(a_string_OUT, "%s", "ENGINE"); break;
-			case LC_GAME:       sprintf(a_string_OUT, "%s", "GAME"); break;
+			case LogCategory::Engine:     sprintf(a_string_OUT, "%s", "ENGINE"); break;
+			case LogCategory::Game:       sprintf(a_string_OUT, "%s", "GAME"); break;
 			default: break;
 		}
 	}
@@ -102,8 +106,8 @@ private:
 	typedef LinkedListNode<LogDisplayEntry> LogDisplayNode;
 	typedef LinkedList<LogDisplayEntry> LogDisplayList;
 
-	const static float	s_logDisplayTime[LL_COUNT];			// How long to display each log category on screen
-	const static Colour s_logDisplayColour[LL_COUNT];		// What colours to display each log category in
+	const static float	s_logDisplayTime[LogLevel::Count];			// How long to display each log category on screen
+	const static Colour s_logDisplayColour[LogLevel::Count];		// What colours to display each log category in
 
 	LogDisplayList m_displayList;							// All log entries that are being displayed at a time
 	HashMap<unsigned int, unsigned int> m_writeOnceList;	// When a message is logged only once, it's hash is added to this map

@@ -30,8 +30,8 @@ DebugMenu::DebugMenu()
 , m_handledCommand(false)
 , m_dirtyFlags()
 , m_lastMousePosRelative(0.0f)
-, m_editType(eEditTypeNone)
-, m_editMode(eEditModeNone)
+, m_editType(EditType::None)
+, m_editMode(EditMode::None)
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
 , m_btnCreateRoot(NULL)
@@ -67,7 +67,7 @@ DebugMenu::DebugMenu()
 
 	if (!Startup())
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "DebugMenu failed to startup correctly!");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "DebugMenu failed to startup correctly!");
 	}
 }
 
@@ -110,7 +110,7 @@ bool DebugMenu::Startup()
 		curItem.m_fontNameHash = debugFont->GetHash();
 	}
 
-	curItem.m_selectFlags = Widget::eSelectionNone;
+	curItem.m_selectFlags = SelectionFlags::None;
 	curItem.m_colour = sc_colourBlue;
 	curItem.m_name = "Resource Select";
 	m_resourceSelect = gui.CreateWidget(curItem, gui.GetDebugRoot(), false);
@@ -118,7 +118,7 @@ bool DebugMenu::Startup()
 
 	// Create list box for resources
 	curItem.m_size = WidgetVector(0.85f, 1.2f);
-	curItem.m_selectFlags = Widget::eSelectionRollover;
+	curItem.m_selectFlags = SelectionFlags::Rollover;
 	curItem.m_colour = sc_colourPurple;
 	curItem.m_name="Resource List";
 	m_resourceSelectList = gui.CreateWidget(curItem, m_resourceSelect, false);
@@ -150,7 +150,7 @@ bool DebugMenu::Startup()
 	// Widgets to be used by script
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
-		curItem.m_selectFlags = Widget::eSelectionRollover;
+		curItem.m_selectFlags = SelectionFlags::Rollover;
 		curItem.m_colour = sc_colourWhite;
 		curItem.m_name = "ScriptDebugWidget";
 		curItem.m_fontSize = 2.0f;
@@ -165,10 +165,10 @@ bool DebugMenu::Startup()
 
 	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
-	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyDown, InputManager::eInputTypeKeyDown); 
-	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyUp, InputManager::eInputTypeKeyUp); 
-	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, InputManager::eMouseButtonRight);
-	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, InputManager::eMouseButtonLeft);
+	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyDown, InputType::KeyDown); 
+	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyUp, InputType::KeyUp); 
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, MouseButton::Right);
+	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, MouseButton::Left);
 
 	// Process vector cursor vertices for display aspect
 	for (unsigned int i = 0; i < 4; ++i)
@@ -183,22 +183,22 @@ void DebugMenu::Update(float a_dt)
 {
 	// Handle editing actions tied to mouse move
 	InputManager & inMan = InputManager::Get();
-	if (m_editType == eEditTypeWidget && m_widgetToEdit != NULL)
+	if (m_editType == EditType::Widget && m_widgetToEdit != NULL)
 	{
 		Vector2 mousePos = inMan.GetMousePosRelative();
 		switch (m_editMode)
 		{
-			case eEditModePos:
+			case EditMode::Pos:
 			{	
 				m_widgetToEdit->SetOffset(mousePos);
-				m_dirtyFlags.Set(eDirtyFlagGUI);
+				m_dirtyFlags.Set(DirtyFlag::GUI);
 				break;
 			}
-			case eEditModeShape:	
+			case EditMode::Shape:	
 			{
 				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
 												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
-				m_dirtyFlags.Set(eDirtyFlagGUI);
+				m_dirtyFlags.Set(DirtyFlag::GUI);
 				break;
 			}
 			default: break;
@@ -215,17 +215,17 @@ void DebugMenu::Update(float a_dt)
 			if (inMan.IsKeyDepressed(SDLK_x))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
-				m_dirtyFlags.Set(eDirtyFlagScene);
+				m_dirtyFlags.Set(DirtyFlag::Scene);
 			} 
 			else if (inMan.IsKeyDepressed(SDLK_y))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
-				m_dirtyFlags.Set(eDirtyFlagScene);				
+				m_dirtyFlags.Set(DirtyFlag::Scene);				
 			}
 			else if (inMan.IsKeyDepressed(SDLK_z))
 			{
 				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
-				m_dirtyFlags.Set(eDirtyFlagScene);
+				m_dirtyFlags.Set(DirtyFlag::Scene);
 			}
 		}
 	}
@@ -241,16 +241,16 @@ bool DebugMenu::SaveChanges()
 {
 	// Save resources to disk if dirty
 	bool changesSaved = false;
-	for (unsigned int i = 0; i < eDirtyFlagCount; ++i)
+	for (unsigned int i = 0; i < DirtyFlag::Count; ++i)
 	{
-		eDirtyFlag curFlag = (eDirtyFlag)i;
+		DirtyFlag::Enum curFlag = (DirtyFlag::Enum)i;
 		if (m_dirtyFlags.IsBitSet(curFlag))
 		{
 			// Handle each flag type
 			switch (curFlag)
 			{
-				case eDirtyFlagGUI:		Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
-				case eDirtyFlagScene:	WorldManager::Get().GetCurrentScene()->Serialise();		changesSaved = true; break;
+				case DirtyFlag::GUI:		Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
+				case DirtyFlag::Scene:	WorldManager::Get().GetCurrentScene()->Serialise();		changesSaved = true; break;
 				default: break;
 			}
 			m_dirtyFlags.Clear(curFlag);
@@ -323,14 +323,14 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 			curItem.m_fontNameHash = debugFont->GetHash();
 		}
 
-		curItem.m_selectFlags = Widget::eSelectionRollover;
+		curItem.m_selectFlags = SelectionFlags::Rollover;
 		curItem.m_name = "NEW_WIDGET";
 
 		// Parent is the active menu
 		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
 		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
 		newWidget->SetOffset(m_btnCreateRoot->GetPos());
-		m_dirtyFlags.Set(eDirtyFlagGUI);
+		m_dirtyFlags.Set(DirtyFlag::GUI);
 		
 		// Cancel menu display
 		ShowCreateMenu(false);
@@ -351,8 +351,8 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	}
 	else if (a_widget == m_btnCreateGameObjectFromTemplate)
 	{
-		m_editType = eEditTypeGameObject;
-		m_editMode = eEditModeTemplate;
+		m_editType = EditType::GameObject;
+		m_editMode = EditMode::Template;
 		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "tmp");
 
 		ShowCreateMenu(false);
@@ -394,33 +394,33 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	}
 	else if (a_widget == m_btnChangeGUIPos)
 	{
-		m_editMode = eEditModePos;
+		m_editMode = EditMode::Pos;
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUIShape)
 	{
-		m_editMode = eEditModeShape;
+		m_editMode = EditMode::Shape;
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUIName)
 	{
-		m_editMode = eEditModeName;
+		m_editMode = EditMode::Name;
 		ShowTextInput(m_widgetToEdit->GetName());
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUIText)
 	{		
-		m_editMode = eEditModeText;
+		m_editMode = EditMode::Text;
 		ShowTextInput(m_widgetToEdit->GetText());
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeGUITexture)
 	{
-		m_editMode = eEditModeTexture;
+		m_editMode = EditMode::Texture;
 		ShowChangeGUIMenu(false);
 		
 		// Bring up the resource selection dialog
@@ -432,11 +432,11 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		Gui::Get().DestroyWidget(m_widgetToEdit);
 		m_widgetToEdit = NULL;
 
-		m_editMode = eEditModeNone;
-		m_editType = eEditTypeNone;
+		m_editMode = EditMode::None;
+		m_editType = EditType::None;
 		ShowChangeGUIMenu(false);
 		m_handledCommand = true;
-		m_dirtyFlags.Set(eDirtyFlagGUI);
+		m_dirtyFlags.Set(DirtyFlag::GUI);
 	}
 	else if (a_widget == m_btnChangeObjectRoot)
 	{
@@ -458,21 +458,21 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	}
 	else if (a_widget == m_btnChangeObjectName)
 	{
-		m_editMode = eEditModeName;
+		m_editMode = EditMode::Name;
 		ShowTextInput(m_gameObjectToEdit->GetName());
 		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnChangeObjectModel)
 	{
-		m_editMode = eEditModeModel;
+		m_editMode = EditMode::Model;
 		ShowResourceSelect(ModelManager::Get().GetModelPath(), "obj");
 		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnSaveObjectTemplate)
 	{
-		m_editMode = eEditModeSaveTemplate;
+		m_editMode = EditMode::SaveTemplate;
 		ShowTextInput(m_gameObjectToEdit->GetTemplate());
 		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
@@ -481,36 +481,36 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	{
 		WorldManager::Get().DestroyObject(m_gameObjectToEdit->GetId());
 		m_gameObjectToEdit = NULL;
-		m_editMode = eEditModeNone;
-		m_editType = eEditTypeNone;
+		m_editMode = EditMode::None;
+		m_editType = EditType::None;
 		ShowChangeObjectMenu(false);
 		m_handledCommand = true;
-		m_dirtyFlags.Set(eDirtyFlagScene);
+		m_dirtyFlags.Set(DirtyFlag::Scene);
 	}
 	else if (a_widget == m_btnResourceSelectOk)
 	{
 		// Have just selected a resource for some object
 		switch (m_editType)
 		{
-			case eEditTypeWidget: 
+			case EditType::Widget: 
 			{
 				// Early out for no widget selected
 				if (m_widgetToEdit == NULL) { break; }
 
 				// Setting a texture on a widget
-				if (m_editMode == eEditModeTexture)
+				if (m_editMode == EditMode::Texture)
 				{
 					char tgaBuf[StringUtils::s_maxCharsPerLine];
 					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
-					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureManager::eCategoryGui));
-					m_dirtyFlags.Set(eDirtyFlagGUI);
+					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureCategory::Gui));
+					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
 				break;
 			}
-			case eEditTypeGameObject:
+			case EditType::GameObject:
 			{
 				WorldManager & worldMan = WorldManager::Get();
-				if (m_editMode == eEditModeTemplate)
+				if (m_editMode == EditMode::Template)
 				{
 					// Delete the old object
 					if (m_gameObjectToEdit)
@@ -518,14 +518,14 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 						worldMan.DestroyObject(m_gameObjectToEdit->GetId());
 					}
 					worldMan.CreateObject<GameObject>(m_resourceSelectList->GetSelectedListItem());
-					m_dirtyFlags.Set(eDirtyFlagScene);
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
 
 				// Early out for no object
 				if (m_gameObjectToEdit == NULL) { break; }
 
 				// Setting a model on a game object
-				if (m_editMode == eEditModeModel)
+				if (m_editMode == EditMode::Model)
 				{
 					char objBuf[StringUtils::s_maxCharsPerLine];
 					sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
@@ -534,7 +534,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 					if (Model * newModel = ModelManager::Get().GetModel(objBuf))
 					{
 						m_gameObjectToEdit->SetModel(newModel);
-						m_dirtyFlags.Set(eDirtyFlagScene);
+						m_dirtyFlags.Set(DirtyFlag::Scene);
 					}
 				}
 				break;
@@ -543,74 +543,74 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		}
 
 		HideResoureSelect();
-		m_editType = eEditTypeNone;
-		m_editMode = eEditModeNone;
+		m_editType = EditType::None;
+		m_editMode = EditMode::None;
 
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
 	{
 		HideResoureSelect();
-		m_editType = eEditTypeNone;
-		m_editMode = eEditModeNone;
+		m_editType = EditType::None;
+		m_editMode = EditMode::None;
 
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnTextInputOk)
 	{
-		if (m_editType == eEditTypeWidget)
+		if (m_editType == EditType::Widget)
 		{
-			if (m_editMode == eEditModeName)
+			if (m_editMode == EditMode::Name)
 			{
 				// Editing the name of a widget
 				if (m_widgetToEdit != NULL)
 				{
 					m_widgetToEdit->SetName(m_textInputField->GetText());
-					m_dirtyFlags.Set(eDirtyFlagGUI);
+					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
 			}
-			else if (m_editMode == eEditModeText)
+			else if (m_editMode == EditMode::Text)
 			{
 				// Editing the text of a widget
 				if (m_widgetToEdit != NULL)
 				{
 					m_widgetToEdit->SetText(m_textInputField->GetText());
-					m_dirtyFlags.Set(eDirtyFlagGUI);
+					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
 			}
 		}
-		else if (m_editType == eEditTypeGameObject)
+		else if (m_editType == EditType::GameObject)
 		{
 			// Editing the name of an object
-			if (m_editMode == eEditModeName)
+			if (m_editMode == EditMode::Name)
 			{
 				if (m_gameObjectToEdit != NULL)
 				{
 					m_gameObjectToEdit->SetName(m_textInputField->GetText());
-					m_dirtyFlags.Set(eDirtyFlagScene);
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
 			}
-			else if (m_editMode == eEditModeSaveTemplate)
+			else if (m_editMode == EditMode::SaveTemplate)
 			{
 				// Editing the template of an object
 				if (m_gameObjectToEdit != NULL)
 				{
 					m_gameObjectToEdit->SetTemplate(m_textInputField->GetText());
-					m_dirtyFlags.Set(eDirtyFlagScene);
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
 			}
 		}
 
 		HideTextInput();
-		m_editType = eEditTypeNone;
-		m_editMode = eEditModeNone;
+		m_editType = EditType::None;
+		m_editMode = EditMode::None;
 		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnTextInputCancel)
 	{
 		HideTextInput();
-		m_editType = eEditTypeNone;
-		m_editMode = eEditModeNone;
+		m_editType = EditType::None;
+		m_editMode = EditMode::None;
 		m_handledCommand = true;
 	}
 
@@ -678,12 +678,12 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 
 	// Stop any mouse bound editing on click
-	if (m_editMode == eEditModePos  || m_editMode == eEditModeShape)
+	if (m_editMode == EditMode::Pos  || m_editMode == EditMode::Shape)
 	{
-		m_editMode = eEditModeNone;
+		m_editMode = EditMode::None;
 
 		// Changed a property, save the file
-		m_dirtyFlags.Set(eDirtyFlagGUI);
+		m_dirtyFlags.Set(DirtyFlag::GUI);
 	}
 
 	// Don't play around with widget selection while a menu is up
@@ -693,12 +693,12 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 
 	// Cancel previous selection
-	if (!IsDebugMenuActive() && m_editMode == eEditModeNone)
+	if (!IsDebugMenuActive() && m_editMode == EditMode::None)
 	{
 		if (m_widgetToEdit != NULL)
 		{
-			m_editType = eEditTypeNone;
-			m_editMode = eEditModeNone;
+			m_editType = EditType::None;
+			m_editMode = EditMode::None;
 			m_widgetToEdit->ClearSelection();
 			m_widgetToEdit = NULL;
 		}
@@ -712,16 +712,16 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			m_widgetToEdit->ClearSelection();
 		}
-		m_editType = eEditTypeWidget;
+		m_editType = EditType::Widget;
 		m_widgetToEdit = newSelectedWidget;
-		m_widgetToEdit->SetSelection(Widget::eSelectionEditSelected);
+		m_widgetToEdit->SetSelection(SelectionFlags::EditSelected);
 	}
 	else // Cancel selections
 	{
 		if (m_widgetToEdit != NULL)
 		{
-			m_editType = eEditTypeNone;
-			m_editMode = eEditModeNone;
+			m_editType = EditType::None;
+			m_editMode = EditMode::None;
 			m_widgetToEdit->ClearSelection();
 			m_widgetToEdit = NULL;
 		}
@@ -747,7 +747,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		// Pick an arbitrary object (would have to sort to get the closest)
 		if (m_gameObjectToEdit = curScene->GetSceneObject(camPos, pickEnd))
 		{
-			m_editType = eEditTypeGameObject;
+			m_editType = EditType::GameObject;
 		}
 	}
 
@@ -938,8 +938,8 @@ void DebugMenu::Draw()
 	if (!IsDebugMenuActive())
 	{
 		// Draw 2D gridlines
-		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
-		renMan.AddLine2D(RenderManager::eBatchDebug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
+		renMan.AddLine2D(RenderLayer::Debug2D, Vector2(-1.0f, 0.0f), Vector2(1.0f, 0.0f), sc_colourGreyAlpha);
+		renMan.AddLine2D(RenderLayer::Debug2D, Vector2(0.0f, 1.0f),  Vector2(0.0f, -1.0f), sc_colourGreyAlpha);
 	}
 
 	// Draw 3D gridlines
@@ -951,14 +951,14 @@ void DebugMenu::Draw()
 	for (unsigned int x = 0; x < gridSize+1; ++x)
 	{
 		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
-		renMan.AddLine(RenderManager::eBatchDebug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
+		renMan.AddLine(RenderLayer::Debug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
 	}
 
 	// Gridlines on the Y axis
 	for (unsigned int y = 0; y < gridSize+1; ++y)
 	{
 		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
-		renMan.AddLine(RenderManager::eBatchDebug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
+		renMan.AddLine(RenderLayer::Debug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
 	}
 
 	// Draw an identity matrix nearby the origin (not directly on to avoid Z fighting)
@@ -972,12 +972,12 @@ void DebugMenu::Draw()
 	{
 		switch (m_gameObjectToEdit->GetClipType())
 		{
-			case GameObject::eClipTypeAxisBox:
+			case ClipType::AxisBox:
 			{
 				renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize() + extraSelectionSize, sc_colourRed);
 				break;
 			}
-			case GameObject::eClipTypeSphere:
+			case ClipType::Sphere:
 			{
 				renMan.AddDebugSphere(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize().GetX() + extraSelectionSize, sc_colourRed); 
 				break;
@@ -996,9 +996,9 @@ void DebugMenu::Draw()
 	// Draw mouse cursor
 	for (int i = 0; i < 3; ++i)
 	{
-		renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
+		renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
-	renMan.AddLine2D(RenderManager::eBatchDebug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+	renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
 }
 
 void DebugMenu::PostRender()
@@ -1020,7 +1020,7 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
 	curItem.m_pos = WidgetVector(10.0f, 10.0f);
-	curItem.m_selectFlags = Widget::eSelectionRollover;
+	curItem.m_selectFlags = SelectionFlags::Rollover;
 	curItem.m_colour = a_colour;
 	curItem.m_name = a_name;
 

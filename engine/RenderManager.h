@@ -16,41 +16,44 @@
 class GameObject;
 class Scene;
 
+//\brief Render modes are used to change how the scene is rendered wholesale
+namespace RenderMode
+{
+	enum Enum
+	{
+		None = 0,
+		Wireframe,
+		Full,
+		Count,
+	};
+}
+
+//\brief A render layer is a way to specify rendering order
+namespace RenderLayer
+{
+	enum Enum
+	{
+		None = 0,		//< It's valid to render in the none renderLayer
+		World,			//< But it will be drawn over by the world
+		Gui,			//< GUI covers the world
+		Debug2D,		//< Debug text over everything
+		Debug3D,		//< Debug text over everything
+		Count,
+	};
+}
+
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
 //		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
 {
 public:
 
-	//\brief Render modes are used to change how the scene is rendered wholesale
-	enum eRenderMode
-	{
-		eRenderModeNone = 0,
-		eRenderModeWireframe,
-		eRenderModeFull,
-
-		eRenderModeCount,
-	};
-
-	//\brief A Batch is a way to specify rendering order
-	// CH:TODO Rename from batch, it's incorrect terminology, what about Category? Layer?
-	enum eBatch
-	{
-		eBatchNone = 0,		//< It's valid to render in the none batch
-		eBatchWorld,		//< But it will be drawn over by the world
-		eBatchGui,			//< GUI covers the world
-		eBatchDebug2D,		//< Debug text over everything
-		eBatchDebug3D,		//< Debug text over everything
-
-		eBatchCount,
-	};
-	
 	//\ No work done in the constructor, only Init
 	RenderManager(float a_updateFreq = s_updateFreq) 
 					: m_renderTime(0.0f)
 					, m_lastRenderTime(0.0f)
 					, m_clearColour(sc_colourBlack)
-					, m_renderMode(eRenderModeFull)
+					, m_renderMode(RenderMode::Full)
 					, m_vr(false)
 					, m_vrIpd(s_vrIpd)
 					, m_colourShader(NULL)
@@ -89,7 +92,7 @@ public:
 	
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set
-	inline void SetRenderMode(eRenderMode a_renderMode) { m_renderMode = a_renderMode; }
+	inline void SetRenderMode(RenderMode::Enum a_renderMode) { m_renderMode = a_renderMode; }
 
 	//\brief Accessors for the viewport dimensions and render properties
 	inline unsigned int GetViewWidth() { return m_viewWidth; }
@@ -110,41 +113,41 @@ public:
 	//\param a_point1 is the start of the line
 	//\param a_point2 is the end of the line
 	//\a_tint is the colour to draw the line
-	void AddLine2D(eBatch a_batch, Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
+	void AddLine2D(RenderLayer::Enum a_layer, Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
 
 	//\brief Quad drawing function with manual texture coordinates
 	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
-	void AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
-	void AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient = Texture::eOrientationNormal, Colour a_tint = sc_colourWhite);
-	void AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad3D(RenderLayer::Enum a_layer, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
 
 	//\brief 3D Drawing functions
-	void AddLine(eBatch a_batch, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
-	void AddTri(eBatch a_batch, Vector a_point1, Vector a_point2, Vector a_point3, 
+	void AddLine(RenderLayer::Enum a_layer, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
+	void AddTri(RenderLayer::Enum a_layer, Vector a_point1, Vector a_point2, Vector a_point3, 
 								TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3,
 								Texture * a_tex, Colour a_tint = sc_colourWhite);
 	
 	//\brief Add a 3D model for drawing
-	//\param a_batch is the rendering group to draw the model in
+	//\param a_renderLayer is the rendering group to draw the model in
 	//\param a_model is a pointer to the loaded model to draw
 	//\param a_mat is a pointer to the position and orientation to draw the model at
 	//\param a_shader is a pointer to a shader to render the model with if any
-	void AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat, Shader * a_shader);
+	void AddModel(RenderLayer::Enum a_layer, Model * a_model, Matrix * a_mat, Shader * a_shader);
 
 	//\brief Add a font character for drawing
-	//\param a_batch is the rendering group to draw the model in
+	//\param a_renderLayer is the rendering group to draw the model in
 	//\param a_fontCharId is the display list ID of the character to call
 	//\param a_size is the size multiplier to use
-	//\param a_pos is the position in 3D space to draw. If a 2D batch is used, the Z component will be ignored
-	void AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
+	//\param a_pos is the position in 3D space to draw. If a 2D renderLayer is used, the Z component will be ignored
+	void AddFontChar(RenderLayer::Enum a_layer, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
-	//\brief Add a line to the debug batch
+	//\brief Add a line to the debug renderLayer
 	//\param Vector a_point1 start of the line
 	//\param Vector a_point2 end of the line
 	//\param Colour a_tint the colour of the line
-	inline void AddDebugLine(Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite) { AddLine(eBatchDebug3D, a_point1, a_point2, a_tint); }
+	inline void AddDebugLine(Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite) { AddLine(RenderLayer::Debug3D, a_point1, a_point2, a_tint); }
 
 	//\brief A matrix is position and orientation displayed with lines
 	//\param a const ref of the matrix containing the position and orientation to display
@@ -238,7 +241,7 @@ private:
 
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
-	static const unsigned int s_maxPrimitivesPerBatch = 64 * 1024;	///< Flat storage amount for quads
+	static const unsigned int s_maxPrimitivesPerrenderLayer = 64 * 1024;	///< Flat storage amount for quads
 	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
@@ -248,16 +251,16 @@ private:
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime;											///< How long the last frame took
 
-	Tri	 * m_tris[eBatchCount];										///< Pointer to a pool of memory for tris
-	Quad * m_quads[eBatchCount];									///< Pointer to a pool of memory for quads
-	Line * m_lines[eBatchCount];									///< Lines for each batch
-	RenderModel * m_models[eBatchCount];							///< Models for each batch
-	FontChar * m_fontChars[eBatchCount];
-	unsigned int m_triCount[eBatchCount];							///< Number of tris per batch per frame
-	unsigned int m_quadCount[eBatchCount];							///< Number of primitives in each batch per frame
-	unsigned int m_lineCount[eBatchCount];							///< Number of lines per frame
-	unsigned int m_modelCount[eBatchCount];							///< Number of models to render
-	unsigned int m_fontCharCount[eBatchCount];						///< Number for font characters to render
+	Tri	 * m_tris[RenderLayer::Count];								///< Pointer to a pool of memory for tris
+	Quad * m_quads[RenderLayer::Count];								///< Pointer to a pool of memory for quads
+	Line * m_lines[RenderLayer::Count];								///< Lines for each renderLayer
+	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
+	FontChar * m_fontChars[RenderLayer::Count];
+	unsigned int m_triCount[RenderLayer::Count];					///< Number of tris per renderLayer per frame
+	unsigned int m_quadCount[RenderLayer::Count];					///< Number of primitives in each renderLayer per frame
+	unsigned int m_lineCount[RenderLayer::Count];					///< Number of lines per frame
+	unsigned int m_modelCount[RenderLayer::Count];					///< Number of models to render
+	unsigned int m_fontCharCount[RenderLayer::Count];				///< Number for font characters to render
 
 	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
 	unsigned int m_colourBuffer;									///< Identifier for the texture to render to
@@ -272,7 +275,7 @@ private:
 	unsigned int m_bpp;												///< Cache of arguments passed to init
 	float		 m_aspect;											///< Calculated ratio of width to height
 	Colour m_clearColour;											///< Cache of arguments passed to init
-	eRenderMode m_renderMode;										///< How the scene is to be rendered
+	RenderMode::Enum m_renderMode;									///< How the scene is to be rendered
 
 	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
 	float m_vrIpd;													///< Inter pupillary distance to render at

@@ -64,39 +64,39 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 	glEnable(GL_COLOR_MATERIAL);
 
 	// Storage for all the primitives
-	bool batchAlloc = true;
-	for (unsigned int i = 0; i < eBatchCount; ++i)
+	bool renderLayerAlloc = true;
+	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
 		// Tris
-		m_tris[i] = (Tri *)malloc(sizeof(Tri) * s_maxPrimitivesPerBatch);
-		batchAlloc &= m_tris[i] != NULL;
+		m_tris[i] = (Tri *)malloc(sizeof(Tri) * s_maxPrimitivesPerrenderLayer);
+		renderLayerAlloc &= m_tris[i] != NULL;
 		m_triCount[i] = 0;
 
 		// Quads
-		m_quads[i] = (Quad *)malloc(sizeof(Quad) * s_maxPrimitivesPerBatch);
-		batchAlloc &= m_quads[i] != NULL;
+		m_quads[i] = (Quad *)malloc(sizeof(Quad) * s_maxPrimitivesPerrenderLayer);
+		renderLayerAlloc &= m_quads[i] != NULL;
 		m_quadCount[i] = 0;
 
 		// Lines
-		m_lines[i] = (Line *)malloc(sizeof(Line) * s_maxPrimitivesPerBatch);
-		batchAlloc &= m_lines[i] != NULL;
+		m_lines[i] = (Line *)malloc(sizeof(Line) * s_maxPrimitivesPerrenderLayer);
+		renderLayerAlloc &= m_lines[i] != NULL;
 		m_lineCount[i] = 0;
 
 		// Render models
-		m_models[i] = (RenderModel *)malloc(sizeof(RenderModel) * s_maxPrimitivesPerBatch);
-		batchAlloc &= m_models[i] != NULL;
+		m_models[i] = (RenderModel *)malloc(sizeof(RenderModel) * s_maxPrimitivesPerrenderLayer);
+		renderLayerAlloc &= m_models[i] != NULL;
 		m_modelCount[i] = 0;
 
 		// Font characters
-		m_fontChars[i] = (FontChar *)malloc(sizeof(FontChar) * s_maxPrimitivesPerBatch);
-		batchAlloc &= m_fontChars[i] != NULL;
+		m_fontChars[i] = (FontChar *)malloc(sizeof(FontChar) * s_maxPrimitivesPerrenderLayer);
+		renderLayerAlloc &= m_fontChars[i] != NULL;
 		m_fontCharCount[i] = 0;
 	}
 
 	// Alert if memory allocation failed
-	if (!batchAlloc)
+	if (!renderLayerAlloc)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "RenderManager failed to allocate batch/primitive memory!");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "RenderManager failed to allocate renderLayer/primitive memory!");
 	}
 
 	// Setup default shaders
@@ -142,13 +142,13 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 		}
 	}
 
-    return batchAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
+    return renderLayerAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
 }
 
 bool RenderManager::Shutdown()
 {
 	// Clean up storage for all primitives
-	for (unsigned int i = 0; i < eBatchCount; ++i)
+	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
 		free(m_tris[i]);
 		free(m_quads[i]);
@@ -241,7 +241,7 @@ bool RenderManager::Update(float a_dt)
 				{
 					curVertShaderReloaded = true;
 					curManShader->m_vertexTimeStamp = curTimeStamp;
-					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
 
 				// Now check the pixel shader
@@ -251,7 +251,7 @@ bool RenderManager::Update(float a_dt)
 				{
 					curFragShaderReloaded = true;
 					curManShader->m_fragmentTimeStamp = curTimeStamp;
-					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in shader %s, reloading.", fullShaderPath);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
 
 				if (curVertShaderReloaded || curFragShaderReloaded)
@@ -457,10 +457,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	// Handle different rendering modes
 	switch (m_renderMode)
 	{
-		case eRenderModeNone:
+		case RenderMode::None:
 		{
 			// Clear the queues as the rest of the system will continue to add primitives
-			for (unsigned int i = 0; i < eBatchCount; ++i)
+			for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 			{
 				m_triCount[i] = 0;
 				m_quadCount[i] = 0;
@@ -470,7 +470,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			}
 			return;
 		}
-		case eRenderModeWireframe:
+		case RenderMode::Wireframe:
 		{
 			// TODO
 		}
@@ -501,14 +501,14 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Draw primitives for each batch
-	for (unsigned int i = 0; i < eBatchCount; ++i)
+	// Draw primitives for each renderLayer
+	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
-		// Switch render mode for each batch
-		switch ((eBatch)i)
+		// Switch render mode for each renderLayer
+		switch ((RenderLayer::Enum)i)
 		{
-			case eBatchWorld:
-			case eBatchDebug3D:
+			case RenderLayer::World:
+			case RenderLayer::Debug3D:
 			{
 				// Setup projection matrix stack to transform eye space to clip coordinates
 				glMatrixMode(GL_PROJECTION);
@@ -521,7 +521,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glLoadMatrixf(a_viewMatrix.GetValues());
 				break;
 			}
-			case eBatchGui:
+			case RenderLayer::Gui:
 			{
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
@@ -533,8 +533,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			default: break;
 		}
 
-		// Ensure 2D batches render on top of everything
-		if ((eBatch)i == eBatchGui)
+		// Ensure 2D renderLayeres render on top of everything
+		if ((RenderLayer::Enum)i == RenderLayer::Gui)
 		{
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
@@ -681,7 +681,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			m_colourShader->UseShader();
 		}
 
-		// Draw lines in the current batch
+		// Draw lines in the current renderLayer
 		Line * l = m_lines[i];
 		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
 		{
@@ -693,7 +693,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			++l;
 		}
 		
-		// Flush the batches if we are not rendering more than once
+		// Flush the renderLayeres if we are not rendering more than once
 		if (a_flushBuffers)
 		{
 			m_triCount[i] = 0;
@@ -813,27 +813,27 @@ unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord
 	return displayListId;
 }
 
-void RenderManager::AddLine2D(eBatch a_batch, Vector2 a_point1, Vector2 a_point2, Colour a_tint)
+void RenderManager::AddLine2D(RenderLayer::Enum a_renderLayer, Vector2 a_point1, Vector2 a_point2, Colour a_tint)
 {
 	// Set the Z depth according to 2D project and call through to 3D version
-	AddLine(a_batch,
+	AddLine(a_renderLayer,
 			Vector(a_point1.GetX(), a_point1.GetY(), s_renderDepth2D),
 		    Vector(a_point2.GetX(), a_point2.GetY(), s_renderDepth2D),
 			a_tint);
 }
 
-void RenderManager::AddLine(eBatch a_batch, Vector a_point1, Vector a_point2, Colour a_tint)
+void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_lineCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_lineCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many line primitives added, max is %d", m_lineCount);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", m_lineCount);
 		return;
 	}
 
 	// Copy params to next queue item
-	Line * l = m_lines[a_batch];
-	l += m_lineCount[a_batch]++;
+	Line * l = m_lines[a_renderLayer];
+	l += m_lineCount[a_renderLayer]++;
 
 	l->m_colour = a_tint;
 		
@@ -842,41 +842,41 @@ void RenderManager::AddLine(eBatch a_batch, Vector a_point1, Vector a_point2, Co
 	l->m_verts[1] = a_point2;
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, Texture::eOrientation a_orient, Colour a_tint)
+void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TextureOrientation::Enum a_orient, Colour a_tint)
 {
 	// Create a quad with tex coord at top left
 	TexCoord texPos(0.0f, 0.0f);
 	TexCoord texSize(1.0f, 1.0f);
-	AddQuad2D(a_batch, a_topLeft, a_size, a_tex, texPos, texSize, a_orient, a_tint);
+	AddQuad2D(a_renderLayer, a_topLeft, a_size, a_tex, texPos, texSize, a_orient, a_tint);
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient, Colour a_tint)
+void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient, Colour a_tint)
 {
 	Vector2 verts[4] =	{Vector2(a_topLeft.GetX(), a_topLeft.GetY()),
 						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY()),
 						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY() - a_size.GetY()),
 						Vector2(a_topLeft.GetX(), a_topLeft.GetY() - a_size.GetY())};
-	AddQuad2D(a_batch, &verts[0], a_tex, a_texCoord, a_texSize, a_orient, a_tint);
+	AddQuad2D(a_renderLayer, &verts[0], a_tex, a_texCoord, a_texSize, a_orient, a_tint);
 }
 
-void RenderManager::AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, Texture::eOrientation a_orient, Colour a_tint)
+void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_quadCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many primitives added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
 		return;
 	}
 
 	// Warn about no texture
-	if (a_batch != eBatchDebug2D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug2D && a_tex == NULL)
 	{
-		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Quad submitted without a texture");
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Quad submitted without a texture");
 	}
 
 	// Copy params to next queue item
-	Quad * q = m_quads[a_batch];
-	q += m_quadCount[a_batch]++;
+	Quad * q = m_quads[a_renderLayer];
+	q += m_quadCount[a_renderLayer]++;
 	if (a_tex)
 	{
 		q->m_textureId = a_tex->GetId();
@@ -898,7 +898,7 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex
 	{
 		switch(a_orient)
 		{
-			case Texture::eOrientationNormal:
+			case TextureOrientation::Normal:
 			{
 				q->m_coords[0] = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
 				q->m_coords[1] = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
@@ -906,17 +906,17 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex
 				q->m_coords[3] = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
 				break;
 			}
-			case Texture::eOrientationFlipVert:
+			case TextureOrientation::FlipVert:
 			{
 				// TODO
 				break;
 			}
-			case Texture::eOrientationFlipHoriz:
+			case TextureOrientation::FlipHoriz:
 			{
 				// TODO
 				break;
 			}
-			case Texture::eOrientationFlipBoth:
+			case TextureOrientation::FlipBoth:
 			{
 				// TODO
 				break;
@@ -927,24 +927,24 @@ void RenderManager::AddQuad2D(eBatch a_batch, Vector2 * a_verts, Texture * a_tex
 	}
 }
 
-void RenderManager::AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex, Colour a_tint)
+void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_quadCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many primitives added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
 		return;
 	}
 
 	// Warn about no texture
-	if (a_batch != eBatchDebug2D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug2D && a_tex == NULL)
 	{
-		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "3D Quad submitted without a texture");
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "3D Quad submitted without a texture");
 	}
 
 	// Copy params to next queue item
-	Quad * q = m_quads[a_batch];
-	q += m_quadCount[a_batch]++;
+	Quad * q = m_quads[a_renderLayer];
+	q += m_quadCount[a_renderLayer]++;
 	if (a_tex)
 	{
 		q->m_textureId = a_tex->GetId();
@@ -971,24 +971,24 @@ void RenderManager::AddQuad3D(eBatch a_batch, Vector * a_verts, Texture * a_tex,
 	}
 }
 
-void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vector a_point2, Vector a_point3, TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3, Texture * a_tex, Colour a_tint)
+void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Vector a_point3, TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_triCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_triCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many tri primitives added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
 		return;
 	}
 
 	// Warn about no texture
-	if (a_batch != eBatchDebug3D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug3D && a_tex == NULL)
 	{
-		Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Tri submitted without a texture");
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Tri submitted without a texture");
 	}
 
 	// Copy params to next queue item
-	Tri * t = m_tris[a_batch];
-	t += m_triCount[a_batch]++;
+	Tri * t = m_tris[a_renderLayer];
+	t += m_triCount[a_renderLayer]++;
 	if (a_tex)
 	{
 		t->m_textureId = a_tex->GetId();
@@ -1010,12 +1010,12 @@ void RenderManager::AddTri(RenderManager::eBatch a_batch, Vector a_point1, Vecto
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat, Shader * a_shader)
+void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader)
 {
 	// Don't add more models than have been allocated for
-	if (m_modelCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_modelCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many render models added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many render models added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
 		return;
 	}
 
@@ -1056,8 +1056,8 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat, Sh
 		a_model->SetDisplayListId(displayListId);
 	}
 
-	RenderModel * r = m_models[a_batch];
-	r += m_modelCount[a_batch]++;
+	RenderModel * r = m_models[a_renderLayer];
+	r += m_modelCount[a_renderLayer]++;
 	r->m_model = a_model;
 	r->m_mat = a_mat;
 	r->m_shader = a_shader;
@@ -1070,31 +1070,31 @@ void RenderManager::AddModel(eBatch a_batch, Model * a_model, Matrix * a_mat, Sh
 
 }
 
-void RenderManager::AddFontChar(eBatch a_batch, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour)
+void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour)
 {
 	// Don't add more font characters than have been allocated for
-	if (m_fontCharCount[a_batch] >= s_maxPrimitivesPerBatch)
+	if (m_fontCharCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Too many font characters added for batch %d, max is %d", a_batch, s_maxPrimitivesPerBatch);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
 		return;
 	}
 
-	FontChar * fc = m_fontChars[a_batch];
-	fc += m_fontCharCount[a_batch]++;
+	FontChar * fc = m_fontChars[a_renderLayer];
+	fc += m_fontCharCount[a_renderLayer]++;
 	fc->m_displayListId = a_fontCharId;
 	fc->m_size = a_size;
 	fc->m_pos = a_pos;
 	fc->m_pos.SetZ(s_renderDepth2D);
 	fc->m_colour = a_colour;
-	fc->m_2d = a_batch == eBatchGui || a_batch == eBatchDebug2D;
+	fc->m_2d = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
 }
 
 void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 {
 	Vector startPos = a_mat.GetPos();
-	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
-	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
-	AddLine(eBatchDebug3D, startPos, startPos + a_mat.GetUp(), sc_colourBlue);			// Blue for Z axis up
+	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
+	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
+	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetUp(), sc_colourBlue);			// Blue for Z axis up
 }
 
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
@@ -1154,13 +1154,13 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	// Draw the lines between each corner
 	for (unsigned int i = 0; i < 3; ++i)
 	{
-		AddLine(eBatchDebug3D, corners[i], corners[i+1], a_colour);
-		AddLine(eBatchDebug3D, corners[i+4], corners[i+5], a_colour);
-		AddLine(eBatchDebug3D, corners[i], corners[i+4], a_colour);
+		AddLine(RenderLayer::Debug3D, corners[i], corners[i+1], a_colour);
+		AddLine(RenderLayer::Debug3D, corners[i+4], corners[i+5], a_colour);
+		AddLine(RenderLayer::Debug3D, corners[i], corners[i+4], a_colour);
 	}
-	AddLine(eBatchDebug3D, corners[3], corners[0], a_colour);
-	AddLine(eBatchDebug3D, corners[7], corners[4], a_colour);
-	AddLine(eBatchDebug3D, corners[3], corners[7], a_colour);
+	AddLine(RenderLayer::Debug3D, corners[3], corners[0], a_colour);
+	AddLine(RenderLayer::Debug3D, corners[7], corners[4], a_colour);
+	AddLine(RenderLayer::Debug3D, corners[3], corners[7], a_colour);
 }
 
 void RenderManager::ManageShader(GameObject * a_gameObject)

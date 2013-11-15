@@ -5,7 +5,7 @@
 
 template<> TextureManager * Singleton<TextureManager>::s_instance = NULL;
 
-const unsigned int TextureManager::s_texurePoolSize[eCategoryCount] = 
+const unsigned int TextureManager::s_texurePoolSize[TextureCategory::Count] = 
 {
 	4096,		// 4 meg for debug textures
 	32768,		// 32 for gui
@@ -21,7 +21,7 @@ TextureManager::TextureManager(float a_updateFreq)
 	, m_updateTimer(0.0f)
 {
 	m_texturePath[0] = '\0';
-	m_filterMode = eTextureFilterInvalid;
+	m_filterMode = TextureFilter::Invalid;
 }
 
 bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTextureFilter)
@@ -30,7 +30,7 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 	 m_updateTimer = 0;
 
 	// Init a pool of memory for each category
-	for (unsigned int i = 0; i < eCategoryCount; ++i)
+	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 	{
 		if (m_texturePool[i].Init(s_texurePoolSize[i]))
 		{
@@ -39,7 +39,7 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 		}
 		else // Allocation of the pool failed in Init
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture memory allocation for texture categpry %d", i);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture memory allocation for texture categpry %d", i);
 			return false;
 		}
 	}
@@ -49,7 +49,7 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
 
 	// Set filtering rule
-	m_filterMode = a_useLinearTextureFilter ? eTextureFilterLinear : eTextureFilterNearest;
+	m_filterMode = a_useLinearTextureFilter ? TextureFilter::Linear : TextureFilter::Nearest;
 
 	return true;
 }
@@ -57,7 +57,7 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 bool TextureManager::Shutdown()
 {
 	// Cleanup memory
-	for (unsigned int i = 0; i < eCategoryCount; ++i)
+	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 	{
 		m_texturePool[i].Done();
 	}
@@ -78,7 +78,7 @@ bool TextureManager::Update(float a_dt)
 		bool textureReloaded = false;
 
 		// For each texture category
-		for (unsigned int i = 0; i < eCategoryCount; ++i)
+		for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 		{
 			// Each texture in the category gets tested
 			ManagedTexture * curTex = NULL;
@@ -89,7 +89,7 @@ bool TextureManager::Update(float a_dt)
 				{
 					if (curTimeStamp > curTex->m_timeStamp)
 					{
-						Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in texture %s, reloading.", curTex->m_path);
+						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path);
 						textureReloaded = curTex->m_texture.Load(curTex->m_path);
 						curTex->m_timeStamp = curTimeStamp;
 					}
@@ -100,7 +100,7 @@ bool TextureManager::Update(float a_dt)
 	}
 }
 
-Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_cat, eTextureFilter a_currentFilter)
+Texture * TextureManager::GetTexture(const char *a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
@@ -125,26 +125,26 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 	// Get the identifier for the new texture
 	StringHash texHash(fileNameBuf);
 	unsigned int texId = texHash.GetHash();
-	eTextureCategory a_loadedCat = IsTextureLoaded(texId);
+	TextureCategory::Enum loadedCat = IsTextureLoaded(texId);
 
 	// If it already exists
-	if (a_loadedCat != eCategoryNone)
+	if (loadedCat != TextureCategory::None)
 	{
 		// Just returned the cached copy
 		ManagedTexture * foundTex = NULL;
-		m_textureMap[a_loadedCat].Get(texId, foundTex);
+		m_textureMap[loadedCat].Get(texId, foundTex);
 		return &foundTex->m_texture;
 	}
 	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(ManagedTexture)))
 	{
 		// If the filter is not specified, use the default
-		if (a_currentFilter == eTextureFilterInvalid)
+		if (a_currentFilter == TextureFilter::Invalid)
 		{
 			a_currentFilter = m_filterMode;
 		}
 
 		// Insert the newly allocated texture
-		if (newTex->m_texture.Load(fileNameBuf, a_currentFilter == eTextureFilterLinear))
+		if (newTex->m_texture.Load(fileNameBuf, a_currentFilter == TextureFilter::Linear))
 		{
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
 			sprintf(newTex->m_path, "%s", fileNameBuf);
@@ -153,28 +153,28 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, eTextureCategory a_c
 		}
 		else
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture load failed for %s", fileNameBuf);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load failed for %s", fileNameBuf);
 			return NULL;
 		}
 	}
 	else // Report the error
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture allocation failed for %s", fileNameBuf);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture allocation failed for %s", fileNameBuf);
 		return NULL;
 	}
    return NULL;
 }
 
-TextureManager::eTextureCategory TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)
+TextureCategory::Enum TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)
 {
 	// Look through each category for the target texture
-	for (unsigned int i = 0; i < eCategoryCount; ++i)
+	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 	{
 		ManagedTexture * foundTex = NULL;
 		if (m_textureMap[i].Get(a_tgaPathHash, foundTex))
 		{
-			return (eTextureCategory)i;
+			return (TextureCategory::Enum)i;
 		}
 	}
-	return eCategoryNone;
+	return TextureCategory::None;
 }

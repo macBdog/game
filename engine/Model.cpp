@@ -160,7 +160,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 				// Check for no texture map
 				if (strstr(line, "\\\\") != NULL)
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load model %s with no uv or normal exported per face", a_modelFilePath);
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot load model %s with no uv or normal exported per face", a_modelFilePath);
 					file.close();
 					return false;
 				}
@@ -234,7 +234,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		}
 		else
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot allocate memory for the faces of model %s", a_modelFilePath);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot allocate memory for the faces of model %s", a_modelFilePath);
 		}		
 
 		// Model data loaded succesfully
@@ -248,7 +248,7 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not open model file resource at path %s", a_modelFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open model file resource at path %s", a_modelFilePath);
 		return false;
 	}
 }
@@ -300,20 +300,20 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 				memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 				sscanf(line, "map_Kd %s", &tempMatName);
 
-				m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureManager::eCategoryModel);
+				m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 				file.close();
 				return true;
 			}
 		}
 
 		// Report error and fail out
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot find material def %s in material file %s", a_materialName, a_materialFileName);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot find material def %s in material file %s", a_materialName, a_materialFileName);
 		file.close();
 		return false;
 	}
 
 	// No material file to load
-	Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot open material file %s", a_materialFileName);
+	Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open material file %s", a_materialFileName);
 	return false;
 }
 

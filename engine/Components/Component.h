@@ -4,20 +4,22 @@
 
 class GameObject;
 
+namespace ComponentType
+{
+	enum Enum
+	{
+		Invalid = -1,
+		RootMotion,
+		Count,
+	};
+}
+
 /// \brief Component is designed to be pure virtual base class for GameObject component functionality.
 class Component
 {
 public:
 	
-	enum eComponentType
-	{
-		eComponentTypeInvalid = -1,
-		eComponentTypeRootMotion,
-
-		eComponentTypeCount,
-	};
-
-	virtual eComponentType GetComponentType() = 0;
+	virtual ComponentType::Enum GetComponentType() = 0;
 	
 	virtual bool Startup(GameObject * a_parentGameObject)
 	{

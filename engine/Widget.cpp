@@ -11,13 +11,13 @@
 
 using namespace std;	//< For fstream operations
 
-const char * WidgetVector::s_alignXNames[eAlignXCount] = 
+const char * WidgetVector::s_alignXNames[AlignX::Count] = 
 {
 	"left",
 	"middle",
 	"right"
 };
-const char * WidgetVector::s_alignYNames[eAlignYCount] =
+const char * WidgetVector::s_alignYNames[AlignY::Count] =
 {
 	"top",
 	"centre",
@@ -53,15 +53,15 @@ void Widget::Draw()
 		// Determine draw style from selection
 		Colour selectColour = m_colour;
 		RenderManager & rMan = RenderManager::Get();
-		RenderManager::eBatch batch = m_debugRender ? RenderManager::eBatchDebug2D : RenderManager::eBatchGui;
+		RenderLayer::Enum renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
 		switch (m_selection)
 		{
-			case eSelectionRollover:		selectColour -= sc_rolloverColour;		break;
-			case eSelectionSelected:		selectColour -= sc_selectedColour;		break;
+			case SelectionFlags::Rollover:		selectColour -= sc_rolloverColour;		break;
+			case SelectionFlags::Selected:		selectColour -= sc_selectedColour;		break;
 			
 			// Draw a selection box around a selected
-			case eSelectionEditRollover:	
-			case eSelectionEditSelected:
+			case SelectionFlags::EditRollover:	
+			case SelectionFlags::EditSelected:
 			{
 				selectColour -= sc_editSelectedColour;
 				const float extraSelectionSize = 0.05f;
@@ -69,10 +69,10 @@ void Widget::Draw()
 				Vector2 startVec = m_pos.GetVector();
 				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
 				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
-				Vector2 endVec = Vector2(startVec.GetX() + selectSize.GetX(), startVec.GetY());  rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
-				startVec = endVec;	endVec -= Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
-				startVec = endVec;	endVec -= Vector2(selectSize.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);
-				startVec = endVec;	endVec += Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, selectColour);	
+				Vector2 endVec = Vector2(startVec.GetX() + selectSize.GetX(), startVec.GetY());  rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(selectSize.GetX(), 0.0f);	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec += Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);	
 				break;
 			}
 			default: break;
@@ -81,7 +81,7 @@ void Widget::Draw()
 		// Draw the quad in various states of activation
 		if (m_texture != NULL)
 		{
-			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), m_texture, Texture::eOrientationNormal, selectColour);
+			rMan.AddQuad2D(renderLayer, m_pos.GetVector(), m_size.GetVector(), m_texture, TextureOrientation::Normal, selectColour);
 		}
 
 		// Draw fill colour for debug widgets
@@ -89,7 +89,7 @@ void Widget::Draw()
 		{
 			Colour fillColour = selectColour * 0.3f;
 			fillColour.SetA(0.95f);
-			rMan.AddQuad2D(batch, m_pos.GetVector(), m_size.GetVector(), NULL, Texture::eOrientationNormal, fillColour);
+			rMan.AddQuad2D(renderLayer, m_pos.GetVector(), m_size.GetVector(), NULL, TextureOrientation::Normal, fillColour);
 		}
 
 		// Draw widget bounds for editing mode or for debug widgets
@@ -99,11 +99,11 @@ void Widget::Draw()
 			boxColour.SetA(0.1f);
 			Vector2 startVec = m_pos.GetVector();
 			Vector2 endVec = Vector2(startVec.GetX() + m_size.GetX(), startVec.GetY());
-			rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
+			rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, boxColour);
 			
-			startVec = endVec;	endVec -= Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
-			startVec = endVec;	endVec -= Vector2(m_size.GetX(), 0.0f);	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
-			startVec = endVec;	endVec += Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderManager::eBatchGui, startVec, endVec, boxColour);
+			startVec = endVec;	endVec -= Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, boxColour);
+			startVec = endVec;	endVec -= Vector2(m_size.GetX(), 0.0f);	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, boxColour);
+			startVec = endVec;	endVec += Vector2(0.0f, m_size.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, boxColour);
 		}
 
 		// Draw gui label on top of the widget in editing mode
@@ -112,7 +112,7 @@ void Widget::Draw()
 		{
 			if (m_fontNameHash > 0)
 			{
-				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, batch);
+				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, renderLayer);
 
 				// Some widgets also text like labels and buttons
 				if (m_text[0] != '\0')
@@ -129,7 +129,7 @@ void Widget::Draw()
 						{
 							sprintf(cursorText, "%s", m_text);
 						}
-						FontManager::Get().DrawDebugString2D(cursorText, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, batch);
+						FontManager::Get().DrawDebugString2D(cursorText, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, renderLayer);
 					}
 				}
 			}	
@@ -138,7 +138,7 @@ void Widget::Draw()
 		// Always display text for a widget
 		if (m_text[0] != '\0') 
 		{
-			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, m_pos, m_colour, batch);
+			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, m_pos, m_colour, renderLayer);
 		}
 
 		// Draw any list items
@@ -153,11 +153,11 @@ void Widget::Draw()
 			{
 				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
 				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
-				rMan.AddQuad2D(batch, hLightPos, hLightSize, NULL, Texture::eOrientationNormal, selectColour - sc_rolloverColour);
+				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, NULL, TextureOrientation::Normal, selectColour - sc_rolloverColour);
 			}
 
 			// Now draw the item text
-			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 1.0f, itemDisplayPos, m_colour, batch);
+			FontManager::Get().DrawString(nextItem->GetData()->GetCString(), m_fontNameHash, 1.0f, itemDisplayPos, m_colour, renderLayer);
 			itemDisplayPos.SetY(itemDisplayPos.GetY() - fontDisplaySize);
 
 			nextItem = nextItem->GetNext();
@@ -187,7 +187,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 	// Don't select debug menu elements if we aren't in debug mode
 	if (IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		m_selection = eSelectionNone;
+		m_selection = SelectionFlags::None;
 		return;
 	}
 
@@ -196,33 +196,33 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		a_pos.GetY() <= m_pos.GetY() && a_pos.GetY() >= m_pos.GetY() - m_size.GetY())
 	{
 		// Check selection flags
-		if ((m_selectFlags & eSelectionRollover) > 0)
+		if ((m_selectFlags & SelectionFlags::Rollover) > 0)
 		{
 			if (DebugMenu::Get().IsDebugMenuEnabled())
 			{
-				if (m_selection <= eSelectionEditRollover)
+				if (m_selection <= SelectionFlags::EditRollover)
 				{
-					m_selection = eSelectionEditRollover;
+					m_selection = SelectionFlags::EditRollover;
 				}
 			}
 			else
 			{
-				m_selection = eSelectionRollover;
+				m_selection = SelectionFlags::Rollover;
 			}
 		}
 	}
 	else // Selection position not inside bounds
 	{
 		// Don't unselect a selection by mouseover
-		if (m_selection != eSelectionSelected && 
-			m_selection != eSelectionEditSelected)
+		if (m_selection != SelectionFlags::Selected && 
+			m_selection != SelectionFlags::EditSelected)
 		{
-			m_selection = eSelectionNone;
+			m_selection = SelectionFlags::None;
 		}
 	}
 
 	// Update selection of list items
-	if (m_selection > eSelectionNone)
+	if (m_selection > SelectionFlags::None)
 	{
 		const float fontDisplaySize = 0.07f;
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
@@ -272,7 +272,7 @@ bool Widget::DoActivation()
 	// Check if the position is inside the widget
 	DebugMenu & debug = DebugMenu::Get();
 	bool activated = false;
-	eSelectionFlags flags = debug.IsDebugMenuEnabled() ? eSelectionEditRollover : eSelectionRollover;
+	SelectionFlags::Enum flags = debug.IsDebugMenuEnabled() ? SelectionFlags::EditRollover : SelectionFlags::Rollover;
 	if (IsSelected(flags))
 	{
 		if (!IsDebugWidget() && debug.IsDebugMenuEnabled())
@@ -302,7 +302,7 @@ bool Widget::DoActivation()
 	return activated;
 }
 
-bool Widget::IsSelected(eSelectionFlags a_selectMode)
+bool Widget::IsSelected(SelectionFlags::Enum a_selectMode)
 { 
 	// TODO Should be a bittest with every selection flag
 	return m_selection == a_selectMode;
@@ -436,7 +436,7 @@ void Widget::Activate()
 	}
 	else if (!m_debugRender)
 	{
-		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Widget named %s does not have an action set.", GetName());
+		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Widget named %s does not have an action set.", GetName());
 	}
 }
 
@@ -581,7 +581,7 @@ const char * Widget::GetListItem(unsigned int a_itemId)
 {
 	if (a_itemId >= m_listItems.GetLength())
 	{
-		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Trying to get an invalid list item %d from widget called %s.", a_itemId, m_name);
+		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Trying to get an invalid list item %d from widget called %s.", a_itemId, m_name);
 		return NULL;
 	}
 

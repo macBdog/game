@@ -78,14 +78,14 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	btRigidBody * rigidBody = NULL;
 	switch (a_gameObj->GetClipType())
 	{
-		case GameObject::eClipTypeBox: 
+		case ClipType::Box: 
 		{	
 			const Vector halfBoxSize = a_gameObj->GetClipSize() * 0.5f;
 			btVector3 halfExt(halfBoxSize.GetX(), halfBoxSize.GetY(), halfBoxSize.GetZ());
 			collision = new btBoxShape(halfExt);
 			break;
 		}
-		case GameObject::eClipTypeSphere:
+		case ClipType::Sphere:
 		{
 			collision = new btSphereShape(a_gameObj->GetClipSize().GetX());
 			break;

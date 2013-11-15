@@ -18,7 +18,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	// Check there is actually a path supplied
 	if (a_path == NULL || !a_path[0])
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Trying to index an invalid path.");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
 	}
 
@@ -31,7 +31,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	// Check path isn't too deep
 	if (pathLength > StringUtils::s_maxCharsPerLine)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot recurse files in a directory with such large path: %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot recurse files in a directory with such large path: %s", a_path);
 		return false;
 	}
 
@@ -50,14 +50,14 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	// Check path actually exists
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Trying to index invalid path %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index invalid path %s", a_path);
 		return false;
 	} 
 
 	// Could be an invalid path
 	if (hFind == INVALID_HANDLE_VALUE) 
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Cannot find a file in path %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot find a file in path %s", a_path);
 		return false;
 	} 
 	
@@ -95,7 +95,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	// Final error check now iteration is done
    if (GetLastError() != ERROR_NO_MORE_FILES) 
    {
-      Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Error completing enumeration in path %s", a_path);
+      Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error completing enumeration in path %s", a_path);
    }
 
    FindClose(hFind);
@@ -178,7 +178,7 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 	// Check there is actually a path supplied
 	if (a_path == NULL || !a_path[0])
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Trying to index an invalid path.");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
 	}
 
@@ -196,7 +196,7 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "File modification date NOT retreived for: %s.", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
 		return false;
 	}
 }

@@ -13,6 +13,49 @@
 
 class Widget;
 
+//\brief When editing we can change properties of GUI widgets and also game objects
+namespace EditType
+{
+	enum Enum
+	{
+		None = -1,		///< Not changing anything
+		Widget,			///< Changing a gui widget
+		GameObject,		///< Changing a game object
+		Count,
+	};
+}
+
+//\brief What type of editing mode is being performed 
+namespace EditMode
+{
+	
+	enum Enum
+	{
+		None = -1,
+		Pos,			///< Widget top left stuck to mouse pos
+		Shape,			///< Widget bottom right stuck to mouse pos
+		Texture,		///< File selection dialog active
+		Name,			///< Cursor keys bound to display name
+		Text,			///< Cursor keys bound to text value
+		Model,			///< Setting the model for an object
+		Template,		///< Create an object from a template
+		SaveTemplate,	///< Set the template name for an object
+
+		eEditModeCount,
+	};
+}
+
+//\brief Dirty flags are stored in a bitset to keep track of changes that need writing to disk
+namespace DirtyFlag
+{
+	enum Enum
+	{
+		GUI = 0,		///< GUI files need writing
+		Scene,			///< Scene needs writing
+		Count,
+	};
+}
+
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
 //		 create and configure gui elements, game objects and control engine settings.
 class DebugMenu : public Singleton<DebugMenu>
@@ -91,41 +134,6 @@ public:
 
 private:
 
-	//\brief When editing we can change properties of GUI widgets and also game objects
-	enum eEditType
-	{
-		eEditTypeNone = -1,		///< Not changing anything
-		eEditTypeWidget,		///< Changing a gui widget
-		eEditTypeGameObject,	///< Changing a game object
-		
-		eEditTypeCount,
-	};
-
-	//\brief What type of editing mode is being performed 
-	enum eEditMode
-	{
-		eEditModeNone = -1,
-		eEditModePos,			///< Widget top left stuck to mouse pos
-		eEditModeShape,			///< Widget bottom right stuck to mouse pos
-		eEditModeTexture,		///< File selection dialog active
-		eEditModeName,			///< Cursor keys bound to display name
-		eEditModeText,			///< Cursor keys bound to text value
-		eEditModeModel,			///< Setting the model for an object
-		eEditModeTemplate,		///< Create an object from a template
-		eEditModeSaveTemplate,	///< Set the template name for an object
-
-		eEditModeCount,
-	};
-
-	//\brief Dirty flags are stored in a bitset to keep track of changes that need writing to disk
-	enum eDirtyFlag
-	{
-		eDirtyFlagGUI = 0,		///< GUI files need writing
-		eDirtyFlagScene,		///< Scene needs writing
-
-		eDirtyFlagCount,
-	};
-
 	//\brief Helper function to handle widget visibility and position as a result of actions
 	//\param a_widget is a pointer to the widget that was activated on
 	//\return a bool indicating that the action was handled correctly
@@ -154,8 +162,8 @@ private:
 	bool m_handledCommand;							///< In the case that we are responding both to a global and a gui command
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
-	eEditType m_editType;							///< What type of object we are editing 
-	eEditMode m_editMode;							///< If we are in a modal editing mode, which mode are we in
+	EditType::Enum m_editType;						///< What type of object we are editing 
+	EditMode::Enum m_editMode;						///< If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 

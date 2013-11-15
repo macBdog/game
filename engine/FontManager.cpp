@@ -109,7 +109,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 			// As we try to render all fonts the same size, fail to load fonts greater than a meg
 			if (sizeW > s_maxFontTexSize || sizeH > s_maxFontTexSize)
 			{
-				Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "Cannot load the font called %s because it's bigger than meg in resolution.", shortFontName);
+				Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than meg in resolution.", shortFontName);
 				file.close();
 				return false;
 			}
@@ -122,7 +122,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 			
 			// Load texture for font
 			sprintf(texturePath, "%s%s", m_fontPath, textureName);
-			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureManager::eCategoryGui, TextureManager::eTextureFilterLinear);
+			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureCategory::Gui, TextureFilter::Linear);
 			newFont->m_numChars = numChars;
 			newFont->m_sizeX = sizeW;
 			newFont->m_sizeY = sizeH;
@@ -167,7 +167,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 	}
 	else
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Could not find font file %s ", fontFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not find font file %s ", fontFilePath);
 
 		// Clean up the font that was allocated
 		delete newFontNode->GetData();
@@ -179,18 +179,18 @@ bool FontManager::LoadFont(const char * a_fontName)
 	return false;
 }
 
-bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
-	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour, a_batch);
+	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour, a_renderLayer);
 }
 
-bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
 	Vector stringPos(a_pos.GetX(), a_pos.GetY(), 0.0f);
-	return DrawString(a_string, a_fontNameHash, a_size, stringPos, a_colour, a_batch);
+	return DrawString(a_string, a_fontNameHash, a_size, stringPos, a_colour, a_renderLayer);
 }
 
-bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != NULL)
@@ -223,18 +223,18 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 						// Align font chars 2D vs 3D
 						if (a_pos.GetZ() == 0.0f)
 						{
-							renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, yPos, 0.0f), a_colour);
+							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, a_size, Vector(xPos, yPos, 0.0f), a_colour);
 						}
 						else
 						{
-							renderMan.AddFontChar(a_batch, curChar.m_displayListId, a_size, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, a_size, Vector(xPos, a_pos.GetY(), zPos), a_colour);
 						}
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
 				}
 				else
 				{
-					Log::Get().WriteOnce(Log::LL_WARNING, Log::LC_ENGINE, "Unexported font glyph for character.");
+					Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Unexported font glyph for character.");
 				}
 			}
 			return true;
@@ -247,16 +247,16 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 }
 
 
-bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderManager::eBatch a_batch)
+bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize2D, a_pos, a_colour, a_batch);
+		return DrawString(a_string, &m_fonts.GetHead()->GetData()->m_fontName, s_debugFontSize2D, a_pos, a_colour, a_renderLayer);
 	}
 	else // Not fonts loaded
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw error message on the screen.", false);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot load any font to draw error message on the screen.", false);
 	}
 
 	return false;
@@ -267,11 +267,11 @@ bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector 
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetHash(), s_debugFontSize3D, a_pos, a_colour, RenderManager::eBatchDebug3D);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetHash(), s_debugFontSize3D, a_pos, a_colour, RenderLayer::Debug3D);
 	}
 	else // Not fonts loaded
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot load any font to draw 3D message on the screen.", false);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot load any font to draw 3D message on the screen.", false);
 	}
 
 	return false;
@@ -315,7 +315,7 @@ StringHash * FontManager::GetDebugFontName()
 	}
 	else // No fonts loaded
 	{
-		Log::Get().WriteOnce(Log::LL_ERROR, Log::LC_ENGINE, "Cannot find a debug font to draw with! Only hope now is reading stdout!");
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot find a debug font to draw with! Only hope now is reading stdout!");
 		return NULL;
 	}
 	

@@ -13,6 +13,29 @@
 #include "StringHash.h"
 #include "Texture.h"
 
+//\brief Alignment types are used as every widget is relative to another
+namespace AlignX
+{
+	enum Enum
+	{
+		Left = 0,
+		Middle,
+		Right,
+		Count,
+	};
+}
+
+namespace AlignY
+{
+	enum Enum
+	{
+		Top = 0,
+		Centre,
+		Bottom,
+		Count,
+	};
+}
+
 //\brief A widget vector is a 2D vector with the additional properties
 //       of different coordinate types to deal with widescreen resolutions
 //       and alignment types to create layouts that work in all screen sizes
@@ -20,35 +43,18 @@ class WidgetVector : public Vector2
 {
 public: 
 
-	//\brief Alignment types are used as every widget is relative to another
-	enum eAlignmentX
-	{
-		eAlignLeft = 0,
-		eAlignMiddle,
-		eAlignRight,
-
-		eAlignXCount,
-	};
-	enum eAlignmentY
-	{
-		eAlignTop = 0,
-		eAlignCentre,
-		eAlignBottom,
-
-		eAlignYCount,
-	};
 	struct Alignment
 	{
-		Alignment() : m_x(eAlignLeft), m_y(eAlignTop) {}
+		Alignment() : m_x(AlignX::Left), m_y(AlignY::Top) {}
 		
 		//\brief String equivalents for  alignment constants written in gui files
 		inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
 		inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
-		inline void SetFromStringX(const char * a_alignString) { for (int i = 0; i < eAlignXCount; ++i) { if (strcmp(a_alignString, s_alignXNames[m_x]) == 0) { m_x = (eAlignmentX)i; break; } } }
-		inline void SetFromStringY(const char * a_alignString) { for (int i = 0; i < eAlignYCount; ++i) { if (strcmp(a_alignString, s_alignYNames[m_y]) == 0) { m_y = (eAlignmentY)i; break; } } }
+		inline void SetFromStringX(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[m_x]) == 0) { m_x = (AlignX::Enum)i; break; } } }
+		inline void SetFromStringY(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[m_y]) == 0) { m_y = (AlignY::Enum)i; break; } } }
 		
-		eAlignmentX m_x;		///< Is widget position relative to left, middle or right
-		eAlignmentY m_y;		///< Is widget position relative to top, centre or bottom
+		AlignX::Enum m_x;		///< Is widget position relative to left, middle or right
+		AlignY::Enum m_y;		///< Is widget position relative to top, centre or bottom
 	};
 
 	//\brief Two float ctor for convenience, default to top left
@@ -59,7 +65,7 @@ public:
 	inline Vector2 GetVector() { return Vector2(x, y); }
 	inline Alignment GetAlignment() const { return m_align; }
 	inline void SetAlignment(const Alignment & a_align) { m_align.m_x = a_align.m_x; m_align.m_y = a_align.m_y; }
-	inline void SetAlignment(eAlignmentX a_x, eAlignmentY a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
+	inline void SetAlignment(AlignX::Enum a_x, AlignY::Enum a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
 
 	// Operator overloads are not inherited by default
 	void operator = (const Vector2 & a_val) { x = a_val.GetX(); y = a_val.GetY(); }
@@ -72,55 +78,62 @@ public:
 	using Vector2::operator *;
 
 	//\brief Literal names for alignment types
-	static const char * s_alignXNames[eAlignXCount];
-	static const char * s_alignYNames[eAlignYCount];
+	static const char * s_alignXNames[AlignX::Count];
+	static const char * s_alignYNames[AlignY::Count];
 
 private:
+
 	Alignment m_alignAnchor;				///< Where the widget is relative to it's parent
 	Alignment m_align;						///< How the widget is aligned
 };
+
+//\brief Represents states of element selection
+namespace SelectionFlags
+{
+	enum Enum
+	{
+	  None			= 0,	// Drawn without tint
+	  Rollover		= 2,	// Indicating possible selection
+	  Selected		= 4,	// Showing element selection
+	  EditRollover	= 8,	// Showing the element will be selected for editing
+	  EditSelected	= 16,	// Indicating edits will affect this element
+	  Count = 5,
+	};
+}
+
+//\brief The idea is that any widget has the capabilities to behave as
+// any kind of widget but the types exist to short cut behaviour and appearance
+// traits together.
+namespace WidgetType
+{
+	enum Enum
+	{
+		Cursor = 0,
+		Image,
+		Button,
+		Checkbox,
+		List,
+		Count,
+	};
+}
+
+//\brief Specifies how a widget with items in it's list is displayed
+namespace WidgetListType
+{
+	enum Enum
+	{
+		List = 0,
+		DropDown,
+		Checkbox,
+		Radio,
+		Count,
+	};
+}
 
 //\brief Widgets are the base 2D elements that make up the GUI system
 class Widget
 {
 public:
-
-	//\brief Represents states of element selection
-	enum eSelectionFlags
-	{
-	  eSelectionNone			= 0,	// Drawn without tint
-	  eSelectionRollover		= 2,	// Indicating possible selection
-	  eSelectionSelected		= 4,	// Showing element selection
-	  eSelectionEditRollover	= 8,	// Showing the element will be selected for editing
-	  eSelectionEditSelected	= 16,	// Indicating edits will affect this element
-
-	  eSelectionCount = 5,
-	};
-
-	//\brief The idea is that any widget has the capabilities to behave as
-	// any kind of widget but the types exist to short cut behaviour and appearance
-	// traits together.
-	enum eWidgetType
-	{
-		eWidgetTypeCursor = 0,
-		eWidgetTypeImage,
-		eWidgetTypeButton,
-		eWidgetTypeCheckbox,
-		eWidgetTypeList,
-			
-		eWidgetTypeCount,
-	};
-
-	//\brief Specifies how a widget with items in it's list is displayed
-	enum WidgetListType
-	{
-		eWidgetListType_List = 0,
-		eWidgetListType_DropDown,
-		eWidgetListType_Checkbox,
-		eWidgetListType_Radio,
-
-		eWidgetListType_Count,
-	};
 
 	//\brief Ctor nulls all pointers out for safety
 	Widget()
@@ -128,7 +141,7 @@ public:
 		, m_fontNameHash(0)
 		, m_fontSize(1.0f)
 		, m_selectFlags(0)
-		, m_selection(eSelectionNone)
+		, m_selection(SelectionFlags::None)
 		, m_colour(sc_colourWhite)
 		, m_showTextCursor(false)
 		, m_active(true)
@@ -138,7 +151,7 @@ public:
 		, m_firstChild(NULL)
 		, m_debugRender(false)
 		, m_alwaysRender(false)
-		, m_selectedListItemId(eSelectionNone)
+		, m_selectedListItemId(SelectionFlags::None)
 	{
 		m_name[0] = '\0';
 		m_script[0] = '\0';
@@ -160,7 +173,7 @@ public:
 			, m_name(NULL)
 			, m_fontNameHash(0)
 			, m_fontSize(0.0f)
-			, m_selectFlags(eSelectionRollover) {}
+			, m_selectFlags(SelectionFlags::Rollover) {}
 
 		WidgetVector m_size;
 		WidgetVector m_pos;
@@ -168,7 +181,7 @@ public:
 		const char * m_name;
 		unsigned int m_fontNameHash;
 		float m_fontSize;
-		eSelectionFlags m_selectFlags;
+		SelectionFlags::Enum m_selectFlags;
 	};
 		
 	//\brief Base implementation will tint for selection
@@ -184,14 +197,14 @@ public:
 	//\brief Find out if the widget is currently selected
 	//\param a_selectMode is the kind of selection to check for
 	//\return true if the element is selected
-	bool IsSelected(eSelectionFlags a_selectMode = eSelectionRollover);
-	inline void SetSelection(eSelectionFlags a_newFlags) { m_selection = a_newFlags; }
-	inline void ClearSelection() { m_selection = eSelectionNone; }
+	bool IsSelected(SelectionFlags::Enum a_selectMode = SelectionFlags::Rollover);
+	inline void SetSelection(SelectionFlags::Enum a_newFlags) { m_selection = a_newFlags; }
+	inline void ClearSelection() { m_selection = SelectionFlags::None; }
 
 	//\brief Active means rendering, updating selection and responding to events
 	inline bool IsActive() { return m_active; }
 
-	//\brief Debug widgets are rendered in a different batch to regular widgets
+	//\brief Debug widgets are rendered in a different renderLayer to regular widgets
 	inline bool IsDebugWidget() { return m_debugRender; }
 
 	//\brief Append a child widget pointer onto this widget creating a hierachy
@@ -211,7 +224,7 @@ public:
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
 	inline void SetOffset(Vector2 a_pctOffset) { m_pos = a_pctOffset; }
 	inline void SetAlignment(const WidgetVector::Alignment & a_align) { m_pos.SetAlignment(a_align); } 
-	inline void SetAlignment(WidgetVector::eAlignmentX a_alignX, WidgetVector::eAlignmentY a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); } 
+	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); } 
 	inline void SetSize(Vector2 a_pctSize) { m_size = a_pctSize; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
@@ -221,7 +234,7 @@ public:
 	inline void SetScript(const char * a_script) { sprintf(m_script, "%s", a_script); }
 	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
-	inline void SetSelectFlags(eSelectionFlags a_flags) { m_selectFlags = a_flags; }
+	inline void SetSelectFlags(SelectionFlags::Enum a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
@@ -281,9 +294,9 @@ private:
 	Widget * m_next;					///< Conitiguous widgets are stored as a linked list
 	Widget * m_firstChild;				///< And each widget can have multiple children
 	unsigned int m_selectFlags;			///< Bit mask of kind of selection this widget supports
-	eSelectionFlags m_selection;		///< The current type of selection that that is current applied to the widget
+	SelectionFlags::Enum m_selection;	///< The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
-	bool m_debugRender;					///< If the widget should be rendered using the debug batch
+	bool m_debugRender;					///< If the widget should be rendered using the debug renderLayer
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
 	char m_script[StringUtils::s_maxCharsPerName];			///< Script filename

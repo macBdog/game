@@ -96,12 +96,12 @@ bool InputManager::Update(const SDL_Event & a_event)
 		case SDL_MOUSEBUTTONUP:
 		{
 			// Convert SDL button to internal enum
-			eMouseButton but = eMouseButtonLeft;
+			MouseButton::Enum but = MouseButton::Left;
 			switch (a_event.button.button)
 			{
-				case SDL_BUTTON_LEFT:	but = eMouseButtonLeft; break;
-				case SDL_BUTTON_MIDDLE: but = eMouseButtonMiddle; break;
-				case SDL_BUTTON_RIGHT:  but = eMouseButtonRight; break;
+				case SDL_BUTTON_LEFT:	but = MouseButton::Left; break;
+				case SDL_BUTTON_MIDDLE: but = MouseButton::Middle; break;
+				case SDL_BUTTON_RIGHT:  but = MouseButton::Right; break;
 				default: break;
 			}
 			ProcessMouseUp(but);
@@ -121,14 +121,14 @@ void InputManager::SetFocus(bool a_focus)
 		m_focus = true;
 		SDL_ShowCursor(SDL_DISABLE);
 		SDL_WM_GrabInput(SDL_GRAB_ON);
-		RenderManager::Get().SetRenderMode(RenderManager::eRenderModeFull);
+		RenderManager::Get().SetRenderMode(RenderMode::Full);
 	}
 	else
 	{
 		m_focus = false;
 		SDL_ShowCursor(SDL_ENABLE);
         SDL_WM_GrabInput(SDL_GRAB_OFF);
-		RenderManager::Get().SetRenderMode(RenderManager::eRenderModeNone);
+		RenderManager::Get().SetRenderMode(RenderMode::None);
 	}
 }
 
@@ -155,7 +155,7 @@ bool InputManager::IsKeyDepressed(SDLKey a_key)
 	return false;
 }
 
-bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
+bool InputManager::ProcessMouseUp(MouseButton::Enum a_button)
 {
 	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
@@ -163,7 +163,7 @@ bool InputManager::ProcessMouseUp(InputManager::eMouseButton a_button)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
-		if (ev->m_type == eInputTypeMouseUp && 
+		if (ev->m_type == InputType::MouseUp && 
 			ev->m_src.m_mouseButton == a_button)
 		{
 			ev->m_delegate.Execute(true);
@@ -201,11 +201,11 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 	}
 	if (!clearedDepressedKey)
 	{
-		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "InputManager cannot correctly release the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "InputManager cannot correctly release the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
 	}
 
 	// Process the global callbacks
-	if (m_alphaKeysUp.m_type == eInputTypeKeyUp)
+	if (m_alphaKeysUp.m_type == InputType::KeyUp)
 	{
 		m_alphaKeysUp.m_delegate.Execute(false);
 	}
@@ -216,7 +216,7 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
-		if (ev->m_type == eInputTypeKeyUp && 
+		if (ev->m_type == InputType::KeyUp && 
 			ev->m_src.m_key == a_key)
 		{
 			ev->m_delegate.Execute(false);
@@ -254,11 +254,11 @@ bool InputManager::ProcessKeyDown(SDLKey a_key)
 	}
 	if (!setDepressedKey)
 	{
-		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "InputManager cannot correctly maintain the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "InputManager cannot correctly maintain the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
 	}
 
 	// Process the global callbacks
-	if (m_alphaKeysDown.m_type == eInputTypeKeyDown)
+	if (m_alphaKeysDown.m_type == InputType::KeyDown)
 	{
 		m_alphaKeysDown.m_delegate.Execute(true);
 	}
@@ -268,7 +268,7 @@ bool InputManager::ProcessKeyDown(SDLKey a_key)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
-		if (ev->m_type == eInputTypeKeyDown && 
+		if (ev->m_type == InputType::KeyDown && 
 			ev->m_src.m_key == a_key)
 		{
 			ev->m_delegate.Execute(true);

@@ -106,7 +106,7 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
     fopen_s(&input, a_tgaFilePath, "rb");
     if (input == NULL) 
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Texture file failed open: %s", a_tgaFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture file failed open: %s", a_tgaFilePath);
         return NULL;
     }
 
@@ -155,11 +155,11 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
     vendorString[16] = 0;
     if (strcmp(vendorString, "TRUEVISION-XFILE") == 0) 
 	{
-        tgaVersion = eTGAVersionNew;
+        tgaVersion = TGAVersion::New;
     } 
 	else
 	{
-        tgaVersion = eTGAVersionOld;
+        tgaVersion = TGAVersion::Old;
 	}
     fseek(input, filePos, SEEK_SET); 
 

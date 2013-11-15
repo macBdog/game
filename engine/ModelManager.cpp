@@ -71,7 +71,7 @@ bool ModelManager::Update(float a_dt)
 				// Timestamp is new, trigger a reload
 				if (curTimestamp > curModel->m_timeStamp)
 				{
-					Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in model %s, reloading.", curModel->m_path);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path);
 					modelReloaded = curModel->m_model.Load(curModel->m_path, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool);
 					curModel->m_timeStamp = curTimestamp;
 
@@ -132,13 +132,13 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 		{
 			//delete newModel;
 			m_modelPool.DeAllocate(sizeof(ManagedModel));
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model load failed for %s", fileNameBuf);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Model load failed for %s", fileNameBuf);
 			return NULL;
 		}
 	}
 	else // Report the error
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Model allocation failed for %s, fileNameBuf");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Model allocation failed for %s, fileNameBuf");
 		return NULL;
 	}
    return NULL;

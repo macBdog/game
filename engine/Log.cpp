@@ -2,14 +2,14 @@
 
 template<> Log * Singleton<Log>::s_instance = NULL;
 
-const float	Log::s_logDisplayTime[LL_COUNT] =
+const float	Log::s_logDisplayTime[LogLevel::Count] =
 {
-	1.0f,	// LL_INFO
-	2.0f,	// LL_WARNING
-	9.0f	// LL_ERROR
+	1.0f,	// INFO
+	2.0f,	// WARNING
+	9.0f	// ERROR
 };
 
-const Colour Log::s_logDisplayColour[LL_COUNT]=
+const Colour Log::s_logDisplayColour[LogLevel::Count]=
 {
 	sc_colourGreen,
 	sc_colourPurple,
@@ -33,7 +33,7 @@ bool Log::Shutdown()
 	return true;
 }
 
-void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
+void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
 {
     char levelBuf[128];
     char categoryBuf[128];
@@ -105,7 +105,7 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	}
 }
 
-void Log::WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
+void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
 {
 	// Add message to write once list
 	unsigned int msgHash = StringHash::GenerateCRC(a_message, false);

@@ -6,21 +6,33 @@
 
 #include "StringUtils.h"
 
+//\brief Texcoords are generated from the orientation hint
+namespace TextureOrientation
+{
+	enum Enum
+	{
+		Normal = 0,
+		FlipHoriz,
+		FlipVert,
+		FlipBoth,
+		Count
+	};
+}
+
+namespace TGAVersion
+{
+	enum Enum
+	{
+		Old = 0,
+		New,
+		Count
+	};
+}
+
 class Texture
 {
 public:
 
-	//\brief Texcoords are generated from the orientation hint
-	enum eOrientation
-	{
-		eOrientationNormal = 0,
-		eOrientationFlipHoriz,
-		eOrientationFlipVert,
-		eOrientationFlipBoth,
-
-		eOrientationCount
-	};
-	
 	// Assigned texture IDs start from 0
 	Texture() : m_textureId(-1) { m_filePath[0] = '\0'; }
 
@@ -37,14 +49,6 @@ public:
 	inline const char * GetFileName() { return StringUtils::ExtractFileNameFromPath(m_filePath); }
 
 private:
-
-	enum eTGAVersion
-	{
-		eTGAVersionOld = 0,
-		eTGAVersionNew,
-
-		eTGAVersionCount
-	};
 
 	//\brief Info stored about each texture <- nice comment asshole
 	typedef struct {

@@ -8,6 +8,18 @@
 #include "Singleton.h"
 #include "StringUtils.h"
 
+//\brief Types of file modification
+namespace ModificationType
+{
+	enum Enum
+	{
+		Change = 0,	///< A file's modification date is new
+		Create,		///< A file was created in a managed directory
+		Delete,		///< A file was deleted in a managed directory
+		Count,
+	};
+}
+
 ///\brief The file manager handles regular opening, reading and writing of files but 
 //		  can also create a delegate for any system that cares about modifications in
 //		  a list of files. It uses file system events to callback to systems with an 
@@ -56,16 +68,6 @@ public:
 			} 
 			return false;
 		}
-	};
-
-	//\brief Types of file modification
-	enum eModificationType
-	{
-		eModificationType_Change = 0,	///< A file's modification date is new
-		eModificationType_Create,		///< A file was created in a managed directory
-		eModificationType_Delete,		///< A file was deleted in a managed directory
-
-		eModificationType_Count,
 	};
 
 	//\brief How to pass lists of file info around
@@ -149,11 +151,11 @@ private:
 	struct FileEvent
 	{
 		FileEvent() 
-			: m_src(eModificationType_Change)
+			: m_src(ModificationType::Change)
 			, m_delegate()
 			{ sprintf(m_fileName, ""); }
 
-		eModificationType m_src;							///< What event happened
+		ModificationType::Enum m_src;						///< What event happened
 		char m_fileName[StringUtils::s_maxCharsPerName];	///< The file that was affected
 		Delegate<bool, bool> m_delegate;					///< Pointer to object to call when it happens
 	};

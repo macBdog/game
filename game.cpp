@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	GameFile configFile(configFilePath);
 	if (!configFile.IsLoaded())
 	{
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load the main configuration file at %s", configFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", configFilePath);
 		return 1;
 	}
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to init SDL");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to init SDL");
         return 1;
     }
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     SDL_Surface* screen = SDL_SetVideoMode(width, height, bpp, videoFlags);
     if ( !screen )
     {
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to set video: %s\n", SDL_GetError());
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to set video: %s\n", SDL_GetError());
         return 1;
     }
 	
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
 		}
 
-		// Drawing the scene will flush the batches
+		// Drawing the scene will flush the renderLayeres
 		RenderManager::Get().Update(lastFrameTimeSec);
 		
 		// Only swap the buffers at the end of all the rendering passes
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
     }
 
 	// Singletons are shutdown by their destructors
-    Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Exited cleanly");
+    Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Exited cleanly");
 
 	// Shut everything down
 	WorldManager::Get().Shutdown();

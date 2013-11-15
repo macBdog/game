@@ -16,6 +16,18 @@
 
 class Shader;
 
+//\brief SceneState keeps track of which scenes are loaded
+namespace SceneState
+{
+	enum Enum
+	{
+		Unloaded = 0,	///< Not rendering or updating
+		Loading,		///< Loading settings and game objects
+		Active,			///< Updating and rendering
+		Count,
+	};
+}
+
 //\brief A scene is a subset of a world, containing objects that are fixed and created by the engine and script objects
 class Scene
 {
@@ -24,20 +36,10 @@ class Scene
 
 public:
 	
-	//\brief SceneState keeps track of which scenes are loaded
-	enum SceneState
-	{
-		eSceneState_Unloaded = 0,	///< Not rendering or updating
-		eSceneState_Loading,		///< Loading settings and game objects
-		eSceneState_Active,			///< Updating and rendering
-		
-		eSceneState_Count,
-	};
-
 	//\brief Set scene count to 0 on construction
 	Scene() 
 		: m_numObjects(0)
-		, m_state(eSceneState_Unloaded) 
+		, m_state(SceneState::Unloaded) 
 		, m_beginLoaded(false)
 		, m_shader(NULL)
 		{ sprintf(m_name, "scene01"); }
@@ -108,7 +110,7 @@ private:
 	SceneObjects m_objects;							///< All the objects in the current scene
 	char m_name[StringUtils::s_maxCharsPerName];	///< Scene name for serialization
 	unsigned int m_numObjects;						///< How many objects are in the default scene
-	SceneState m_state;								///< What state the scene is in
+	SceneState::Enum m_state;						///< What state the scene is in
 	bool m_beginLoaded;								///< If the scene should be loaded and rendering on startup
 	Shader * m_shader;								///< Shader for the whole scene
 };
@@ -195,7 +197,7 @@ public:
 				if (T * newGameObject = new T())
 				{
 					newGameObject->SetId(m_totalSceneNumObjects++);
-					newGameObject->SetState(GameObject::eGameObjectState_Loading);
+					newGameObject->SetState(GameObjectState::Loading);
 					newGameObject->SetTemplate(a_templatePath);
 					if (GameFile::Object * object = templateFile.FindObject("gameObject"))
 					{	
@@ -223,20 +225,20 @@ public:
 						{
 							if (strstr(clipType->GetString(), "sphere") != NULL)
 							{
-								newGameObject->SetClipType(GameObject::eClipTypeSphere);
+								newGameObject->SetClipType(ClipType::Sphere);
 							}
 							else if (strstr(clipType->GetString(), "box") != NULL)
 							{
-								newGameObject->SetClipType(GameObject::eClipTypeBox);
+								newGameObject->SetClipType(ClipType::Box);
 							}
 							else if (strstr(clipType->GetString(), "none") != NULL)
 							{
-								newGameObject->SetClipType(GameObject::eClipTypeNone);
+								newGameObject->SetClipType(ClipType::None);
 							}
 							else
 							{
-								newGameObject->SetClipType(GameObject::eClipTypeBox);
-								Log::Get().Write(Log::LL_WARNING, Log::LC_GAME, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
+								newGameObject->SetClipType(ClipType::Box);
+								Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
 							}
 						}
 						// Clipping size
@@ -272,7 +274,7 @@ public:
 
 						// Add collision
 						PhysicsManager & pMan = PhysicsManager::Get();
-						if (newGameObject->GetClipType() > GameObject::eClipTypeNone &&
+						if (newGameObject->GetClipType() > ClipType::None &&
 							newGameObject->GetClipSize().LengthSquared() > 0.0f)
 						{
 							pMan.AddCollisionObject(newGameObject);
@@ -300,19 +302,19 @@ public:
 					}
 					else // Can't find the first object
 					{
-						Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to find a root gameObject node for template file %s", a_templatePath);
+						Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to find a root gameObject node for template file %s", a_templatePath);
 						return NULL;
 					}
 				}
 				else // Can't create the game object
 				{
-					Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to allocate memory to create game object from template file %s", a_templatePath);
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to allocate memory to create game object from template file %s", a_templatePath);
 					return NULL;
 				}
 			}
 			else // Load failed
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Unable to load template file %s", a_templatePath);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
 				return NULL;
 			}
 		}
@@ -321,7 +323,7 @@ public:
 			if (T * newGameObject = new T())
 			{
 				newGameObject->SetId(m_totalSceneNumObjects++);
-				newGameObject->SetState(GameObject::eGameObjectState_Loading);
+				newGameObject->SetState(GameObjectState::Loading);
 				newGameObject->SetName("NEW_GAME_OBJECT");
 				newGameObject->SetPos(Vector(0.0f, 0.0f, -20.0f));
 				

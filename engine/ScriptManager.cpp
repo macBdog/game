@@ -101,7 +101,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		luaL_loadfile(m_gameLua, gameScriptPath);
 		if (lua_resume(m_gameLua, NULL, 0) != LUA_YIELD)
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_GAME, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
 		}
 
 		// Scan all the scripts in the dir for changes to trigger a reload
@@ -190,7 +190,7 @@ bool ScriptManager::Update(float a_dt)
 			{
 				scriptsReloaded = true;
 				curScript->m_timeStamp = curTimeStamp;
-				Log::Get().Write(Log::LL_INFO, Log::LC_ENGINE, "Change detected in script %s, reloading.", curScript->m_path);
+				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
 
 				// Clean up any script-owned objects
 				WorldManager::Get().DestoryAllScriptsOwnedObjects();

@@ -36,7 +36,7 @@ bool Gui::Startup(const char * a_guiPath)
 	// There are no menus loaded
 	if (m_menus.GetLength() == 0)
 	{
-		Log::Get().Write(Log::LL_WARNING, Log::LC_ENGINE, "No menus loaded, a default menu has been created.");
+		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "No menus loaded, a default menu has been created.");
 
 		// Create one and add it to the list
 		Widget * defaultMenu = new Widget();
@@ -61,8 +61,8 @@ bool Gui::Startup(const char * a_guiPath)
 		if (GameFile::Property * mouseCursorProp = configObj->FindProperty("mouseCursorTexture"))
 		{
 			sprintf(fileName, "%s%s", a_guiPath, mouseCursorProp->GetString());
-			m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureManager::eCategoryGui));
-			m_cursor.SetAlignment(WidgetVector::eAlignMiddle, WidgetVector::eAlignCentre);
+			m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureCategory::Gui));
+			m_cursor.SetAlignment(AlignX::Middle, AlignY::Centre);
 			m_cursor.SetOffset(Vector2(0.0f, 0.0f));
 			m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
 			m_cursor.SetActive(true);
@@ -71,8 +71,8 @@ bool Gui::Startup(const char * a_guiPath)
 	
 	// Setup input callbacks for handling events, left mouse buttons activate gui elements
 	InputManager & inMan = InputManager::Get();
-	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonLeft);
-	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, InputManager::eMouseButtonRight);
+	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, MouseButton::Left);
+	inMan.RegisterMouseCallback(this, &Gui::MouseInputHandler, MouseButton::Right);
 
 	return true;
 }
@@ -123,7 +123,7 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	// Check for a valid parent
 	if (a_parent == NULL) 
 	{	
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Widget creation failed due to an invalid parent.");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Widget creation failed due to an invalid parent.");
 		return NULL;
 	}
 
@@ -158,7 +158,7 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	// Check for a valid parent
 	if (a_parent == NULL) 
 	{	
-		Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Widget creation from file failed due to an invalid parent.");
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Widget creation from file failed due to an invalid parent.");
 		return NULL;
 	}
 
@@ -178,11 +178,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	}
 	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignX"))
 	{
-		defFromFile.m_pos.SetAlignment(WidgetVector::eAlignLeft, WidgetVector::eAlignTop);
+		defFromFile.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
 	}
 	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignY"))
 	{
-		defFromFile.m_pos.SetAlignment(WidgetVector::eAlignLeft, WidgetVector::eAlignTop);
+		defFromFile.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
 	}
 	if (GameFile::Property * fontSize = a_widgetFile->FindProperty("fontSize"))
 	{
@@ -219,7 +219,7 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		}
 		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
-			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureManager::eCategoryGui))
+			if (Texture * tex = TextureManager::Get().GetTexture(texture->GetString(), TextureCategory::Gui))
 			{
 				newWidget->SetTexture(tex);
 			}
@@ -313,7 +313,7 @@ Widget * Gui::GetActiveWidget()
 			// If we are in editing mode process editing selections
 			if (dbgMen.IsDebugMenuEnabled())
 			{
-				if (curSibling->IsSelected(Widget::eSelectionEditRollover))
+				if (curSibling->IsSelected(SelectionFlags::EditRollover))
 				{
 					selected = curSibling;
 					break;
@@ -333,7 +333,7 @@ Widget * Gui::GetActiveWidget()
 		// Do the same for debug children
 		if (dbgMen.IsDebugMenuEnabled())
 		{
-			if (curChild->IsSelected(Widget::eSelectionEditRollover))
+			if (curChild->IsSelected(SelectionFlags::EditRollover))
 			{
 				selected = curChild;
 				break;
@@ -385,12 +385,12 @@ bool Gui::LoadMenu(const char * a_menuFile)
 			}
 			else // No properties present
 			{
-				Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Error loading menu file %s, menu does not have a name property.", a_menuFile);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file %s, menu does not have a name property.", a_menuFile);
 			}
 		}
 		else // Unexpected file format, no root element
 		{
-			Log::Get().Write(Log::LL_ERROR, Log::LC_ENGINE, "Error loading menu file %s, no valid menu parent element.", a_menuFile);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file %s, no valid menu parent element.", a_menuFile);
 		}
 
 		return true;

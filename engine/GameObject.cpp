@@ -13,7 +13,7 @@ using namespace std;	//< For fstream operations
 bool GameObject::Update(float a_dt)
 {
 	// Tick the object's life
-	if (m_state == eGameObjectState_Active)
+	if (m_state == GameObjectState::Active)
 	{
 		m_lifeTime += a_dt;
 	}
@@ -25,7 +25,7 @@ bool GameObject::Update(float a_dt)
 	}
 
 	// Update components
-	for (unsigned int i = 0; i < Component::eComponentTypeCount; ++i)
+	for (unsigned int i = 0; i < ComponentType::Count; ++i)
 	{
 		Component * curComp = m_components[(unsigned int)i];
 		if (curComp != NULL)
@@ -39,14 +39,14 @@ bool GameObject::Update(float a_dt)
 
 bool GameObject::Draw()
 {
-	if (m_state == eGameObjectState_Active)
+	if (m_state == GameObjectState::Active)
 	{
 		// Normal mesh rendering
 		RenderManager & rMan = RenderManager::Get();
 
 		if (m_model != NULL && m_model->IsLoaded())
 		{
-			rMan.AddModel(RenderManager::eBatchWorld, m_model, &m_worldMat, m_shader);
+			rMan.AddModel(RenderLayer::World, m_model, &m_worldMat, m_shader);
 		}
 		
 		// Draw the object's name, position, orientation and clip volume over the top
@@ -57,17 +57,17 @@ bool GameObject::Draw()
 			// Draw different debug render shapes accoarding to clip type
 			switch (m_clipType)
 			{
-				case eClipTypeAxisBox:
+				case ClipType::AxisBox:
 				{
 					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourGrey); 
 					break;
 				}
-				case eClipTypeBox:
+				case ClipType::Box:
 				{
 					//rMan.AddDebugBox(m_worldMat.GetPos() + m_clipVolumeOffset, sc_colourGrey);
 					break;
 				}
-				case eClipTypeSphere:
+				case ClipType::Sphere:
 				{
 					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourGrey); 
 					break;
@@ -210,11 +210,11 @@ bool GameObject::CollidesWith(Vector a_worldPos)
 	// Clip point against volume
 	switch (m_clipType)
 	{
-		case eClipTypeSphere:
+		case ClipType::Sphere:
 		{
 			return CollisionUtils::IntersectPointSphere(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
 		}
-		case eClipTypeAxisBox:
+		case ClipType::AxisBox:
 		{
 			return CollisionUtils::IntersectPointAxisBox(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize);
 		}
@@ -227,20 +227,20 @@ bool GameObject::CollidesWith(GameObject * a_colObj)
 	// TODO: This is SUPER branchy code, change clip type to a bit set and re-do
 
 	// Clip each type against type
-	eClipType colClip = a_colObj->GetClipType();
-	if (m_clipType == eClipTypeSphere && colClip == eClipTypeSphere)
+	ClipType::Enum colClip = a_colObj->GetClipType();
+	if (m_clipType == ClipType::Sphere && colClip == ClipType::Sphere)
 	{
 		return false; /* TODO: CollisionUtils::IntersectSphereSphere(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
 	} 
-	else if ((m_clipType == eClipTypeSphere && colClip == eClipTypeAxisBox) || (m_clipType == eClipTypeAxisBox && colClip == eClipTypeSphere)) 
+	else if ((m_clipType == ClipType::Sphere && colClip == ClipType::AxisBox) || (m_clipType == ClipType::AxisBox && colClip == ClipType::Sphere)) 
 	{
 		return false; /* TODO: CollisionUtils::IntersectSphereAxisBox(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
 	} 
-	else if ((m_clipType == eClipTypeSphere && colClip == eClipTypeBox) || (m_clipType == eClipTypeBox && colClip == eClipTypeSphere)) 
+	else if ((m_clipType == ClipType::Sphere && colClip == ClipType::Box) || (m_clipType == ClipType::Box && colClip == ClipType::Sphere)) 
 	{
 		return false; /* TODO: CollisionUtils::IntersectSphereBox(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
 	} 
-	else if (m_clipType == eClipTypeAxisBox && colClip == eClipTypeAxisBox) 
+	else if (m_clipType == ClipType::AxisBox && colClip == ClipType::AxisBox) 
 	{
 		// Early out if it's impossible to collide
 		Vector colCentre = a_colObj->GetClipPos();
@@ -263,11 +263,11 @@ bool GameObject::CollidesWith(Vector a_lineStart, Vector a_lineEnd)
 	Vector clipPoint(0.0f);
 	switch (m_clipType)
 	{
-		case eClipTypeSphere:
+		case ClipType::Sphere:
 		{
 			return CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX());
 		}
-		case eClipTypeAxisBox:
+		case ClipType::AxisBox:
 		{
 			return CollisionUtils::IntersectLineAxisBox(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, clipPoint);
 		}
