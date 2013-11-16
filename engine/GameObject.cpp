@@ -64,7 +64,9 @@ bool GameObject::Draw()
 				}
 				case ClipType::Box:
 				{
-					//rMan.AddDebugBox(m_worldMat.GetPos() + m_clipVolumeOffset, sc_colourGrey);
+					Matrix tempMat = m_worldMat;
+					tempMat.SetPos(tempMat.GetPos() + m_clipVolumeOffset);
+					rMan.AddDebugBox(tempMat, m_clipVolumeSize, sc_colourGrey); 
 					break;
 				}
 				case ClipType::Sphere:
@@ -105,106 +107,6 @@ void GameObject::AddRot(const Vector & a_newRot)
 	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
 }
 
-bool GameObject::AddCollider(GameObject * a_colObj)
-{
-	if (a_colObj == NULL)
-	{
-		return false;
-	}
-
-	// Make sure we aren't adding the same collider twice
-	Collider * collider = new Collider();
-	collider->SetData(a_colObj);
-	if (m_colliders.IsEmpty() || m_colliders.Find(a_colObj) == NULL)
-	{
-		m_colliders.Insert(collider);
-		return true;
-	}
-	else // No insert, cleanup
-	{
-		delete collider;
-		return false;
-	}
-}
-
-bool GameObject::RemoveCollider(GameObject * a_colObj)
-{
-	if (m_colliders.IsEmpty() || a_colObj == NULL)
-	{
-		return false;
-	}
-
-	// Iterate through colliders in linked list
-	Collider * curColObj = m_colliders.GetHead();
-	while (curColObj != NULL)
-	{
-		// Cache off next pointer
-		Collider * next = curColObj->GetNext();
-
-		// Test for the collider we are looking for and remove it
-		if (curColObj->GetData()->GetId() == a_colObj->GetId())
-		{
-			m_colliders.Remove(curColObj);
-			delete curColObj;
-			return true;
-		}
-
-		curColObj = next;
-	}
-	
-	return false;
-}
-
-bool GameObject::GetCollisions(CollisionList & a_list_OUT)
-{
-	// Early out for simple case
-	if (!m_clipping || m_colliders.IsEmpty())
-	{
-		return false;
-	}
-
-	// Furnish the list of collisions
-	bool addedCollision = false;
-	Collider * curColObj = m_colliders.GetHead();
-	while (curColObj != NULL)
-	{
-		// Test for the collider we are looking for and add it to the list
-		if (GameObject * collider = curColObj->GetData())
-		{
-			if (CollidesWith(collider))
-			{
-				Collider * collision = new Collider();
-				collision->SetData(collider);
-				a_list_OUT.Insert(collision);
-				addedCollision = true;
-			}
-		}
-		curColObj = curColObj->GetNext();
-	}
-	return addedCollision;
-}
-
-bool GameObject::CleanupCollisionList(CollisionList & a_colList_OUT)
-{
-	if (a_colList_OUT.IsEmpty())
-	{
-		return false;
-	}
-
-	// Iterate through all objects in this file and clean up memory
-	Collider * cur = a_colList_OUT.GetHead();
-	while(cur != NULL)
-	{
-		// Cache off next pointer and remove and deallocate memory
-		Collider * next = cur->GetNext();
-		a_colList_OUT.Remove(cur);
-		delete cur;
-
-		cur = next;
-	}
-	return true;
-}
-
 bool GameObject::CollidesWith(Vector a_worldPos)
 { 
 	// Clip point against volume
@@ -214,6 +116,7 @@ bool GameObject::CollidesWith(Vector a_worldPos)
 		{
 			return CollisionUtils::IntersectPointSphere(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize.GetX());
 		}
+		case ClipType::Box:
 		case ClipType::AxisBox:
 		{
 			return CollisionUtils::IntersectPointAxisBox(a_worldPos + m_clipVolumeOffset, m_worldMat.GetPos(), m_clipVolumeSize);
@@ -267,6 +170,7 @@ bool GameObject::CollidesWith(Vector a_lineStart, Vector a_lineEnd)
 		{
 			return CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX());
 		}
+		case ClipType::Box:
 		case ClipType::AxisBox:
 		{
 			return CollisionUtils::IntersectLineAxisBox(a_lineStart, a_lineEnd, m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, clipPoint);
@@ -324,14 +228,14 @@ void GameObject::Destroy()
 	}
 
 	// Empty collision list
-	if (!m_colliders.IsEmpty())
+	if (!m_collisions.IsEmpty())
 	{
-		Collider * curColObj = m_colliders.GetHead();
+		Collider * curColObj = m_collisions.GetHead();
 		while (curColObj != NULL)
 		{
 			// Cache off next pointer
 			Collider * next = curColObj->GetNext();
-			m_colliders.Remove(curColObj);
+			m_collisions.Remove(curColObj);
 			delete curColObj;
 
 			curColObj = next;

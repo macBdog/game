@@ -78,8 +78,6 @@ private:
 	static int SetGameObjectRotation(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
-	static int AddGameObjectCollider(lua_State * a_luaState);
-	static int RemoveGameObjectCollider(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);
 	static int GetGameObjectCollisions(lua_State * a_luaState);
 

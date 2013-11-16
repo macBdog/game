@@ -62,7 +62,7 @@ public:
 		, m_physics(NULL)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
-		, m_clipType(ClipType::None)
+		, m_clipType(ClipType::AxisBox)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_clipping(true)
@@ -175,20 +175,9 @@ public:
 	typedef LinkedListNode<GameObject> Collider;		///< Alias for passing lists of game objects around
 	typedef LinkedList<GameObject> CollisionList;		///< Alias for passing lists of game objects around
 
-	//\ingroup Collision list functions
-	//\brief Find any colliding game objects this frame
-	//\param a_list_OUT ref to a collision linked list to be modified, memory will be allocated
-	//\return bool true if nodes were added to the linked list and memory was allocated
-	bool GetCollisions(CollisionList & a_list_OUT);
-
-	//\brief Clean up memory for a collision list, MUST be called after GetCollisions returns true
-	//\param a_list_OUT ref to a collision linked list to be modified, memory will be ede-allocated
-	bool CleanupCollisionList(CollisionList & a_list_OUT);
-
 	//\brief Collision utility functions
-	inline bool HasColliders() { return !m_colliders.IsEmpty(); }
-	bool AddCollider(GameObject * a_colObj);
-	bool RemoveCollider(GameObject * a_colObj);
+	inline CollisionList * GetCollisions() { return &m_collisions; }
+	inline bool HasColliders() { return !m_collisions.IsEmpty(); }
 	
 	//\brief Realtime collision functions
 	//\param The vector(s) to check intersection against the game object
@@ -214,7 +203,7 @@ private:
 	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids
 	GameObject *		  m_child;				///< Pointer to first child game obhject
 	GameObject *		  m_next;				///< Pointer to sibling game objects
-	CollisionList		  m_colliders;			///< List of objects that this game object will process collisions with every frame
+	CollisionList		  m_collisions;			///< List of objects that this game object has collided with this frame
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
 	PhysicsObject *		  m_physics;			///< Pointer to physics manager object for collisions and dynamics

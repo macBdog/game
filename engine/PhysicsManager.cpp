@@ -65,6 +65,38 @@ void PhysicsManager::Update(float a_dt)
 	}
 
 	m_dynamicsWorld->stepSimulation(a_dt, 10);
+
+	// Get all collisions between objects
+	int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
+	{
+		btPersistentManifold* contactManifold =  m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		//btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->getBody0());
+		//btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->getBody1());
+		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
+		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
+		GameObject * gameObjA = (GameObject*)obA->getUserPointer();
+		GameObject * gameObjB = (GameObject*)obB->getUserPointer();
+
+		int numContacts = contactManifold->getNumContacts();
+		if (numContacts > 0 && gameObjA != NULL && gameObjB != NULL)
+		{
+			AddCollision(gameObjA, gameObjB);
+			AddCollision(gameObjB, gameObjA);
+			
+			/* TODO Add more information to collisions
+			for (int j=0;j<numContacts;j++)
+			{
+				btManifoldPoint& pt = contactManifold->getContactPoint(j);
+				if (pt.getDistance()<0.f)
+				{
+					const btVector3& ptA = pt.getPositionWorldOnA();
+					const btVector3& ptB = pt.getPositionWorldOnB();
+					const btVector3& normalOnB = pt.m_normalWorldOnB;
+				}
+			}*/
+		}
+	}
 }
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
@@ -113,6 +145,10 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			a_gameObj->SetPhysics(newObj);
 		}
 	}
+
+	// And vice versa
+	rigidBody->setUserPointer(a_gameObj);
+	collision->setUserPointer(a_gameObj);
 	
 	return a_gameObj->GetPhysics() != NULL;
 }
@@ -140,6 +176,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
 	newWorldTrans.setOrigin(trans);
 	phys->GetPhysics()->setWorldTransform(newWorldTrans);
+	ClearCollisions(a_gameObj);
 }
 
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
@@ -156,3 +193,33 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 	}
 	return false;
 }
+
+void PhysicsManager::ClearCollisions(GameObject * a_gameObj)
+{
+	// Iterate through all objects in this file and clean up memory
+	GameObject::CollisionList * colList = a_gameObj->GetCollisions();
+	GameObject::Collider * cur = colList->GetHead();
+	while(cur != NULL)
+	{
+		// Cache off next pointer and remove and deallocate memory
+		GameObject::Collider * next = cur->GetNext();
+		colList->Remove(cur);
+		delete cur;
+
+		cur = next;
+	}
+}
+
+void PhysicsManager::AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB)
+{
+	if (a_gameObjA == NULL || a_gameObjB == NULL)
+	{
+		return;
+	}
+
+	GameObject::CollisionList * colList = a_gameObjA->GetCollisions();
+	GameObject::Collider * collider = new GameObject::Collider();
+	collider->SetData(a_gameObjB);
+	colList->Insert(collider);
+}
+

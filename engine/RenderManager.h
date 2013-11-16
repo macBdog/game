@@ -162,6 +162,7 @@ public:
 	//\param a_dimensions the size of the box in x,y,z order
 	//\param a_colour optional argument for the colour of the box
 	void AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
+	void AddDebugBox(const Matrix & a_worldMat, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
 	//\brief Add and remove a shader to the list for hotloading on file modification
 	void ManageShader(GameObject * a_gameObject);

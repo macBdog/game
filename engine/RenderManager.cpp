@@ -1138,7 +1138,7 @@ void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_ra
 
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
-	// Define the corners of the cube
+	// Define the corners of the box
 	Vector halfSize = a_dimensions * 0.5f;
 	Vector corners[8];
 	corners[0] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
@@ -1161,6 +1161,12 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	AddLine(RenderLayer::Debug3D, corners[3], corners[0], a_colour);
 	AddLine(RenderLayer::Debug3D, corners[7], corners[4], a_colour);
 	AddLine(RenderLayer::Debug3D, corners[3], corners[7], a_colour);
+}
+
+void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dimensions, Colour a_colour)
+{
+	// TODO
+	AddDebugAxisBox(a_worldMat.GetPos(), a_dimensions);
 }
 
 void RenderManager::ManageShader(GameObject * a_gameObject)

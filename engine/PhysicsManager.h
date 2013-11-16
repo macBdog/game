@@ -80,6 +80,13 @@ public:
 
 protected:
 
+	//\brief Remove all entries from a game object collision list, called once a frame
+	//		 before the physics world is queried
+	//\param a_gameObj the object to affect
+	void ClearCollisions(GameObject * a_gameObj);
+	void AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB);
+
+	//\brief Accessor for game systems to query the physics world
 	inline btDiscreteDynamicsWorld * GetDynamicsWorld() { return m_dynamicsWorld; }
 
 private:

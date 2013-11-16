@@ -35,9 +35,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetRotation", SetGameObjectRotation},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
-	{"AddCollider", AddGameObjectCollider},
-	{"RemoveCollider", RemoveGameObjectCollider},
-	{"HasCollided", TestGameObjectCollisions},
+	{"HasCollisions", TestGameObjectCollisions},
 	{"GetCollisions", GetGameObjectCollisions},
 	{"__gc", DestroyGameObject},
 	{NULL, NULL}
@@ -596,50 +594,6 @@ int ScriptManager::DisableGameObjectCollision(lua_State * a_luaState)
 	return 0;
 }
 
-int ScriptManager::AddGameObjectCollider(lua_State * a_luaState)
-{
-	if (lua_gettop(a_luaState) == 2)
-	{
-		GameObject * gameObj = CheckGameObject(a_luaState);
-		GameObject * colGameObj = CheckGameObject(a_luaState, 2);
-		if (gameObj != NULL && colGameObj != NULL)
-		{
-			gameObj->AddCollider(colGameObj);
-		}
-		else
-		{
-			Log::Get().WriteGameErrorNoParams("AddGameObjectCollider cannot find the game objects referred to.");
-		}
-	}
-	else
-	{
-		Log::Get().WriteGameErrorNoParams("AddGameObjectCollider expects no parameters.");
-	}
-	return 0;
-}
-
-int ScriptManager::RemoveGameObjectCollider(lua_State * a_luaState)
-{
-	if (lua_gettop(a_luaState) == 2)
-	{
-		GameObject * gameObj = CheckGameObject(a_luaState);
-		GameObject * colGameObj = CheckGameObject(a_luaState, 2);
-		if (gameObj != NULL && colGameObj != NULL)
-		{
-			gameObj->RemoveCollider(colGameObj);
-		}
-		else
-		{
-			Log::Get().WriteGameErrorNoParams("RemoveGameObjectCollider cannot find the game objects referred to.");
-		}
-	}
-	else
-	{
-		Log::Get().WriteGameErrorNoParams("RemoveGameObjectCollider expects no parameters.");
-	}
-	return 0;
-}
-
 int ScriptManager::TestGameObjectCollisions(lua_State * a_luaState)
 {
 	// Check the list of collisions
@@ -648,13 +602,8 @@ int ScriptManager::TestGameObjectCollisions(lua_State * a_luaState)
 	{
 		if (GameObject * gameObj = CheckGameObject(a_luaState))
 		{
-			GameObject::CollisionList colList;
-			gameObj->GetCollisions(colList);
-			if (!colList.IsEmpty())
-			{
-				gameObj->CleanupCollisionList(colList);
-				foundCollisions = true;
-			}
+			GameObject::CollisionList * colList = gameObj->GetCollisions();
+			foundCollisions = !colList->IsEmpty();
 		}
 		else
 		{
@@ -670,6 +619,7 @@ int ScriptManager::TestGameObjectCollisions(lua_State * a_luaState)
 	lua_pushboolean(a_luaState, foundCollisions);
 	return 1;
 }
+
 
 int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 {

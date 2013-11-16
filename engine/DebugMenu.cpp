@@ -972,6 +972,7 @@ void DebugMenu::Draw()
 	{
 		switch (m_gameObjectToEdit->GetClipType())
 		{
+			case ClipType::Box:
 			case ClipType::AxisBox:
 			{
 				renMan.AddDebugAxisBox(m_gameObjectToEdit->GetClipPos(), m_gameObjectToEdit->GetClipSize() + extraSelectionSize, sc_colourRed);

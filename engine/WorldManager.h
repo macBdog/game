@@ -221,23 +221,21 @@ public:
 							}
 						}
 						// Clipping type
+						bool hasCollision = false;
 						if (GameFile::Property * clipType = object->FindProperty("clipType"))
 						{
 							if (strstr(clipType->GetString(), "sphere") != NULL)
 							{
+								hasCollision = true;
 								newGameObject->SetClipType(ClipType::Sphere);
 							}
 							else if (strstr(clipType->GetString(), "box") != NULL)
 							{
+								hasCollision = true;
 								newGameObject->SetClipType(ClipType::Box);
-							}
-							else if (strstr(clipType->GetString(), "none") != NULL)
-							{
-								newGameObject->SetClipType(ClipType::None);
 							}
 							else
 							{
-								newGameObject->SetClipType(ClipType::Box);
 								Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
 							}
 						}
@@ -274,7 +272,8 @@ public:
 
 						// Add collision
 						PhysicsManager & pMan = PhysicsManager::Get();
-						if (newGameObject->GetClipType() > ClipType::None &&
+						if (hasCollision && 
+							newGameObject->GetClipType() > ClipType::None &&
 							newGameObject->GetClipSize().LengthSquared() > 0.0f)
 						{
 							pMan.AddCollisionObject(newGameObject);
