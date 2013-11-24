@@ -77,19 +77,35 @@ bool PhysicsManager::Startup(const GameFile & a_config)
 			{
 				if (GameFile::Property * filterProp = colFilters->FindProperty(m_collisionGroups[i].GetCString()))
 				{
-					// Each collision filter is a comma separated list of collision group names
-					for (int j = 0; j < s_maxCollisionGroups; ++j)
+					// If the collision filter is a single entry
+					const char * curFilters = filterProp->GetString();
+					if (strstr(curFilters, ",") == NULL)
 					{
-						if (const char * colFilterInList = StringUtils::ExtractField(filterProp->GetString(), ",", j))
+						int colFilterInListId = GetCollisionGroupId(curFilters);
+						if (colFilterInListId > 0)
 						{
-							int colFilterInListId = GetCollisionGroupId(colFilterInList);
-							if (colFilterInListId > 0)
+							m_collisionFilters[i].Set(colFilterInListId);
+						}
+						else
+						{
+							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", curFilters, m_collisionGroups[i].GetCString());
+						}
+					}
+					else // Collision filter is a comma separated list of collision group names
+					{
+						for (int j = 0; j < s_maxCollisionGroups; ++j)
+						{
+							if (const char * colFilterInList = StringUtils::ExtractField(curFilters, ",", j))
 							{
-								m_collisionFilters[i].Set(colFilterInListId);
-							}
-							else
-							{
-								Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", colFilterInList, filterProp->GetString());
+								int colFilterInListId = GetCollisionGroupId(colFilterInList);
+								if (colFilterInListId > 0)
+								{
+									m_collisionFilters[i].Set(colFilterInListId);
+								}
+								else
+								{
+									Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", curFilters, m_collisionGroups[i].GetCString());
+								}
 							}
 						}
 					}
@@ -229,22 +245,11 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	collisionShape->setUserPointer(a_gameObj);
 	collisionObject->setUserPointer(a_gameObj);
 	
-
-//	enum collisiontypes {
- //   COL_NOTHING = 0, //<Collide with nothing
- //   COL_SHIP = BIT(0), //<Collide with ships
- //   COL_WALL = BIT(1), //<Collide with walls
- //   COL_POWERUP = BIT(2) //<Collide with powerups
-
-//int shipCollidesWith = COL_WALL;
-//int wallCollidesWith = COL_NOTHING;
-//int powerupCollidesWith = COL_SHIP | COL_WALL;
-
 	// Add to world
 	short colGroup = (short)1;
 	short colFilter = (short)-1;
 	int colGroupId = GetCollisionGroupId(a_gameObj->GetClipGroup());
-	if (colGroupId >= 0)
+	if (colGroupId > 0)
 	{
 		colGroup = (short)(1 << colGroupId);
 		colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
