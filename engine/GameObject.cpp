@@ -198,6 +198,9 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		{
 			outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
 		}
+
+		// TODO: No game objects are being written out yet which is why all the rest
+		//			of their optional properties are ommitted here.
 		
 		// Serialise any children of this child
 		GameObject * child = m_child;

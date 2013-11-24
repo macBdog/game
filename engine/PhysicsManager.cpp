@@ -20,35 +20,112 @@ PhysicsObject::~PhysicsObject()
 		delete m_rigidBody;
 	}
 
-	// Clean up collision
-	if (m_collision != NULL)
+	// And collision object
+	if (m_collisionObject != NULL)
 	{
-		delete m_collision;
+		if (btDiscreteDynamicsWorld * dynWorld = PhysicsManager::Get().GetDynamicsWorld())
+		{
+			dynWorld->removeCollisionObject(m_collisionObject);
+		}
+		delete m_collisionObject;
+	}
+
+	// And shape
+	if (m_collisionShape != NULL)
+	{
+		delete m_collisionObject;
 	}
 }
 
-bool PhysicsManager::Startup()
+bool PhysicsManager::Startup(const GameFile & a_config)
 {
 	// Initialise physics world
 	m_broadphase = new btDbvtBroadphase();
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
 	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 	m_solver = new btSequentialImpulseConstraintSolver;
-	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
-	m_dynamicsWorld->setGravity(btVector3(0.0f, 0.0f, -10.0f));
+	btVector3	worldAabbMin(-1000,-1000,-1000);
+	btVector3	worldAabbMax(1000,1000,1000);
 
-	return m_dynamicsWorld != NULL;
+	btAxisSweep3*	broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
+	
+	m_collisionWorld = new btCollisionWorld(m_dispatcher, broadphase,m_collisionConfiguration);
+
+	// First group is always nothing, user groups start at index 1
+	m_collisionGroups[0] = StringHash("Nothing");
+
+	// Setup collision groups and flags from config file
+	if (GameFile::Object * colConfig = a_config.FindObject("collision"))
+	{
+		if (GameFile::Object * colGroups = colConfig->FindObject("groups"))
+		{
+			char colGroupName[StringUtils::s_maxCharsPerName];
+			colGroupName[0] = '\0';
+			for (int i = 1; i < s_maxCollisionGroups; ++i)
+			{
+				sprintf(colGroupName, "group%d", i);
+				if (GameFile::Property * colGroupProp = colGroups->FindProperty(colGroupName))
+				{
+					m_collisionGroups[i] = StringHash(colGroupProp->GetString());
+				}
+			}
+		}
+
+		if (GameFile::Object * colFilters = colConfig->FindObject("filters"))
+		{
+			for (int i = 1; i < s_maxCollisionGroups; ++i)
+			{
+				if (GameFile::Property * filterProp = colFilters->FindProperty(m_collisionGroups[i].GetCString()))
+				{
+					// Each collision filter is a comma separated list of collision group names
+					for (int j = 0; j < s_maxCollisionGroups; ++j)
+					{
+						if (const char * colFilterInList = StringUtils::ExtractField(filterProp->GetString(), ",", j))
+						{
+							int colFilterInListId = GetCollisionGroupId(colFilterInList);
+							if (colFilterInListId > 0)
+							{
+								m_collisionFilters[i].Set(colFilterInListId);
+							}
+							else
+							{
+								Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", colFilterInList, filterProp->GetString());
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// If the config specifies physics properties, set up the world
+	if (GameFile::Object * physConfig = a_config.FindObject("physics"))
+	{
+		Vector gravity(0.0f, 0.0f, -10.0f);
+		if (GameFile::Property * gravProp = physConfig->FindProperty("gravity"))
+		{
+			gravity = gravProp->GetVector();
+		}
+		m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
+		m_dynamicsWorld->setGravity(btVector3(gravity.GetX(), gravity.GetY(), gravity.GetZ()));
+	}
+
+	return m_dynamicsWorld != NULL || m_collisionWorld != NULL;
 }
 
 bool PhysicsManager::Shutdown()
 {
-	if (m_dynamicsWorld == NULL)
+	if (m_dynamicsWorld == NULL && m_collisionWorld == NULL)
 	{
 		return false;
 	}
 
 	// Clean up world
-	delete m_dynamicsWorld;
+	if (m_dynamicsWorld != NULL)
+	{
+		delete m_dynamicsWorld;
+	}
+	delete m_collisionWorld;
     delete m_solver;
     delete m_dispatcher;
     delete m_collisionConfiguration;
@@ -59,20 +136,22 @@ bool PhysicsManager::Shutdown()
 
 void PhysicsManager::Update(float a_dt)
 {
-	if (m_dynamicsWorld == NULL)
+	if (m_dynamicsWorld == NULL && m_collisionWorld == NULL)
 	{
 		return;
 	}
 
-	m_dynamicsWorld->stepSimulation(a_dt, 10);
+	if (m_dynamicsWorld != NULL)
+	{
+		m_dynamicsWorld->stepSimulation(a_dt, 10);
+	}
+	m_collisionWorld->performDiscreteCollisionDetection();
 
 	// Get all collisions between objects
-	int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+	int numManifolds = m_collisionWorld->getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; i++)
 	{
-		btPersistentManifold* contactManifold =  m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-		//btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->getBody0());
-		//btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->getBody1());
+		btPersistentManifold* contactManifold =  m_collisionWorld->getDispatcher()->getManifoldByIndexInternal(i);
 		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
 		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
 		GameObject * gameObjA = (GameObject*)obA->getUserPointer();
@@ -84,7 +163,7 @@ void PhysicsManager::Update(float a_dt)
 			AddCollision(gameObjA, gameObjB);
 			AddCollision(gameObjB, gameObjA);
 			
-			/* TODO Add more information to collisions
+			// TODO Add more information to collisions
 			for (int j=0;j<numContacts;j++)
 			{
 				btManifoldPoint& pt = contactManifold->getContactPoint(j);
@@ -94,8 +173,10 @@ void PhysicsManager::Update(float a_dt)
 					const btVector3& ptB = pt.getPositionWorldOnB();
 					const btVector3& normalOnB = pt.m_normalWorldOnB;
 				}
-			}*/
+			}
 		}
+
+		contactManifold->clearManifold();
 	}
 }
 
@@ -106,62 +187,98 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		return false;
 	}
 
-	btCollisionShape * collision = NULL;
-	btRigidBody * rigidBody = NULL;
+	btCollisionShape * collisionShape = NULL;
+	btCollisionObject * collisionObject = NULL;
 	switch (a_gameObj->GetClipType())
 	{
 		case ClipType::Box: 
 		{	
 			const Vector halfBoxSize = a_gameObj->GetClipSize() * 0.5f;
 			btVector3 halfExt(halfBoxSize.GetX(), halfBoxSize.GetY(), halfBoxSize.GetZ());
-			collision = new btBoxShape(halfExt);
+			collisionShape = new btBoxShape(halfExt);
 			break;
 		}
 		case ClipType::Sphere:
 		{
-			collision = new btSphereShape(a_gameObj->GetClipSize().GetX());
+			collisionShape = new btSphereShape(a_gameObj->GetClipSize().GetX());
 			break;
 		}
 		default: return false;
 	}
 
-	// Setup motion state and construction info for game object shape
-	btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
-	btQuaternion bodyRotation(0, 0, 0, 1);
-	btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
-	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collision, btVector3(0,0,0));
-	rigidBody = new btRigidBody(rigidBodyCI);
+	collisionShape->setMargin(0.0f);
+	collisionObject = new btCollisionObject();
 
-	// Add object to physics world
-	m_dynamicsWorld->addRigidBody(rigidBody);
-	
 	// Assign the physics object to the game object
-	if (collision != NULL)
+	if (collisionShape != NULL && collisionObject != NULL)
 	{
 		if (PhysicsObject * newObj = new PhysicsObject())
 		{
-			newObj->SetCollision(collision);
-			newObj->SetPhysics(rigidBody);
+			btMatrix3x3 basis;
+			basis.setIdentity();
+			collisionObject->getWorldTransform().setBasis(basis);
+			collisionObject->setCollisionShape(collisionShape);
+			
+			newObj->SetCollisionObject(collisionObject);
+			newObj->SetCollisionShape(collisionShape);
 			a_gameObj->SetPhysics(newObj);
 		}
 	}
 
 	// And vice versa
-	rigidBody->setUserPointer(a_gameObj);
-	collision->setUserPointer(a_gameObj);
+	collisionShape->setUserPointer(a_gameObj);
+	collisionObject->setUserPointer(a_gameObj);
 	
+
+//	enum collisiontypes {
+ //   COL_NOTHING = 0, //<Collide with nothing
+ //   COL_SHIP = BIT(0), //<Collide with ships
+ //   COL_WALL = BIT(1), //<Collide with walls
+ //   COL_POWERUP = BIT(2) //<Collide with powerups
+
+//int shipCollidesWith = COL_WALL;
+//int wallCollidesWith = COL_NOTHING;
+//int powerupCollidesWith = COL_SHIP | COL_WALL;
+
+	// Add to world
+	short colGroup = (short)1;
+	short colFilter = (short)-1;
+	int colGroupId = GetCollisionGroupId(a_gameObj->GetClipGroup());
+	if (colGroupId >= 0)
+	{
+		colGroup = (short)(1 << colGroupId);
+		colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
+	}
+	m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
+
 	return a_gameObj->GetPhysics() != NULL;
 }
 
 bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 {
-	if (a_gameObj == NULL || a_gameObj->GetPhysics() == NULL)
+	if (a_gameObj == NULL || a_gameObj->GetPhysics() == NULL || m_dynamicsWorld == NULL)
 	{
 		return false;
 	}
 
+	PhysicsObject * phys = a_gameObj->GetPhysics();
+	btCollisionShape * collisionShape = phys->GetCollisionShape();
+
+	// Setup motion state and construction info for game object shape
+	btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
+	btQuaternion bodyRotation(0, 0, 0, 1);
+
 	// TODO activate physical properties like mass and intertia
-	return false;
+	btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
+	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collisionShape, btVector3(0,0,0));
+	btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
+	rigidBody->setUserPointer(a_gameObj);
+	phys->SetRigidBody(rigidBody);
+
+	// Add object to physics world
+	m_dynamicsWorld->addRigidBody(rigidBody);
+
+	return true;
 }
 
 void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
@@ -173,9 +290,14 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 
 	PhysicsObject * phys = a_gameObj->GetPhysics();
 	btTransform newWorldTrans;
+	newWorldTrans.setIdentity();
 	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
 	newWorldTrans.setOrigin(trans);
-	phys->GetPhysics()->setWorldTransform(newWorldTrans);
+	phys->GetCollisionObject()->setWorldTransform(newWorldTrans);
+	if (phys->HasRigidBody())
+	{
+		phys->GetRigidBody()->setWorldTransform(newWorldTrans);
+	}
 	ClearCollisions(a_gameObj);
 }
 
@@ -192,6 +314,18 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		}
 	}
 	return false;
+}
+
+int PhysicsManager::GetCollisionGroupId(StringHash a_colGroupHash)
+{
+	for (int i = 1; i < s_maxCollisionGroups; ++i)
+	{
+		if (m_collisionGroups[i] == a_colGroupHash)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 void PhysicsManager::ClearCollisions(GameObject * a_gameObj)

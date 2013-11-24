@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 	
 	// Process resource paths
+	char gameConfigPath[StringUtils::s_maxCharsPerLine];
 	char texturePath[StringUtils::s_maxCharsPerLine];
 	char fontPath[StringUtils::s_maxCharsPerLine];
 	char guiPath[StringUtils::s_maxCharsPerLine];
@@ -124,38 +125,48 @@ int main(int argc, char *argv[])
 	char scriptPath[StringUtils::s_maxCharsPerLine];
 	char shaderPath[StringUtils::s_maxCharsPerLine];
 
-	strcpy(texturePath, configFile.GetString("config", "texturePath"));
-	strcpy(fontPath, configFile.GetString("config", "fontPath"));
-	strcpy(guiPath, configFile.GetString("config", "guiPath"));
-	strcpy(modelPath, configFile.GetString("config", "modelPath"));
-	strcpy(templatePath, configFile.GetString("config", "templatePath"));
-	strcpy(scenePath, configFile.GetString("config", "scenePath"));
+	strcpy(gameConfigPath,	configFile.GetString("config", "gameConfigFile"));
+	strcpy(texturePath,		configFile.GetString("config", "texturePath"));
+	strcpy(fontPath,		configFile.GetString("config", "fontPath"));
+	strcpy(guiPath,			configFile.GetString("config", "guiPath"));
+	strcpy(modelPath,		configFile.GetString("config", "modelPath"));
+	strcpy(templatePath,	configFile.GetString("config", "templatePath"));
+	strcpy(scenePath,		configFile.GetString("config", "scenePath"));
 	strcpy(scriptPath,		configFile.GetString("config", "scriptPath"));
-	strcpy(shaderPath, configFile.GetString("config", "shaderPath"));
+	strcpy(shaderPath,		configFile.GetString("config", "shaderPath"));
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)
 	{
-		if (strstr(texturePath, ":") == NULL)	{ StringUtils::PrependString(texturePath, gameDataPath); }
-		if (strstr(fontPath, ":") == NULL)		{ StringUtils::PrependString(fontPath, gameDataPath); }
-		if (strstr(guiPath, ":") == NULL)		{ StringUtils::PrependString(guiPath, gameDataPath); }
-		if (strstr(modelPath, ":") == NULL)		{ StringUtils::PrependString(modelPath, gameDataPath); }
-		if (strstr(templatePath, ":") == NULL)	{ StringUtils::PrependString(templatePath, gameDataPath); }
-		if (strstr(scenePath, ":") == NULL)		{ StringUtils::PrependString(scenePath, gameDataPath); }
-		if (strstr(scriptPath, ":") == NULL)	{ StringUtils::PrependString(scriptPath, gameDataPath); }
-		if (strstr(shaderPath, ":") == NULL)	{ StringUtils::PrependString(shaderPath, gameDataPath); }
+		if (strstr(gameConfigPath, ":") == NULL)	{ StringUtils::PrependString(gameConfigPath, gameDataPath); }
+		if (strstr(texturePath, ":") == NULL)		{ StringUtils::PrependString(texturePath, gameDataPath); }
+		if (strstr(fontPath, ":") == NULL)			{ StringUtils::PrependString(fontPath, gameDataPath); }
+		if (strstr(guiPath, ":") == NULL)			{ StringUtils::PrependString(guiPath, gameDataPath); }
+		if (strstr(modelPath, ":") == NULL)			{ StringUtils::PrependString(modelPath, gameDataPath); }
+		if (strstr(templatePath, ":") == NULL)		{ StringUtils::PrependString(templatePath, gameDataPath); }
+		if (strstr(scenePath, ":") == NULL)			{ StringUtils::PrependString(scenePath, gameDataPath); }
+		if (strstr(scriptPath, ":") == NULL)		{ StringUtils::PrependString(scriptPath, gameDataPath); }
+		if (strstr(shaderPath, ":") == NULL)		{ StringUtils::PrependString(shaderPath, gameDataPath); }
+	}
+
+	// Load game specific config
+	GameFile gameConfig(gameConfigPath);
+	if (!gameConfig.IsLoaded())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", configFilePath);
+		return 1;
 	}
 
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
-    RenderManager::Get().Startup(sc_colourBlack, shaderPath, configFile.GetBool("render", "vr"));
+    RenderManager::Get().Startup(sc_colourBlack, shaderPath, gameConfig.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
-	TextureManager::Get().Startup(texturePath, configFile.GetBool("render", "textureFilter"));
+	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
-	PhysicsManager::Get().Startup();
+	PhysicsManager::Get().Startup(gameConfig);
 	CameraManager::Get().Startup();
 	ScriptManager::Get().Startup(scriptPath);
 	Gui::Get().Startup(guiPath);

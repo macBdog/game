@@ -221,25 +221,29 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 		{
 			// Set various properties of a scene
 			bool propsOk = true;
-			if (sceneFile->FindProperty(sceneObject, "name") &&
-				sceneFile->FindProperty(sceneObject, "beginLoaded"))
+			if (GameFile::Object * sceneObj = sceneFile->FindObject("scene"))
 			{
-				a_sceneToLoad_OUT->SetName(sceneFile->GetString("scene", "name"));
-				a_sceneToLoad_OUT->SetBeginLoaded(sceneFile->GetBool("scene", "beginLoaded"));
-
-				// Set whole scene shader if specified
-				if (sceneFile->FindProperty(sceneObject, "shader"))
+				GameFile::Property * nameProp = sceneObj->FindProperty("name");
+				GameFile::Property * beginLoadedProp = sceneObj->FindProperty("beginLoaded");
+				if (nameProp && beginLoadedProp)
 				{
-					if (Shader * pNewShader = new Shader(sceneFile->GetString("scene", "shader")))
+					a_sceneToLoad_OUT->SetName(nameProp->GetString());
+					a_sceneToLoad_OUT->SetBeginLoaded(beginLoadedProp->GetBool());
+
+					// Set whole scene shader if specified
+					if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
 					{
-						if (RenderManager::InitShaderFromFile(*pNewShader))
+						if (Shader * pNewShader = new Shader(shaderProp->GetString()))
 						{
-							a_sceneToLoad_OUT->SetShader(pNewShader);
-							RenderManager::Get().ManageShader(a_sceneToLoad_OUT);
-						}	
-						else // Compile error will be reported in the log
-						{
-							delete pNewShader;
+							if (RenderManager::InitShaderFromFile(*pNewShader))
+							{
+								a_sceneToLoad_OUT->SetShader(pNewShader);
+								RenderManager::Get().ManageShader(a_sceneToLoad_OUT);
+							}	
+							else // Compile error will be reported in the log
+							{
+								delete pNewShader;
+							}
 						}
 					}
 				}
@@ -250,22 +254,23 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			}
 
 			// Load child game objects of the scene
-			GameFile::Object * childGameObject = sceneObject->m_firstChild;
+			LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
 			while (childGameObject != NULL)
 			{
-				if (GameFile::Property * prop = childGameObject->FindProperty("template"))
+				GameFile::Object * childObj = childGameObject->GetData();
+				if (GameFile::Property * prop = childObj->FindProperty("template"))
 				{
 					// Create object from template values and add to the scene
 					if (GameObject * newObject = CreateObject<GameObject>(prop->GetString(), a_sceneToLoad_OUT))
 					{
 						// Override any template values
 						newObject->SetTemplate(prop->GetString());
-						newObject->SetName(childGameObject->FindProperty("name")->GetString());
-						newObject->SetPos(childGameObject->FindProperty("pos")->GetVector());
+						newObject->SetName(childObj->FindProperty("name")->GetString());
+						newObject->SetPos(childObj->FindProperty("pos")->GetVector());
 					}
 				}
 				
-				childGameObject = childGameObject->m_next;
+				childGameObject = childGameObject->GetNext();
 			}
 
 			// No properties present

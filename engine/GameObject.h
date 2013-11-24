@@ -8,6 +8,7 @@
 #include "../core/Matrix.h"
 
 #include "GameFile.h"
+#include "StringHash.h"
 #include "StringUtils.h"
 
 #include "Components\Component.h"
@@ -66,6 +67,7 @@ public:
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_clipping(true)
+		, m_clipGroup()
 		, m_worldMat(Matrix::Identity())
 		, m_scriptRef(-1)
 		{ 
@@ -137,6 +139,7 @@ public:
 	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
+	inline void SetClipGroup(const char * a_clipGroupName) { m_clipGroup.SetCString(a_clipGroupName); }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
@@ -151,6 +154,7 @@ public:
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline ClipType::Enum GetClipType() const { return m_clipType; }
+	inline StringHash GetClipGroup() const { return m_clipGroup; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline int GetScriptReference() const { return m_scriptRef; }
@@ -213,6 +217,7 @@ private:
 	Vector				  m_clipVolumeSize;		///< Dimensions of the clipping volume for culling and picking
 	Vector				  m_clipVolumeOffset;	///< How far from the pivot of the object the clip volume is
 	bool				  m_clipping;			///< If collision is enabled
+	StringHash			  m_clipGroup;			///< What group the object belongs to
 	Matrix				  m_worldMat;			///< Position and orientation in the world
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template

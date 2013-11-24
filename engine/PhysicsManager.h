@@ -2,11 +2,11 @@
 #define _ENGINE_PHYSICS_MANAGER
 #pragma once
 
-#include "..\core\Matrix.h"
-#include "..\core\Vector.h"
-#include "../core/LinkedList.h"
+#include "..\core\BitSet.h"
 
+#include "GameFile.h"
 #include "Singleton.h"
+#include "StringHash.h"
 
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
@@ -14,6 +14,8 @@ class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btCollisionShape;
+class btCollisionObject;
+class btCollisionWorld;
 struct btDefaultMotionState;
 class btRigidBody;
 
@@ -25,19 +27,31 @@ class PhysicsObject
 
 public:
 
-	PhysicsObject() : m_collision(NULL), m_rigidBody(NULL) { }
+	PhysicsObject() 
+		: m_collisionGroup(-1)
+		, m_collisionShape(NULL)
+		, m_collisionObject(NULL)
+		, m_rigidBody(NULL) { }
 	~PhysicsObject();
-	inline bool HasCollision() { return m_collision != NULL; }
-	inline bool HasPhysics() { return m_rigidBody != NULL; }
-	inline btCollisionShape * GetCollision() { return m_collision; }
-	inline btRigidBody * GetPhysics() { return m_rigidBody; }
-	inline void SetCollision(btCollisionShape * a_col) { if (m_collision == NULL) { m_collision = a_col; } }
-	inline void SetPhysics(btRigidBody * a_phy) { if (m_rigidBody == NULL) { m_rigidBody = a_phy; } }
+	inline bool HasCollision() { return m_collisionShape != NULL; }
+	inline bool HasRigidBody() { return m_rigidBody != NULL; }
+	
+	inline int GetCollisionGroup() { return m_collisionGroup; }
+	inline btCollisionShape * GetCollisionShape() { return m_collisionShape; }
+	inline btCollisionObject * GetCollisionObject() { return m_collisionObject; }
+	inline btRigidBody * GetRigidBody() { return m_rigidBody; }
 
+	inline void SetCollisionGroup(int a_newGroup) { m_collisionGroup = a_newGroup; }
+	inline void SetCollisionShape(btCollisionShape * a_col) { if (m_collisionShape == NULL) { m_collisionShape = a_col; } }
+	inline void SetCollisionObject(btCollisionObject * a_col) { if (m_collisionObject == NULL) { m_collisionObject = a_col; } }
+	inline void SetRigidBody(btRigidBody * a_phy) { if (m_rigidBody == NULL) { m_rigidBody = a_phy; } }
+	
 private:
 
-	btRigidBody * m_rigidBody;
-	btCollisionShape * m_collision;
+	int m_collisionGroup;					///< Group for collision filtering, if any
+	btRigidBody * m_rigidBody;				///< Rigid body present only if object driven by dynamics
+	btCollisionShape * m_collisionShape;	///< Dimensions and type of volume for collisions and dynamics if present
+	btCollisionObject * m_collisionObject;	///< All objects are represented in the collision world
 };
 
 class PhysicsManager : public Singleton<PhysicsManager>
@@ -51,11 +65,12 @@ public:
 		, m_collisionConfiguration(NULL)
 		, m_dispatcher(NULL)
 		, m_solver(NULL)
-		, m_dynamicsWorld(NULL) { }
+		, m_dynamicsWorld(NULL) 
+		, m_collisionWorld(NULL) { }
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
-	bool Startup();
+	bool Startup(const GameFile & a_config);
 	bool Shutdown();
 	void Update(float a_dt);
 
@@ -78,6 +93,11 @@ public:
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
 
+	//\brief Get the group ID matching the name of a collision group
+	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group
+	int GetCollisionGroupId(StringHash a_colGroupHash);
+	inline int GetCollisionGroupId(const char * a_colGroupName) { return GetCollisionGroupId(StringHash(a_colGroupName)); }
+
 protected:
 
 	//\brief Remove all entries from a game object collision list, called once a frame
@@ -91,11 +111,16 @@ protected:
 
 private:
 
+	static const int s_maxCollisionGroups = 16;
+	StringHash m_collisionGroups[s_maxCollisionGroups];
+	BitSet m_collisionFilters[s_maxCollisionGroups];
+
 	btBroadphaseInterface * m_broadphase;
 	btDefaultCollisionConfiguration * m_collisionConfiguration;
 	btCollisionDispatcher * m_dispatcher;
 	btSequentialImpulseConstraintSolver * m_solver;
 	btDiscreteDynamicsWorld * m_dynamicsWorld;
+	btCollisionWorld * m_collisionWorld;
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER

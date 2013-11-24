@@ -363,7 +363,7 @@ bool Gui::LoadMenu(const char * a_menuFile)
 		// Create a new widget and copy properties from file
 		if (GameFile::Object * menuObject = menuFile->FindObject("menu"))
 		{
-			if (GameFile::Property * nameProp = menuFile->FindProperty(menuObject, "name"))
+			if (GameFile::Property * nameProp = menuObject->FindProperty("name"))
 			{
 				Widget * parentMenu = new Widget();
 				parentMenu->SetName(menuFile->GetString("menu", "name"));
@@ -371,11 +371,12 @@ bool Gui::LoadMenu(const char * a_menuFile)
 				parentMenu->SetActive(false);
 
 				// Load child elements of the menu
-				GameFile::Object * childWidget = menuObject->m_firstChild;
+				LinkedListNode<GameFile::Object> * childWidget = menuObject->GetChildren();
 				while (childWidget != NULL)
 				{
-					CreateWidget(childWidget, parentMenu);
-					childWidget = childWidget->m_next;
+					GameFile::Object * curObject = childWidget->GetData();
+					CreateWidget(curObject, parentMenu);
+					childWidget = childWidget->GetNext();
 				}
 
 				// Add to list of menus

@@ -276,10 +276,24 @@ public:
 							newGameObject->GetClipType() > ClipType::None &&
 							newGameObject->GetClipSize().LengthSquared() > 0.0f)
 						{
+							// Set the collision group up first
+							if (GameFile::Property * clipGroup = object->FindProperty("clipGroup"))
+							{
+								if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
+								{
+									newGameObject->SetClipGroup(clipGroup->GetString());
+								}
+								else
+								{
+									Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
+								}
+							}
+
+							// Add object to collision world
 							pMan.AddCollisionObject(newGameObject);
 						}
 
-						// Add to physics world
+						// Optionally add to physics world
 						if (GameFile::Property * physics = object->FindProperty("physics"))
 						{
 							if (physics->GetBool())

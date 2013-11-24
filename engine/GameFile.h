@@ -45,28 +45,28 @@ public:
 			: m_data(NULL) { }
 
 		//\brief Property type casting unsafe versions
-		inline const char * GetString()
+		inline const char * GetString() const
 		{
 			return (const char *)m_data;
 		}
 
-		inline int GetInt()
+		inline int GetInt() const
 		{
 			return atoi((const char *)m_data);
 		}
 
-		inline float GetFloat()
+		inline float GetFloat() const
 		{
 			return (float)atof((const char *)m_data);
 		}
 
-		inline bool GetBool()
+		inline bool GetBool() const
 		{
 			const char * vecString = (const char *)m_data;
 			return strstr(vecString, "true") != NULL;
 		}
 
-		inline Colour GetColour()
+		inline Colour GetColour() const
 		{
 			const char * colString = (const char *)m_data;
 			if (strstr(colString, ","))
@@ -78,7 +78,7 @@ public:
 			return sc_colourWhite;
 		}
 
-		inline Vector GetVector()
+		inline Vector GetVector() const
 		{
 			const char * vecString = (const char *)m_data;
 			if (strstr(vecString, ","))
@@ -90,7 +90,7 @@ public:
 			return Vector::Zero();
 		}
 
-		inline Vector2 GetVector2() 
+		inline Vector2 GetVector2() const
 		{
 			const char * vecString = (const char *)m_data;
 			if (strstr(vecString, ","))
@@ -118,16 +118,14 @@ public:
 	//\brief Each entity in the game file
 	struct Object
 	{
-		Object()
-			: m_firstChild(NULL)
-			, m_next(NULL) { }
+		Object() { }
 
-		//\brief Direct accessor for property data for convenience
-		Property * FindProperty(const char * a_propertyName)
-		{
-			return GameFile::FindProperty(this, a_propertyName);
-		}
+		//\brief Direct accessor of property data for convenience
+		Property * FindProperty(const char * a_propertyName) const;
+		Object * FindObject(const char * a_objectName) const;
+		inline LinkedListNode<Object> * GetChildren() const { return m_children.GetHead(); }
 
+		//\brief Write out in memory gamefile to stream
 		inline void Serialise(std::ofstream & a_stream, unsigned int a_indentLevel = 0)
 		{
 			GameFile::WriteTabs(a_stream, a_indentLevel);
@@ -147,29 +145,22 @@ public:
 			}
 
 			// Now the children of this child
-			if (m_firstChild)
+			LinkedListNode<Object> * curChild = m_children.GetHead();
+			while (curChild != NULL)
 			{
-				m_firstChild->Serialise(a_stream, a_indentLevel);
+				curChild->GetData()->Serialise(a_stream, a_indentLevel);
+				curChild = curChild->GetNext();
 			}
 
 			// Now end the object
 			--a_indentLevel;
 			GameFile::WriteTabs(a_stream, a_indentLevel);
 			a_stream << "}" << StringUtils::s_charLineEnd;
-
-			// Output siblings of this child outside the object
-			Object * nextSibling = m_next;
-			while(nextSibling != NULL)
-			{
-				nextSibling->Serialise(a_stream, a_indentLevel);
-				nextSibling = nextSibling->m_next;
-			}
 		}
 
-		StringHash m_name;					// Literal declared before the open brace
-		Object * m_firstChild;				// First child of this object
-		Object * m_next;					// Next sibling object
-		LinkedList<Property> m_properties;	// Properties of this object
+		StringHash m_name;					///< Literal declared before the open brace
+		LinkedList<Object> m_children;		///< Any child objects belonging to this object
+		LinkedList<Property> m_properties;	///< Properties of this object
 	};
 
 	//\ No work done in the constructor, only Init
@@ -187,12 +178,12 @@ public:
 	bool Write(const char * a_filePath);
 
 	//\brief Accessors to the gamefile property data
-	const char * GetString(const char * a_object, const char * a_property);
-	int GetInt(const char * a_object, const char * a_property);
-	float GetFloat(const char * a_object, const char * a_property);
-	bool GetBool(const char * a_object, const char * a_property);
-	bool GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT);
-	bool GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT);
+	const char * GetString(const char * a_object, const char * a_property) const;
+	int GetInt(const char * a_object, const char * a_property) const;
+	float GetFloat(const char * a_object, const char * a_property) const;
+	bool GetBool(const char * a_object, const char * a_property) const;
+	bool GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT) const;
+	bool GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT) const;
 
 	//\brief Add an object that has properties
 	//\param a_objectName is the literal declared on the line preceeding the open bracket
@@ -209,10 +200,7 @@ public:
 	//\brief Helper function to find an object by name
 	//\param a_name is the pointer to a c string of the name
 	//\return A pointer to the object data or NULL if there was no object found by name
-	Object * FindObject(const char * a_name);
-
-	//brief Static helper function to find a property of an object, can be used at the file or object level
-	static Property * FindProperty(Object * a_parent, const char * a_propertyName);
+	Object * FindObject(const char * a_name) const;
 
 private:
 
