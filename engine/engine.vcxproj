@@ -77,8 +77,6 @@
   <ItemGroup>
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="CollisionUtils.h" />
-    <ClInclude Include="Components\Component.h" />
-    <ClInclude Include="Components\ComponentRootMotion.h" />
     <ClInclude Include="DebugMenu.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FontManager.h" />

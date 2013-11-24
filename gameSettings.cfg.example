@@ -1,0 +1,28 @@
+render
+{
+  textureFilter: false
+  vr: false
+}
+collision
+{
+	groups
+	{
+		group1: player
+		group2: enemy
+		group3: playerShots
+		group4: enemyShots
+		group5: powerups
+	}
+	filters
+	{
+		player: enemy, enemyShots, powerups
+		enemy: player, playerShots
+		playerShots: enemy
+		enemyShots: player
+		powerups: player
+	}
+}
+physics
+{
+  gravity: 0, 0, -10
+}

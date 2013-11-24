@@ -11,9 +11,6 @@
 #include "StringHash.h"
 #include "StringUtils.h"
 
-#include "Components\Component.h"
-
-class GameObjectComponent;
 class Model;
 class PhysicsObject;
 class Shader;
@@ -73,7 +70,6 @@ public:
 		{ 
 			SetName("UNAMED_GAME_OBJECT");
 			SetTemplate("");
-			memset(&m_components[0], 0, sizeof(Component *) * (int)ComponentType::Count);
 		}
 
 	~GameObject() { Destroy(); }
@@ -83,52 +79,6 @@ public:
 	virtual bool Update(float a_dt);
 	virtual bool Draw();
 	virtual bool Shutdown() { return true; }
-
-	//\brief Component accessors
-	template <typename T>
-	inline bool AddComponent()
-	{
-		if (T * newComponent = new T())
-		{
-			newComponent->Startup(this);
-			m_components[(unsigned int)newComponent->GetComponentType()] = dynamic_cast<Component *>(newComponent);
-			return true;
-		}
-		return false;
-	}
-	inline bool HasComponent(ComponentType::Enum a_type)
-	{
-		return m_components[(unsigned int)a_type] != NULL;
-	}
-	template <typename T>
-	inline T * GetComponent(ComponentType::Enum a_type)
-	{
-		Component * curComp = m_components[(unsigned int)a_type];
-		if (curComp != NULL)
-		{
-			return dynamic_cast<T *>(curComp);
-		}
-		return NULL;
-	}
-	inline bool RemoveComponent(ComponentType::Enum a_type)
-	{
-		Component * curComp = m_components[(unsigned int)a_type];
-		if (curComp != NULL)
-		{
-			delete curComp;
-			m_components[(unsigned int)a_type] = NULL;
-			return true;
-		}
-
-		return false;
-	}
-	inline void RemoveAllComponents()
-	{
-		for (unsigned int i = 0; i < ComponentType::Count; ++i)
-		{
-			RemoveComponent((ComponentType::Enum)i);
-		}
-	}
 
 	//\brief State mutators and accessors
 	inline void SetSleeping() { if (m_state == GameObjectState::Active) m_state = GameObjectState::Sleep; }
@@ -199,9 +149,6 @@ private:
 
 	//\brief Destruction is private as it should only be handled by object management
 	void Destroy();
-
-	//\ingroup Component management
-	Component * m_components[ComponentType::Count];
 
 	//\ingroup Local properties
 	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids

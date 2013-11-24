@@ -1,5 +1,5 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Rewrite WorldManager object lookup to be constant time.
-TASK QUEUE: Lighting in default shaders. Animation system. Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
+WHAT IS THE CURRENT SHORT TERM GOAL: Animation system. Rewrite WorldManager object lookup to be constant time.
+TASK QUEUE: Lighting in default shaders. Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 
 What is this project?
@@ -21,7 +21,7 @@ Technology Choices:
 * OpenGL for rendering
 * LUA for scripting
 * irrKlang for Sound
-* TGA, OBJ and ANM file formats
+* TGA, OBJ and FBX file formats
 * For everything else, the choice is Roll-Your-Own because dependancies suck and this is a coding for fun and learning project.
 
 Organisation:

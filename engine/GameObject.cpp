@@ -24,16 +24,6 @@ bool GameObject::Update(float a_dt)
 		PhysicsManager::Get().UpdateGameObject(this);
 	}
 
-	// Update components
-	for (unsigned int i = 0; i < ComponentType::Count; ++i)
-	{
-		Component * curComp = m_components[(unsigned int)i];
-		if (curComp != NULL)
-		{
-			curComp->Update(a_dt);
-		}
-	}
-
 	return true;
 }
 
@@ -219,9 +209,6 @@ void GameObject::Destroy()
 	{
 		PhysicsManager::Get().RemovePhysicsObject(this);
 	}
-
-	// Clean up components
-	RemoveAllComponents();
 
 	// Remove references to managed resources
 	if (m_shader != NULL)
