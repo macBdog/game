@@ -7,6 +7,7 @@
 
 #include "core/MathUtils.h"
 
+#include "engine/AnimationManager.h"
 #include "engine/CameraManager.h"
 #include "engine/DebugMenu.h"
 #include "engine/FontManager.h"
@@ -165,8 +166,9 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);
-	WorldManager::Get().Startup(templatePath, scenePath);
 	PhysicsManager::Get().Startup(gameConfig);
+	AnimationManager::Get().Startup(modelPath);
+	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
 	ScriptManager::Get().Startup(scriptPath);
 	Gui::Get().Startup(guiPath);
@@ -196,8 +198,9 @@ int main(int argc, char *argv[])
 		CameraManager::Get().Update(lastFrameTimeSec);
 
 		// Update the world and scripts first, other systems rely on object positions/states etc
-		WorldManager::Get().Update(lastFrameTimeSec);
+		AnimationManager::Get().Update(lastFrameTimeSec);
 		PhysicsManager::Get().Update(lastFrameTimeSec);
+		WorldManager::Get().Update(lastFrameTimeSec);
 		ScriptManager::Get().Update(lastFrameTimeSec);
 		
 		// Draw the Gui

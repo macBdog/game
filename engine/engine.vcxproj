@@ -75,6 +75,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationBlender.h" />
+    <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="CollisionUtils.h" />
     <ClInclude Include="DebugMenu.h" />
@@ -102,6 +104,8 @@
     <ClInclude Include="WorldManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationBlender.cpp" />
+    <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="CameraManager.cpp" />
     <ClCompile Include="CollisionUtils.cpp" />
     <ClCompile Include="DebugMenu.cpp" />

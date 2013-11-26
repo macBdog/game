@@ -11,6 +11,7 @@
 #include "StringHash.h"
 #include "StringUtils.h"
 
+class AnimationBlender;
 class Model;
 class PhysicsObject;
 class Shader;
@@ -58,6 +59,7 @@ public:
 		, m_model(NULL)
 		, m_shader(NULL)
 		, m_physics(NULL)
+		, m_blender(NULL)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
 		, m_clipType(ClipType::AxisBox)
@@ -158,6 +160,7 @@ private:
 	Model *				  m_model;				///< Pointer to a mesh for display purposes
 	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
 	PhysicsObject *		  m_physics;			///< Pointer to physics manager object for collisions and dynamics
+	AnimationBlender *	  m_blender;			///< Pointer to an animation blender if present
 	GameObjectState::Enum m_state;				///< What state the object is in
 	float				  m_lifeTime;			///< How long this guy has been active
 	ClipType::Enum		  m_clipType;			///< What kind of shape represents the bounds of the object
