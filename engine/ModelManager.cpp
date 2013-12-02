@@ -5,10 +5,10 @@
 
 template<> ModelManager * Singleton<ModelManager>::s_instance = NULL;
 
-const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64 meg for all models
-const unsigned int ModelManager::s_loadingVertPoolSize = 32768;		// 32 meg for temporary loading of model vertices
-const unsigned int ModelManager::s_loadingNormalPoolSize = 32768;	// 32 meg for temporary loading of model normals
-const unsigned int ModelManager::s_loadingUvPoolSize = 32768;		// 32 meg for temporary loading texture coords
+const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64k for managed model info
+const unsigned int ModelManager::s_loadingVertPoolSize = 32768;		// 32k for temporary loading of model vertices
+const unsigned int ModelManager::s_loadingNormalPoolSize = 32768;	// 32k for temporary loading of model normals
+const unsigned int ModelManager::s_loadingUvPoolSize = 32768;		// 32k for temporary loading texture coords
 
 const float ModelManager::s_updateFreq = 1.0f;
 

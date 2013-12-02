@@ -6,6 +6,7 @@
 
 #include "StringHash.h"
 
+class GameObject;
 struct KeyFrame;
 
 //\brief Animation Blender reads animation data and applies it to a model
@@ -14,10 +15,27 @@ class AnimationBlender
 public:
 
 	//\ No work done in the constructor, only Init
-	AnimationBlender() { }
+	AnimationBlender(GameObject * a_gameObj) 
+		: m_gameObject(a_gameObj) { }
 	
 	//\brief Update will apply keyframes to the model from animation channels
 	bool Update(float a_dt);
+
+	//\brief Play will start the blender mixing data from the provided keyframe stream into the transforms
+	inline bool PlayAnimation(KeyFrame * a_data, int a_numFrames, StringHash a_animName)
+	{
+		int freeChannel = GetChannel();
+		if (freeChannel >= 0 && freeChannel < s_maxAnimationChannels)
+		{
+			m_channels[freeChannel].m_data = a_data;
+			m_channels[freeChannel].m_curFrame = 0;
+			m_channels[freeChannel].m_numFrames = a_numFrames;
+			m_channels[freeChannel].m_active = true;
+			m_channels[freeChannel].m_name = a_animName;
+			return true;
+		}
+		return false;
+	}
 
 private:
 
@@ -41,6 +59,11 @@ private:
 		KeyFrame * m_data;	///< The current keyframe data for the channel
 	};
 
+	//\brief Get the next free channel to play an animation on
+	//\return the channel id to play on or -1 for no available channels
+	int GetChannel();
+
+	GameObject * m_gameObject;								///< The game object that owns this blender
 	AnimationChannel m_channels[s_maxAnimationChannels];	///< A number of animations can be playing at once
 };
 

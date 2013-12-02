@@ -77,10 +77,10 @@ public:
 	~GameObject() { Destroy(); }
 
 	//\brief Lifecycle functionality inherited by children
-	virtual bool Startup() { return true; }
-	virtual bool Update(float a_dt);
-	virtual bool Draw();
-	virtual bool Shutdown() { return true; }
+	bool Startup() { return true; }
+	bool Update(float a_dt);
+	bool Draw();
+	bool Shutdown() { return true; }
 
 	//\brief State mutators and accessors
 	inline void SetSleeping() { if (m_state == GameObjectState::Active) m_state = GameObjectState::Sleep; }
@@ -141,6 +141,11 @@ public:
 	bool CollidesWith(Vector a_worldPos);
 	bool CollidesWith(GameObject * a_collider);
 	bool CollidesWith(Vector a_lineStart, Vector a_lineEnd);
+
+	//\ingroup Animation
+	inline bool HasAnimationBlender() { return m_blender != NULL; }
+	inline AnimationBlender * GetAnimationBlender() { return m_blender; }
+	inline void SetAnimationBlender(AnimationBlender * a_newBlender) { m_blender = a_newBlender; }
 
 	//\brief Add the game object, all instance properties and children to game file object
 	//\param a_outputFile is a gamefile object that will be appended

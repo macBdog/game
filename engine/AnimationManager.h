@@ -12,27 +12,28 @@
 
 class GameObject;
 
+//\brief A KeyFrame stores data to apply to a model at a certain time
+struct KeyFrame
+{
+	KeyFrame()
+		: m_time(0.0f)
+		, m_prs()
+		, m_transformName() { }
+	float m_time;					///< What relative time the keyframe is applied
+	Matrix m_prs;					///< Where the keyframe locates the transform
+	StringHash m_transformName;		///< What the keyframe locates 
+};
+
 //\brief AnimationManager loads animations for disk resources and supplies to animation blenders
 class AnimationManager : public Singleton<AnimationManager>
 {
 public:
 
-	//\brief A KeyFrame stores data to apply to a model at a certain time
-	struct KeyFrame
-	{
-		KeyFrame()
-			: m_time(0.0f)
-			, m_prs()
-			, m_transformName() { }
-		float m_time;					///< What relative time the keyframe is applied
-		Matrix m_prs;					///< Where the keyframe locates the transform
-		StringHash m_transformName;		///< What the keyframe locates 
-	};
-
 	//\ No work done in the constructor, only Init
 	AnimationManager(float a_updateFreq = s_updateFreq) 
 		: m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
+		, m_data(NULL)
 		{ m_animPath[0] = '\0'; }
 	~AnimationManager() { Shutdown(); }
 
@@ -42,6 +43,9 @@ public:
 
 	//\brief Update and reload animation data
 	bool Update(float a_dt);
+
+	//\brief Play an animation on a game object
+	bool PlayAnimation(GameObject * a_gameObj, const StringHash & a_animName);
 
 private:
 
@@ -53,13 +57,17 @@ private:
 	{
 		ManagedAnim(const char * a_animPath, const char * a_animName, const FileManager::Timestamp & a_timeStamp)
 			: m_timeStamp(a_timeStamp)	
+			, m_numKeys(0)
+			, m_name(a_animName)
+			, m_data(NULL)
 		{ 
 			strcpy(&m_path[0], a_animPath); 
-			strcpy(&m_name[0], a_animName);
 		}
 		FileManager::Timestamp m_timeStamp;						///< When the anim file was last edited
 		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the anim resides for reloading
-		char m_name[StringUtils::s_maxCharsPerName];			///< What the anim is called
+		StringHash m_name;										///< What the anim is called
+		int m_numKeys;											///< How many keys are in the animation
+		KeyFrame * m_data;										///< Pointer to the keyframe data
 	};
 
 	typedef LinkedListNode<ManagedAnim> ManagedAnimNode;		///< Alias for a linked list node that points to a managed animation
@@ -75,6 +83,7 @@ private:
 	char m_animPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to animation data 
 	float m_updateFreq;											///< How often the script manager should check for changes to shaders
 	float m_updateTimer;										///< If we are due for a scan and update of scripts
+	KeyFrame * m_last;											///< Last allocated animation memory
 };
 
 #endif // _ENGINE_ANIMATION_MANAGER

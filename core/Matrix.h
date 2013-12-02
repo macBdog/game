@@ -24,10 +24,14 @@ public:
 			}
 	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
 	inline float * GetValues() { return &f[0]; }
+	inline void SetValue(int a_index, float a_val) { if (a_index >= 0 && a_index <= 15) { f[a_index] = a_val; } }
 	inline void SetRight(Vector a_right,	float a_w = 0.0f) { right = a_right; rightW = a_w;}
 	inline void SetLook(Vector a_look,		float a_w = 0.0f) { look = a_look; lookW = a_w;}
 	inline void SetUp(Vector a_up,			float a_w = 0.0f) { up = a_up; upW = a_w;}
 	inline void SetPos(Vector a_pos,		float a_w = 1.0f) { pos = a_pos; posW = a_w;}
+	inline void SetPosX(float a_posX) { pos.SetX(a_posX); }
+	inline void SetPosY(float a_posY) { pos.SetY(a_posY); }
+	inline void SetPosZ(float a_posZ) { pos.SetZ(a_posZ); }
 	inline void Translate(Vector a_trans) { pos += a_trans; }
 	inline Vector GetRight() const	{ return right; }
 	inline Vector GetLook()	const	{ return look; }

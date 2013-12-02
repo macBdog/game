@@ -80,6 +80,7 @@ private:
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);
 	static int GetGameObjectCollisions(lua_State * a_luaState);
+	static int PlayGameObjectAnimation(lua_State * a_luaState);
 
 	//\brief A managed script stores info critical to the hot reloading of scripts
 	struct ManagedScript

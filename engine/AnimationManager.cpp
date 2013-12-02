@@ -1,17 +1,22 @@
 #include "DebugMenu.h"
 #include "WorldManager.h"
 
+#include "AnimationBlender.h"
+
 #include "AnimationManager.h"
 
 template<> AnimationManager * Singleton<AnimationManager>::s_instance = NULL;
 
-const unsigned int AnimationManager::s_animPoolSize = 16384;					///< How much memory is assigned for all game animations
+const unsigned int AnimationManager::s_animPoolSize = 16777216;					///< How much memory is assigned for all game animations
 const float AnimationManager::s_updateFreq = 1.0f;								///< How often the animation manager should check for updates to disk resources
 
 using namespace std;	//< For fstream operations
 
 bool AnimationManager::Startup(const char * a_animPath)
 {
+	// Initialise the anim memory pool
+	m_data.Init(s_animPoolSize);
+
 	// Cache off path and look for the main game lua file
 	strncpy(m_animPath, a_animPath, sizeof(char) * strlen(a_animPath) + 1);
 
@@ -56,6 +61,9 @@ bool AnimationManager::Shutdown()
 		delete cur;
 	}
 
+	// Clean up the memory pool
+	m_data.Done();
+
 	return true;
 }
 
@@ -93,11 +101,44 @@ bool AnimationManager::Update(float a_dt)
 	return reloadedAnims > 0;
 }
 
+bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & a_animName)
+{
+	// Find the animation
+	ManagedAnim * foundAnim = NULL;
+	ManagedAnimNode * curAnim = m_anims.GetHead();
+	while (curAnim != NULL)
+	{
+		if (curAnim->GetData()->m_name == a_animName)
+		{
+			foundAnim = curAnim->GetData();
+			break;
+		}
+		curAnim = curAnim->GetNext();
+	}
+
+	// Play it on the game object's blender
+	if (a_gameObj && foundAnim)
+	{
+		if (!a_gameObj->HasAnimationBlender())
+		{
+			AnimationBlender * newBlend = new AnimationBlender(a_gameObj);
+			a_gameObj->SetAnimationBlender(newBlend);
+		}
+		if (AnimationBlender * blend = a_gameObj->GetAnimationBlender())
+		{
+			return blend->PlayAnimation(foundAnim->m_data, foundAnim->m_numKeys, foundAnim->m_name);
+		}
+	}
+
+	return false;
+}
+
 int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 {
 	int numAnimsLoaded = 0;
-	char line[StringUtils::s_maxCharsPerLine];
-	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	const unsigned int maxAnimFileLineChars = StringUtils::s_maxCharsPerLine * 2;
+	char line[maxAnimFileLineChars];
+	memset(&line, 0, sizeof(char) * maxAnimFileLineChars);
 	ifstream file(a_fbxPath);
 	
 	// Open the file and parse each line 
@@ -105,19 +146,21 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 	{
 		// Read till the file has more contents or a rule is broken
 		unsigned int lineCount = 0;
+		int frameRate = 24;
 		bool reachedTakes = false;
+		bool finishedWithTakes = false;
 		char currentTake[StringUtils::s_maxCharsPerName];
 		currentTake[0] = '\0';
 		while (file.good())
 		{
-			file.getline(line, StringUtils::s_maxCharsPerLine);
+			file.getline(line, maxAnimFileLineChars);
 			lineCount++;
 
 			// If this line starts the animation section
-			if (strstr(line, "Takes:  {"))
+			if (strstr(line, "Takes:"))
 			{
 				reachedTakes = true;
-				continue;
+				continue;	
 			}
 
 			// Parse any comment lines
@@ -126,35 +169,118 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 				continue;
 			}
 
+			// Get the frame rate for the animations in this file
+			if (strstr(line, "FrameRate: "))
+			{
+				sscanf(StringUtils::TrimString(line), "FrameRate: \"%d\"", &frameRate);
+			}
+
 			// If a new animation is being defined
+			int maxKeys = 0;
+			KeyFrame * currentTake = NULL;
+			KeyFrame * currentChannel = NULL;
+			KeyFrame * currentTransform = NULL;
 			if (reachedTakes &&
+				!finishedWithTakes &&
 				strstr(line, "Current: "))
 			{
-				const char * takeName = StringUtils::ExtractField(line, ":", 0);
+				const char * takeName = StringUtils::ExtractField(line, ":", 1);
 				if (strlen(takeName) != NULL)
 				{
 					// Read till the channels start
 					while (file.good() && strstr(line, "Channel:") == NULL)
 					{
-						file.getline(line, StringUtils::s_maxCharsPerLine);
+						file.getline(line, maxAnimFileLineChars);
 						lineCount++;
 					}
+					const char * transformName = StringUtils::ExtractField(line, ":", 1);
 
 					// Preamble for each transform manipulattion
-					int channelNum = 0;
-					int dimensionNum = 0;
-					if (strcmp(line, "Channel: \"Transform\" {") == 0)
+					const int numChannels = 3;
+					const int numComponents = 3;
+					for (int i = 0; i < numChannels; ++i)
 					{
+						// Channel: T/R/S
+						file.getline(line, maxAnimFileLineChars);		lineCount++;
 
+						// Reset data pointer to take so all components line up
+						if (currentTake != NULL)
+						{
+							currentChannel = currentTake;
+						}
+						for (int j = 0; j < numComponents; ++j)
+						{
+							// Channel: X/Y/Z
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+							// Default: 
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+							// KeyVer:
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+							// KeyCount:
+							int keyCount = 0;
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+							sscanf(StringUtils::TrimString(line), "KeyCount: %d", &keyCount);
+
+							if (keyCount > maxKeys)
+							{
+								maxKeys = keyCount;
+							}
+
+							// Key:
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+							// Setup the current take
+							if (currentTake == NULL)
+							{
+								currentTake = m_data.Allocate(sizeof(KeyFrame) * keyCount);
+								currentChannel = currentTake;
+							}
+							currentChannel->m_transformName.SetCString(transformName);
+
+							// Read all the keys
+							for (int k = 0; k < keyCount; ++k)
+							{
+								int time = 0;
+								float key = 0.0f;
+								file.getline(line, maxAnimFileLineChars);		lineCount++;
+								sscanf(StringUtils::TrimString(line), "%d,%f,L,", &time, &key);
+
+								// TODO: Support for scale channel
+								if (i == 2)
+								{
+									continue;
+								}
+
+								// Set data based on which channel and component we are on
+								int compOrder = i == 0 ? 3 : i - 1;
+								currentChannel->m_prs.SetValue(compOrder * 4 + j, key);
+								currentChannel++;
+							}
+
+							// Colour:
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+							// }
+							file.getline(line, maxAnimFileLineChars);		lineCount++;
+						}
+						
+						// LayerType: 
+						file.getline(line, maxAnimFileLineChars);		lineCount++;
+
+						// }
+						file.getline(line, maxAnimFileLineChars);		lineCount++;
 					}
-					
 
-					// Start writing keyframes
-					
-					// Add managed animation to the list
+					// Add the new managed animation to the list
 					FileManager::Timestamp curTimeStamp;
 					FileManager::Get().GetFileTimeStamp(a_fbxPath, curTimeStamp);
 					ManagedAnim * manAnim = new ManagedAnim(a_fbxPath, takeName, curTimeStamp);
+					manAnim->m_data = currentTake;
+					manAnim->m_numKeys = maxKeys;
+
 					ManagedAnimNode * manAnimNode = new ManagedAnimNode();
 					if (manAnim != NULL && manAnimNode != NULL)
 					{
@@ -162,7 +288,9 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 						m_anims.Insert(manAnimNode);
 						++numAnimsLoaded;
 					}
-				}
+
+					finishedWithTakes = true;
+				}	
 			}
 		}
 	}

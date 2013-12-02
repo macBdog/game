@@ -1,3 +1,4 @@
+#include "AnimationManager.h"
 #include "DebugMenu.h"
 #include "InputManager.h"
 #include "LuaScript.h"
@@ -37,6 +38,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"DisableCollision", DisableGameObjectCollision},
 	{"HasCollisions", TestGameObjectCollisions},
 	{"GetCollisions", GetGameObjectCollisions},
+	{"PlayAnimation", PlayGameObjectAnimation},
 	{"__gc", DestroyGameObject},
 	{NULL, NULL}
 };
@@ -625,4 +627,29 @@ int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 {
 	// TODO
 	return 0;
+}
+
+int ScriptManager::PlayGameObjectAnimation(lua_State * a_luaState)
+{
+	bool playedAnim = false;
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TSTRING);
+			const char * animName = lua_tostring(a_luaState, 2);
+			AnimationManager::Get().PlayAnimation(gameObj, StringHash(animName));
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("PlayGameObjectAnimation cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("PlayGameObjectAnimation expects one parameter - the name of the animation to play.");
+	}
+
+	lua_pushboolean(a_luaState, playedAnim);
+	return 1;
 }

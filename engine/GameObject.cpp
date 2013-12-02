@@ -1,5 +1,6 @@
 #include "../core/Quaternion.h"
 
+#include "AnimationBlender.h"
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
@@ -16,6 +17,12 @@ bool GameObject::Update(float a_dt)
 	if (m_state == GameObjectState::Active)
 	{
 		m_lifeTime += a_dt;
+	}
+
+	// Update animation
+	if (m_blender != NULL)
+	{	
+		m_blender->Update(a_dt);
 	}
 
 	// Update physics world

@@ -70,8 +70,8 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
 		memcpy(retBuf, ptrStart, (sizeof(char)*(ptrEnd-ptrStart)));
 		retBuf[ptrEnd-ptrStart] = '\0';
  
-		// Trim off any unwanted characters such an newlines
-		return TrimString(retBuf);
+		// Trim off any unwanted characters such an newlines and quotes
+		return TrimString(retBuf, true);
 	}
 
 	// Failure case
