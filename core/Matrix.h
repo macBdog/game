@@ -23,6 +23,7 @@ public:
 				f[12]=a_12; f[13]=a_13; f[14]=a_14; f[15]=a_15; 
 			}
 	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
+	inline float GetValue(unsigned int a_index) const							{ return f[a_index]; }
 	inline float * GetValues() { return &f[0]; }
 	inline void SetValue(int a_index, float a_val) { if (a_index >= 0 && a_index <= 15) { f[a_index] = a_val; } }
 	inline void SetRight(Vector a_right,	float a_w = 0.0f) { right = a_right; rightW = a_w;}
@@ -39,6 +40,13 @@ public:
 	inline Vector GetPos() const	{ return pos; }
 	inline float GetDeterminant() const { return 0.0f; } //TODO
 	inline bool HasInverse() const { return GetDeterminant() > 0.0f; }
+	inline void SetIdentity()
+	{
+		f[0] = 1.0f;	f[1] = 0.0f;	f[2] = 0.0f;	f[3] = 0.0f;
+		f[4] = 0.0f;	f[5] = 1.0f;	f[6] = 0.0f;	f[7] = 0.0f;
+		f[8] = 0.0f;	f[9] = 0.0f;	f[10] = 1.0f;	f[11] = 0.0f;
+		f[12] = 0.0f;	f[13] = 0.0f;	f[14] = 0.0f;	f[15] = 1.0f;
+	}
 	static const Matrix Identity() 
 	{ 
 		float vals[16] = {	1.0f, 0.0f, 0.0f, 0.0f,
@@ -47,7 +55,7 @@ public:
 							0.0f, 0.0f, 0.0f, 1.0f };
 		return Matrix(vals);
 	}
-	inline Matrix Multiply(const Matrix & a_mat) 
+	inline Matrix Multiply(const Matrix & a_mat) const
 	{
 		Matrix mOut;
 		for (unsigned int r = 0; r < 4; ++r)
@@ -62,6 +70,38 @@ public:
 			}
 		}
 
+		return mOut;
+	}
+	inline Matrix Add(const Matrix & a_mat, bool a_addW = false) const
+	{
+		Matrix mOut;
+		for (int i = 0; i < 16; ++i)
+		{
+			mOut.f[i] = a_mat.f[i] + f[i];
+		}
+		if (!a_addW)
+		{
+			mOut.row[0][3] = row[0][3];
+			mOut.row[1][3] = row[1][3];
+			mOut.row[2][3] = row[2][3];
+			mOut.row[3][3] = row[3][3];
+		}
+		return mOut;
+	}
+	inline Matrix Sub(const Matrix & a_mat, bool a_subW = false) const
+	{
+		Matrix mOut;
+		for (int i = 0; i < 16; ++i)
+		{
+			mOut.f[i] = a_mat.f[i] - f[i];
+		}
+		if (!a_subW)
+		{
+			mOut.row[0][3] = row[0][3];
+			mOut.row[1][3] = row[1][3];
+			mOut.row[2][3] = row[2][3];
+			mOut.row[3][3] = row[3][3];
+		}
 		return mOut;
 	}
 	inline static Matrix GetRotateX(float a_angleRadians)

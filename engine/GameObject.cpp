@@ -40,10 +40,13 @@ bool GameObject::Draw()
 	{
 		// Normal mesh rendering
 		RenderManager & rMan = RenderManager::Get();
-
+		m_finalMat.SetIdentity();
+		Vector finalPos = m_worldMat.GetPos() + m_localMat.GetPos();
+		m_finalMat = m_worldMat.Multiply(m_localMat);
+		m_finalMat.SetPos(finalPos);
 		if (m_model != NULL && m_model->IsLoaded())
 		{
-			rMan.AddModel(RenderLayer::World, m_model, &m_worldMat, m_shader);
+			rMan.AddModel(RenderLayer::World, m_model, &m_finalMat, m_shader);
 		}
 		
 		// Draw the object's name, position, orientation and clip volume over the top
@@ -56,26 +59,26 @@ bool GameObject::Draw()
 			{
 				case ClipType::AxisBox:
 				{
-					rMan.AddDebugAxisBox(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize, sc_colourGrey); 
+					rMan.AddDebugAxisBox(GetClipPos(), m_clipVolumeSize, sc_colourGrey); 
 					break;
 				}
 				case ClipType::Box:
 				{
 					Matrix tempMat = m_worldMat;
-					tempMat.SetPos(tempMat.GetPos() + m_clipVolumeOffset);
+					tempMat.SetPos(GetClipPos());
 					rMan.AddDebugBox(tempMat, m_clipVolumeSize, sc_colourGrey); 
 					break;
 				}
 				case ClipType::Sphere:
 				{
-					rMan.AddDebugSphere(m_worldMat.GetPos() + m_clipVolumeOffset, m_clipVolumeSize.GetX(), sc_colourGrey); 
+					rMan.AddDebugSphere(GetClipPos(), m_clipVolumeSize.GetX(), sc_colourGrey); 
 					break;
 				}
 				
 				default: break;
 			}
 
-			FontManager::Get().DrawDebugString3D(m_name, 1.0f, m_worldMat.GetPos());
+			FontManager::Get().DrawDebugString3D(m_name, 1.0f, GetClipPos());
 		}
 
 		return true;

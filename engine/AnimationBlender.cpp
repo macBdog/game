@@ -31,11 +31,8 @@ bool AnimationBlender::Update(float a_dt)
 	{
 		if (m_channels[i].m_active)
 		{
-			Matrix & worldMat = m_gameObject->GetWorldMat();
-			Vector tAxis = worldMat.GetPos();
-			tAxis = tAxis + m_channels[i].m_data->m_prs.GetPos();
-			worldMat.SetPos(tAxis);
-			m_gameObject->SetWorldMat(worldMat);
+			Matrix & local = m_gameObject->GetLocalMat();
+			local.SetPos(m_channels[i].m_data->m_prs.GetPos());
 			
 			m_channels[i].m_curFrame++;
 			m_channels[i].m_data++;

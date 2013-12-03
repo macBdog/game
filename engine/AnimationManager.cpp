@@ -135,18 +135,20 @@ bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & 
 
 int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 {
-	int numAnimsLoaded = 0;
+	int fileFrameRate = 24;
 	const unsigned int maxAnimFileLineChars = StringUtils::s_maxCharsPerLine * 2;
 	char line[maxAnimFileLineChars];
 	memset(&line, 0, sizeof(char) * maxAnimFileLineChars);
 	ifstream file(a_fbxPath);
 	
+	// Keep track of  all the animations that have been added to their frame rate can be appended
+	ManagedAnimList addedAnims;
+
 	// Open the file and parse each line 
 	if (file.is_open())
 	{
 		// Read till the file has more contents or a rule is broken
 		unsigned int lineCount = 0;
-		int frameRate = 24;
 		bool reachedTakes = false;
 		bool finishedWithTakes = false;
 		char currentTake[StringUtils::s_maxCharsPerName];
@@ -172,7 +174,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 			// Get the frame rate for the animations in this file
 			if (strstr(line, "FrameRate: "))
 			{
-				sscanf(StringUtils::TrimString(line), "FrameRate: \"%d\"", &frameRate);
+				sscanf(StringUtils::TrimString(line), "FrameRate: \"%d\"", &fileFrameRate);
 			}
 
 			// If a new animation is being defined
@@ -226,6 +228,11 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 
 							if (keyCount > maxKeys)
 							{
+								// Make sure there is enough memory for the largest channel
+								if (currentTake != NULL)
+								{
+									m_data.ResizeLastAllocation(sizeof(KeyFrame) * maxKeys);
+								}
 								maxKeys = keyCount;
 							}
 
@@ -235,7 +242,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 							// Setup the current take
 							if (currentTake == NULL)
 							{
-								currentTake = m_data.Allocate(sizeof(KeyFrame) * keyCount);
+								currentTake = m_data.Allocate(sizeof(KeyFrame) * maxKeys);
 								currentChannel = currentTake;
 							}
 							currentChannel->m_transformName.SetCString(transformName);
@@ -254,8 +261,10 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 									continue;
 								}
 
-								// Set data based on which channel and component we are on
+								// Matrix data based on which channel and component we are on
 								int compOrder = i == 0 ? 3 : i - 1;
+
+								// Set data 
 								currentChannel->m_prs.SetValue(compOrder * 4 + j, key);
 								currentChannel++;
 							}
@@ -286,14 +295,27 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 					{
 						manAnimNode->SetData(manAnim);
 						m_anims.Insert(manAnimNode);
-						++numAnimsLoaded;
+
+						// Add to list for appending framerate
+						addedAnims.Insert(manAnimNode);
 					}
 
 					finishedWithTakes = true;
 				}	
 			}
 		}
+	
+		file.close();
 	}
 
-	return numAnimsLoaded > 0;
+	// Update frame rate on all managed anims
+	int numAddedAnims = 0;
+	ManagedAnimNode * curNode = addedAnims.GetHead();
+	while (curNode != NULL)
+	{
+		curNode->GetData()->m_frameRate = fileFrameRate;
+		curNode = curNode->GetNext();
+	}
+
+	return numAddedAnims > 0;
 }

@@ -67,6 +67,7 @@ private:
 		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the anim resides for reloading
 		StringHash m_name;										///< What the anim is called
 		int m_numKeys;											///< How many keys are in the animation
+		int m_frameRate;										///< The speed at which the animation should be played
 		KeyFrame * m_data;										///< Pointer to the keyframe data
 	};
 

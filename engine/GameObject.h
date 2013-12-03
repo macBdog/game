@@ -68,6 +68,7 @@ public:
 		, m_clipping(true)
 		, m_clipGroup()
 		, m_worldMat(Matrix::Identity())
+		, m_localMat(Matrix::Identity())
 		, m_scriptRef(-1)
 		{ 
 			SetName("UNAMED_GAME_OBJECT");
@@ -100,10 +101,10 @@ public:
 	inline const char * GetName() { return m_name; }
 	inline const char * GetTemplate() { return m_template; }
 	inline Model * GetModel() { return m_model; }
-	inline Matrix GetWorldMat() const { return m_worldMat; }
+	inline Matrix & GetLocalMat() { return m_localMat; }
 	inline Shader * GetShader() const { return m_shader; }
-	inline Vector GetPos() const { return m_worldMat.GetPos(); }
-	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_clipVolumeOffset; }
+	inline Vector GetPos() const { return  m_worldMat.GetPos() + m_localMat.GetPos(); }
+	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_localMat.GetPos() + m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline ClipType::Enum GetClipType() const { return m_clipType; }
 	inline StringHash GetClipGroup() const { return m_clipGroup; }
@@ -174,6 +175,8 @@ private:
 	bool				  m_clipping;			///< If collision is enabled
 	StringHash			  m_clipGroup;			///< What group the object belongs to
 	Matrix				  m_worldMat;			///< Position and orientation in the world
+	Matrix				  m_localMat;			///< Position and orientation relative to world mat, used for animation
+	Matrix				  m_finalMat;			///< Aggregate of world and local only used by render
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
 	int					  m_scriptRef;			///< If the object is created and managed by script, the ID on the script side is stored here
