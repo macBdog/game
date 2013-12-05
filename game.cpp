@@ -197,11 +197,11 @@ int main(int argc, char *argv[])
 		// Update the camera first
 		CameraManager::Get().Update(lastFrameTimeSec);
 
-		// Update the world and scripts first, other systems rely on object positions/states etc
+		// Update world last as it clears physics collisions for the frame
 		AnimationManager::Get().Update(lastFrameTimeSec);
 		PhysicsManager::Get().Update(lastFrameTimeSec);
-		WorldManager::Get().Update(lastFrameTimeSec);
 		ScriptManager::Get().Update(lastFrameTimeSec);
+		WorldManager::Get().Update(lastFrameTimeSec);
 		
 		// Draw the Gui
 		Gui::Get().Update(lastFrameTimeSec);

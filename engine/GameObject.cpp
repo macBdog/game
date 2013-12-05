@@ -13,6 +13,12 @@ using namespace std;	//< For fstream operations
 
 bool GameObject::Update(float a_dt)
 {
+	// Don't update game objects while debugging
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return true;
+	}
+
 	// Tick the object's life
 	if (m_state == GameObjectState::Active)
 	{

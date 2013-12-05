@@ -84,7 +84,7 @@ public:
 	//\brief Allocate a block from the contiguous memory and advance the offset
 	//\param a_allocationSizeBytes how much memory is being allocated
 	//\return a pointer to the allocated memory
-	inline T * Allocate(size_t a_allocationSizeBytes)
+	inline T * Allocate(size_t a_allocationSizeBytes, bool a_zeroMemory = true)
 	{
 		if (a_allocationSizeBytes > 0)
 		{
@@ -99,8 +99,11 @@ public:
 				// Set last pointer to new section of memory
 				m_memoryPtr =  m_memoryEnd;
 
-				// Clear the memory that was just allocated - this should be removed in debug configuration
-				memset(m_memoryPtr, 0, a_allocationSizeBytes);
+				// Clear the memory that was just allocated
+				if (a_zeroMemory)
+				{
+					memset(m_memoryPtr, 0, a_allocationSizeBytes);
+				}
 
 				// Update end sentinel
 				m_memoryEnd = (T*)newMemoryEnd;

@@ -16,10 +16,10 @@ class GameObject;
 struct KeyFrame
 {
 	KeyFrame()
-		: m_time(0.0f)
+		: m_time(0)
 		, m_prs()
 		, m_transformName() { }
-	float m_time;					///< What relative time the keyframe is applied
+	int m_time;						///< What relative time the keyframe is applied
 	Matrix m_prs;					///< Where the keyframe locates the transform
 	StringHash m_transformName;		///< What the keyframe locates 
 };

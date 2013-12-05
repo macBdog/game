@@ -126,7 +126,7 @@ bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & 
 		}
 		if (AnimationBlender * blend = a_gameObj->GetAnimationBlender())
 		{
-			return blend->PlayAnimation(foundAnim->m_data, foundAnim->m_numKeys, foundAnim->m_name);
+			return blend->PlayAnimation(foundAnim->m_data, foundAnim->m_numKeys, foundAnim->m_frameRate, foundAnim->m_name);
 		}
 	}
 
@@ -141,7 +141,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 	memset(&line, 0, sizeof(char) * maxAnimFileLineChars);
 	ifstream file(a_fbxPath);
 	
-	// Keep track of  all the animations that have been added to their frame rate can be appended
+	// Keep track of all the animations that have been added to their frame rate can be appended
 	ManagedAnimList addedAnims;
 
 	// Open the file and parse each line 
@@ -205,13 +205,14 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 						// Channel: T/R/S
 						file.getline(line, maxAnimFileLineChars);		lineCount++;
 
-						// Reset data pointer to take so all components line up
-						if (currentTake != NULL)
-						{
-							currentChannel = currentTake;
-						}
 						for (int j = 0; j < numComponents; ++j)
 						{
+							// Reset data pointer to take so all components line up
+							if (currentTake != NULL)
+							{
+								currentChannel = currentTake;
+							}
+
 							// Channel: X/Y/Z
 							file.getline(line, maxAnimFileLineChars);		lineCount++;
 
@@ -261,12 +262,25 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 									continue;
 								}
 
-								// Matrix data based on which channel and component we are on
-								int compOrder = i == 0 ? 3 : i - 1;
+								// Make sure key time lines up
+								bool atTime = currentChannel->m_time <= 0 || time >= currentChannel->m_time;
+								while (!atTime)
+								{
+									currentChannel++;
+									atTime = currentChannel->m_time <= 0 || time >= currentChannel->m_time;
+								}
 
-								// Set data 
-								currentChannel->m_prs.SetValue(compOrder * 4 + j, key);
-								currentChannel++;
+								if (atTime)
+								{
+									// Matrix data based on which channel and component we are on
+									int compOrder = i == 0 ? 3 : i - 1;
+
+									// Set data
+									currentChannel->m_time = time;
+									currentChannel->m_prs.SetValue(15, 1.0f);	// Set T axis W to 1.0 indicating a point
+									currentChannel->m_prs.SetValue(compOrder * 4 + j, key);
+									currentChannel++;
+								}
 							}
 
 							// Colour:
