@@ -1,3 +1,5 @@
+#include "../core/MathUtils.h"
+
 #include "AnimationManager.h"
 #include "GameObject.h"
 
@@ -27,6 +29,7 @@ bool AnimationBlender::Update(float a_dt)
 
 	// Construct an aggregate matrix of all the playing animations
 	Matrix animMat = Matrix::Identity();
+	Matrix & local = m_gameObject->GetLocalMat();
 
 	// Iterate through each channel and increment it's progress
 	bool playedAnim = false;
@@ -34,7 +37,10 @@ bool AnimationBlender::Update(float a_dt)
 	{
 		if (m_channels[i].m_active)
 		{
-			Vector animRootPos(m_channels[i].m_data->m_prs.GetPos());
+			const float fracToNextFrame = MathUtils::GetMin(m_channels[i].m_lastFrame / m_channels[i].m_frameRateRecip, 1.0f);
+			const Vector curPos = m_channels[i].m_data->m_prs.GetPos();
+			const Vector nextPos = m_channels[i].m_curFrame < m_channels[i].m_numFrames - 1 ? (m_channels[i].m_data+1)->m_prs.GetPos() : curPos;
+			Vector animRootPos = MathUtils::LerpVector(curPos, nextPos, fracToNextFrame);
 			animMat.Multiply(m_channels[i].m_data->m_prs);
 			animMat.SetPos(animRootPos);
 
@@ -63,7 +69,6 @@ bool AnimationBlender::Update(float a_dt)
 	}
 
 	// Apply the aggregate matrix to the object
-	Matrix & local = m_gameObject->GetLocalMat();
 	local = animMat;
 
 	return playedAnim;

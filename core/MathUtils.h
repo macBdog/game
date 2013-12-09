@@ -5,6 +5,8 @@
 #include <random>
 #include <time.h>
 
+#include "Vector.h"
+
 #define PI 3.141592654f
 #define TAU 6.283185308f
 #define EPSILON 0.0001f
@@ -72,6 +74,14 @@ namespace MathUtils
 		{
 			return a_from + ((a_to - a_from) * a_frac);
 		}
+	}
+
+	//\brief Return a vector with each component between two bounds
+	static Vector LerpVector(const Vector & a_from, const Vector & a_to, float a_frac)
+	{
+		return Vector(	LerpFloat(a_from.GetX(), a_to.GetX(), a_frac),
+						LerpFloat(a_from.GetY(), a_to.GetY(), a_frac),
+						LerpFloat(a_from.GetZ(), a_to.GetZ(), a_frac));
 	}
 	
 	//\brief Convert between degrees and radians
