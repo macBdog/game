@@ -109,7 +109,7 @@ void GameObject::SetRot(const Vector & a_rot)
 
 void GameObject::AddRot(const Vector & a_newRot)
 {
-	Quaternion q(Vector(MathUtils::Deg2Rad(a_newRot.GetX()), MathUtils::Deg2Rad(a_newRot.GetY()), MathUtils::Deg2Rad(a_newRot.GetZ())));
+	Quaternion q(MathUtils::Deg2Rad(a_newRot));
 	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
 }
 

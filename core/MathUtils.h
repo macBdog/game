@@ -90,6 +90,13 @@ namespace MathUtils
 		return a_degrees * (PI / 180.0f);
 	}
 
+	//\brief Convert between degrees and radians
+	static Vector Deg2Rad(const Vector & a_degrees)
+	{
+		const float piRecip = PI / 180.0f;
+		return Vector(a_degrees.GetX() * piRecip, a_degrees.GetY() * piRecip, a_degrees.GetZ() * piRecip);
+	}
+
 	//\brief Compare a float value  to close to zero
 	static bool IsZeroEpsilon(const float & a_val)
 	{

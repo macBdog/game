@@ -137,7 +137,8 @@ public:
 						a_vec.GetX() * row[0][1] + a_vec.GetY() * row[1][1] + a_vec.GetZ() * row[2][1] + row[3][1],
 						a_vec.GetX() * row[0][2] + a_vec.GetY() * row[1][2] + a_vec.GetZ() * row[2][2] + row[3][2]);
 	}
-	inline Matrix Scale(const float & a_scalar) { } //TODO!
+	inline void Scale(const float & a_scalar) { } // TODO
+	inline void Scale(const Vector & a_scalar) { } // TODO
 
 private:
 	

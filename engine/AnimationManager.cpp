@@ -177,11 +177,22 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 				sscanf(StringUtils::TrimString(line), "FrameRate: \"%d\"", &fileFrameRate);
 			}
 
-			// If a new animation is being defined
-			int maxKeys = 0;
-			KeyFrame * currentTake = NULL;
-			KeyFrame * currentChannel = NULL;
-			KeyFrame * currentTransform = NULL;
+			// If a new animation is being defined, read each component separately
+			int animLength = 0;
+			const int numChannels = 3;
+			const int numComponents = 3;
+			KeyComp * activeKey = NULL;
+			int numKeys[numChannels][numComponents];
+			LinearAllocator<KeyComp> * inputKeys[numChannels][numComponents];
+			for (int i = 0; i < numChannels; ++i)
+			{
+				for (int j = 0; j < numComponents; ++j)
+				{
+					numKeys[i][j] = 0;
+					inputKeys[i][j] = NULL;
+				}
+			}
+
 			if (reachedTakes &&
 				!finishedWithTakes &&
 				strstr(line, "Current: "))
@@ -198,21 +209,13 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 					const char * transformName = StringUtils::ExtractField(line, ":", 1);
 
 					// Preamble for each transform manipulattion
-					const int numChannels = 3;
-					const int numComponents = 3;
-					for (int i = 0; i < numChannels; ++i)
+					for (int chanCount = 0; chanCount < numChannels; ++chanCount)
 					{
 						// Channel: T/R/S
 						file.getline(line, maxAnimFileLineChars);		lineCount++;
 
-						for (int j = 0; j < numComponents; ++j)
+						for (int compCount = 0; compCount < numComponents; ++compCount)
 						{
-							// Reset data pointer to take so all components line up
-							if (currentTake != NULL)
-							{
-								currentChannel = currentTake;
-							}
-
 							// Channel: X/Y/Z
 							file.getline(line, maxAnimFileLineChars);		lineCount++;
 
@@ -227,26 +230,17 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 							file.getline(line, maxAnimFileLineChars);		lineCount++;
 							sscanf(StringUtils::TrimString(line), "KeyCount: %d", &keyCount);
 
-							if (keyCount > maxKeys)
+							// Allocate for the data to be read
+							numKeys[chanCount][compCount] = keyCount;
+							if (inputKeys[chanCount][compCount] == NULL)
 							{
-								// Make sure there is enough memory for the largest channel
-								if (currentTake != NULL)
-								{
-									m_data.ResizeLastAllocation(sizeof(KeyFrame) * maxKeys);
-								}
-								maxKeys = keyCount;
+								inputKeys[chanCount][compCount] = new LinearAllocator<KeyComp>();
+								inputKeys[chanCount][compCount]->Init(sizeof(KeyComp) * keyCount);
 							}
+							activeKey = inputKeys[chanCount][compCount]->GetHead();
 
 							// Key:
 							file.getline(line, maxAnimFileLineChars);		lineCount++;
-
-							// Setup the current take
-							if (currentTake == NULL)
-							{
-								currentTake = m_data.Allocate(sizeof(KeyFrame) * maxKeys);
-								currentChannel = currentTake;
-							}
-							currentChannel->m_transformName.SetCString(transformName);
 
 							// Read all the keys
 							for (int k = 0; k < keyCount; ++k)
@@ -254,32 +248,33 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 								int time = 0;
 								float key = 0.0f;
 								file.getline(line, maxAnimFileLineChars);		lineCount++;
+								const char * timeString = StringUtils::ExtractField(line, ",", 0);
 								sscanf(StringUtils::TrimString(line), "%d,%f,L,", &time, &key);
 
-								// TODO: Support for scale channel
-								if (i == 2)
+								// Convert super long time string into something more managable
+								if (timeString[0] == '0') 
 								{
-									continue;
+									time = 0;
 								}
-
-								// Make sure key time lines up
-								bool atTime = currentChannel->m_time <= 0 || time >= currentChannel->m_time;
-								while (!atTime)
+								else // Chop the extraneous precision off the end of the time value
 								{
-									currentChannel++;
-									atTime = currentChannel->m_time <= 0 || time >= currentChannel->m_time;
+									const int numLength = strlen(timeString);
+									const int maxPrecision = 6;
+									if (numLength > maxPrecision)
+									{
+										char choppedNum[16];
+										strncpy(&choppedNum[0], timeString, numLength - maxPrecision);
+										choppedNum[numLength - maxPrecision] = '\0';
+										time = atoi(choppedNum);
+									}
 								}
+								activeKey->m_time = time;
+								activeKey->m_value = key;
+								activeKey++;
 
-								if (atTime)
+								if (time > animLength)
 								{
-									// Matrix data based on which channel and component we are on
-									int compOrder = i == 0 ? 3 : i - 1;
-
-									// Set data
-									currentChannel->m_time = time;
-									currentChannel->m_prs.SetValue(15, 1.0f);	// Set T axis W to 1.0 indicating a point
-									currentChannel->m_prs.SetValue(compOrder * 4 + j, key);
-									currentChannel++;
+									animLength = time;
 								}
 							}
 
@@ -297,13 +292,90 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 						file.getline(line, maxAnimFileLineChars);		lineCount++;
 					}
 
+					// Compile the keys and components into a stream of frames
+					int totalFrameCount = 0;
+					KeyFrame * firstFrame = NULL;
+					KeyComp * currentKeyComp[numChannels][numComponents];
+					for (int i = 0; i < numChannels; ++i)
+					{
+						for (int j = 0; j < numComponents; ++j)
+						{
+							currentKeyComp[i][j] = inputKeys[i][j]->GetHead();
+						}
+					}
+					for (int timeCount = 0; timeCount < animLength; ++timeCount)
+					{
+						bool keySet = false;
+						KeyFrame curKey;
+						for (int chanCount = 0; chanCount < numChannels; ++chanCount)
+						{
+							for (int compCount = 0; compCount < numComponents; ++ compCount)
+							{
+								bool compSet = false;
+								KeyComp * curKeyComp = currentKeyComp[chanCount][compCount];
+								if (curKeyComp->m_time <= timeCount)
+								{
+									switch (chanCount)
+									{
+										// Transform
+										case 0:	
+										{
+											if (compCount == 0) { curKey.m_pos.SetX(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 1) { curKey.m_pos.SetY(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 2) { curKey.m_pos.SetZ(curKeyComp->m_value); compSet = true; }
+											break;
+										}
+										// Rotation
+										case 1:
+										{
+											if (compCount == 0) { curKey.m_rot.SetX(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 1) { curKey.m_rot.SetY(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 2) { curKey.m_rot.SetZ(curKeyComp->m_value); compSet = true; }
+											break;
+
+										}
+										// Scale
+										case 2:
+										{
+											if (compCount == 0) { curKey.m_scale.SetX(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 1) { curKey.m_scale.SetY(curKeyComp->m_value); compSet = true; }
+											else if (compCount == 2) { curKey.m_scale.SetZ(curKeyComp->m_value); compSet = true; }
+											break;
+										}
+										default: break;
+									}
+								
+									// Advance component to next frame if a value was set
+									if (compSet) 
+									{
+										currentKeyComp[chanCount][compCount]++;
+										keySet = true;
+									}
+								}
+							}
+						}
+
+						// Add a new key into the stream
+						if (keySet)
+						{
+							curKey.m_time = timeCount;
+							KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
+							*newKey = curKey;
+							++totalFrameCount;
+							if (firstFrame == NULL)
+							{
+								firstFrame = newKey;
+							}
+						}
+					}
+
 					// Add the new managed animation to the list
 					FileManager::Timestamp curTimeStamp;
 					FileManager::Get().GetFileTimeStamp(a_fbxPath, curTimeStamp);
 					ManagedAnim * manAnim = new ManagedAnim(a_fbxPath, takeName, curTimeStamp);
-					manAnim->m_data = currentTake;
-					manAnim->m_numKeys = maxKeys;
-
+					manAnim->m_numKeys = totalFrameCount;
+					manAnim->m_data = firstFrame;
+					manAnim->m_frameRate = fileFrameRate;
 					ManagedAnimNode * manAnimNode = new ManagedAnimNode();
 					if (manAnim != NULL && manAnimNode != NULL)
 					{

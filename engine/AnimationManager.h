@@ -17,10 +17,14 @@ struct KeyFrame
 {
 	KeyFrame()
 		: m_time(0)
-		, m_prs()
+		, m_pos(0.0f)
+		, m_rot(0.0f)
+		, m_scale(0.0f)
 		, m_transformName() { }
-	int m_time;						///< What relative time the keyframe is applied
-	Matrix m_prs;					///< Where the keyframe locates the transform
+	int m_time;					///< What relative time the keyframe is applied
+	Vector m_pos;					///< Where the keyframe locates the transform
+	Vector m_rot;					///< Three axis of rotation
+	Vector m_scale;					///< Scale in each dimension
 	StringHash m_transformName;		///< What the keyframe locates 
 };
 
@@ -51,6 +55,14 @@ private:
 
 	static const unsigned int s_animPoolSize;					///< How much memory is assigned for all game animations
 	static const float s_updateFreq;							///< How often the animation manager should check for resource updates
+
+	//\brief A KeyChannel is a component of a keyframe used only when loading the animation
+	struct KeyComp
+	{
+		KeyComp() : m_value(0.0f), m_time(0) { }
+		float m_value;
+		int m_time;
+	};
 
 	//\brief A managed animation stores animation data and metadata about the file resource
 	struct ManagedAnim
