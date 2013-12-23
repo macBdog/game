@@ -158,6 +158,14 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 			file.getline(line, maxAnimFileLineChars);
 			lineCount++;
 
+			// If the line is too long then its some vertex data we dont care about
+			if (strlen(line) >= maxAnimFileLineChars-1)
+			{
+				lineCount--;
+				file.clear();
+				continue;
+			}
+
 			// If this line starts the animation section
 			if (strstr(line, "Takes:"))
 			{
@@ -167,6 +175,12 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 
 			// Parse any comment lines
 			if (strstr(line, ";"))
+			{
+				continue;
+			}
+
+			// Keep skipping before we get to the takes section
+			if (!reachedTakes)
 			{
 				continue;
 			}
@@ -193,8 +207,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 				}
 			}
 
-			if (reachedTakes &&
-				!finishedWithTakes &&
+			if (!finishedWithTakes &&
 				strstr(line, "Current: "))
 			{
 				const char * takeName = StringUtils::ExtractField(line, ":", 1);
