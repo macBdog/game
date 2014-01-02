@@ -134,7 +134,8 @@ public:
 	//\param a_model is a pointer to the loaded model to draw
 	//\param a_mat is a pointer to the position and orientation to draw the model at
 	//\param a_shader is a pointer to a shader to render the model with if any
-	void AddModel(RenderLayer::Enum a_layer, Model * a_model, Matrix * a_mat, Shader * a_shader);
+	//\param a_life is how old the object that owns the model is, in seconds
+	void AddModel(RenderLayer::Enum a_layer, Model * a_model, Matrix * a_mat, Shader * a_shader, float a_life);
 
 	//\brief Add a font character for drawing
 	//\param a_renderLayer is the rendering group to draw the model in
@@ -210,6 +211,7 @@ private:
 		Model * m_model;
 		Matrix * m_mat;
 		Shader * m_shader;
+		float m_life;
 	};
 
 	//\brief Fixes size structure for queing font characters that are just a display list

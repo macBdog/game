@@ -446,7 +446,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 {
 	// Setup fresh data to pass to shaders
 	Matrix identity;
-	Shader::UniformData shaderData(m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
 	
 	// Use scissor to disable the inactive viewport for VR
 	if (m_vr)
@@ -665,6 +665,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			{
 				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
 				shaderData.m_mat = rm->m_mat;
+				shaderData.m_life = rm->m_life;
 				pLastModelShader->UseShader(shaderData);
 			}
 			glPushMatrix();
@@ -714,7 +715,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 void RenderManager::RenderFramebuffer()
 {
 	Matrix identity;
-	Shader::UniformData shaderData(m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
 	
 	// Use the full scene shader if specified 
 	bool bUseDefaultShader = true;
@@ -1010,7 +1011,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader)
+void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, float a_life)
 {
 	// Don't add more models than have been allocated for
 	if (m_modelCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
@@ -1061,6 +1062,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	r->m_model = a_model;
 	r->m_mat = a_mat;
 	r->m_shader = a_shader;
+	r->m_life = a_life;
 
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())

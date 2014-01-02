@@ -52,7 +52,7 @@ bool GameObject::Draw()
 		m_finalMat.SetPos(finalPos);
 		if (m_model != NULL && m_model->IsLoaded())
 		{
-			rMan.AddModel(RenderLayer::World, m_model, &m_finalMat, m_shader);
+			rMan.AddModel(RenderLayer::World, m_model, &m_finalMat, m_shader, m_lifeTime);
 		}
 		
 		// Draw the object's name, position, orientation and clip volume over the top

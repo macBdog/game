@@ -89,6 +89,7 @@ public:
 	inline bool IsActive()	  { return m_state == GameObjectState::Active; }
 	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
+	inline void SetLifeTime(float a_newTime) { m_lifeTime = a_newTime; }
 	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
@@ -97,10 +98,12 @@ public:
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
-	inline unsigned int GetId() { return m_id; }
-	inline const char * GetName() { return m_name; }
-	inline const char * GetTemplate() { return m_template; }
-	inline Model * GetModel() { return m_model; }
+
+	inline unsigned int GetId() const { return m_id; }
+	inline const char * GetName() const { return m_name; }
+	inline const char * GetTemplate() const { return m_template; }
+	inline Model * GetModel() const { return m_model; }
+	inline float GetLifeTime() const { return m_lifeTime; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
 	inline Shader * GetShader() const { return m_shader; }
 	inline Vector GetPos() const { return  m_worldMat.GetPos() + m_localMat.GetPos(); }

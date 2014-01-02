@@ -49,17 +49,20 @@ public:
 	struct UniformData
 	{
 		UniformData(	float a_time,
+						float a_life,
 						float a_frameTime, 
 						float a_viewWidth,
 						float a_viewHeight,
 						Matrix * a_mat)
 						: m_time(a_time)
+						, m_life(a_life)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight) 
 						, m_mat(a_mat) { }
 
 		float m_time;					///< How much time in seconds has passed since the app has started
+		float m_life;					///< How much time in seconds has passed since the object using the shader was initialised
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
@@ -103,6 +106,7 @@ public:
 			// Set up the standard uniforms
 			m_texture.Init(m_shader, "Texture0");
 			m_time.Init(m_shader, "Time");
+			m_life.Init(m_shader, "Life");
 			m_frameTime.Init(m_shader, "FrameTime");
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");
@@ -125,7 +129,8 @@ public:
 		glUseProgram(m_shader);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(m_texture.m_id, 0);
-		glUniform1f(m_time.m_id, a_data.m_time);	
+		glUniform1f(m_time.m_id, a_data.m_time);
+		glUniform1f(m_life.m_id, a_data.m_life);
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
@@ -150,6 +155,7 @@ private:
 
 	Uniform m_texture;								///< Standard set of uniforms follow
 	Uniform m_time;
+	Uniform m_life;
 	Uniform m_frameTime;
 	Uniform m_viewWidth;
 	Uniform m_viewHeight;

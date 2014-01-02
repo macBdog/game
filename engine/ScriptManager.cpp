@@ -34,6 +34,8 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetPosition", SetGameObjectPosition},
 	{"GetRotation", GetGameObjectRotation},
 	{"SetRotation", SetGameObjectRotation},
+	{"GetLifeTime", GetGameObjectLifeTime},
+	{"SetLifeTime", SetGameObjectLifeTime},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"HasCollisions", TestGameObjectCollisions},
@@ -268,7 +270,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	int numArgs = lua_gettop(a_luaState);
     if (numArgs != 2) 
 	{
-        return luaL_error(a_luaState, "CreateGameObject error, expecting 2 arguments: class and template name."); 
+        return luaL_error(a_luaState, "GameObject:Create error, expecting 2 argument: class (before the scope operator) then template name."); 
 	}  
 
 	// Qualify template path with template extension
@@ -287,6 +289,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	// Create the new object
 	if (GameObject * newGameObject = WorldManager::Get().CreateObject<GameObject>(templatePath))
 	{
+		// Pushes full userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
 		*userData = newGameObject->GetId();
 
@@ -556,6 +559,48 @@ int ScriptManager::SetGameObjectRotation(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::GetGameObjectLifeTime(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			lua_pushnumber(a_luaState, gameObj->GetLifeTime());
+			return 1;
+		}
+		else // Object not found, destroyed?
+		{
+			Log::Get().WriteGameErrorNoParams("GetLifeTime cannot find the game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		Log::Get().WriteGameErrorNoParams("GetLifeTime expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectLifeTime(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			gameObj->SetLifeTime((float)lua_tonumber(a_luaState, 2));
+		}
+		else // Object not found, destroyed?
+		{
+			Log::Get().WriteGameErrorNoParams("SetLifeTime could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		Log::Get().WriteGameErrorNoParams("SetLifeTime expects 1 number parameter.");
+	}
+	return 0;
+}
+
 int ScriptManager::EnableGameObjectCollision(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -625,8 +670,43 @@ int ScriptManager::TestGameObjectCollisions(lua_State * a_luaState)
 
 int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 {
-	// TODO
-	return 0;
+	// Populate table with any collisions this frame
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			// Push a new table
+			lua_newtable(a_luaState);
+
+			int numCollisions = 0;
+			GameObject::CollisionList * colList = gameObj->GetCollisions();
+			GameObject::Collider * curCol = colList->GetHead();
+			while (curCol != NULL)
+			{
+				char idStringBuf[8];
+				idStringBuf[0] = '\0';
+				itoa(++numCollisions, idStringBuf, 10);
+				lua_pushstring(a_luaState, idStringBuf);
+				
+				unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
+				*userData = gameObj->GetId();
+
+				lua_settable(a_luaState, -3);
+
+				curCol = curCol->GetNext();
+			}
+		}
+		else
+		{
+			Log::Get().WriteGameErrorNoParams("GetCollisions cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("GetCollisions expects no parameters.");
+	}
+
+	return 1;
 }
 
 int ScriptManager::PlayGameObjectAnimation(lua_State * a_luaState)

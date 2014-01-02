@@ -50,7 +50,7 @@ private:
 
 	//\brief Verify a user data pointer passed by script is a valid GameObject pointer
 	//\param a_luaState pointer to the LUA state to interrogate
-	//\param a_argumentId the id of the user data pointer in the LUA registry
+	//\param a_argumentId the id of the user data pointer in the LUA stack
 	//\return a pointer to a GameObject or null if unvalid
 	static GameObject * CheckGameObject(lua_State * a_luaState, unsigned int a_argumentId = 1U);
 
@@ -76,6 +76,8 @@ private:
 	static int SetGameObjectPosition(lua_State * a_luaState);
 	static int GetGameObjectRotation(lua_State * a_luaState);
 	static int SetGameObjectRotation(lua_State * a_luaState);
+	static int GetGameObjectLifeTime(lua_State * a_luaState);
+	static int SetGameObjectLifeTime(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);
