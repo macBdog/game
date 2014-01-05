@@ -70,6 +70,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
+		lua_register(m_globalLua, "DebugLog", DebugLog);
 
 		// Register C++ functions available on the global GUI
 		lua_newtable(m_globalLua);
@@ -289,20 +290,25 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	// Create the new object
 	if (GameObject * newGameObject = WorldManager::Get().CreateObject<GameObject>(templatePath))
 	{
-		// Pushes full userdata onto the stack
+		// Allocate memory for an push userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
 		*userData = newGameObject->GetId();
 
+		// Push the metatable where gameobject functions are stored onto the stack
 		luaL_getmetatable(a_luaState, "GameObject.Registry");
+
+		// Pop the metatable from the stack and sets it as the metatable for the userdata (at index -2)
 		lua_setmetatable(a_luaState, -2);
 
-		// Generate the registry reference
+		// Push a copy of the userdata with the attached metatable onto the stack
 		lua_pushvalue(a_luaState, -1);
+
+		// Create a reference in the registry for the object at the top of the stack (our userdata with metatable)
 		int ref = luaL_ref(a_luaState, LUA_REGISTRYINDEX);
 		newGameObject->SetScriptReference(ref);
 	}
 
-	return 1; // Userdata is returned
+	return 1; // Userdata with metatable at the top of the stack is returned
 }
 
 int ScriptManager::GetGameObject(lua_State * a_luaState)
@@ -401,6 +407,25 @@ int ScriptManager::DebugPrint(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::DebugLog(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * debugText = lua_tostring(a_luaState, 1);
+		if (debugText != NULL && debugText != NULL)
+		{
+			Log::Get().Write(LogLevel::Info, LogCategory::Game, debugText);
+		}
+	}
+	else
+	{
+		Log::Get().WriteGameErrorNoParams("DebugLog expects just one parameter to show on the screen.");
+	}
+
+	return 0;
+}
+
 int ScriptManager::GetGameObjectId(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -412,7 +437,7 @@ int ScriptManager::GetGameObjectId(lua_State * a_luaState)
 		}
 		else
 		{
-			Log::Get().WriteGameErrorNoParams("GetGameObjectId cannot find the game object referred to.");
+			Log::Get().WriteGameErrorNoParams("GetId cannot find the game object referred to.");
 		}
 	}
 	else
@@ -683,13 +708,16 @@ int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 			GameObject::Collider * curCol = colList->GetHead();
 			while (curCol != NULL)
 			{
-				char idStringBuf[8];
-				idStringBuf[0] = '\0';
-				itoa(++numCollisions, idStringBuf, 10);
-				lua_pushstring(a_luaState, idStringBuf);
+				// Push the key for a table entry
+				lua_pushnumber(a_luaState, ++numCollisions);
 				
+				// Push the value - a unsigned int wrapped as user data (our LUA game object)
 				unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
-				*userData = gameObj->GetId();
+				*userData = curCol->GetData()->GetId();
+
+				// Associate the metatable with the userdata
+				luaL_getmetatable(a_luaState, "GameObject.Registry");
+				lua_setmetatable(a_luaState, -2);
 
 				lua_settable(a_luaState, -3);
 
