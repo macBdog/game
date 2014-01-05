@@ -770,10 +770,11 @@ bool DebugMenu::OnEnable(bool a_toggle)
 
 bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 {
-	// Only useful if typing in a text input box
+	InputManager & inMan = InputManager::Get();
+
+	// Respond to typing in a text input box
 	if (m_textInput->IsActive())
 	{
-		InputManager & inMan = InputManager::Get();
 		char newName[StringUtils::s_maxCharsPerName];
 		newName[0] = '\0';
 		strncpy(newName, m_textInputField->GetText(), sizeof(char) * strlen(m_textInputField->GetText()) + 1);
@@ -814,6 +815,19 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 		}
 
 		return true;
+	}
+	else // Other debug menu keys
+	{
+		if (m_enabled)
+		{
+			SDLKey lastKey = inMan.GetLastKey();
+
+			// Clear the log
+			if (lastKey == SDLK_BACKSPACE)
+			{
+				Log::Get().ClearRendering();
+			}
+		}
 	}
 
 	return false;

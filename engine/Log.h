@@ -64,6 +64,7 @@ public:
 	//\brief Controls for turning log rendering on and off, useful for errors related to rendering
 	inline void DisableRendering() { m_renderToScreen = false; }
 	inline void EnableRendering() { m_renderToScreen = true; }
+	void ClearRendering();
  
 private:
 	
