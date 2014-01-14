@@ -822,6 +822,7 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 		{
 			SDLKey lastKey = inMan.GetLastKey();
 
+
 			// Clear the log
 			if (lastKey == SDLK_BACKSPACE)
 			{
