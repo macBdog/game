@@ -101,6 +101,12 @@ public:
 			m_tail = a_node->m_prev;
 		}
 
+		// Update operating cursor
+		if (m_cursor == a_node)
+		{
+			m_cursor = a_node->m_prev != NULL ? a_node->m_prev : a_node->m_next;
+		}
+
 		// Remove node by linking neighbours to each other
 		if (a_node->m_next)
 		{

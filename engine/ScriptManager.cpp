@@ -102,7 +102,8 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		// And kick it off and wait for a yield
 		m_gameLua = lua_newthread(m_globalLua);
 		luaL_loadfile(m_gameLua, gameScriptPath);
-		if (lua_resume(m_gameLua, NULL, 0) != LUA_YIELD)
+		int yieldResult = lua_resume(m_gameLua, NULL, 0);
+		if (yieldResult != LUA_YIELD)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
 		}

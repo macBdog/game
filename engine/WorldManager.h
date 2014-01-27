@@ -353,7 +353,7 @@ public:
 	//\brief Remove a created object from the world
 	//\param a_destroyScriptBindings true if the script management bindings should be killed
 	//\return true if an object is destroyed
-	bool DestroyObject(unsigned int a_objectId, bool a_destroyScriptBindings = true);
+	bool DestroyObject(unsigned int a_objectId, bool a_destroyScriptBindings = false);
 
 	//\brief Destroy all objects in the current scene
 	//\param a_destroyScriptOwned bool to specify destruction of scripts owned objects
