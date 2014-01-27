@@ -52,6 +52,7 @@ bool Scene::RemoveObject(unsigned int a_objectId)
 		if (gameObject->GetId() == a_objectId)
 		{
 			m_objects.Remove(curObject);
+			delete gameObject;
 			delete curObject;
 			return true;
 		}
@@ -440,7 +441,7 @@ bool WorldManager::DestoryAllObjects(bool a_destroyScriptOwned)
 	return objectDestroyed;
 }
 
-bool WorldManager::DestoryAllScriptsOwnedObjects(bool a_destroyScriptBindings)
+bool WorldManager::DestoryAllScriptOwnedObjects(bool a_destroyScriptBindings)
 {
 	// Iterate through all objects in the scene
 	bool objectDestroyed = false;

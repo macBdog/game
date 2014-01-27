@@ -99,6 +99,11 @@ Vector GameObject::GetRot() const
 	return Vector::Zero();
 }
 
+Vector GameObject::GetScale() const
+{
+	return Vector::Zero();
+}
+
 void GameObject::SetRot(const Vector & a_rot)
 {
 	const Vector oldPos = m_worldMat.GetPos();
@@ -111,6 +116,11 @@ void GameObject::AddRot(const Vector & a_newRot)
 {
 	Quaternion q(MathUtils::Deg2Rad(a_newRot));
 	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
+}
+
+void GameObject::SetScale(const Vector & a_newScale)
+{
+	//TODO
 }
 
 bool GameObject::CollidesWith(Vector a_worldPos)
@@ -220,31 +230,17 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 
 void GameObject::Destroy() 
 {
-	// Clean up physics
+	// Empty collision list and remove from physics simulation
 	if (m_physics != NULL)
 	{
-		PhysicsManager::Get().RemovePhysicsObject(this);
+		PhysicsManager & physMan = PhysicsManager::Get();
+		physMan.ClearCollisions(this);
+		physMan.RemovePhysicsObject(this);
 	}
 
 	// Remove references to managed resources
 	if (m_shader != NULL)
 	{
 		RenderManager::Get().UnManageShader(this);
-		delete m_shader;
-	}
-
-	// Empty collision list
-	if (!m_collisions.IsEmpty())
-	{
-		Collider * curColObj = m_collisions.GetHead();
-		while (curColObj != NULL)
-		{
-			// Cache off next pointer
-			Collider * next = curColObj->GetNext();
-			m_collisions.Remove(curColObj);
-			delete curColObj;
-
-			curColObj = next;
-		}
 	}
 }

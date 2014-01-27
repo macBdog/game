@@ -23,17 +23,17 @@ PhysicsObject::~PhysicsObject()
 	// And collision object
 	if (m_collisionObject != NULL)
 	{
-		if (btDiscreteDynamicsWorld * dynWorld = PhysicsManager::Get().GetDynamicsWorld())
+		if (btCollisionWorld * colWorld = PhysicsManager::Get().GetCollisionWorld())
 		{
-			dynWorld->removeCollisionObject(m_collisionObject);
+			colWorld->removeCollisionObject(m_collisionObject);
 		}
 		delete m_collisionObject;
 	}
 
-	// And shape
+	// Now shape
 	if (m_collisionShape != NULL)
 	{
-		delete m_collisionObject;
+		delete m_collisionShape;
 	}
 }
 

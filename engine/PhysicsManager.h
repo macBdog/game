@@ -97,17 +97,18 @@ public:
 	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group
 	int GetCollisionGroupId(StringHash a_colGroupHash);
 	inline int GetCollisionGroupId(const char * a_colGroupName) { return GetCollisionGroupId(StringHash(a_colGroupName)); }
+	void ClearCollisions(GameObject * a_gameObj);
 
 protected:
 
 	//\brief Remove all entries from a game object collision list, called once a frame
 	//		 before the physics world is queried
 	//\param a_gameObj the object to affect
-	void ClearCollisions(GameObject * a_gameObj);
 	void AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB);
 
 	//\brief Accessor for game systems to query the physics world
 	inline btDiscreteDynamicsWorld * GetDynamicsWorld() { return m_dynamicsWorld; }
+	inline btCollisionWorld * GetCollisionWorld() { return m_collisionWorld; }
 
 private:
 

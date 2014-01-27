@@ -361,9 +361,9 @@ public:
 	bool DestoryAllObjects(bool a_destroyScriptOwned = false);
 
 	//\brief Destroy all objects owned by script in the current scene
-	//\param a_destroyScriptBindings bool to specify destruction of bindings to scripts, usually unwanted as script is going bye bye
+	//\param a_destroyScriptBindings bool to specify destruction of bindings to scripts, usually wanted as script is going bye bye
 	//\return true if any objects were destroyed
-	bool DestoryAllScriptsOwnedObjects(bool a_destroyScriptBindings = false);
+	bool DestoryAllScriptOwnedObjects(bool a_destroyScriptBindings = true);
 
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object

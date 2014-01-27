@@ -116,6 +116,7 @@ public:
 	inline int GetScriptReference() const { return m_scriptRef; }
 	inline PhysicsObject * GetPhysics() const { return m_physics; }
 	Vector GetRot() const;
+	Vector GetScale() const;
 	
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
@@ -126,6 +127,7 @@ public:
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	void SetRot(const Vector & a_newRot);
 	void AddRot(const Vector & a_rot);
+	void SetScale(const Vector & a_newScale);
 
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }

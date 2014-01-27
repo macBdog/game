@@ -665,7 +665,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			{
 				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
 				shaderData.m_mat = rm->m_mat;
-				shaderData.m_life = rm->m_life;
+				shaderData.m_lifeTime = rm->m_lifeTime;
 				pLastModelShader->UseShader(shaderData);
 			}
 			glPushMatrix();
@@ -1011,7 +1011,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, float a_life)
+void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, float a_lifeTime)
 {
 	// Don't add more models than have been allocated for
 	if (m_modelCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
@@ -1062,7 +1062,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	r->m_model = a_model;
 	r->m_mat = a_mat;
 	r->m_shader = a_shader;
-	r->m_life = a_life;
+	r->m_lifeTime = a_lifeTime;
 
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())

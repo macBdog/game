@@ -45,6 +45,12 @@ private:
 	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global
 	static const luaL_Reg s_gameObjectMethods[];				///< Constant array of functions registered for game object members
 
+	//\brief Print out an error for the script user with line number and file name
+	//\param a_luaState the LUA state that created the error
+	//\param a_callingFunctionName name of the function that was called
+	//\param a_message the reason the script created an error
+	static void LogScriptError(lua_State * a_luaState, const char * a_callingFunctionName, const char * a_message);
+
 	//\brief Called by LUA during each update to allow the game to run
 	static int YieldLuaEnvironment(lua_State * a_luaState);
 
@@ -61,8 +67,6 @@ private:
 	//\brief LUA versions of game functions made avaiable from C++
 	static int GetFrameDelta(lua_State * a_luaState);
 	static int CreateGameObject(lua_State * a_luaState);
-	static int GetGameObject(lua_State * a_luaState);
-	static int DestroyGameObject(lua_State * a_luaState);
 	static int IsKeyDown(lua_State * a_luaState);
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
@@ -77,6 +81,8 @@ private:
 	static int SetGameObjectPosition(lua_State * a_luaState);
 	static int GetGameObjectRotation(lua_State * a_luaState);
 	static int SetGameObjectRotation(lua_State * a_luaState);
+	static int GetGameObjectScale(lua_State * a_luaState);
+	static int SetGameObjectScale(lua_State * a_luaState);
 	static int GetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectLifeTime(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
@@ -84,6 +90,7 @@ private:
 	static int TestGameObjectCollisions(lua_State * a_luaState);
 	static int GetGameObjectCollisions(lua_State * a_luaState);
 	static int PlayGameObjectAnimation(lua_State * a_luaState);
+	static int DestroyGameObject(lua_State * a_luaState);
 
 	//\brief A managed script stores info critical to the hot reloading of scripts
 	struct ManagedScript
