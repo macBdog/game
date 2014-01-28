@@ -85,6 +85,10 @@ private:
 	static int SetGameObjectScale(lua_State * a_luaState);
 	static int GetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectLifeTime(lua_State * a_luaState);
+	static int SetGameObjectSleeping(lua_State * a_luaState);
+	static int SetGameObjectActive(lua_State * a_luaState);
+	static int GetGameObjectSleeping(lua_State * a_luaState);
+	static int GetGameObjectActive(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);

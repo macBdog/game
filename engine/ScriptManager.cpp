@@ -37,6 +37,10 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetScale", SetGameObjectScale},
 	{"GetLifeTime", GetGameObjectLifeTime},
 	{"SetLifeTime", SetGameObjectLifeTime},
+	{"SetSleeping", SetGameObjectSleeping},
+	{"SetActive", SetGameObjectActive},
+	{"IsSleeping", GetGameObjectSleeping},
+	{"IsActive", GetGameObjectActive},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"HasCollisions", TestGameObjectCollisions},
@@ -673,6 +677,94 @@ int ScriptManager::SetGameObjectLifeTime(lua_State * a_luaState)
 		LogScriptError(a_luaState, "SetLifeTime", "expects 1 number parameter.");
 	}
 	return 0;
+}
+
+int ScriptManager::SetGameObjectSleeping(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->SetSleeping();
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetSleeping", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetSleeping", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectActive(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->SetActive();
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetActive", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetActive", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::GetGameObjectSleeping(lua_State * a_luaState)
+{
+	bool isSleeping = false;
+
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			isSleeping = gameObj->IsSleeping();
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsSleeping", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsSleeping", "expects no parameters.");
+	}
+
+	lua_pushboolean(a_luaState, isSleeping);
+	return 1;
+}
+
+int ScriptManager::GetGameObjectActive(lua_State * a_luaState)
+{
+	bool isActive = false;
+
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			isActive = gameObj->IsActive();
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsActive", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsActive", "expects no parameters.");
+	}
+
+	lua_pushboolean(a_luaState, isActive);
+	return 1;
 }
 
 int ScriptManager::EnableGameObjectCollision(lua_State * a_luaState)

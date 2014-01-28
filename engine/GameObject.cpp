@@ -101,7 +101,7 @@ Vector GameObject::GetRot() const
 
 Vector GameObject::GetScale() const
 {
-	return Vector::Zero();
+	return m_worldMat.GetScale();
 }
 
 void GameObject::SetRot(const Vector & a_rot)
@@ -120,7 +120,7 @@ void GameObject::AddRot(const Vector & a_newRot)
 
 void GameObject::SetScale(const Vector & a_newScale)
 {
-	//TODO
+	m_worldMat.SetScale(a_newScale);
 }
 
 bool GameObject::CollidesWith(Vector a_worldPos)

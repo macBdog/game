@@ -85,7 +85,7 @@ bool AnimationBlender::Update(float a_dt)
 	local = Matrix::Identity();
 	Quaternion rot(MathUtils::Deg2Rad(keyRot));
 	local = local.Multiply(rot.GetRotationMatrix());
-	local.Scale(keyScale);
+	local.SetScale(keyScale);
 	local.SetPos(keyPos);
 
 	return playedAnim;
