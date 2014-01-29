@@ -19,12 +19,15 @@ bool GameObject::Update(float a_dt)
 		return true;
 	}
 
-	// Tick the object's life
-	if (m_state == GameObjectState::Active)
+	// Early out for deactivated objects
+	if (m_state == GameObjectState::Sleep)
 	{
-		m_lifeTime += a_dt;
+		return true;
 	}
 
+	// Tick the object's life
+	m_lifeTime += a_dt;
+	
 	// Update animation
 	if (m_blender != NULL)
 	{	
