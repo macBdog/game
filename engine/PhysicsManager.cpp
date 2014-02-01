@@ -176,8 +176,15 @@ void PhysicsManager::Update(float a_dt)
 		int numContacts = contactManifold->getNumContacts();
 		if (numContacts > 0 && gameObjA != NULL && gameObjB != NULL)
 		{
-			if (gameObjA->IsSleeping() || gameObjB->IsSleeping())
+			if (gameObjA->IsSleeping())
 			{
+				ClearCollisions(gameObjA);
+				continue;
+			}
+
+			if (gameObjB->IsSleeping())
+			{
+				ClearCollisions(gameObjB);
 				continue;
 			}
 

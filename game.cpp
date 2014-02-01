@@ -170,9 +170,9 @@ int main(int argc, char *argv[])
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
-	ScriptManager::Get().Startup(scriptPath);
 	Gui::Get().Startup(guiPath);
-
+	ScriptManager::Get().Startup(scriptPath);
+	
     // Game main loop
 	unsigned int lastFrameTime = 0;
 	float lastFrameTimeSec = 0.0f;

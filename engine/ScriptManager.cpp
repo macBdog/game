@@ -11,10 +11,12 @@ template<> ScriptManager * Singleton<ScriptManager>::s_instance = NULL;
 const float ScriptManager::s_updateFreq = 1.0f;								///< How often the script manager should check for updates to scripts
 const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
 
-// Registration of gui functions
+// Registration of GUI functions
 const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetValue", GUIGetValue},
 	{"SetValue", GUISetValue},
+	{"Show", GUIShowWidget},
+	{"Hide", GUIHideWidget},
 	{NULL, NULL}
 };
 
@@ -335,7 +337,7 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 	}
 	else
 	{
-		Log::Get().WriteGameErrorNoParams("IsKeyDown expects 1 parameter of the key code to test.");
+		LogScriptError(a_luaState, "IsKeyDown", "expects 1 parameter of the key code to test.");
 	}
 
 	lua_pushboolean(a_luaState, keyIsDown);
@@ -359,7 +361,7 @@ int ScriptManager::GUIGetValue(lua_State * a_luaState)
 	}
 	else
 	{
-		Log::Get().WriteGameErrorNoParams("GUIGetValue expects 1 parameter: name of the element to get.");
+		LogScriptError(a_luaState, "GUI:GetValue", "expects 1 parameter: name of the element to get.");
 	}
 	
 	lua_pushstring(a_luaState, strValue);
@@ -385,10 +387,59 @@ int ScriptManager::GUISetValue(lua_State * a_luaState)
 	}
 	else
 	{
-		Log::Get().WriteGameErrorNoParams("GUISetValue expects 2 parameters: name of the element to set and the string to set.");
+		LogScriptError(a_luaState, "GUI:SetValue", "expects 2 parameters: name of the element to set and the string to set.");
 	}
 
-	Log::Get().WriteGameErrorNoParams("GUISetValue could not find the GUI element to set a value on.");
+	LogScriptError(a_luaState, "GUI:SetValue", "could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::GUIShowWidget(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetActive(true);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+
+		LogScriptError(a_luaState, "GUI:Show", "expects 1 parameter: name of the element.");
+	}
+
+	LogScriptError(a_luaState, "GUI:Show", "could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::GUIHideWidget(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetActive(false);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:Hide", "expects 1 parameter: name of the element.");
+	}
+
+	LogScriptError(a_luaState, "GUI:Hide", "could not find the GUI element to set a value on.");
 	return 0;
 }
 
@@ -405,7 +456,7 @@ int ScriptManager::DebugPrint(lua_State * a_luaState)
 	}
 	else
 	{
-		Log::Get().WriteGameErrorNoParams("DebugPrint at least one parameter to show on the screen.");
+		LogScriptError(a_luaState, "DebugPrint", "at least one parameter to show on the screen.");
 	}
 
 	return 0;
@@ -424,7 +475,7 @@ int ScriptManager::DebugLog(lua_State * a_luaState)
 	}
 	else
 	{
-		Log::Get().WriteGameErrorNoParams("DebugLog expects just one parameter to show on the screen.");
+		LogScriptError(a_luaState, "DebugLog", "expects just one parameter to show on the screen.");
 	}
 
 	return 0;
