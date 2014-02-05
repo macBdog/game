@@ -194,6 +194,19 @@ bool RenderManager::Shutdown()
 		delete cur;
 	}
 
+	// And finally the shaders
+	LinkedListNode<Shader> * nextShader = m_shaders.GetHead();
+	while (nextShader != NULL)
+	{
+		// Cache off next pointer
+		LinkedListNode<Shader> * cur = nextShader;
+		nextShader = cur->GetNext();
+
+		m_shaders.Remove(cur);
+		delete cur->GetData();
+		delete cur;
+	}
+
 	return true;
 }
 
@@ -1171,8 +1184,33 @@ void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dime
 	AddDebugAxisBox(a_worldMat.GetPos(), a_dimensions);
 }
 
-void RenderManager::ManageShader(GameObject * a_gameObject)
+void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shaderName)
 {
+	if (Shader * existingShader = GetShader(a_shaderName))
+	{
+		// It's already in the list, link it to the game object
+		a_gameObject->SetShader(existingShader);
+	}
+	// If not, create the shader
+	else if (Shader * pNewShader = new Shader(a_shaderName))
+	{
+		if (RenderManager::InitShaderFromFile(*pNewShader))
+		{
+			LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+			shaderNode->SetData(pNewShader);
+			a_gameObject->SetShader(pNewShader);
+			m_shaders.Insert(shaderNode);
+		}
+		else // Compile error will be reported in the log
+		{
+			delete pNewShader;
+			a_gameObject->SetShader(NULL);
+		}
+	}
+
+	// TODO Check this object is not already managed
+
+	// Link shader in list to game object for management
 	if (a_gameObject != NULL)
 	{
 		if (ManagedShader * pManShader = new ManagedShader())
@@ -1183,8 +1221,33 @@ void RenderManager::ManageShader(GameObject * a_gameObject)
 	}
 }
 
-void RenderManager::ManageShader(Scene * a_scene)
+void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 {
+	if (Shader * existingShader = GetShader(a_shaderName))
+	{
+		// It's already in the list, link it to the game object
+		a_scene->SetShader(existingShader);
+	}
+	// If not, create the shader
+	else if (Shader * pNewShader = new Shader(a_shaderName))
+	{
+		if (RenderManager::InitShaderFromFile(*pNewShader))
+		{
+			LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+			shaderNode->SetData(pNewShader);
+			a_scene->SetShader(pNewShader);
+			m_shaders.Insert(shaderNode);
+		}
+		else // Compile error will be reported in the log
+		{
+			delete pNewShader;
+			a_scene->SetShader(NULL);
+		}
+	}
+
+	// TODO Check this scene is not already managed
+
+	// Link shader in list to scene for management
 	if (a_scene != NULL)
 	{
 		if (ManagedShader * pManShader = new ManagedShader())
@@ -1193,25 +1256,6 @@ void RenderManager::ManageShader(Scene * a_scene)
 			AddManagedShader(pManShader);
 		}
 	}
-}
-
-Shader * RenderManager::GetManagedShader(const char * a_shaderName)
-{
-	// Iterate through all shaders looking for the named program
-	ManagedShaderNode * next = m_managedShaders.GetHead();
-	while (next != NULL)
-	{
-		if (Shader * curShader = next->GetData()->m_shaderObject->GetShader())
-		{
-			if (strcmp(curShader->GetName(), a_shaderName) == 0)
-			{
-				return curShader;
-			}
-		}
-		next = next->GetNext();
-	}
-
-	return NULL;
 }
 
 void RenderManager::UnManageShader(GameObject * a_gameObject)
@@ -1232,6 +1276,8 @@ void RenderManager::UnManageShader(GameObject * a_gameObject)
 			next = next->GetNext();
 		}
 	}
+
+	// TODO If the shader that was just unmanaged is not shared by any other object or scene then remove it from m_shaders
 }
 
 void RenderManager::UnManageShader(Scene * a_scene)
@@ -1252,6 +1298,8 @@ void RenderManager::UnManageShader(Scene * a_scene)
 		}
 		next = next->GetNext();
 	}
+
+	// TODO If the shader that was just unmanaged is not shared by any other object or scene then remove it from m_shaders
 }
 
 bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
@@ -1365,4 +1413,20 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 			m_managedShaders.Insert(pManShaderNode);
 		}
 	}
+}
+
+Shader * RenderManager::GetShader(const char * a_shaderName)
+{
+	// Iterate through all shaders looking for the named program
+	LinkedListNode<Shader> * next = m_shaders.GetHead();
+	while (next != NULL)
+	{
+		if (strcmp(next->GetData()->GetName(), a_shaderName) == 0)
+		{
+			return next->GetData();
+		}
+		next = next->GetNext();
+	}
+
+	return NULL;
 }

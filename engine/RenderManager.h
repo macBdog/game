@@ -166,9 +166,8 @@ public:
 	void AddDebugBox(const Matrix & a_worldMat, const Vector & a_dimensions, Colour a_colour = sc_colourWhite);
 
 	//\brief Add and remove a shader to the list for hotloading on file modification
-	void ManageShader(GameObject * a_gameObject);
-	void ManageShader(Scene * a_scene);
-	Shader * GetManagedShader(const char * a_shaderName);
+	void ManageShader(GameObject * a_gameObject, const char * a_shaderName);
+	void ManageShader(Scene * a_scene, const char * a_shaderName);
 	void UnManageShader(GameObject * a_gameObject);
 	void UnManageShader(Scene * a_scene);
 
@@ -241,6 +240,7 @@ private:
 	//\brief Add a shader to the list of managed shaders
 	//\param a_newManShader is a pointer to the manager shader struct pre-filled by the rendermanager
 	void AddManagedShader(ManagedShader * a_newManShader);
+	Shader * GetShader(const char * a_shaderName);
 
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
@@ -289,6 +289,8 @@ private:
 	typedef LinkedList<ManagedShader> ManagedShaderList;			///< Alias for a linked list of managed shaders
 
 	ManagedShaderList m_managedShaders;								///< List of managed shaders that are scanned for hot loading
+	LinkedList<Shader> m_shaders;									///< List of shaders the game references
+
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
 

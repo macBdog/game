@@ -234,18 +234,7 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 					// Set whole scene shader if specified
 					if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
 					{
-						if (Shader * pNewShader = new Shader(shaderProp->GetString()))
-						{
-							if (RenderManager::InitShaderFromFile(*pNewShader))
-							{
-								a_sceneToLoad_OUT->SetShader(pNewShader);
-								RenderManager::Get().ManageShader(a_sceneToLoad_OUT);
-							}	
-							else // Compile error will be reported in the log
-							{
-								delete pNewShader;
-							}
-						}
+						RenderManager::Get().ManageShader(a_sceneToLoad_OUT, shaderProp->GetString());
 					}
 				}
 			}

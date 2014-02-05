@@ -85,6 +85,7 @@ private:
 	static int SetGameObjectRotation(lua_State * a_luaState);
 	static int GetGameObjectScale(lua_State * a_luaState);
 	static int SetGameObjectScale(lua_State * a_luaState);
+	static int ResetGameObjectScale(lua_State * a_luaState);
 	static int GetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectSleeping(lua_State * a_luaState);

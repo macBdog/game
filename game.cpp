@@ -194,6 +194,9 @@ int main(int argc, char *argv[])
             active = InputManager::Get().Update(event);
         }
 
+		// Speed up or slow time down for debugging
+		lastFrameTimeSec *= DebugMenu::Get().GetGameTimeScale();
+
 		// Update the camera first
 		CameraManager::Get().Update(lastFrameTimeSec);
 

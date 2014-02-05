@@ -37,6 +37,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetRotation", SetGameObjectRotation},
 	{"GetScale", GetGameObjectScale},
 	{"SetScale", SetGameObjectScale},
+	{"ResetScale", ResetGameObjectScale},
 	{"GetLifeTime", GetGameObjectLifeTime},
 	{"SetLifeTime", SetGameObjectLifeTime},
 	{"SetSleeping", SetGameObjectSleeping},
@@ -684,6 +685,26 @@ int ScriptManager::SetGameObjectScale(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "SetScale", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::ResetGameObjectScale(lua_State * a_luaState)
+{ 
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->RemoveScale();
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "ResetScale", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "ResetScale", "expects no parameters.");
 	}
 	return 0;
 }

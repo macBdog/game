@@ -121,11 +121,6 @@ void GameObject::AddRot(const Vector & a_newRot)
 	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
 }
 
-void GameObject::SetScale(const Vector & a_newScale)
-{
-	m_worldMat.SetScale(a_newScale);
-}
-
 bool GameObject::CollidesWith(Vector a_worldPos)
 { 
 	// Clip point against volume

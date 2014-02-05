@@ -132,6 +132,10 @@ public:
 	//\brief Show a debug menu widget for a frame, called from script
 	bool ShowScriptDebugText(const char * a_text, float a_posX = -0.5f, float a_posY = 0.5f);
 
+	//\brief Game time scale modification and access
+	inline float GetGameTimeScale() { return m_gameTimeScale; }
+	inline void ResetGameTimeScale() { m_gameTimeScale = 1.0f; }
+
 private:
 
 	//\brief Helper function to handle widget visibility and position as a result of actions
@@ -139,6 +143,8 @@ private:
 	//\return a bool indicating that the action was handled correctly
 	bool HandleMenuAction(Widget * a_widget);
 
+	static const float sc_gameTimeScaleFast;		// Value of game time scale in fast mode
+	static const float sc_gameTimeScaleSlow;		// Value of game time scale in slow mode
 	static const float sc_cursorSize;				// Size of debug mouse cursor
 	static Vector2 sc_vectorCursor[4];				// Debug menu does not have textures so it draws mouse cursors by vectors
 	static const int sc_numScriptDebugWidgets = 8;	// Number of debug widgets the script system owns
@@ -160,6 +166,7 @@ private:
 
 	bool m_enabled;									///< Is the menu being shown
 	bool m_handledCommand;							///< In the case that we are responding both to a global and a gui command
+	float m_gameTimeScale;							///< How fast the game is running, 1.0 means real time
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
 	EditType::Enum m_editType;						///< What type of object we are editing 

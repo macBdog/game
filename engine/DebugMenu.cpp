@@ -15,8 +15,9 @@
 
 template<> DebugMenu * Singleton<DebugMenu>::s_instance = NULL;
 
-// Cursor definitions
-const float DebugMenu::sc_cursorSize = 0.075f;
+const float DebugMenu::sc_gameTimeScaleFast = 3.0f;		// Value of game time scale in fast mode
+const float DebugMenu::sc_gameTimeScaleSlow = 0.1f;		// Value of game time scale in slow mode
+const float DebugMenu::sc_cursorSize = 0.075f;			// Cursor definition
 Vector2 DebugMenu::sc_vectorCursor[4] = 
 { 
 	Vector2(0.0f, 0.0f),
@@ -28,6 +29,7 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 DebugMenu::DebugMenu()
 : m_enabled(false) 
 , m_handledCommand(false)
+, m_gameTimeScale(1.0f)
 , m_dirtyFlags()
 , m_lastMousePosRelative(0.0f)
 , m_editType(EditType::None)
@@ -181,8 +183,20 @@ bool DebugMenu::Startup()
 
 void DebugMenu::Update(float a_dt)
 {
-	// Handle editing actions tied to mouse move
 	InputManager & inMan = InputManager::Get();
+
+	// Handle variable time scale
+	ResetGameTimeScale();
+	if (inMan.IsKeyDepressed(SDLK_EQUALS))
+	{
+		m_gameTimeScale = sc_gameTimeScaleFast;
+	}
+	else if (inMan.IsKeyDepressed(SDLK_MINUS))
+	{
+		m_gameTimeScale = sc_gameTimeScaleSlow;
+	}
+
+	// Handle editing actions tied to mouse move
 	if (m_editType == EditType::Widget && m_widgetToEdit != NULL)
 	{
 		Vector2 mousePos = inMan.GetMousePosRelative();
@@ -820,10 +834,8 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 	{
 		if (m_enabled)
 		{
-			SDLKey lastKey = inMan.GetLastKey();
-
-
 			// Clear the log
+			SDLKey lastKey = inMan.GetLastKey();
 			if (lastKey == SDLK_BACKSPACE)
 			{
 				Log::Get().ClearRendering();

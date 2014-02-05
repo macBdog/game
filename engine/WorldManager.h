@@ -248,26 +248,7 @@ public:
 						if (GameFile::Property * shader = object->FindProperty("shader"))
 						{
 							// First try to find if the shader is already loaded
-							Shader * existingShader = RenderManager::Get().GetManagedShader(shader->GetString());
-							if (existingShader != NULL)
-							{
-								newGameObject->SetShader(existingShader);
-								RenderManager::Get().ManageShader(newGameObject);
-							}
-							// If not, create the shader
-							else if (Shader * pNewShader = new Shader(shader->GetString()))
-							{
-								if (RenderManager::InitShaderFromFile(*pNewShader))
-								{
-									newGameObject->SetShader(pNewShader);
-									RenderManager::Get().ManageShader(newGameObject);
-								}
-								else // Compile error will be reported in the log
-								{
-									delete pNewShader;
-									newGameObject->SetShader(NULL);
-								}
-							}
+							RenderManager::Get().ManageShader(newGameObject, shader->GetString());
 						}
 
 						// Add collision

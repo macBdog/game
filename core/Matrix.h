@@ -153,6 +153,12 @@ public:
 	{
 		return Vector(right.Length(), look.Length(), up.Length());
 	}
+	inline void RemoveScale()
+	{
+		right.Normalise();
+		look.Normalise();
+		up.Normalise();
+	}
 
 private:
 	

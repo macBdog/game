@@ -125,10 +125,11 @@ public:
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
 	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
+	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
+	inline void RemoveScale() { m_worldMat.RemoveScale(); }
 	void SetRot(const Vector & a_newRot);
 	void AddRot(const Vector & a_rot);
-	void SetScale(const Vector & a_newScale);
-
+	
 	//\brief Child object accessors
 	inline GameObject * GetChild() { return m_child; }
 	inline GameObject * GetNext() { return m_next; }
