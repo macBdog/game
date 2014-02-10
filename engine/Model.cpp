@@ -298,7 +298,7 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 			{
 				char tempMatName[StringUtils::s_maxCharsPerLine];
 				memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-				sscanf(line, "map_Kd %s", &tempMatName);
+				sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
 
 				m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 				file.close();

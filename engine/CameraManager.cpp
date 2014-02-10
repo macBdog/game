@@ -10,6 +10,21 @@ const float Camera::sc_defaultCameraRotSpeed = 0.01f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
 
+void CameraManager::SetPosition(const Vector & a_newPos)
+{
+	m_currentCamera->SetPos(a_newPos);
+}
+
+void CameraManager::SetRotation(const Vector & a_newRot)
+{
+	//m_currentCamera->SetRot(a_newRot);
+}
+
+void CameraManager::SetFOV(const float & a_newFov)
+{
+	//m_currentCamera->SetFOV(a_newFov)
+}
+
 void CameraManager::Update(float a_dt)
 {
 	m_currentCamera = &m_gameCamera;
@@ -21,13 +36,11 @@ void CameraManager::Update(float a_dt)
 		m_currentCamera = &m_debugCamera;
 	
 		// Create a view direction matrix
-		Matrix viewMat = Matrix::Identity();
+		Matrix viewMat = m_currentCamera->GetViewMatrix();
 		Vector camPos = m_currentCamera->GetPosition();
 		const float speed = m_currentCamera->GetTranslationSpeed();
 		const float rotSpeed = m_currentCamera->GetRotationSpeed();
-		viewMat = viewMat.Multiply(Matrix::GetRotateX(m_currentCamera->GetOrientation().GetY() * m_currentCamera->GetRotationSpeed()));
-		viewMat = viewMat.Multiply(Matrix::GetRotateZ(m_currentCamera->GetOrientation().GetX() * m_currentCamera->GetRotationSpeed()));
-
+		
 		// Don't change camera while there is a dialog up
 		if (!DebugMenu::Get().IsDebugMenuActive())
 		{
@@ -39,7 +52,6 @@ void CameraManager::Update(float a_dt)
 			if (inMan.IsKeyDepressed(SDLK_q)) {	camPos -= Vector(0.0f, 0.0f, speed * a_dt); }
 			if (inMan.IsKeyDepressed(SDLK_e)) { camPos += Vector(0.0f, 0.0f, speed * a_dt); }	
 		
-
 			m_currentCamera->SetPos(camPos);
 
 			// Set rotation based on mouse delta while hotkey pressed
@@ -55,7 +67,7 @@ void CameraManager::Update(float a_dt)
 				const float cameraMoveEpsilonSq = 0.05f;
 				if ((orientInput - curInput).LengthSquared() > cameraMoveEpsilonSq)
 				{
-					m_currentCamera->SetOrientationInput(curInput);
+					orientInput = curInput;
 				}
 				orient += (curInput - orientInput) * maxRot;
 				m_currentCamera->SetOrientation(orient);
@@ -69,6 +81,11 @@ void CameraManager::Update(float a_dt)
 
 void Camera::Update()
 {
+	// Refresh the view mat
+	m_viewMat = Matrix::Identity();
+	m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * m_rotationSpeed));
+	m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * m_rotationSpeed));
+
     // Create the matrix
 	m_mat = Matrix::Identity();
 	m_mat.SetPos(m_pos);

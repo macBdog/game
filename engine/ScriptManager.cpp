@@ -1,4 +1,5 @@
 #include "AnimationManager.h"
+#include "CameraManager.h"
 #include "DebugMenu.h"
 #include "InputManager.h"
 #include "LuaScript.h"
@@ -73,8 +74,10 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		// Register C++ functions made accessible to LUA
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
-		lua_register(m_globalLua, "DestroyGameObject", DestroyGameObject);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
+		lua_register(m_globalLua, "SetCameraPosition", SetCameraPosition);
+		lua_register(m_globalLua, "SetCameraRotation", SetCameraRotation);
+		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
@@ -343,6 +346,54 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, keyIsDown);
 	return 1; // One bool returned
+}
+
+int ScriptManager::SetCameraPosition(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		Vector newPos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		CameraManager::Get().SetPosition(newPos);	
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "SetCameraPosition", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetCameraRotation(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		Vector newPos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		CameraManager::Get().SetRotation(newPos);	
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "SetCameraRotation", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetCameraFOV(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		CameraManager::Get().SetFOV((float)lua_tonumber(a_luaState, 1));	
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "SetCameraFOV", "expects 3 number parameters.");
+	}
+	return 0;
 }
 
 int ScriptManager::GUIGetValue(lua_State * a_luaState)

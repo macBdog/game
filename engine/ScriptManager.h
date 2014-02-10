@@ -68,6 +68,9 @@ private:
 	static int GetFrameDelta(lua_State * a_luaState);
 	static int CreateGameObject(lua_State * a_luaState);
 	static int IsKeyDown(lua_State * a_luaState);
+	static int SetCameraPosition(lua_State * a_luaState);
+	static int SetCameraRotation(lua_State * a_luaState);
+	static int SetCameraFOV(lua_State * a_luaState);
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);

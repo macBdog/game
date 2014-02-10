@@ -29,17 +29,17 @@ public:
 	void Update();
 
 	//\ingroup Accessors
-	inline Matrix GetMatrix() { return m_mat; }
-	inline Matrix GetViewMatrix() { return m_viewMat; }
-	inline Vector GetInversePos() { return Vector(-m_pos.GetX(), -m_pos.GetY(), -m_pos.GetZ()); }
-	inline Vector GetPosition() { return m_pos; }
-	inline float GetRotationSpeed() { return m_rotationSpeed; }
-	inline float GetTranslationSpeed() { return m_translationSpeed; }
-	inline Vector2 GetOrientation() { return m_orientation; }
-	inline Vector2 GetOrientationInput() { return m_orientationInput; }
+	inline const Matrix & GetMatrix() const { return m_mat; }
+	inline const Matrix & GetViewMatrix() const { return m_viewMat; }
+	inline Vector GetInversePos() const { return Vector(-m_pos.GetX(), -m_pos.GetY(), -m_pos.GetZ()); }
+	inline Vector GetPosition() const { return m_pos; }
+	inline float GetRotationSpeed() const { return m_rotationSpeed; }
+	inline float GetTranslationSpeed() const { return m_translationSpeed; }
+	inline Vector2 GetOrientation() const { return m_orientation; }
+	inline Vector2 GetOrientationInput() const { return m_orientationInput; }
 
 	//\ingroup Mutators
-	inline void SetPos(const Vector & a_pos) { m_pos = a_pos; } 
+	inline void SetPos(const Vector & a_pos) { m_pos = a_pos; }
 	inline void SetOrientation(const Vector2 & a_orient) { m_orientation = a_orient; }
 	inline void SetOrientationInput(const Vector2 & a_input) { m_orientationInput = a_input; }
 
@@ -71,10 +71,15 @@ public:
 	void Shutdown() {};
 	void Update(float a_dt);
 
-	//\brief Accessor for rendering 
-	inline Matrix GetCameraMatrix() { return m_currentCamera->GetMatrix(); }
-	inline Matrix GetViewMatrix() { return m_currentCamera->GetViewMatrix(); }
-	inline Vector GetWorldPos() { return m_currentCamera->GetInversePos(); }
+	//\brief Accessors for rendering 
+	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetMatrix(); }
+	inline Matrix GetViewMatrix() const { return m_currentCamera->GetViewMatrix(); }
+	inline Vector GetWorldPos() const { return m_currentCamera->GetInversePos(); }
+
+	///\brief Mutators affecting the currently active camera
+	void SetPosition(const Vector & a_newPos);
+	void SetRotation(const Vector & a_newRot);
+	void SetFOV(const float & a_newFov);
 
 	void GetInverseMat(Matrix & a_mat_OUT);
 
