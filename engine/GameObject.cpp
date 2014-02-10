@@ -96,10 +96,9 @@ bool GameObject::Draw()
 	return false;
 }
 
-Vector GameObject::GetRot() const
+Quaternion GameObject::GetRot() const
 {
-	// TODO? Maybe not even required
-	return Vector::Zero();
+	return Quaternion(m_worldMat);
 }
 
 Vector GameObject::GetScale() const
@@ -112,6 +111,13 @@ void GameObject::SetRot(const Vector & a_rot)
 	const Vector oldPos = m_worldMat.GetPos();
 	Quaternion q(Vector(MathUtils::Deg2Rad(a_rot.GetX()), MathUtils::Deg2Rad(a_rot.GetY()), MathUtils::Deg2Rad(a_rot.GetZ())));
 	m_worldMat = q.GetRotationMatrix();
+	m_worldMat.SetPos(oldPos);
+}
+
+void GameObject::SetRot(const Quaternion & a_rot)
+{
+	const Vector oldPos = m_worldMat.GetPos();
+	m_worldMat = m_worldMat.Multiply(a_rot.GetRotationMatrix());
 	m_worldMat.SetPos(oldPos);
 }
 
@@ -198,14 +204,18 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 	if (a_parent != NULL)
 	{
 		// Get string versions of numeric values
-		char posBuf[StringUtils::s_maxCharsPerName];
-		m_worldMat.GetPos().GetString(posBuf);
-
+		char vecBuf[StringUtils::s_maxCharsPerName];
+		
 		// Output all mandatory properties
 		GameFile::Object * fileObject = outputFile->AddObject("gameObject", a_parent);
 		outputFile->AddProperty(fileObject, "name", m_name);
 		outputFile->AddProperty(fileObject, "template", m_template);
-		outputFile->AddProperty(fileObject, "pos", posBuf);
+
+		GetPos().GetString(vecBuf);
+		outputFile->AddProperty(fileObject, "pos", vecBuf);
+
+		GetRot().GetString(vecBuf);
+		outputFile->AddProperty(fileObject, "rot", vecBuf);
 
 		// And optional ones
 		if (m_shader != NULL)

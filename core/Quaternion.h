@@ -26,6 +26,16 @@ public:
 							z = a_axis.GetZ() * sinf(a_angle*0.5f);  }
 	Quaternion(const Vector & a_eulerAngles) { *this = FromEulerAngles(a_eulerAngles); }
 	Quaternion(const Vector & a_vec1, const Vector & a_vec2) { *this = FromAngles(a_vec1, a_vec2); }
+	Quaternion(const Matrix & a_mat)
+	{
+		const float m0 = a_mat.GetValue(0);
+		const float m11 = a_mat.GetValue(5);
+		const float m22 = a_mat.GetValue(10);
+		x = sqrt(MathUtils::GetMax(0.0f, 1.0f + m0 - m11 - m22)) * 0.5f;
+		y = sqrt(MathUtils::GetMax(0.0f, 1.0f - m0 + m11 - m22)) * 0.5f;
+		z = sqrt(MathUtils::GetMax(0.0f, 1.0f - m0 - m11 + m22)) * 0.5f;
+		w = sqrt(MathUtils::GetMax(0.0f, 1.0f + m0 + m11 + m22)) * 0.5f;
+	}
 
 	// Mutators
 	void Normalise() { const float magRecip = 1.0f / GetMagnitude(); w *= magRecip; x *= magRecip; y *= magRecip; z *= magRecip; }
@@ -89,6 +99,7 @@ public:
 
 	bool IsUnit() const { return abs(1.0f - ((w*w) + (x*x) + (y*y) + (z*z))) > EPSILON; }
 	inline void ApplyToMatrix(Matrix & a_mat) { a_mat = a_mat.Multiply(GetRotationMatrix()); }
+	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f, %f", x, y, z, w); }
 	inline Vector GetXYZ() const { return Vector(x, y, z); }
 	inline bool GetAxisAngle(Vector & a_axis_OUT, float & a_angle_OUT)
 	{

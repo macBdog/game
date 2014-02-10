@@ -224,21 +224,42 @@ void DebugMenu::Update(float a_dt)
 		if (!IsDebugMenuActive())
 		{
 			// Move object in all dimensions separately
-			Vector curPos = m_gameObjectToEdit->GetPos();
+			Vector curPos = m_gameObjectToEdit->GetPos();			
 			Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
 			if (inMan.IsKeyDepressed(SDLK_x))
 			{
-				m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
+				if (inMan.IsKeyDepressed(SDLK_LALT))
+				{
+					m_gameObjectToEdit->AddRot(Vector(amountToMove.GetX() * 16.0f, 0.0f, 0.0f));
+				}
+				else
+				{
+					m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
+				}
 				m_dirtyFlags.Set(DirtyFlag::Scene);
 			} 
 			else if (inMan.IsKeyDepressed(SDLK_y))
 			{
-				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
+				if (inMan.IsKeyDepressed(SDLK_LALT))
+				{
+					m_gameObjectToEdit->AddRot(Vector(0.0f, amountToMove.GetX() * 16.0f, 0.0f));
+				}
+				else
+				{
+					m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
+				}
 				m_dirtyFlags.Set(DirtyFlag::Scene);				
 			}
 			else if (inMan.IsKeyDepressed(SDLK_z))
 			{
-				m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
+				if (inMan.IsKeyDepressed(SDLK_LALT))
+				{
+					m_gameObjectToEdit->AddRot(Vector(0.0f, 0.0f, amountToMove.GetX() * 16.0f));
+				}
+				else
+				{
+					m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
+				}
 				m_dirtyFlags.Set(DirtyFlag::Scene);
 			}
 		}

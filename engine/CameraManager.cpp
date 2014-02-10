@@ -64,7 +64,7 @@ void CameraManager::Update(float a_dt)
 				Vector2 orientInput = m_currentCamera->GetOrientationInput();
 
 				// Cancel out mouse movement above an epsilon to prevent the camera jumping around
-				const float cameraMoveEpsilonSq = 0.05f;
+				const float cameraMoveEpsilonSq = 0.005f;
 				if ((orientInput - curInput).LengthSquared() > cameraMoveEpsilonSq)
 				{
 					orientInput = curInput;

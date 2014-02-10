@@ -649,10 +649,11 @@ int ScriptManager::GetGameObjectRotation(lua_State * a_luaState)
 	{
 		if (GameObject * gameObj = CheckGameObject(a_luaState))
 		{
-			Vector rot = gameObj->GetRot();
-			lua_pushnumber(a_luaState, rot.GetX());
-			lua_pushnumber(a_luaState, rot.GetY());
-			lua_pushnumber(a_luaState, rot.GetZ());
+			Quaternion rot = gameObj->GetRot();
+			Vector eulerRot = rot.GetXYZ();
+			lua_pushnumber(a_luaState, eulerRot.GetX());
+			lua_pushnumber(a_luaState, eulerRot.GetY());
+			lua_pushnumber(a_luaState, eulerRot.GetZ());
 			return 3;
 		}
 		else // Object not found, destroyed?

@@ -8,6 +8,7 @@
 #include "../core/Colour.h"
 #include "../core/LinkedList.h"
 #include "../core/Vector.h"
+#include "../core/Quaternion.h"
 
 #include "StringHash.h"
 #include "StringUtils.h"
@@ -86,6 +87,18 @@ public:
 				float f1, f2, f3 = 0.0f;
 				sscanf(StringUtils::TrimString(vecString), "%f,%f,%f", &f1, &f2, &f3);
 				return Vector(f1, f2, f3);
+			}
+			return Vector::Zero();
+		}
+
+		inline Quaternion GetQuaternion() const
+		{
+			const char * quatString = (const char *)m_data;
+			if (strstr(quatString, ","))
+			{
+				float f1, f2, f3, f4 = 0.0f;
+				sscanf(StringUtils::TrimString(quatString), "%f,%f,%f,%f", &f1, &f2, &f3, &f4);
+				return Quaternion(f1, f2, f3, f4);
 			}
 			return Vector::Zero();
 		}

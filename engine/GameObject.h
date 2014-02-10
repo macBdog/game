@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "../core/Matrix.h"
+#include "../core/Quaternion.h"
 
 #include "GameFile.h"
 #include "StringHash.h"
@@ -115,7 +116,7 @@ public:
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline int GetScriptReference() const { return m_scriptRef; }
 	inline PhysicsObject * GetPhysics() const { return m_physics; }
-	Vector GetRot() const;
+	Quaternion GetRot() const;
 	Vector GetScale() const;
 	
 	//\brief Resource mutators and accessors
@@ -128,6 +129,7 @@ public:
 	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
 	inline void RemoveScale() { m_worldMat.RemoveScale(); }
 	void SetRot(const Vector & a_newRot);
+	void SetRot(const Quaternion & a_rot);
 	void AddRot(const Vector & a_rot);
 	
 	//\brief Child object accessors

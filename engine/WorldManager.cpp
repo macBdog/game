@@ -255,8 +255,18 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 					{
 						// Override any template values
 						newObject->SetTemplate(prop->GetString());
-						newObject->SetName(childObj->FindProperty("name")->GetString());
-						newObject->SetPos(childObj->FindProperty("pos")->GetVector());
+						if (childObj->FindProperty("name"))
+						{
+							newObject->SetName(childObj->FindProperty("name")->GetString());
+						}
+						if (childObj->FindProperty("pos"))
+						{
+							newObject->SetPos(childObj->FindProperty("pos")->GetVector());
+						}
+						if (childObj->FindProperty("rot"))
+						{
+							newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
+						}
 					}
 				}
 				
