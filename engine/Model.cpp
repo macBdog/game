@@ -293,16 +293,45 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 				foundTargetMaterial = strstr(tempMatName, a_materialName) != NULL;
 				continue;
 			}
-			// Material name
-			else if (strstr(line, "map_Kd") && foundTargetMaterial)
+			else if (foundTargetMaterial)
 			{
-				char tempMatName[StringUtils::s_maxCharsPerLine];
-				memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-				sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+				float matX, matY, matZ = 0.0f;
 
-				m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
-				file.close();
-				return true;
+				// Diffuse map name
+				if (strstr(line, "map_Kd") )
+				{
+					char tempMatName[StringUtils::s_maxCharsPerLine];
+					memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+					sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+
+					m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
+					file.close();
+					return true;
+				}
+				// Ambient colour
+				if (strstr(line, "Ka"))
+				{
+					sscanf(line, "Ka %f %f %f", &matX, &matY, &matZ);
+					m_material.m_ambient.SetX(matX);
+					m_material.m_ambient.SetY(matY);
+					m_material.m_ambient.SetZ(matZ);
+				}
+				// Diffuse colour
+				else if (strstr(line, "Kd"))
+				{
+					sscanf(line, "Kd %f %f %f", &matX, &matY, &matZ);
+					m_material.m_diffuse.SetX(matX);
+					m_material.m_diffuse.SetY(matY);
+					m_material.m_diffuse.SetZ(matZ);
+				}
+				// Specular colour
+				else if (strstr(line, "Ks"))
+				{
+					sscanf(line, "Ks %f %f %f", &matX, &matY, &matZ);
+					m_material.m_specular.SetX(matX);
+					m_material.m_specular.SetY(matY);
+					m_material.m_specular.SetZ(matZ);
+				}
 			}
 		}
 

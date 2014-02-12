@@ -12,6 +12,16 @@ class Model
 {
 public:
 
+	struct Material
+	{
+		Material() : m_ambient(1.0f), m_diffuse(0.0), m_specular(0.0), m_emission(0.0), m_shininess(0.0f) { }
+		Vector m_ambient;
+		Vector m_diffuse;
+		Vector m_specular;
+		Vector m_emission;
+		Vector m_shininess;
+	};
+
 	// Assigned texture IDs start from 0
 	Model() 
 		: m_loaded(false)
@@ -51,6 +61,7 @@ public:
 
 	//\brief Accessors for texture data
 	inline Texture * GetDiffuseTexture() const { return m_diffuseTex; }
+	inline Material * GetMaterial() { return &m_material; }
 
 	static const unsigned int s_vertsPerTri = 3;	///< Seems silly to have a variable for the number of sides to a triangle but it's instructional when reading code that references it
 
@@ -62,6 +73,7 @@ private:
 	//\return true if the material was loaded successfully and a texture for the model was assigned
 	bool LoadMaterial(const char * a_materialFileName, const char * a_materialName);
 
+	Material m_material;					///< Material properties loaded from file
 	bool m_loaded;							///< If the model has been loaded correctly
 	bool m_displayListGenerated;			///< If the render manager has set the buffer Ids
 

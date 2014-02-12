@@ -210,6 +210,7 @@ private:
 		Model * m_model;
 		Matrix * m_mat;
 		Shader * m_shader;
+		Model::Material * m_material;
 		float m_lifeTime;
 	};
 

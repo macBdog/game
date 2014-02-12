@@ -231,7 +231,8 @@ bool RenderManager::Update(float a_dt)
 		{
 			bool curFragShaderReloaded = false;
 			bool curVertShaderReloaded = false;
-			FileManager::Timestamp curTimeStamp;
+			FileManager::Timestamp curTimeStampFrag;
+			FileManager::Timestamp curTimeStampVert;
 			ManagedShader * curManShader = next->GetData();
 			char fullShaderPath[StringUtils::s_maxCharsPerLine];
 			Shader * pShader = curManShader->m_shaderObject != NULL ? curManShader->m_shaderObject->GetShader() : curManShader->m_shaderScene->GetShader();
@@ -249,21 +250,21 @@ bool RenderManager::Update(float a_dt)
 			else
 			{
 				sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
-				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
-				if (curTimeStamp > curManShader->m_vertexTimeStamp)
+				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStampVert);
+				if (curTimeStampVert > curManShader->m_vertexTimeStamp)
 				{
 					curVertShaderReloaded = true;
-					curManShader->m_vertexTimeStamp = curTimeStamp;
+					curManShader->m_vertexTimeStamp = curTimeStampVert;
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
 
 				// Now check the pixel shader
 				sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
-				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStamp);
-				if (curTimeStamp > curManShader->m_fragmentTimeStamp)
+				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStampFrag);
+				if (curTimeStampFrag > curManShader->m_fragmentTimeStamp)
 				{
 					curFragShaderReloaded = true;
-					curManShader->m_fragmentTimeStamp = curTimeStamp;
+					curManShader->m_fragmentTimeStamp = curTimeStampFrag;
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
 				}
 
@@ -301,11 +302,11 @@ bool RenderManager::Update(float a_dt)
 										// Reset timestamps for shared shader resources
 										if (curFragShaderReloaded)
 										{
-											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStamp;
+											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStampFrag;
 										}
 										if (curVertShaderReloaded)
 										{
-											sharedShader->GetData()->m_vertexTimeStamp = curTimeStamp;
+											sharedShader->GetData()->m_vertexTimeStamp = curTimeStampVert;
 										}
 									}
 								}
@@ -320,11 +321,11 @@ bool RenderManager::Update(float a_dt)
 										// Reset timestamps for shared shader resources
 										if (curFragShaderReloaded)
 										{
-											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStamp;
+											sharedShader->GetData()->m_fragmentTimeStamp = curTimeStampFrag;
 										}
 										if (curVertShaderReloaded)
 										{
-											sharedShader->GetData()->m_vertexTimeStamp = curTimeStamp;
+											sharedShader->GetData()->m_vertexTimeStamp = curTimeStampVert;
 										}
 									}
 								}
@@ -409,11 +410,19 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		// Move left for left eye and leave the buffers full for the next render pass
 		Vector vrDist(-m_vrIpd*0.5f, 0.0f, 0.0f);
 		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
+
+		//glMultMatrixf(params.ViewAdjust);
+		//glMultMatrixf(params.Projection);
+
 		RenderScene(a_viewMatrix, true, false);
 
 		// Move right for the right eye
 		vrDist = Vector(m_vrIpd, 0.0f, 0.0f);
 		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
+
+		//glMultMatrixf(params.ViewAdjust);
+		//glMultMatrixf(params.Projection);
+
 		RenderScene(a_viewMatrix, false, true);
 	}
 	else // Render once
@@ -683,6 +692,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			}
 			glPushMatrix();
 			glMultMatrixf(rm->m_mat->GetValues());
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rm->m_model->GetMaterial()->m_ambient.GetValues());
+			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rm->m_model->GetMaterial()->m_diffuse.GetValues());
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, rm->m_model->GetMaterial()->m_specular.GetValues());
 			glCallList(rm->m_model->GetDisplayListId());
 			glPopMatrix();
 			++rm;
