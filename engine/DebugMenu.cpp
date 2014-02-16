@@ -98,7 +98,7 @@ bool DebugMenu::Startup()
 	m_btnChangeObjectRoot = CreateButton("Change Object", sc_colourRed, gui.GetDebugRoot());
 	m_btnChangeObjectModel = CreateButton("Model", sc_colourGreen, m_btnChangeObjectRoot);
 	m_btnChangeObjectName = CreateButton("Name", sc_colourOrange, m_btnChangeObjectRoot);
-	m_btnSaveObjectTemplate = CreateButton("Template", sc_colourPurple, m_btnChangeObjectRoot);
+	m_btnSaveObjectTemplate = CreateButton("Save Template", sc_colourPurple, m_btnChangeObjectRoot);
 	m_btnDeleteObject = CreateButton("Delete", sc_colourGrey, m_btnChangeObjectRoot);
 
 	// Create the resource selection dialog

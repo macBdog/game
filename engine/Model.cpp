@@ -17,6 +17,9 @@ bool Model::Load(const char *a_modelFilePath, LinearAllocator<Vector> & a_vertPo
 		return false;
 	}
 
+	// Set name
+	sprintf(m_name, "%s", StringUtils::ExtractFileNameFromPath(a_modelFilePath));
+
 	// Storage for model file reading progress
 	char line[StringUtils::s_maxCharsPerLine];
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);

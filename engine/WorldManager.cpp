@@ -321,27 +321,46 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
 			while (childGameObject != NULL)
 			{
+				const char * templateName = NULL;
 				GameFile::Object * childObj = childGameObject->GetData();
 				if (GameFile::Property * prop = childObj->FindProperty("template"))
 				{
-					// Create object from template values and add to the scene
-					if (GameObject * newObject = CreateObject<GameObject>(prop->GetString(), a_sceneToLoad_OUT))
-					{
-						// Override any template values
-						newObject->SetTemplate(prop->GetString());
-						if (childObj->FindProperty("name"))
-						{
-							newObject->SetName(childObj->FindProperty("name")->GetString());
-						}
-						if (childObj->FindProperty("pos"))
-						{
-							newObject->SetPos(childObj->FindProperty("pos")->GetVector());
-						}
-						if (childObj->FindProperty("rot"))
-						{
-							newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
-						}
-					}
+					templateName = prop->GetString();
+				}
+				
+				// Create object with optional template values and add to the scene
+				GameObject * newObject = CreateObject<GameObject>(templateName, a_sceneToLoad_OUT);
+
+				// Override any templated values
+				if (templateName != NULL)
+				{
+					newObject->SetTemplate(templateName);
+				}
+
+				if (childObj->FindProperty("name"))
+				{
+					newObject->SetName(childObj->FindProperty("name")->GetString());
+				}
+				if (childObj->FindProperty("pos"))
+				{
+					newObject->SetPos(childObj->FindProperty("pos")->GetVector());
+				}
+				if (childObj->FindProperty("rot"))
+				{
+					newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
+				}
+				if (childObj->FindProperty("model"))
+				{
+					newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));
+				}
+				if (childObj->FindProperty("shader"))
+				{
+					RenderManager::Get().ManageShader(newObject, childObj->FindProperty("shader")->GetString());
+				}
+				else if (a_sceneToLoad_OUT->HasLights())
+				{
+					// Set default shader
+					newObject->SetShader(RenderManager::Get().GetLightingShader());		
 				}
 				
 				childGameObject = childGameObject->GetNext();

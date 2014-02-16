@@ -38,7 +38,7 @@ public:
 		, m_normals(NULL)
 		, m_uvs(NULL)
 		, m_numFaces(0) 
-		, m_displayListId(0) {}
+		, m_displayListId(0) { m_name[0] = '\0'; }
 
 	~Model() { if (m_loaded) { Unload(); } }
 
@@ -53,6 +53,7 @@ public:
 	inline bool IsLoaded() { return m_loaded; }
 
 	//\brief Accessors for the model's data
+	inline const char * GetName() const { return m_name; }
 	inline unsigned int GetNumFaces() const { return m_numFaces; }
 	inline unsigned int GetNumVertices() const { return m_numFaces * s_vertsPerTri; }
 	inline Vector * GetVertices() const { return m_verts; }
@@ -78,20 +79,21 @@ private:
 	//\return true if the material was loaded successfully and a texture for the model was assigned
 	bool LoadMaterial(const char * a_materialFileName, const char * a_materialName);
 
-	Material m_material;					///< Material properties loaded from file
-	bool m_loaded;							///< If the model has been loaded correctly
-	bool m_displayListGenerated;			///< If the render manager has set the buffer Ids
+	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the model as referenced by the game
+	Material m_material;							///< Material properties loaded from file
+	bool m_loaded;									///< If the model has been loaded correctly
+	bool m_displayListGenerated;					///< If the render manager has set the buffer Ids
 
-	Texture * m_diffuseTex;					///< The texture used to draw the model
-	Texture * m_normalTex;					///< For drawing normal depth mapping
-	Texture * m_specularTex;				///< The shininess map
+	Texture * m_diffuseTex;							///< The texture used to draw the model
+	Texture * m_normalTex;							///< For drawing normal depth mapping
+	Texture * m_specularTex;						///< The shininess map
 
-	Vector * m_verts;						///< Storage for the verts of the model
-	Vector * m_normals;						///< Storage for the normals
-	TexCoord * m_uvs;						///< Storage for the tex coords
-	unsigned int m_numFaces;				///< All indexed by face
+	Vector * m_verts;								///< Storage for the verts of the model
+	Vector * m_normals;								///< Storage for the normals
+	TexCoord * m_uvs;								///< Storage for the tex coords
+	unsigned int m_numFaces;						///< All indexed by face
 
-	unsigned int m_displayListId;			///< Assigned by the render manager when added for rendering
+	unsigned int m_displayListId;					///< Assigned by the render manager when added for rendering
 };
 
 #endif /* _ENGINE_MODEL_H_ */

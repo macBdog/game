@@ -209,7 +209,13 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		// Output all mandatory properties
 		GameFile::Object * fileObject = outputFile->AddObject("gameObject", a_parent);
 		outputFile->AddProperty(fileObject, "name", m_name);
-		outputFile->AddProperty(fileObject, "template", m_template);
+
+		// Save template if set
+		bool templated = m_template[0] != '\0';
+		if (templated)
+		{
+			outputFile->AddProperty(fileObject, "template", m_template);
+		}
 
 		GetPos().GetString(vecBuf);
 		outputFile->AddProperty(fileObject, "pos", vecBuf);
@@ -218,13 +224,23 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		outputFile->AddProperty(fileObject, "rot", vecBuf);
 
 		// And optional ones
-		if (m_shader != NULL)
+		if (!templated)
 		{
-			outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
+			if (m_shader != NULL)
+			{
+				// Make sure the shader is not a default engine shader
+				RenderManager & rMan = RenderManager::Get();
+				if (m_shader != rMan.GetLightingShader() ||
+					m_shader != rMan.GetColourShader())
+				{
+					outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
+				}
+			}
+			if (m_model != NULL)
+			{
+				outputFile->AddProperty(fileObject, "model", m_model->GetName());
+			}
 		}
-
-		// TODO: No game objects are being written out yet which is why all the rest
-		//			of their optional properties are ommitted here.
 		
 		// Serialise any children of this child
 		GameObject * child = m_child;
