@@ -28,7 +28,7 @@ const char * lightingFragmentShader =
 "		vec3 Idiff = lightDiffuse * gl_FrontMaterial.diffuse.xyz * max(dot(lightN,L), 0.0); \n"
 "		Idiff = clamp(Idiff, 0.0, 1.0);      \n"
 " \n"
-"		vec3 Ispec = lightSpecular * gl_FrontMaterial.specular.xyz * pow(max(dot(R,E),0.0), 1.0 - (gl_FrontMaterial.shininess/512)); \n"
+"		vec3 Ispec = lightSpecular * gl_FrontMaterial.specular.xyz * pow(max(dot(R,E),0.0), 1.0 - (gl_FrontMaterial.shininess/1024)); \n"
 "		Ispec = clamp(Ispec, 0.0, 1.0);  \n"
 " \n"
 "		vec4 texFrag = texture2D(Texture0, OutTexCoord); \n"

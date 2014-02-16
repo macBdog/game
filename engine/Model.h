@@ -16,10 +16,10 @@ public:
 	{
 		Material() 
 			: m_ambient(1.0f)
-			, m_diffuse(0.5)
-			, m_specular(0.5)
-			, m_emission(0.0)
-			, m_shininess(256) { }
+			, m_diffuse(0.5f)
+			, m_specular(0.5f)
+			, m_emission(0.0f)
+			, m_shininess(512) { }
 		Vector m_ambient;
 		Vector m_diffuse;
 		Vector m_specular;

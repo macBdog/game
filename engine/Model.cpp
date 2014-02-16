@@ -337,7 +337,7 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 				{
 					float shininess = 0.0f;
 					sscanf(line, "Ns %f", &shininess);
-					m_material.m_shininess = int(shininess / 1024.0f);
+					m_material.m_shininess = (int)shininess;
 				}
 			}
 		}

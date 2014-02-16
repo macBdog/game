@@ -7,7 +7,7 @@ const char * lightingVertexShader =
 "varying vec3 lightN; \n"
 "void main(void)  \n"
 "{ \n"
-"	lightV = vec3(gl_ModelViewMatrix * gl_Vertex); \n"
+"	lightV = vec3(gl_Vertex); \n"
 " 	lightN = normalize(gl_NormalMatrix * gl_Normal); \n"
 " \n"
 "	gl_FrontColor = gl_Color;  \n"
