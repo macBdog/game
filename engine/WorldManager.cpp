@@ -191,7 +191,7 @@ void Scene::Serialise()
 	// Add lighting section
 	if (HasLights())
 	{
-		GameFile::Object * lightsObject = sceneFile->AddObject("lighting");
+		GameFile::Object * lightsObject = sceneFile->AddObject("lighting", sceneObject);
 		for (int i = 0; i < m_numLights; ++i)
 		{
 			char vecBuf[StringUtils::s_maxCharsPerName];
