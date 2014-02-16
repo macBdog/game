@@ -135,6 +135,8 @@
     <None Include="Shaders\colour.vsh.inc" />
     <None Include="Shaders\global.fsh.inc" />
     <None Include="Shaders\global.vsh.inc" />
+    <None Include="Shaders\lighting.fsh.inc" />
+    <None Include="Shaders\lighting.vsh.inc" />
     <None Include="Shaders\texture.fsh.inc" />
     <None Include="Shaders\texture.vsh.inc" />
     <None Include="Shaders\vr.fsh.inc" />

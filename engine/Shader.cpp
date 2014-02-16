@@ -2,6 +2,9 @@
 
 #include "Log.h"
 
+// Light data is written to shader in an array of floats
+float Shader::s_lightingData[Shader::s_maxLights * Shader::s_numLightParameters * Shader::s_numFloatsPerParameter];
+
 unsigned int Shader::Compile(GLuint type, const char * a_src)
 {
     GLint compiled;

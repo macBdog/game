@@ -14,12 +14,17 @@ public:
 
 	struct Material
 	{
-		Material() : m_ambient(1.0f), m_diffuse(0.0), m_specular(0.0), m_emission(0.0), m_shininess(0.0f) { }
+		Material() 
+			: m_ambient(1.0f)
+			, m_diffuse(0.5)
+			, m_specular(0.5)
+			, m_emission(0.0)
+			, m_shininess(256) { }
 		Vector m_ambient;
 		Vector m_diffuse;
 		Vector m_specular;
 		Vector m_emission;
-		Vector m_shininess;
+		int m_shininess;
 	};
 
 	// Assigned texture IDs start from 0

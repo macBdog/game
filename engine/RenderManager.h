@@ -48,7 +48,7 @@ class RenderManager : public Singleton<RenderManager>
 {
 public:
 
-	//\ No work done in the constructor, only Init
+	//\brief No work done in the constructor, only Init
 	RenderManager(float a_updateFreq = s_updateFreq) 
 					: m_renderTime(0.0f)
 					, m_lastRenderTime(0.0f)
@@ -58,6 +58,7 @@ public:
 					, m_vrIpd(s_vrIpd)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
+					, m_lightingShader(NULL)
 					, m_vrShader(NULL)
 					, m_frameBuffer(0)
 					, m_colourBuffer(0)
@@ -101,6 +102,9 @@ public:
 	inline float GetViewAspect() { return m_aspect; }
 	inline const char * GetShaderPath() { return m_shaderPath; }
 	inline bool GetVrSupport() { return m_vr; }
+	inline Shader * GetColourShader() { return m_colourShader; }
+	inline Shader * GetTextureShader() { return m_textureShader; }
+	inline Shader * GetLightingShader() { return m_lightingShader; }
 
 	//\brief Set up a display list for a font character so drawing only involves calling a list
 	//\param a_size is an arbitrary width to height to generate the list at
@@ -243,10 +247,10 @@ private:
 	void AddManagedShader(ManagedShader * a_newManShader);
 	Shader * GetShader(const char * a_shaderName);
 
+	static const int s_maxPrimitivesPerrenderLayer = 64 * 1024;		///< Flat storage amount for quads
+	static const int s_maxLines = 1600;								///< Storage amount for debug lines
 	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
-	static const unsigned int s_maxPrimitivesPerrenderLayer = 64 * 1024;	///< Flat storage amount for quads
-	static const unsigned int s_maxLines = 1600;					///< Storage amount for debug lines
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
@@ -272,12 +276,13 @@ private:
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
+	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified
 	Shader * m_vrShader;											///< Shader for vr optics correction
 
 	unsigned int m_viewWidth;										///< Cache of arguments passed to init
 	unsigned int m_viewHeight;										///< Cache of arguments passed to init
 	unsigned int m_bpp;												///< Cache of arguments passed to init
-	float		 m_aspect;											///< Calculated ratio of width to height
+	float m_aspect;													///< Calculated ratio of width to height
 	Colour m_clearColour;											///< Cache of arguments passed to init
 	RenderMode::Enum m_renderMode;									///< How the scene is to be rendered
 

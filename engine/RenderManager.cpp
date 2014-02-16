@@ -104,6 +104,8 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 	#include "Shaders\colour.fsh.inc"
 	#include "Shaders\texture.vsh.inc"
 	#include "Shaders\texture.fsh.inc"
+	#include "Shaders\lighting.vsh.inc"
+	#include "Shaders\lighting.fsh.inc"
 	GLenum extensionStartup = glewInit();
 	if (extensionStartup != GLEW_OK)
 	{
@@ -117,6 +119,10 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 	if (m_textureShader = new Shader("texture"))
 	{
 		m_textureShader->Init(textureVertexShader, textureFragmentShader);
+	}
+	if (m_lightingShader = new Shader("lighting"))
+	{
+		m_lightingShader->Init(lightingVertexShader, lightingFragmentShader);
 	}
 
 	// Cache off the shader path
@@ -142,7 +148,13 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 		}
 	}
 
-    return renderLayerAlloc && m_colourShader != NULL && m_textureShader != NULL && m_colourShader->IsCompiled() && m_textureShader->IsCompiled();
+    return renderLayerAlloc && 
+			m_colourShader != NULL && 
+			m_textureShader != NULL && 
+			m_lightingShader != NULL &&
+			m_colourShader->IsCompiled() && 
+			m_textureShader->IsCompiled() && 
+			m_lightingShader->IsCompiled();
 }
 
 bool RenderManager::Shutdown()
@@ -470,6 +482,17 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	Matrix identity;
 	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
 	
+	// Set the lights in the scene for the shader
+	Scene * curScene = WorldManager::Get().GetCurrentScene();
+	if (curScene->HasLights())
+	{
+		for (int i = 0; i < curScene->GetNumLights(); ++i)
+		{
+			const Shader::Light & light = curScene->GetLight(i);
+			shaderData.m_lights[i] = light;
+		}
+	}
+
 	// Use scissor to disable the inactive viewport for VR
 	if (m_vr)
 	{
@@ -695,6 +718,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rm->m_model->GetMaterial()->m_ambient.GetValues());
 			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rm->m_model->GetMaterial()->m_diffuse.GetValues());
 			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, rm->m_model->GetMaterial()->m_specular.GetValues());
+			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, rm->m_model->GetMaterial()->m_emission.GetValues());
+			glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, rm->m_model->GetMaterial()->m_shininess);
 			glCallList(rm->m_model->GetDisplayListId());
 			glPopMatrix();
 			++rm;

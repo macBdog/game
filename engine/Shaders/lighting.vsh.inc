@@ -1,0 +1,16 @@
+const char * lightingVertexShader = 
+"uniform float Time; \n" 
+"uniform mat4 ObjMat; \n"
+"varying vec2 OutTexCoord; \n"
+" \n"
+"varying vec3 lightV; \n"
+"varying vec3 lightN; \n"
+"void main(void)  \n"
+"{ \n"
+"	lightV = vec3(gl_ModelViewMatrix * gl_Vertex); \n"
+" 	lightN = normalize(gl_NormalMatrix * gl_Normal); \n"
+" \n"
+"	gl_FrontColor = gl_Color;  \n"
+"	OutTexCoord = gl_MultiTexCoord0.xy; \n"
+"	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; \n"
+"} \n";

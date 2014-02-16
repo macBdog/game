@@ -332,6 +332,13 @@ bool Model::LoadMaterial(const char * a_materialFileName, const char * a_materia
 					m_material.m_specular.SetY(matY);
 					m_material.m_specular.SetZ(matZ);
 				}
+				// Shininess value
+				else if (strstr(line, "Ns"))
+				{
+					float shininess = 0.0f;
+					sscanf(line, "Ns %f", &shininess);
+					m_material.m_shininess = int(shininess / 1024.0f);
+				}
 			}
 		}
 

@@ -42,7 +42,8 @@ public:
 		, m_state(SceneState::Unloaded) 
 		, m_beginLoaded(false)
 		, m_shader(NULL)
-		{ sprintf(m_name, "scene01"); }
+		, m_numLights(0)
+		{ sprintf(m_name, "defaultScene"); }
 
 	// Cleanup the of objects in the scene on destruction
 	~Scene();
@@ -50,6 +51,13 @@ public:
 	//\brief Adding and removing objects from the scene
 	void AddObject(GameObject * a_newObject);
 	bool RemoveObject(unsigned int a_objectId);
+
+	//\brief Adding lights to the scene
+	//\return false if there are already the maximum number of lights in the scene
+	bool AddLight(const char * a_name, const Vector & a_pos, const Vector & a_dir, float a_ambient, float a_diffuse, float a_specular);
+	inline const Shader::Light & GetLight(int a_lightId) { return m_lights[a_lightId]; }
+	inline int GetNumLights() { return m_numLights; }
+	inline bool HasLights() { return m_numLights > 0; }
 
 	//\brief Get an object by it's ID
 	//\param a_objectId is the ID of the object to get
@@ -107,12 +115,14 @@ private:
 	//\return true if resources were submitted without issue
 	bool Draw();
 
-	SceneObjects m_objects;							///< All the objects in the current scene
-	char m_name[StringUtils::s_maxCharsPerName];	///< Scene name for serialization
-	unsigned int m_numObjects;						///< How many objects are in the default scene
-	SceneState::Enum m_state;						///< What state the scene is in
-	bool m_beginLoaded;								///< If the scene should be loaded and rendering on startup
-	Shader * m_shader;								///< Shader for the whole scene
+	SceneObjects m_objects;											///< All the objects in the current scene
+	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
+	Shader::Light m_lights[Shader::s_maxLights];					///< The lights in the scene
+	unsigned int m_numObjects;										///< How many objects are in the default scene
+	SceneState::Enum m_state;										///< What state the scene is in
+	bool m_beginLoaded;												///< If the scene should be loaded and rendering on startup
+	Shader * m_shader;												///< Shader for the whole scene
+	int m_numLights;												///< The number of lights in the scene
 };
 
 //\brief WorldManager handles object and scene management.
@@ -164,7 +174,7 @@ public:
 			return NULL;
 		}
 
-		// TODO Please allocate a heap for game objects
+		// TODO Please allocate a heap for game object memory
 
 		// Template paths are either fully qualified or relative to the config template dir
 		ModelManager & modelMan = ModelManager::Get();
@@ -245,10 +255,16 @@ public:
 							newGameObject->SetClipSize(clipSize->GetVector());
 						}
 						// Shader 
+						RenderManager & rMan = RenderManager::Get();
 						if (GameFile::Property * shader = object->FindProperty("shader"))
 						{
 							// First try to find if the shader is already loaded
-							RenderManager::Get().ManageShader(newGameObject, shader->GetString());
+							rMan.ManageShader(newGameObject, shader->GetString());
+						}
+						else if (sceneToAddObjectTo->HasLights())
+						{
+							// Otherwise use lighting if the scene has been specified with lights
+							newGameObject->SetShader(rMan.GetLightingShader());
 						}
 
 						// Add collision

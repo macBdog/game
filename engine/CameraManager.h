@@ -64,7 +64,7 @@ public:
 
 	//\brief Contruct a valid camera at the origin look down the Y axis
 	CameraManager() 
-		: m_currentCamera(NULL) {}
+		: m_currentCamera(&m_gameCamera) {}
 
 	//\brief Stubbed out for loading cameras for each scene
 	void Startup() {};

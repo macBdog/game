@@ -63,6 +63,23 @@ bool Scene::RemoveObject(unsigned int a_objectId)
 	return false;
 }
 
+bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Vector & a_dir, float a_ambient, float a_diffuse, float a_specular)
+{
+	if (m_numLights < Shader::s_maxLights)
+	{
+		sprintf(m_lights[m_numLights].m_name, "%s", a_name);
+		m_lights[m_numLights].m_enabled = true;
+		m_lights[m_numLights].m_pos = a_pos;
+		m_lights[m_numLights].m_dir = a_dir;
+		m_lights[m_numLights].m_ambient = a_ambient;
+		m_lights[m_numLights].m_diffuse = a_diffuse;
+		m_lights[m_numLights].m_specular = a_specular;
+		m_numLights++;
+		return true;
+	}
+	return false;
+}
+
 GameObject * Scene::GetSceneObject(unsigned int a_objectId)
 {
 	// Iterate through all objects in the scene
@@ -170,6 +187,23 @@ void Scene::Serialise()
 	GameFile::Object * sceneObject = sceneFile->AddObject("scene");
 	sceneFile->AddProperty(sceneObject, "name", m_name);
 	sceneFile->AddProperty(sceneObject, "beginLoaded", StringUtils::BoolToString(m_beginLoaded));
+
+	// Add lighting section
+	if (HasLights())
+	{
+		GameFile::Object * lightsObject = sceneFile->AddObject("lighting");
+		for (int i = 0; i < m_numLights; ++i)
+		{
+			char vecBuf[StringUtils::s_maxCharsPerName];
+			GameFile::Object * curLightObj = sceneFile->AddObject("light", lightsObject);
+			sceneFile->AddProperty(curLightObj, "name", m_lights[i].m_name);
+			m_lights[i].m_pos.GetString(vecBuf);		sceneFile->AddProperty(curLightObj, "pos", vecBuf);
+			m_lights[i].m_dir.GetString(vecBuf);		sceneFile->AddProperty(curLightObj, "dir", vecBuf);
+			m_lights[i].m_ambient.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "ambient", vecBuf);
+			m_lights[i].m_diffuse.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "diffuse", vecBuf);
+			m_lights[i].m_specular.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "specular", vecBuf);
+		}
+	}
 	
 	// Add each object in the scene
 	SceneObject * curObject = m_objects.GetHead();
@@ -235,6 +269,46 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 					if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
 					{
 						RenderManager::Get().ManageShader(a_sceneToLoad_OUT, shaderProp->GetString());
+					}
+				}
+				// Support for up to four lights per scene
+				GameFile::Object * lightingObj = sceneObj->FindObject("lighting");
+				if (lightingObj)
+				{
+					int numLights = 0;
+					LinkedListNode<GameFile::Object> * nextLight = lightingObj->GetChildren();
+					while (nextLight != NULL)
+					{
+						// Check there aren't more lights than we support
+						if (numLights >= Shader::s_maxLights)
+						{
+							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", a_scenePath, Shader::s_maxLights);
+							propsOk = false;
+							break;
+						}
+						GameFile::Object * light = nextLight->GetData();
+						GameFile::Property * lName = light->FindProperty("name");
+						GameFile::Property * lPos = light->FindProperty("pos");
+						GameFile::Property * lDir = light->FindProperty("dir");
+						GameFile::Property * lAmbient = light->FindProperty("ambient");
+						GameFile::Property * lDiffuse = light->FindProperty("diffuse");
+						GameFile::Property * lSpecular = light->FindProperty("specular");
+						if (lName && lPos && lDir && lAmbient && lDiffuse && lSpecular)
+						{
+							a_sceneToLoad_OUT->AddLight(lName->GetString(), 
+														lPos->GetVector(),
+														lDir->GetVector(),
+														lAmbient->GetFloat(),
+														lDiffuse->GetFloat(),
+														lSpecular->GetFloat());
+							numLights++;
+						}
+						else
+						{
+							Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.");
+							propsOk = false;
+						}
+						nextLight = nextLight->GetNext();
 					}
 				}
 			}

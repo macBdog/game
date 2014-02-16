@@ -15,13 +15,40 @@ class Shader
 {
 public:
 
+	static const int s_maxLights = 4; ///< Maximum amount of light data passed to lighting shaders
+
+	//\brief Lighting data passed between the game config files and the standard lighting shader
+	struct Light
+	{
+		Light() 
+			: m_enabled(false)
+			, m_pos(0.0f)
+			, m_dir(0.0f)
+			, m_ambient(0.0f)
+			, m_diffuse(0.0f)
+			, m_specular(0.0f) 
+			{ 
+				m_name[0] = '\0'; 
+			}
+		bool m_enabled;									///< If the light is currently on
+		char m_name[StringUtils::s_maxCharsPerName];	///< Name of the light is used for attaching lights to objects
+		Vector m_pos;									///< World position of the light
+		Vector m_dir;									///< Direction the light is facing, zero means its an omni light
+		Vector m_ambient;								///< Ambient light colour is an aproximation of all reflected light
+		Vector m_diffuse;								///< Colour of light scattered equally off a lit surface
+		Vector m_specular;								///< Colour of light reflected in one direction off a lit surface
+	};
+
 	//\brief Useful collection of uniform name, location and value data
+	template <typename TDataType>
 	struct Uniform
 	{
 		Uniform()
 			: m_output(false)
 			, m_id(0)
-			, m_floatValue(0.0f) { m_name[0] = '\0'; }
+		{
+			m_name[0] = '\0';
+		}
 
 		// Initialise values from graphics API on construction
 		bool Init(GLuint a_sourceShader, const char * a_name, bool a_output = false)
@@ -38,11 +65,7 @@ public:
 		bool m_output;									///< If the uniform is for input or output
 		int m_id;										///< Identifier for the uniform
 		char m_name[StringUtils::s_maxCharsPerName];	///< Name of the variable referenced in the shader
-		union											///< The value to be passed or received
-		{
-			float m_floatValue;							///< Bit dangerous as sizeof(float) may not equal sizeof(int)
-			int m_intValue;
-		};
+		TDataType m_data;								///< Data that is referenced by name
 	};
 
 	//\brief Struct to collect a standard set of data passed to and from shaders
@@ -59,7 +82,8 @@ public:
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight) 
-						, m_mat(a_mat) { }
+						, m_mat(a_mat)
+						{ }
 
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_lifeTime;				///< How much time in seconds has passed since the object using the shader was initialised
@@ -67,6 +91,7 @@ public:
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
 		Matrix * m_mat;					///< Pointer to matrix containing game object position
+		Light m_lights[s_maxLights];	///< Support for multiple lights in the scene
 	};
 
 	//\brief Shaders will compile and link from source upon creation
@@ -111,6 +136,7 @@ public:
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");
 			m_objectMatrix.Init(m_shader, "ObjMat");
+			m_lights.Init(m_shader, "Lights");
 			return true;
 		}
 
@@ -125,7 +151,33 @@ public:
 	//\brief Bind the shader and setup the uniforms
 	inline void UseShader() { glUseProgram(m_shader); glActiveTexture(GL_TEXTURE0); }
 	inline void UseShader(const UniformData & a_data) 
-	{ 
+	{
+		// Write the lighting data into the static memory location for the shader to reference
+		int lightValCount = 0;
+		for (int i = 0; i < s_maxLights; ++i)
+		{
+			if (a_data.m_lights[i].m_enabled)
+			{
+				// Position first
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetX();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetY();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetZ();
+				// TODO Support for light direction
+				// Ambient
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetX();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetY();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetZ();
+				// Diffuse
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetX();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetY();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetZ();
+				//Specular
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetX();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetY();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetZ();
+			}
+		}
+
 		glUseProgram(m_shader);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(m_texture.m_id, 0);
@@ -134,6 +186,7 @@ public:
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
+		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightParameters * s_numFloatsPerParameter, &s_lightingData[0]); 
 		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_FALSE, a_data.m_mat->GetValues());
 	}
 
@@ -145,6 +198,13 @@ public:
 
 private:
 
+	// Lighting parameters are written to shader as an array of floats
+	static const int s_numLightParameters = 4;
+	static const int s_numFloatsPerParameter = 3;
+
+	//\brief Static data to write light parameter floats into
+	static float s_lightingData[s_maxLights * s_numLightParameters * s_numFloatsPerParameter];
+
 	//\brief Compile the shader given the source code
     unsigned int Compile(GLuint type, const char * a_src);
 	
@@ -153,13 +213,14 @@ private:
 	GLuint m_fragmentShader;						///< Pixel shader
 	GLuint m_shader;								///< Linked program
 
-	Uniform m_texture;								///< Standard set of uniforms follow
-	Uniform m_time;
-	Uniform m_lifeTime;
-	Uniform m_frameTime;
-	Uniform m_viewWidth;
-	Uniform m_viewHeight;
-	Uniform m_objectMatrix;
+	Uniform<int> m_texture;							///< Standard set of uniforms follow
+	Uniform<float> m_time;
+	Uniform<float> m_lifeTime;
+	Uniform<float> m_frameTime;
+	Uniform<float> m_viewWidth;
+	Uniform<float> m_viewHeight;
+	Uniform<Matrix> m_objectMatrix;
+	Uniform<Light> m_lights;
 };
 
 #endif // _ENGINE_RENDER_MANAGER
