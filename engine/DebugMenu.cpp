@@ -630,7 +630,16 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 				// Editing the template of an object
 				if (m_gameObjectToEdit != NULL)
 				{
-					m_gameObjectToEdit->SetTemplate(m_textInputField->GetText());
+					char templateString[StringUtils::s_maxCharsPerName];
+					if (strstr(m_textInputField->GetText(), ".tmp"))
+					{
+						sprintf(templateString, "%s", m_textInputField->GetText());
+					}
+					else
+					{
+						sprintf(templateString, "%s.tmp", m_textInputField->GetText());
+					}
+					m_gameObjectToEdit->SetTemplate(templateString);
 					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
 			}

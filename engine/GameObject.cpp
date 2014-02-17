@@ -6,10 +6,20 @@
 #include "FontManager.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
+#include "WorldManager.h"
 
 #include "GameObject.h"
 
 using namespace std;	//< For fstream operations
+
+// String literals for the clip types
+const char * GameObject::s_clipTypeStrings[ClipType::Count] = 
+{
+	"none",
+	"axisbox",
+	"sphere",
+	"box"
+};
 
 bool GameObject::Update(float a_dt)
 {
@@ -215,6 +225,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		if (templated)
 		{
 			outputFile->AddProperty(fileObject, "template", m_template);
+			SerialiseTemplate();
 		}
 
 		GetPos().GetString(vecBuf);
@@ -229,9 +240,8 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			if (m_shader != NULL)
 			{
 				// Make sure the shader is not a default engine shader
-				RenderManager & rMan = RenderManager::Get();
-				if (m_shader != rMan.GetLightingShader() ||
-					m_shader != rMan.GetColourShader())
+				if (m_shader != RenderManager::Get().GetLightingShader() &&
+					m_shader != RenderManager::Get().GetColourShader())
 				{
 					outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
 				}
@@ -250,6 +260,41 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			child = child->GetChild();
 		}
 	}
+}
+
+void GameObject::SerialiseTemplate()
+{
+	GameFile * templateFile = new GameFile();
+	GameFile::Object * templateObj = templateFile->AddObject("gameObject");
+	if (m_model != NULL)
+	{
+		templateFile->AddProperty(templateObj, "model", m_model->GetName());
+	}
+	if (m_clipType != ClipType::None)
+	{
+
+		templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[m_clipType]);
+		char vecBuf[StringUtils::s_maxCharsPerName];
+		m_clipVolumeSize.GetString(vecBuf);
+		templateFile->AddProperty(templateObj, "clipsSize", vecBuf);
+	}
+	if (!m_clipGroup.IsEmpty())
+	{
+		templateFile->AddProperty(templateObj, "clipGroup", m_clipGroup.GetCString());
+	}
+	if (m_shader != NULL)
+	{
+		if (m_shader != RenderManager::Get().GetLightingShader() &&
+			m_shader != RenderManager::Get().GetColourShader())
+		{
+			templateFile->AddProperty(templateObj, "shader", m_shader->GetName());
+		}
+	}
+
+	// Check the template exists, if not create it
+	char templatePath[StringUtils::s_maxCharsPerLine];
+	sprintf(templatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+	templateFile->Write(templatePath);
 }
 
 void GameObject::Destroy() 

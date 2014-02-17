@@ -213,11 +213,6 @@ public:
 					{	
 						bool validObject = true;
 						
-						// Name
-						if (GameFile::Property * name = object->FindProperty("name"))
-						{
-							newGameObject->SetName(name->GetString());
-						}
 						// Model file
 						if (GameFile::Property * model = object->FindProperty("model"))
 						{
@@ -234,12 +229,12 @@ public:
 						bool hasCollision = false;
 						if (GameFile::Property * clipType = object->FindProperty("clipType"))
 						{
-							if (strstr(clipType->GetString(), "sphere") != NULL)
+							if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
 							{
 								hasCollision = true;
 								newGameObject->SetClipType(ClipType::Sphere);
 							}
-							else if (strstr(clipType->GetString(), "box") != NULL)
+							else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
 							{
 								hasCollision = true;
 								newGameObject->SetClipType(ClipType::Box);

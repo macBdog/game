@@ -35,6 +35,7 @@ public:
 	//\return pointer to the head of the cstring
 	inline const char * GetCString() { return m_cString; }
 	inline unsigned int GetHash() { return m_hash; }
+	inline bool IsEmpty() { return m_hash == 0; }
 
 	//\brief The most useful part of the string hash is the comparison
 	bool operator == (const StringHash & a_compare) const { return m_hash == a_compare.m_hash; }

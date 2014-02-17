@@ -160,6 +160,9 @@ public:
 	//\param a_outputFile is a gamefile object that will be appended
 	//\param a_parent is an object in the output file to add this object's properties to
 	void Serialise(GameFile * a_outputFile, GameFile::Object * a_parent);
+	void SerialiseTemplate();
+
+	static const char * s_clipTypeStrings[ClipType::Count];	///< String literals for the clip types
 
 private:
 
