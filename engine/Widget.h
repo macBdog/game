@@ -45,27 +45,36 @@ public:
 
 	struct Alignment
 	{
-		Alignment() : m_x(AlignX::Left), m_y(AlignY::Top) {}
+		Alignment() : m_x(AlignX::Middle), m_y(AlignY::Centre) { }
+		Alignment(AlignX::Enum a_x, AlignY::Enum a_y) : m_x(a_x), m_y(a_y) { }
 		
 		//\brief String equivalents for  alignment constants written in gui files
 		inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
 		inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
-		inline void SetFromStringX(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[m_x]) == 0) { m_x = (AlignX::Enum)i; break; } } }
-		inline void SetFromStringY(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[m_y]) == 0) { m_y = (AlignY::Enum)i; break; } } }
+		inline void SetXFromString(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[i]) == 0) { m_x = (AlignX::Enum)i; break; } } }
+		inline void SetYFromString(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[i]) == 0) { m_y = (AlignY::Enum)i; break; } } }
 		
 		AlignX::Enum m_x;		///< Is widget position relative to left, middle or right
 		AlignY::Enum m_y;		///< Is widget position relative to top, centre or bottom
 	};
 
-	//\brief Two float ctor for convenience, default to top left
-	inline WidgetVector() : m_align() { x = 0.0f; y = 0.0f; }
+	//\brief Two float ctor for convenience, default to top left aligning to bottom right
+	inline WidgetVector() 
+		: m_alignAnchor(AlignX::Middle, AlignY::Centre) 
+		, m_align(AlignX::Middle, AlignY::Centre)
+		{ 
+			x = 0.0f; y = 0.0f; 
+		}
 	inline WidgetVector(float a_x, float a_y) : m_align() { x = a_x; y = a_y; }
 
 	//\brief Mutators
 	inline Vector2 GetVector() { return Vector2(x, y); }
 	inline Alignment GetAlignment() const { return m_align; }
+	inline Alignment GetAlignmentAnchor() const { return m_alignAnchor; }
 	inline void SetAlignment(const Alignment & a_align) { m_align.m_x = a_align.m_x; m_align.m_y = a_align.m_y; }
 	inline void SetAlignment(AlignX::Enum a_x, AlignY::Enum a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
+	inline void SetAlignmentAnchor(const Alignment & a_align) { m_alignAnchor.m_x = a_align.m_x; m_alignAnchor.m_y = a_align.m_y; }
+	inline void SetAlignmentAnchor(AlignX::Enum a_x, AlignY::Enum a_y) { m_alignAnchor.m_x = a_x; m_alignAnchor.m_y = a_y; }
 
 	// Operator overloads are not inherited by default
 	void operator = (const Vector2 & a_val) { x = a_val.GetX(); y = a_val.GetY(); }
@@ -83,8 +92,8 @@ public:
 
 private:
 
-	Alignment m_alignAnchor;				///< Where the widget is relative to it's parent
-	Alignment m_align;						///< How the widget is aligned
+	Alignment m_alignAnchor;				///< Which part of the widget is aligned
+	Alignment m_align;						///< How the widget is aligned relative to another widget
 };
 
 //\brief Represents states of element selection
@@ -138,6 +147,8 @@ public:
 	//\brief Ctor nulls all pointers out for safety
 	Widget()
 		: m_pos(0.0f, 0.0f)
+		, m_size(0.0f, 0.0f)
+		, m_drawPos(0.0f, 0.0f)
 		, m_fontNameHash(0)
 		, m_fontSize(1.0f)
 		, m_selectFlags(0)
@@ -146,14 +157,14 @@ public:
 		, m_showTextCursor(false)
 		, m_active(true)
 		, m_texture(NULL)
-		, m_parent(NULL)
-		, m_next(NULL)
-		, m_firstChild(NULL)
+		, m_alignTo(NULL)
+		, m_children()
 		, m_debugRender(false)
 		, m_alwaysRender(false)
 		, m_selectedListItemId(SelectionFlags::None)
 	{
 		m_name[0] = '\0';
+		m_alignToName[0] = '\0';
 		m_script[0] = '\0';
 		m_text[0] = '\0';
 		m_filePath[0] = '\0';
@@ -184,6 +195,9 @@ public:
 		SelectionFlags::Enum m_selectFlags;
 	};
 		
+	typedef LinkedList<Widget> WidgetList;
+	typedef LinkedListNode<Widget> WidgetNode;
+
 	//\brief Base implementation will tint for selection
 	void Draw();
 
@@ -210,22 +224,22 @@ public:
 	//\brief Append a child widget pointer onto this widget creating a hierachy
 	//\param a_child is a pointer to the allocated widget to append
 	void AddChild(Widget * a_child);
-	void AddSibling(Widget * a_sibling);
-	void Orphan();
 
 	//\brief Property accessors to return the head of the sibling or child widgets
 	//\return The sibling or child widget or NULL if not set
-	inline Widget * GetNext() { return m_next; }
-	inline Widget * GetChild() { return m_firstChild; }
-	inline Widget * GetParent() { return m_parent; }
+	inline WidgetNode * GetChildren() { return m_children.GetHead(); }
 	Widget * Find(const char * a_name);
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
-	inline void SetOffset(Vector2 a_pctOffset) { m_pos = a_pctOffset; }
+	inline void SetOffset(const Vector2 & a_pctOffset) { m_pos = a_pctOffset; }
+	inline void SetDrawPos(const Vector2 & a_pos) { m_drawPos = a_pos; }
+	inline void SetPos(const WidgetVector & a_pos) { m_pos = a_pos; }
 	inline void SetAlignment(const WidgetVector::Alignment & a_align) { m_pos.SetAlignment(a_align); } 
-	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); } 
-	inline void SetSize(Vector2 a_pctSize) { m_size = a_pctSize; }
+	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); }
+	inline void SetAlignmentAnchor(const WidgetVector::Alignment & a_align) { m_pos.SetAlignmentAnchor(a_align); } 
+	inline void SetAlignmentAnchor(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignmentAnchor(a_alignX, a_alignY); }
+	inline void SetSize(Vector2 a_size) { m_size = a_size; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
@@ -238,13 +252,18 @@ public:
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
+	void SetAlignTo(Widget * a_alignWidget);
+	void SetAlignTo(const char * a_alignWidgetName);
+	void UpdateAlignTo();
 	
-	inline WidgetVector GetPos() { return m_pos; }
-	inline WidgetVector GetSize() { return m_size; }
-	inline const char * GetName() { return m_name; }
-	inline const char * GetScript() { return m_script; }
-	inline const char * GetText() { return m_text; }
-	inline const char * GetFilePath() { return m_filePath; }
+	inline WidgetVector GetPos() const { return m_pos; }
+	inline WidgetVector GetSize() const { return m_size; }
+	inline const char * GetName() const { return m_name; }
+	inline const char * GetScript() const { return m_script; }
+	inline const char * GetText() const { return m_text; }
+	inline const char * GetFilePath() const { return m_filePath; }
+	inline Widget * GetAlignTo() const { return m_alignTo; }
+	inline bool HasAlignTo() const { return m_alignTo != NULL || m_alignToName[0] != '\0'; }
 
 	//\brief Execute the callback if defined
 	void Activate();
@@ -276,29 +295,35 @@ public:
 
 private:
 
-	// Colours used for rolling over elements
+	// Colours used for rolling over elements in normal and game modes
 	static const Colour sc_rolloverColour;
 	static const Colour sc_selectedColour;
 	static const Colour sc_editRolloverColour;
 	static const Colour sc_editSelectedColour;
 
+	//\brief Work out the top left coordinate of widget according to it's align anchor and parent
+	//\param a_alignParent the widget to align the position to
+	//\return A vector2 with the coordinate in relative sapce (-1 to +1)
+	Vector2 GetPositionRelative(Widget * a_alignParent);
+
 	WidgetVector m_size;				///< How much of the parent container the element takes up
 	WidgetVector m_pos;					///< Where in the parent container the element resides
+	Vector2 m_drawPos;					///< The calculated screen position of this widget based on it's hierachy
 	Colour m_colour;					///< What the base colour of the widget is, will tint texture
 	bool m_active;						///< If the widget should be drawn and reactive
 	bool m_showTextCursor;				///< If the cursor should be shown on a text field
 	unsigned int m_fontNameHash;		///< Hash of the name of the font to render with
 	float m_fontSize;					///< How large to draw text on this widget 
 	Texture * m_texture;				///< What to draw
-	Widget * m_parent;					///< Who's ya daddy
-	Widget * m_next;					///< Conitiguous widgets are stored as a linked list
-	Widget * m_firstChild;				///< And each widget can have multiple children
+	Widget * m_alignTo;					///< If this widget's position depends on another
+	WidgetList m_children;				///< Each widget can have multiple children
 	unsigned int m_selectFlags;			///< Bit mask of kind of selection this widget supports
 	SelectionFlags::Enum m_selection;	///< The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
 	bool m_debugRender;					///< If the widget should be rendered using the debug renderLayer
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
+	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
 	char m_script[StringUtils::s_maxCharsPerName];			///< Script filename
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
 	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property

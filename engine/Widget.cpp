@@ -50,6 +50,15 @@ void Widget::Draw()
 	bool shouldDraw =  !(IsDebugWidget() && !DebugMenu::Get().IsDebugMenuEnabled());
 	if (m_active && (shouldDraw || m_alwaysRender))	// Is a debug widget and the debug menu is on or should we always draw it
 	{
+		// Derive position based on alignment to parent
+		Vector2 drawPos = m_pos.GetVector();
+		UpdateAlignTo();
+		if (m_alignTo != NULL)
+		{
+			drawPos = GetPositionRelative(m_alignTo);
+		}
+		m_drawPos = drawPos;
+
 		// Determine draw style from selection
 		Colour selectColour = m_colour;
 		RenderManager & rMan = RenderManager::Get();
@@ -59,14 +68,14 @@ void Widget::Draw()
 			case SelectionFlags::Rollover:		selectColour -= sc_rolloverColour;		break;
 			case SelectionFlags::Selected:		selectColour -= sc_selectedColour;		break;
 			
-			// Draw a selection box around a selected
+			// Draw a selection box around a selected widget
 			case SelectionFlags::EditRollover:	
 			case SelectionFlags::EditSelected:
 			{
 				selectColour -= sc_editSelectedColour;
 				const float extraSelectionSize = 0.05f;
 				const Vector2 selectSize = m_size + (m_size * extraSelectionSize);
-				Vector2 startVec = m_pos.GetVector();
+				Vector2 startVec = drawPos;
 				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
 				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
 				Vector2 endVec = Vector2(startVec.GetX() + selectSize.GetX(), startVec.GetY());  rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
@@ -81,7 +90,7 @@ void Widget::Draw()
 		// Draw the quad in various states of activation
 		if (m_texture != NULL)
 		{
-			rMan.AddQuad2D(renderLayer, m_pos.GetVector(), m_size.GetVector(), m_texture, TextureOrientation::Normal, selectColour);
+			rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), m_texture, TextureOrientation::Normal, selectColour);
 		}
 
 		// Draw fill colour for debug widgets
@@ -89,7 +98,7 @@ void Widget::Draw()
 		{
 			Colour fillColour = selectColour * 0.3f;
 			fillColour.SetA(0.95f);
-			rMan.AddQuad2D(renderLayer, m_pos.GetVector(), m_size.GetVector(), NULL, TextureOrientation::Normal, fillColour);
+			rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), NULL, TextureOrientation::Normal, fillColour);
 		}
 
 		// Draw widget bounds for editing mode or for debug widgets
@@ -97,7 +106,7 @@ void Widget::Draw()
 		{
 			Colour boxColour = selectColour;
 			boxColour.SetA(0.1f);
-			Vector2 startVec = m_pos.GetVector();
+			Vector2 startVec = drawPos;
 			Vector2 endVec = Vector2(startVec.GetX() + m_size.GetX(), startVec.GetY());
 			rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, boxColour);
 			
@@ -112,7 +121,7 @@ void Widget::Draw()
 		{
 			if (m_fontNameHash > 0)
 			{
-				FontManager::Get().DrawDebugString2D(m_name, m_pos.GetVector(), m_colour, renderLayer);
+				FontManager::Get().DrawDebugString2D(m_name, drawPos, m_colour, renderLayer);
 
 				// Some widgets also text like labels and buttons
 				if (m_text[0] != '\0')
@@ -129,7 +138,7 @@ void Widget::Draw()
 						{
 							sprintf(cursorText, "%s", m_text);
 						}
-						FontManager::Get().DrawDebugString2D(cursorText, Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize), m_colour, renderLayer);
+						FontManager::Get().DrawDebugString2D(cursorText, Vector2(drawPos.GetX() + fontDisplaySize, drawPos.GetY() - fontDisplaySize), m_colour, renderLayer);
 					}
 				}
 			}	
@@ -138,12 +147,12 @@ void Widget::Draw()
 		// Always display text for a widget
 		if (m_text[0] != '\0') 
 		{
-			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, m_pos, m_colour, renderLayer);
+			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, drawPos, m_colour, renderLayer);
 		}
 
 		// Draw any list items
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
-		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		Vector2 listDisplayPos = Vector2(drawPos.GetX() + fontDisplaySize, drawPos.GetY() - fontDisplaySize);
 		Vector2 itemDisplayPos(listDisplayPos);
 		unsigned int numItems = 0;
 		while(nextItem != NULL)
@@ -165,20 +174,12 @@ void Widget::Draw()
 		}
 	}
 
-	// Draw any sibling widgets
-	Widget * curWidget = GetNext();
-	while (curWidget != NULL)
-	{
-		curWidget->Draw();
-		curWidget = curWidget->GetNext();
-	}
-
 	// Draw any child widgets
-	curWidget = GetChild();
+	WidgetNode * curWidget = m_children.GetHead();
 	while (curWidget != NULL)
 	{
-		curWidget->Draw();
-		curWidget = curWidget->GetChild();
+		curWidget->GetData()->Draw();
+		curWidget = curWidget->GetNext();
 	}
 }
 
@@ -191,9 +192,16 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		return;
 	}
 
+	// Derive position based on alignment to parent
+	Vector2 drawPos = m_pos.GetVector();
+	if (m_alignTo != NULL)
+	{
+		drawPos = GetPositionRelative(m_alignTo);
+	}
+
 	// Check if the mouse position is inside the widget
-	if (a_pos.GetX() >= m_pos.GetX() && a_pos.GetX() <= m_pos.GetX() + m_size.GetX() && 
-		a_pos.GetY() <= m_pos.GetY() && a_pos.GetY() >= m_pos.GetY() - m_size.GetY())
+	if (a_pos.GetX() >= drawPos.GetX() && a_pos.GetX() <= drawPos.GetX() + m_size.GetX() && 
+		a_pos.GetY() <= drawPos.GetY() && a_pos.GetY() >= drawPos.GetY() - m_size.GetY())
 	{
 		// Check selection flags
 		if ((m_selectFlags & SelectionFlags::Rollover) > 0)
@@ -226,7 +234,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 	{
 		const float fontDisplaySize = 0.07f;
 		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
-		Vector2 listDisplayPos = Vector2(m_pos.GetX() + fontDisplaySize, m_pos.GetY() - fontDisplaySize);
+		Vector2 listDisplayPos = Vector2(drawPos.GetX() + fontDisplaySize, drawPos.GetY() - fontDisplaySize);
 		unsigned int numItems = 0;
 		while(nextItem != NULL)
 		{
@@ -244,20 +252,12 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		}
 	}
 
-	// Update selection on any sibling widgets
-	Widget * curWidget = GetNext();
+	// Update selection on any child widgets
+	WidgetNode * curWidget = m_children.GetHead();
 	while (curWidget != NULL)
 	{
-		curWidget->UpdateSelection(a_pos);
+		curWidget->GetData()->UpdateSelection(a_pos);
 		curWidget = curWidget->GetNext();
-	}
-
-	// Draw any child widgets
-	curWidget = GetChild();
-	while (curWidget != NULL)
-	{
-		curWidget->UpdateSelection(a_pos);
-		curWidget = curWidget->GetChild();
 	}
 }
 
@@ -287,16 +287,12 @@ bool Widget::DoActivation()
 		}
 	}
 	
-	// Activate only the next sibling widget
-	if (Widget * curWidget = GetNext())
-	{
-		activated &= curWidget->DoActivation();
-	}
-
 	// Activate any child widgets
-	if (Widget * curWidget = GetChild())
+	WidgetNode * curWidget = m_children.GetHead();
+	while (curWidget != NULL)
 	{
-		activated &= curWidget->DoActivation();
+		activated &= curWidget->GetData()->DoActivation();
+		curWidget = curWidget->GetNext();
 	}
 
 	return activated;
@@ -310,89 +306,9 @@ bool Widget::IsSelected(SelectionFlags::Enum a_selectMode)
 
 void Widget::AddChild(Widget * a_child)
 {
-	// I'm your daddy
-	a_child->m_parent = this;
-
-	// In the case of no preexisitng children
-	if (m_firstChild == NULL)
-	{
-		m_firstChild = a_child;
-	}
-	else // Otherwise append to the list of children
-	{
-		Widget * nextChild = m_firstChild;
-		while (nextChild != NULL)
-		{
-			// Check for the end of the list
-			if (nextChild->GetNext() == NULL)
-			{
-				nextChild->AddSibling(a_child);
-				return;
-			}
-			else
-			{
-				nextChild = nextChild->GetNext();
-			}
-		}
-	}
-}
-
-void Widget::AddSibling(Widget * a_sibling)
-{
-	// Your daddy is my daddy
-	a_sibling->m_parent = m_parent;
-
-	// In the case of no existing siblings
-	if (m_next == NULL)
-	{
-		m_next = a_sibling;
-	}
-	else
-	{
-		// Add to the head of the list (newest get drawn first)
-		Widget * nextChild = m_next;
-		while (nextChild != NULL)
-		{
-			// Check for the end of the list
-			if (nextChild->GetNext() == NULL)
-			{
-				nextChild->m_next = a_sibling;
-				return;
-			}
-			else
-			{
-				nextChild = nextChild->GetNext();
-			}
-		}
-	}
-}
-
-void Widget::Orphan()
-{
-	// Unlink from parents and siblings (disowned)
-	if (m_parent != NULL)
-	{
-		// If first child
-		if (m_parent->m_firstChild == this)
-		{
-			m_parent->m_firstChild = m_next;
-		}
-		else
-		{
-			Widget * sibling = m_parent->m_firstChild;
-			while (sibling != NULL)
-			{
-				if (sibling->m_next == this)
-				{
-					sibling->m_next = sibling->m_next->m_next;
-					return;
-				}
-				sibling = sibling->m_next;
-			}
-			// Couldn't find myself in the list of siblings, something is wrong
-			assert(false);
-		}
-	}
+	WidgetNode * newWidgetNode = new WidgetNode();
+	newWidgetNode->SetData(a_child);
+	m_children.Insert(newWidgetNode);
 }
 
 Widget * Widget::Find(const char * a_name)
@@ -402,29 +318,53 @@ Widget * Widget::Find(const char * a_name)
 	{
 		return this;
 	}
-	if (m_firstChild == NULL)
+
+	if (m_children.IsEmpty())
 	{
 		return NULL;
 	}
 
 	// Exhaustive search through child and siblings to find widget with name
 	Widget * foundWidget = NULL;
-	Widget * curWidget = m_firstChild;
+	WidgetNode * curWidget = m_children.GetHead();
 	while (curWidget != NULL && foundWidget == NULL)
 	{
-		if (strcmp(curWidget->GetName(), a_name) == 0)
+		if (strcmp(curWidget->GetData()->GetName(), a_name) == 0)
 		{
-			return curWidget;
+			return curWidget->GetData();
 		}
 		// Recurse into children's family to find the widget
-		if (curWidget->m_firstChild != NULL)
+		if (curWidget->GetData()->GetChildren() != NULL)
 		{
-			foundWidget = curWidget->Find(a_name);
+			foundWidget = curWidget->GetData()->Find(a_name);
 		}
 		// Keep searching the widget list
 		curWidget = curWidget->GetNext();
 	}
 	return foundWidget;
+}
+
+void Widget::SetAlignTo(Widget * a_alignWidget)
+{
+	m_alignTo = a_alignWidget;
+	strcpy(m_alignToName, a_alignWidget->GetName());
+}
+
+void Widget::SetAlignTo(const char * a_alignWidgetName)
+{
+	strcpy(m_alignToName, a_alignWidgetName);
+	UpdateAlignTo();
+}
+
+void Widget::UpdateAlignTo()
+{
+	// Lookup the align to widget if the name is set but the pointer isn't OR
+	// if the name and the pointer mismatch
+	if ( (m_alignTo == NULL && m_alignToName[0] != '\0') || 
+		 (m_alignTo != NULL && m_alignToName[0] != '\0' && strcmp(m_alignTo->GetName(), m_alignToName) != 0))
+	{
+		m_alignTo = Gui::Get().FindWidget(m_alignToName);
+	}
 }
 
 void Widget::Activate() 
@@ -481,6 +421,12 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		m_pos.GetAlignment().GetStringY(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "alignY: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
+		m_pos.GetAlignmentAnchor().GetStringX(outBuf);
+		menuStream << tabs << StringUtils::s_charTab << "alignAnchorX: "	<< outBuf	<< StringUtils::s_charLineEnd;
+
+		m_pos.GetAlignmentAnchor().GetStringY(outBuf);
+		menuStream << tabs << StringUtils::s_charTab << "alignAnchorY: "	<< outBuf	<< StringUtils::s_charLineEnd;
+
 		if (m_texture != NULL)
 		{
 			menuStream << tabs << StringUtils::s_charTab << "texture: " << m_texture->GetFileName() << StringUtils::s_charLineEnd;
@@ -488,16 +434,12 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 
 		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
 
-		// Serialise any siblings of this element at this indentation level
-		if (m_next != NULL)
-		{
-			m_next->Serialise(a_outputStream, a_indentCount);
-		}
-
 		// Serialise any children of this child
-		if (m_firstChild != NULL)
+		WidgetNode * curChild = m_children.GetHead();
+		while (curChild != NULL)
 		{
-			m_firstChild->Serialise(a_outputStream, ++a_indentCount);
+			curChild->GetData()->Serialise(a_outputStream, ++a_indentCount);
+			curChild = curChild->GetNext();
 		}
 	}
 	else if (strlen(m_filePath) > 0)
@@ -516,17 +458,13 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			{
 				menuOutput << StringUtils::s_charTab		<< "script: "	<< m_script << StringUtils::s_charLineEnd;
 			}
-			
-			// Write the siblings out
-			if (m_next != NULL)
-			{
-				m_next->Serialise(&menuOutput, 1);
-			}
 
-			// Write all children out
-			if (m_firstChild != NULL)
+			// Write out any children of this child
+			WidgetNode * curChild = m_children.GetHead();
+			while (curChild != NULL)
 			{
-				m_firstChild->Serialise(&menuOutput, 1);
+				curChild->GetData()->Serialise(&menuOutput, 1);
+				curChild = curChild->GetNext();
 			}
 
 			menuOutput << "}" << StringUtils::s_charLineEnd;
@@ -600,4 +538,44 @@ const char * Widget::GetListItem(unsigned int a_itemId)
 	}
 
 	return NULL;
+}
+
+Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
+{
+	Vector2 pos = a_alignParent->m_drawPos;
+	const float sizeX = m_size.GetX();
+	const float sizeY = m_size.GetY();
+	const float parentSizeX = a_alignParent->GetSize().GetX();
+	const float parentSizeY = a_alignParent->GetSize().GetY();
+
+	// Offset from parent X
+	switch (m_pos.GetAlignment().m_x)
+	{
+		case AlignX::Middle:	pos.SetX(pos.GetX() + parentSizeX * 0.5f);	break;
+		case AlignX::Right:		pos.SetX(pos.GetX() + parentSizeX);			break;
+		default: break;
+	}
+	// Offset from parent Y
+	switch (m_pos.GetAlignment().m_y)
+	{
+		case AlignY::Centre:	pos.SetY(pos.GetY() - parentSizeY * 0.5f);	break;
+		case AlignY::Bottom:	pos.SetY(pos.GetY() - parentSizeY);			break;
+		default: break;
+	}
+	// Offset from anchor X
+	switch (m_pos.GetAlignmentAnchor().m_x)
+	{
+		case AlignX::Middle:	pos.SetX(pos.GetX() - sizeX * 0.5f);	break;
+		case AlignX::Right:		pos.SetX(pos.GetX() - sizeX);			break;
+		default: break;
+	}
+	// Offset from anchor Y
+	switch (m_pos.GetAlignmentAnchor().m_y)
+	{
+		case AlignY::Bottom:	pos.SetY(pos.GetY() + sizeY);			break;
+		case AlignY::Centre:	pos.SetY(pos.GetY() + sizeY * 0.5f);	break;
+		default: break;
+	}
+	
+	return pos;
 }

@@ -134,21 +134,14 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 	newWidget->SetSize(a_def.m_size);
 	newWidget->SetOffset(a_def.m_pos);
 	newWidget->SetAlignment(a_def.m_pos.GetAlignment());
+	newWidget->SetAlignmentAnchor(a_def.m_pos.GetAlignmentAnchor());
 	newWidget->SetFontName(a_def.m_fontNameHash);
 	newWidget->SetFontSize(a_def.m_fontSize <= 0.5f ? 1.0f : a_def.m_fontSize);
 	newWidget->SetSelectFlags(a_def.m_selectFlags);
 	newWidget->SetActive(a_startActive);
 
-	// If parent has children
-	if (a_parent->GetChild() != NULL)
-	{
-		a_parent->GetChild()->AddSibling(newWidget);
-	}
-	else // Add element as first child 
-	{
-		a_parent->AddChild(newWidget);
-	}
-
+	a_parent->AddChild(newWidget);
+	
 	return newWidget;
 }
 
@@ -176,14 +169,27 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	{
 		defFromFile.m_size = size->GetVector2();
 	}
+	// Set alignment and anchor
+	WidgetVector::Alignment align;
+	WidgetVector::Alignment alignAnchor;
 	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignX"))
 	{
-		defFromFile.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
+		align.SetXFromString(a_widgetFile->FindProperty("alignX")->GetString());
 	}
 	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignY"))
 	{
-		defFromFile.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
+		align.SetYFromString(a_widgetFile->FindProperty("alignY")->GetString());
 	}
+	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignAnchorX"))
+	{
+		alignAnchor.SetXFromString(a_widgetFile->FindProperty("alignAnchorX")->GetString());
+	}
+	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignAnchorY"))
+	{
+		alignAnchor.SetYFromString(a_widgetFile->FindProperty("alignAnchorY")->GetString());
+	}
+	defFromFile.m_pos.SetAlignment(align);
+	defFromFile.m_pos.SetAlignmentAnchor(alignAnchor);
 	if (GameFile::Property * fontSize = a_widgetFile->FindProperty("fontSize"))
 	{
 		defFromFile.m_fontSize = fontSize->GetFloat();
@@ -216,6 +222,10 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		if (GameFile::Property * colour = a_widgetFile->FindProperty("colour"))
 		{
 			newWidget->SetColour(colour->GetColour());
+		}
+		if (GameFile::Property * alignTo = a_widgetFile->FindProperty("alignTo"))
+		{
+			newWidget->SetAlignTo(alignTo->GetString());
 		}
 		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
@@ -256,25 +266,18 @@ void Gui::DestroyWidget(Widget * a_widget)
 {
 	// Clean up any links
 	a_widget->ClearAction();
-	a_widget->Orphan();
-
-	// Delete sibling widgets
-	Widget * curWidget = a_widget->GetNext();
+	
+	// Delete child widgets
+	Widget::WidgetNode * curWidget = a_widget->GetChildren();
 	while (curWidget != NULL)
 	{
-		Widget * next = curWidget->GetNext();
+		Widget::WidgetNode * next = curWidget->GetNext();
+		DestroyWidget(next->GetData());
 		delete curWidget;
 		curWidget = next;
 	}
 
-	// Delete any child widgets
-	curWidget = a_widget->GetChild();
-	while (curWidget != NULL)
-	{
-		Widget * next = curWidget->GetChild();
-		delete curWidget;
-		curWidget = next;
-	}
+	// TODO Remove any align to references
 
 	// Destroy the parent
 	delete a_widget;
@@ -303,52 +306,28 @@ Widget * Gui::GetActiveWidget()
 
 	// Iterate through all children of the active menu
 	Widget * selected = NULL;
-	Widget * curChild = m_activeMenu->GetChild();
 	DebugMenu & dbgMen = DebugMenu::Get();
+	Widget::WidgetNode * curChild = m_activeMenu->GetChildren();
 	while (curChild != NULL)
-	{
-		Widget * curSibling = curChild->GetNext();
-		while (curSibling != NULL)
-		{
-			// If we are in editing mode process editing selections
-			if (dbgMen.IsDebugMenuEnabled())
-			{
-				if (curSibling->IsSelected(SelectionFlags::EditRollover))
-				{
-					selected = curSibling;
-					break;
-				}
-			}
-			else // Otherwise perform normal selection changes
-			{
-				if (curSibling->IsSelected())
-				{
-					selected = curSibling;
-					break;
-				}
-			}
-			curSibling = curSibling->GetNext();
-		}
-
-		// Do the same for debug children
+	{	
+		// If we are in editing mode process editing selections
 		if (dbgMen.IsDebugMenuEnabled())
 		{
-			if (curChild->IsSelected(SelectionFlags::EditRollover))
+			if (curChild->GetData()->IsSelected(SelectionFlags::EditRollover))
 			{
-				selected = curChild;
+				selected = curChild->GetData();
 				break;
 			}
 		}
-		else // Normal children
+		else // Otherwise perform normal selection changes
 		{
-			if (curChild->IsSelected())
+			if (curChild->GetData()->IsSelected())
 			{
-				selected = curChild;
+				selected = curChild->GetData();
 				break;
 			}
 		}
-
-		curChild = curChild->GetChild();
+		curChild = curChild->GetNext();
 	}
 
 	return selected;
@@ -370,12 +349,21 @@ bool Gui::LoadMenu(const char * a_menuFile)
 				parentMenu->SetFilePath(a_menuFile);
 				parentMenu->SetActive(false);
 
+				// TODO Support for non fullscreen menus
+				parentMenu->SetSize(Vector2(2.0f, 2.0f));
+				parentMenu->SetDrawPos(Vector2(-1.0, 1.0));
+
 				// Load child elements of the menu
 				LinkedListNode<GameFile::Object> * childWidget = menuObject->GetChildren();
 				while (childWidget != NULL)
 				{
 					GameFile::Object * curObject = childWidget->GetData();
-					CreateWidget(curObject, parentMenu);
+					Widget * newChild = CreateWidget(curObject, parentMenu);
+					// If not specified in the file, align child widgets to the parent menu
+					if (!newChild->HasAlignTo())
+					{
+						newChild->SetAlignTo(parentMenu);
+					}
 					childWidget = childWidget->GetNext();
 				}
 

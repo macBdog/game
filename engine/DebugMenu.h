@@ -193,6 +193,9 @@ private:
 	Widget * m_btnChangeObjectRoot;
 		Widget * m_btnChangeObjectModel;
 		Widget * m_btnChangeObjectName;
+		Widget * m_btnChangeObjectClipType;
+		Widget * m_btnChangeObjectClipSize;
+		Widget * m_btnChangeObjectClipPos;
 		Widget * m_btnSaveObjectTemplate;
 		Widget * m_btnDeleteObject;
 

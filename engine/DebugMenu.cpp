@@ -51,6 +51,9 @@ DebugMenu::DebugMenu()
 , m_btnChangeObjectRoot(NULL)
 , m_btnChangeObjectModel(NULL)
 , m_btnChangeObjectName(NULL)
+, m_btnChangeObjectClipType(NULL)
+, m_btnChangeObjectClipSize(NULL)
+, m_btnChangeObjectClipPos(NULL)
 , m_btnSaveObjectTemplate(NULL)
 , m_btnDeleteObject(NULL)
 , m_resourceSelect(NULL)
@@ -98,6 +101,9 @@ bool DebugMenu::Startup()
 	m_btnChangeObjectRoot = CreateButton("Change Object", sc_colourRed, gui.GetDebugRoot());
 	m_btnChangeObjectModel = CreateButton("Model", sc_colourGreen, m_btnChangeObjectRoot);
 	m_btnChangeObjectName = CreateButton("Name", sc_colourOrange, m_btnChangeObjectRoot);
+	m_btnChangeObjectClipType = CreateButton("Clip Type", sc_colourYellow, m_btnChangeObjectRoot);
+	m_btnChangeObjectClipSize = CreateButton("Clip Size", sc_colourBlue, m_btnChangeObjectRoot);
+	m_btnChangeObjectClipPos = CreateButton("Clip Position", sc_colourSkyBlue, m_btnChangeObjectRoot);
 	m_btnSaveObjectTemplate = CreateButton("Save Template", sc_colourPurple, m_btnChangeObjectRoot);
 	m_btnDeleteObject = CreateButton("Delete", sc_colourGrey, m_btnChangeObjectRoot);
 
@@ -284,7 +290,7 @@ bool DebugMenu::SaveChanges()
 			// Handle each flag type
 			switch (curFlag)
 			{
-				case DirtyFlag::GUI:		Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
+				case DirtyFlag::GUI:	Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
 				case DirtyFlag::Scene:	WorldManager::Get().GetCurrentScene()->Serialise();		changesSaved = true; break;
 				default: break;
 			}
@@ -317,30 +323,28 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	m_handledCommand = false;
 
 	// Make sure the menu is not being drawn off the screen
-	Vector2 drawDir(-1.0f, -1.0f);
+	WidgetVector alignedPos;
+	alignedPos.SetAlignment(AlignX::Left, AlignY::Bottom);
+	alignedPos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
 	const Vector2 screenSideLimit(0.15f, 0.15f);
 	const Vector2 menuDrawSize(m_btnCreateRoot->GetSize());
 	const Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
 	if (menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX())
 	{
-		drawDir.SetX(-drawDir.GetX());
+		//TODO
 	}
 	if (menuDrawPos.GetY() - menuDrawSize.GetY() < screenSideLimit.GetY())
 	{
-		drawDir.SetY(-drawDir.GetY());
+		//TODO
 	}
 
 	if (a_widget == m_btnCreateRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnCreateRoot->GetPos() + WidgetVector(m_btnCreateRoot->GetSize().GetX(), 0.0f);
-		WidgetVector height = m_btnCreateRoot->GetSize();
-		height.SetX(0.0f);
-		m_btnCreateWidget->SetOffset(right);
-		m_btnCreateGameObject->SetOffset(right - height);
-
-		height.SetY(height.GetY() - m_btnCreateRoot->GetSize().GetY() * 2.0f);
-		m_btnCreateGameObject->SetOffset(right + height);
+		m_btnCreateWidget->SetAlignTo(m_btnCreateRoot);
+		m_btnCreateWidget->SetPos(alignedPos);
+		m_btnCreateGameObject->SetAlignTo(m_btnCreateWidget);
+		m_btnCreateGameObject->SetPos(alignedPos);
 
 		ShowCreateMenu(true);
 		m_handledCommand = true;
@@ -374,11 +378,8 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	else if (a_widget == m_btnCreateGameObject)
 	{
 		// Position the create object submenu buttons
-		WidgetVector right = m_btnCreateGameObject->GetPos() + WidgetVector(m_btnCreateGameObject->GetSize().GetX(), -m_btnCreateGameObject->GetSize().GetY());
-		WidgetVector height = m_btnCreateGameObject->GetSize();
-		height.SetX(0.0f);
-		m_btnCreateGameObjectFromTemplate->SetOffset(right);
-		m_btnCreateGameObjectNew->SetOffset(right + height);
+		m_btnCreateGameObjectFromTemplate->SetAlignTo(m_btnCreateGameObject);
+		m_btnCreateGameObjectNew->SetAlignTo(m_btnCreateGameObjectFromTemplate);
 
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
@@ -406,23 +407,12 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	else if (a_widget == m_btnChangeGUIRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnChangeGUIRoot->GetPos() + WidgetVector(m_btnChangeGUIRoot->GetSize().GetX(), -m_btnChangeGUIRoot->GetSize().GetY());
-		WidgetVector height = m_btnChangeGUIRoot->GetSize();
-		height.SetX(0.0f);
-		m_btnChangeGUIPos->SetOffset(right);
-		m_btnChangeGUIShape->SetOffset(right + height);
-
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
-		m_btnChangeGUIName->SetOffset(right + height);
-
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnChangeGUIText->SetOffset(right + height);
-
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnChangeGUITexture->SetOffset(right + height);
-
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnDeleteGUI->SetOffset(right + height);
+		m_btnChangeGUIPos->SetAlignTo(m_btnChangeGUIRoot);
+		m_btnChangeGUIShape->SetAlignTo(m_btnChangeGUIPos);
+		m_btnChangeGUIName->SetAlignTo(m_btnChangeGUIShape);
+		m_btnChangeGUIText->SetAlignTo(m_btnChangeGUIName);
+		m_btnChangeGUITexture->SetAlignTo(m_btnChangeGUIText);
+		m_btnDeleteGUI->SetAlignTo(m_btnChangeGUITexture);
 
 		ShowChangeGUIMenu(true);
 		m_handledCommand = true;
@@ -476,17 +466,10 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	else if (a_widget == m_btnChangeObjectRoot)
 	{
 		// Show menu options on the right of the menu
-		WidgetVector right = m_btnChangeObjectRoot->GetPos() + WidgetVector(m_btnChangeObjectRoot->GetSize().GetX(), -m_btnChangeObjectRoot->GetSize().GetY());
-		WidgetVector height = m_btnChangeObjectRoot->GetSize();
-		height.SetX(0.0f);
-		m_btnChangeObjectName->SetOffset(right);
-		m_btnChangeObjectModel->SetOffset(right + height);
-		
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY() * 2.0f);
-		m_btnSaveObjectTemplate->SetOffset(right + height);
-
-		height.SetY(height.GetY() - m_btnChangeGUIRoot->GetSize().GetY());
-		m_btnDeleteObject->SetOffset(right + height);
+		m_btnChangeObjectName->SetAlignTo(m_btnChangeObjectRoot);
+		m_btnChangeObjectModel->SetAlignTo(m_btnChangeObjectName);
+		m_btnSaveObjectTemplate->SetAlignTo(m_btnChangeObjectModel);
+		m_btnDeleteObject->SetAlignTo(m_btnSaveObjectTemplate);
 
 		ShowChangeObjectMenu(true);
 		m_handledCommand = true;
@@ -1078,6 +1061,8 @@ Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * 
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
 	curItem.m_pos = WidgetVector(10.0f, 10.0f);
+	curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Bottom);
+	curItem.m_pos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
 	curItem.m_selectFlags = SelectionFlags::Rollover;
 	curItem.m_colour = a_colour;
 	curItem.m_name = a_name;
