@@ -323,28 +323,35 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	m_handledCommand = false;
 
 	// Make sure the menu is not being drawn off the screen
-	WidgetVector alignedPos;
-	alignedPos.SetAlignment(AlignX::Left, AlignY::Bottom);
-	alignedPos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+	WidgetVector firstWidgetAlignment;
+	WidgetVector widgetAlignment;
+	firstWidgetAlignment.SetAlignment(AlignX::Right, AlignY::Top);
+	firstWidgetAlignment.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+	widgetAlignment.SetAlignment(AlignX::Left, AlignY::Bottom);
+	widgetAlignment.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
 	const Vector2 screenSideLimit(0.15f, 0.15f);
 	const Vector2 menuDrawSize(m_btnCreateRoot->GetSize());
 	const Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
 	if (menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX())
 	{
-		//TODO
+		// User clicked too close to the right extent, draw left instead
+		firstWidgetAlignment.m_align.m_x = AlignX::Left;
+		firstWidgetAlignment.m_alignAnchor.m_x = AlignX::Right;
 	}
-	if (menuDrawPos.GetY() - menuDrawSize.GetY() < screenSideLimit.GetY())
+	if (menuDrawPos.GetY() - menuDrawSize.GetY() < -1.0 - screenSideLimit.GetY())
 	{
-		//TODO
+		// User clicked too close to the bottom, draw up instead
+		widgetAlignment.m_align.m_y = AlignY::Top;
+		widgetAlignment.m_alignAnchor.m_y = AlignY::Bottom;
 	}
 
 	if (a_widget == m_btnCreateRoot)
 	{
 		// Show menu options on the right of the menu
 		m_btnCreateWidget->SetAlignTo(m_btnCreateRoot);
-		m_btnCreateWidget->SetPos(alignedPos);
+		m_btnCreateWidget->SetPos(firstWidgetAlignment);
 		m_btnCreateGameObject->SetAlignTo(m_btnCreateWidget);
-		m_btnCreateGameObject->SetPos(alignedPos);
+		m_btnCreateGameObject->SetPos(widgetAlignment);
 
 		ShowCreateMenu(true);
 		m_handledCommand = true;
@@ -379,7 +386,9 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	{
 		// Position the create object submenu buttons
 		m_btnCreateGameObjectFromTemplate->SetAlignTo(m_btnCreateGameObject);
+		m_btnCreateGameObjectFromTemplate->SetPos(firstWidgetAlignment);
 		m_btnCreateGameObjectNew->SetAlignTo(m_btnCreateGameObjectFromTemplate);
+		m_btnCreateGameObjectNew->SetPos(widgetAlignment);
 
 		m_btnCreateGameObjectFromTemplate->SetActive(true);
 		m_btnCreateGameObjectNew->SetActive(true);
@@ -408,11 +417,17 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	{
 		// Show menu options on the right of the menu
 		m_btnChangeGUIPos->SetAlignTo(m_btnChangeGUIRoot);
+		m_btnChangeGUIPos->SetPos(firstWidgetAlignment);
 		m_btnChangeGUIShape->SetAlignTo(m_btnChangeGUIPos);
+		m_btnChangeGUIShape->SetPos(widgetAlignment);
 		m_btnChangeGUIName->SetAlignTo(m_btnChangeGUIShape);
+		m_btnChangeGUIName->SetPos(widgetAlignment);
 		m_btnChangeGUIText->SetAlignTo(m_btnChangeGUIName);
+		m_btnChangeGUIText->SetPos(widgetAlignment);
 		m_btnChangeGUITexture->SetAlignTo(m_btnChangeGUIText);
+		m_btnChangeGUITexture->SetPos(widgetAlignment);
 		m_btnDeleteGUI->SetAlignTo(m_btnChangeGUITexture);
+		m_btnDeleteGUI->SetPos(widgetAlignment);
 
 		ShowChangeGUIMenu(true);
 		m_handledCommand = true;
@@ -467,9 +482,13 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 	{
 		// Show menu options on the right of the menu
 		m_btnChangeObjectName->SetAlignTo(m_btnChangeObjectRoot);
+		m_btnChangeObjectName->SetPos(firstWidgetAlignment);
 		m_btnChangeObjectModel->SetAlignTo(m_btnChangeObjectName);
+		m_btnChangeObjectModel->SetPos(widgetAlignment);
 		m_btnSaveObjectTemplate->SetAlignTo(m_btnChangeObjectModel);
+		m_btnSaveObjectTemplate->SetPos(widgetAlignment);
 		m_btnDeleteObject->SetAlignTo(m_btnSaveObjectTemplate);
+		m_btnDeleteObject->SetPos(widgetAlignment);
 
 		ShowChangeObjectMenu(true);
 		m_handledCommand = true;

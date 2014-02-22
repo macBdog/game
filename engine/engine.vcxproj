@@ -80,6 +80,7 @@
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="CollisionUtils.h" />
     <ClInclude Include="DebugMenu.h" />
+    <ClInclude Include="DebugMenuCommands.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameFile.h" />
@@ -109,6 +110,7 @@
     <ClCompile Include="CameraManager.cpp" />
     <ClCompile Include="CollisionUtils.cpp" />
     <ClCompile Include="DebugMenu.cpp" />
+    <ClCompile Include="DebugMenuCommands.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GameFile.cpp" />

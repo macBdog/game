@@ -90,8 +90,6 @@ public:
 	static const char * s_alignXNames[AlignX::Count];
 	static const char * s_alignYNames[AlignY::Count];
 
-private:
-
 	Alignment m_alignAnchor;				///< Which part of the widget is aligned
 	Alignment m_align;						///< How the widget is aligned relative to another widget
 };

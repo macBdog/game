@@ -1,5 +1,5 @@
-#ifndef _ENGINE_DEBUG_MENU_
-#define _ENGINE_DEBUG_MENU_
+#ifndef _ENGINE_DEBUG_MENU_COMMANDS_
+#define _ENGINE_DEBUG_MENU_COMMANDS_
 #pragma once
 
 #include "../core/BitSet.h"
@@ -210,4 +210,4 @@ private:
 		Widget * m_btnTextInputCancel;
 };
 
-#endif //_ENGINE_DEBUG_MENU_
+#endif //_ENGINE_DEBUG_MENU_COMMANDS_
