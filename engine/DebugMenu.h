@@ -1,5 +1,5 @@
-#ifndef _ENGINE_DEBUG_MENU_COMMANDS_
-#define _ENGINE_DEBUG_MENU_COMMANDS_
+#ifndef _ENGINE_DEBUG_MENU_
+#define _ENGINE_DEBUG_MENU_
 #pragma once
 
 #include "../core/BitSet.h"
@@ -7,6 +7,7 @@
 #include "../core/Vector.h"
 #include "../core/LinkedList.h"
 
+#include "DebugMenuCommands.h"
 #include "GameObject.h"
 #include "Gui.h"
 #include "Singleton.h"
@@ -68,7 +69,7 @@ public:
 
 	//\brief Startup registers input callbacks for mouse clicks
 	bool Startup();
-	void Shutdown() {};
+	inline void Shutdown() { m_commands.Shutdown(); };
 
 	//\brief Update will draw all debug menu items
 	//\param a_dt float of time since the last frame in seconds
@@ -108,17 +109,10 @@ public:
 	//\brief Debug menu active means there is a menu or dialog of the debug menu visible
 	bool IsDebugMenuActive() const 
 	{ 
-		return	(	m_btnCreateRoot			!= NULL && 
-					m_btnChangeGUIRoot		!= NULL && 
-					m_btnChangeObjectRoot	!= NULL &&
-					m_resourceSelect		!= NULL && 
-					m_textInput				!= NULL) 
-					&& 
-				(	m_btnCreateRoot->IsActive()			|| 
-					m_btnChangeGUIRoot->IsActive()		|| 
-					m_btnChangeObjectRoot->IsActive()	||
-					m_resourceSelect->IsActive()		||
-					m_textInput->IsActive()); }
+		return	m_commands.IsActive() ||
+				(m_resourceSelect != NULL && m_resourceSelect->IsActive()) ||
+				(m_textInput != NULL && m_textInput->IsActive());
+	}
 
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
@@ -157,10 +151,6 @@ private:
 	Widget * CreateButton(const char * a_name, Colour a_colour, Widget * a_parent);
 
 	//\brief Helper function to close debug menus
-	inline void ShowCreateMenu(bool a_show);
-	inline void ShowChangeGUIMenu(bool a_show);
-	inline void ShowChangeObjectMenu(bool a_show);
-
 	void HideResoureSelect();
 	void HideTextInput();
 
@@ -174,30 +164,8 @@ private:
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 
-	//\ingroup Debug menu buttons organised in hierachy using tabs
-
 	Widget * m_btnCreateRoot;						///< Pointer to a widget that we create on startup with all other buttons as children
-		Widget * m_btnCreateWidget;
-		Widget * m_btnCreateGameObject;
-			Widget * m_btnCreateGameObjectFromTemplate;
-			Widget * m_btnCreateGameObjectNew;
-
-	Widget * m_btnChangeGUIRoot;
-		Widget * m_btnChangeGUIPos;
-		Widget * m_btnChangeGUIShape;
-		Widget * m_btnChangeGUIName;
-		Widget * m_btnChangeGUIText;
-		Widget * m_btnChangeGUITexture;
-		Widget * m_btnDeleteGUI;
-
-	Widget * m_btnChangeObjectRoot;
-		Widget * m_btnChangeObjectModel;
-		Widget * m_btnChangeObjectName;
-		Widget * m_btnChangeObjectClipType;
-		Widget * m_btnChangeObjectClipSize;
-		Widget * m_btnChangeObjectClipPos;
-		Widget * m_btnSaveObjectTemplate;
-		Widget * m_btnDeleteObject;
+	DebugMenuCommandRegistry m_commands;			///< List of commands that can be performed by the debug menu
 
 	Widget * m_resourceSelect;
 		Widget * m_resourceSelectList;
@@ -210,4 +178,4 @@ private:
 		Widget * m_btnTextInputCancel;
 };
 
-#endif //_ENGINE_DEBUG_MENU_COMMANDS_
+#endif //_ENGINE_DEBUG_MENU_

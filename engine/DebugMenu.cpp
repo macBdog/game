@@ -37,25 +37,6 @@ DebugMenu::DebugMenu()
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
 , m_btnCreateRoot(NULL)
-, m_btnCreateWidget(NULL)
-, m_btnCreateGameObject(NULL)
-, m_btnCreateGameObjectFromTemplate(NULL)
-, m_btnCreateGameObjectNew(NULL)
-, m_btnChangeGUIRoot(NULL)
-, m_btnChangeGUIPos(NULL)
-, m_btnChangeGUIShape(NULL)
-, m_btnChangeGUIName(NULL)
-, m_btnChangeGUIText(NULL)
-, m_btnChangeGUITexture(NULL)
-, m_btnDeleteGUI(NULL)
-, m_btnChangeObjectRoot(NULL)
-, m_btnChangeObjectModel(NULL)
-, m_btnChangeObjectName(NULL)
-, m_btnChangeObjectClipType(NULL)
-, m_btnChangeObjectClipSize(NULL)
-, m_btnChangeObjectClipPos(NULL)
-, m_btnSaveObjectTemplate(NULL)
-, m_btnDeleteObject(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
@@ -82,31 +63,11 @@ bool DebugMenu::Startup()
 	InputManager & inMan = InputManager::Get();
 
 	// Create the root of the create menu buttons and use it as the parent to each button
-	m_btnCreateRoot = CreateButton("Create!", sc_colourRed, gui.GetDebugRoot());
-	m_btnCreateWidget = CreateButton("Widget", sc_colourPurple, m_btnCreateRoot);
-	m_btnCreateGameObject = CreateButton("Game Object", sc_colourGreen, m_btnCreateRoot);
-	m_btnCreateGameObjectFromTemplate = CreateButton("From Template", sc_colourOrange, m_btnCreateRoot);
-	m_btnCreateGameObjectNew = CreateButton("New Object", sc_colourSkyBlue, m_btnCreateRoot);
+	m_btnCreateRoot = DebugMenuCommand::CreateButton("Create!", gui.GetDebugRoot(), sc_colourRed);
 
-	// Change 2D objects
-	m_btnChangeGUIRoot = CreateButton("Change GUI", sc_colourRed, gui.GetDebugRoot());
-	m_btnChangeGUIPos = CreateButton("Position", sc_colourPurple, m_btnChangeGUIRoot);
-	m_btnChangeGUIShape = CreateButton("Shape", sc_colourBlue, m_btnChangeGUIRoot);
-	m_btnChangeGUIName = CreateButton("Name", sc_colourOrange, m_btnChangeGUIRoot);
-	m_btnChangeGUIText = CreateButton("Text", sc_colourGreen, m_btnChangeGUIRoot);
-	m_btnChangeGUITexture = CreateButton("Texture", sc_colourYellow, m_btnChangeGUIRoot);
-	m_btnDeleteGUI = CreateButton("Delete", sc_colourGrey, m_btnChangeGUIRoot);
-
-	// Change 3D objects
-	m_btnChangeObjectRoot = CreateButton("Change Object", sc_colourRed, gui.GetDebugRoot());
-	m_btnChangeObjectModel = CreateButton("Model", sc_colourGreen, m_btnChangeObjectRoot);
-	m_btnChangeObjectName = CreateButton("Name", sc_colourOrange, m_btnChangeObjectRoot);
-	m_btnChangeObjectClipType = CreateButton("Clip Type", sc_colourYellow, m_btnChangeObjectRoot);
-	m_btnChangeObjectClipSize = CreateButton("Clip Size", sc_colourBlue, m_btnChangeObjectRoot);
-	m_btnChangeObjectClipPos = CreateButton("Clip Position", sc_colourSkyBlue, m_btnChangeObjectRoot);
-	m_btnSaveObjectTemplate = CreateButton("Save Template", sc_colourPurple, m_btnChangeObjectRoot);
-	m_btnDeleteObject = CreateButton("Delete", sc_colourGrey, m_btnChangeObjectRoot);
-
+	// Create the debug menu functionality
+	m_commands.Startup(m_btnCreateRoot);
+	
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.95f, 1.5f);
@@ -134,8 +95,8 @@ bool DebugMenu::Startup()
 	m_resourceSelectList->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
 	// Ok and Cancel buttons on the resource select dialog
-	m_btnResourceSelectOk = CreateButton("Ok", sc_colourOrange, m_resourceSelect);
-	m_btnResourceSelectCancel = CreateButton("Cancel", sc_colourGrey, m_resourceSelect);
+	m_btnResourceSelectOk = DebugMenuCommand::CreateButton("Ok", m_resourceSelect, sc_colourOrange);
+	m_btnResourceSelectCancel = DebugMenuCommand::CreateButton("Cancel", m_resourceSelect, sc_colourGrey);
 
 	// Create text input box for naming objects and files
 	curItem.m_size = WidgetVector(0.85f, 0.4f);
@@ -152,8 +113,8 @@ bool DebugMenu::Startup()
 	m_textInputField->SetDebugWidget();
 
 	// Ok and Cancel buttons on the text input dialog
-	m_btnTextInputOk = CreateButton("Ok", sc_colourOrange, m_textInput);
-	m_btnTextInputCancel = CreateButton("Cancel", sc_colourGrey, m_textInput);
+	m_btnTextInputOk = DebugMenuCommand::CreateButton("Ok", m_textInput, sc_colourOrange);
+	m_btnTextInputCancel = DebugMenuCommand::CreateButton("Cancel", m_textInput, sc_colourGrey);
 
 	// Widgets to be used by script
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
@@ -178,7 +139,7 @@ bool DebugMenu::Startup()
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, MouseButton::Right);
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnSelect, MouseButton::Left);
 
-	// Process vector cursor vertices for display aspect
+	// Process vector cursor vertices to account for display aspect
 	for (unsigned int i = 0; i < 4; ++i)
 	{
 		sc_vectorCursor[i].SetY(sc_vectorCursor[i].GetY() * RenderManager::Get().GetViewAspect());
@@ -320,43 +281,9 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 {
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
-	m_handledCommand = false;
-
-	// Make sure the menu is not being drawn off the screen
-	WidgetVector firstWidgetAlignment;
-	WidgetVector widgetAlignment;
-	firstWidgetAlignment.SetAlignment(AlignX::Right, AlignY::Top);
-	firstWidgetAlignment.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
-	widgetAlignment.SetAlignment(AlignX::Left, AlignY::Bottom);
-	widgetAlignment.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
-	const Vector2 screenSideLimit(0.15f, 0.15f);
-	const Vector2 menuDrawSize(m_btnCreateRoot->GetSize());
-	const Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
-	if (menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX())
-	{
-		// User clicked too close to the right extent, draw left instead
-		firstWidgetAlignment.m_align.m_x = AlignX::Left;
-		firstWidgetAlignment.m_alignAnchor.m_x = AlignX::Right;
-	}
-	if (menuDrawPos.GetY() - menuDrawSize.GetY() < -1.0 - screenSideLimit.GetY())
-	{
-		// User clicked too close to the bottom, draw up instead
-		widgetAlignment.m_align.m_y = AlignY::Top;
-		widgetAlignment.m_alignAnchor.m_y = AlignY::Bottom;
-	}
-
-	if (a_widget == m_btnCreateRoot)
-	{
-		// Show menu options on the right of the menu
-		m_btnCreateWidget->SetAlignTo(m_btnCreateRoot);
-		m_btnCreateWidget->SetPos(firstWidgetAlignment);
-		m_btnCreateGameObject->SetAlignTo(m_btnCreateWidget);
-		m_btnCreateGameObject->SetPos(widgetAlignment);
-
-		ShowCreateMenu(true);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCreateWidget)
+	m_handledCommand = m_commands.HandleLeftClick(a_widget, m_widgetToEdit, m_gameObjectToEdit);
+	/*
+	if (a_widget == m_btnCreateWidget)
 	{
 		// Make a new widget
 		Widget::WidgetDef curItem;
@@ -659,10 +586,11 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		m_editMode = EditMode::None;
 		m_handledCommand = true;
 	}
+	*/
 
 	// Save anything dirty to file
 	SaveChanges();
-
+	
 	return m_handledCommand;
 }
 
@@ -680,37 +608,8 @@ bool DebugMenu::OnActivate(bool a_active)
 		m_gameObjectToEdit = NULL;
 	}
 
-	// Set the position to draw the menu with respect to where the user clicked
-	InputManager & inMan = InputManager::Get();
-	Vector2 menuDrawPos = inMan.GetMousePosRelative();
-	const Vector2 menuSize = m_btnChangeObjectRoot->GetSize();
-	menuDrawPos.SetX(menuDrawPos.GetX() > 1.0f - menuSize.GetX() ? 1.0f - menuSize.GetX() - 0.05f : menuDrawPos.GetX());
-	menuDrawPos.SetY(menuDrawPos.GetY() < -1.0f + menuSize.GetY() ? -1.0f + menuSize.GetY() + 0.05f : menuDrawPos.GetY());
-
-	// Set the creation root element to visible if it isn't already
-	if (m_widgetToEdit != NULL)
-	{
-		if (!IsDebugMenuActive())
-		{
-			m_btnChangeGUIRoot->SetOffset(menuDrawPos);
-			m_btnChangeGUIRoot->SetActive(a_active);
-		}
-	}
-	else if (m_gameObjectToEdit != NULL)
-	{
-		if (!IsDebugMenuActive())
-		{
-			// TODO Get object pos from world pos of object
-			m_btnChangeObjectRoot->SetOffset(Vector2(0.0f, 0.0f));
-			m_btnChangeObjectRoot->SetActive(a_active);
-		}
-	}
-	else if (!m_btnCreateRoot->IsActive())
-	{
-		m_btnCreateRoot->SetOffset(menuDrawPos);
-		m_btnCreateRoot->SetActive(a_active);
-	}
-
+	// Let the commands handle what to do
+	m_commands.HandleRightClick(NULL, m_widgetToEdit, m_gameObjectToEdit);
 	return true;
 }
 
@@ -800,9 +699,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Cancel all menu display
 	if (m_gameObjectToEdit == NULL && m_widgetToEdit == NULL)
 	{
-		ShowCreateMenu(false);
-		ShowChangeGUIMenu(false);
-		ShowChangeObjectMenu(false);
+		m_commands.Hide();
 	}
 
 	return false;
@@ -1072,73 +969,6 @@ void DebugMenu::PostRender()
 			m_scriptDebugWidgets[i]->SetText("");
 		}
 	}
-}
-
-Widget * DebugMenu::CreateButton(const char * a_name, Colour a_colour, Widget * a_parent)
-{
-	// All debug menu elements are created roughly equal
-	Widget::WidgetDef curItem;
-	curItem.m_size = WidgetVector(0.2f, 0.1f);
-	curItem.m_pos = WidgetVector(10.0f, 10.0f);
-	curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Bottom);
-	curItem.m_pos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
-	curItem.m_selectFlags = SelectionFlags::Rollover;
-	curItem.m_colour = a_colour;
-	curItem.m_name = a_name;
-
-	// Check for a loaded debug font
-	if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
-	{
-		curItem.m_fontNameHash = debugFont->GetHash();
-	}
-
-	Widget * newWidget = Gui::Get().CreateWidget(curItem, a_parent, false);
-	newWidget->SetDebugWidget();
-	newWidget->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
-	newWidget->SetActive(false);
-
-	return newWidget;
-}
-
-void DebugMenu::ShowCreateMenu(bool a_show)
-{
-	// Set the create menu and first children visible
-	if (a_show)
-	{
-		m_btnCreateRoot->SetActive(a_show);
-		m_btnCreateWidget->SetActive(a_show);
-		m_btnCreateGameObject->SetActive(a_show);
-	}
-	else // Hide everything
-	{
-		m_btnCreateRoot->SetActive(a_show);
-		m_btnCreateWidget->SetActive(a_show);
-		m_btnCreateGameObject->SetActive(a_show);
-		m_btnCreateGameObjectFromTemplate->SetActive(a_show);
-		m_btnCreateGameObjectNew->SetActive(a_show);
-	}
-}
-
-void DebugMenu::ShowChangeGUIMenu(bool a_show)
-{
-	// Set the change menu and all children visible
-	m_btnChangeGUIRoot->SetActive(a_show);
-	m_btnChangeGUIPos->SetActive(a_show);
-	m_btnChangeGUIShape->SetActive(a_show);
-	m_btnChangeGUIName->SetActive(a_show);
-	m_btnChangeGUIText->SetActive(a_show);
-	m_btnChangeGUITexture->SetActive(a_show);
-	m_btnDeleteGUI->SetActive(a_show);
-}
-
-void DebugMenu::ShowChangeObjectMenu(bool a_show)
-{
-	// Set the change menu and all children visible
-	m_btnChangeObjectRoot->SetActive(a_show);
-	m_btnChangeObjectName->SetActive(a_show);
-	m_btnChangeObjectModel->SetActive(a_show);
-	m_btnSaveObjectTemplate->SetActive(a_show);
-	m_btnDeleteObject->SetActive(a_show);
 }
 
 void DebugMenu::HideResoureSelect()
