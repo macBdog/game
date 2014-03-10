@@ -21,6 +21,18 @@ struct Alignment;
 		curNode = curNode->GetNext();								\
 	}
 
+//\brief Dirty flags are stored in a bitset to keep track of changes that need writing to disk
+namespace DirtyFlag
+{
+	enum Enum
+	{
+		None = -1,		///< Nothing needs writing
+		GUI,			///< GUI files need writing
+		Scene,			///< Scene needs writing
+		Count,
+	};
+}
+
 //\brief Shorthand names for alignment settings for command butons
 namespace DebugMenuCommandAlign
 {
@@ -32,6 +44,17 @@ namespace DebugMenuCommandAlign
 		Left,	///< Top right anchor to top left of aligned to
 	};
 }
+
+//\brief Contains some data that a command can return, passed around by value so remember to keep it small
+struct DebugCommandReturnData
+{
+	DebugCommandReturnData() 
+		: m_success(false)
+		, m_dirtyFlag(DirtyFlag::None)
+		{ }
+	bool m_success;					///< Was the command successful
+	DirtyFlag::Enum m_dirtyFlag;	///< If the command touched a widget or game object it should set a flag
+};
 
 //\brief Debug menu commands are functions that the debug menu executes from a button press
 class DebugMenuCommand
@@ -55,11 +78,11 @@ public:
 	//\brief Set the visual hierachy of the command buttons
 	void SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum a_alignment);
 	void SetWidgetAlignment(DebugMenuCommandAlign::Enum a_alignment);
-	inline bool Execute(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+	inline DebugCommandReturnData Execute(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 	{
 		if (m_widgetFunction.IsSet())		{ return m_widgetFunction.Execute(a_selectedWidget); }
 		if (m_gameObjectFunction.IsSet())	{ return m_gameObjectFunction.Execute(a_selectedGameObject); }
-		return false;
+		return DebugCommandReturnData();
 	}
 
 	//\ingroup Event handling
@@ -71,10 +94,10 @@ public:
 
 private:
 
-	Delegate<bool, GameObject *> m_gameObjectFunction;		///< Function if the command is registered on a game object
-	Delegate<bool, Widget *> m_widgetFunction;				///< Function if the command is registered on a widget
-	DebugMenuCommandAlign::Enum m_alignment;				///< How the command is aligned to it's parent command NOTE: this is separate to widget alignment
-	Widget * m_widget;										///< Visual representation of the command button
+	Delegate<DebugCommandReturnData, GameObject *> m_gameObjectFunction;		///< Function if the command is registered on a game object
+	Delegate<DebugCommandReturnData, Widget *> m_widgetFunction;				///< Function if the command is registered on a widget
+	DebugMenuCommandAlign::Enum m_alignment;									///< How the command is aligned to it's parent command NOTE: this is separate to widget alignment
+	Widget * m_widget;															///< Visual representation of the command button
 };
 
 class DebugMenuCommandRegistry
@@ -95,8 +118,8 @@ public:
 	bool IsActive() const;
 
 	//\brief Handlers for various things that can happen from the debug menu
-	bool HandleLeftClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject);
-	bool HandleRightClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject);
+	DebugCommandReturnData HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject);
+	DebugCommandReturnData HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject);
 
 	//\brief Menu button visibility functions
 	void ShowRootCommands();
@@ -116,10 +139,10 @@ private:
 	void SetMenuAlignment(Alignment * a_screenAlign);
 
 	//\ brief Debug menu command functions
-	bool CreateWidget(Widget * a_widget);
+	DebugCommandReturnData CreateWidget(Widget * a_widget);
 
-	Widget * m_rootCommand;
-	CommandList m_commands;
+	Widget * m_rootCommand;		///< The Create! menu header that appears on right click
+	CommandList m_commands;		///< List of commands that can be executed
 };
 
 #endif //_ENGINE_DEBUG_MENU_COMMANDS_

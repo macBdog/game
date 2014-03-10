@@ -46,17 +46,6 @@ namespace EditMode
 	};
 }
 
-//\brief Dirty flags are stored in a bitset to keep track of changes that need writing to disk
-namespace DirtyFlag
-{
-	enum Enum
-	{
-		GUI = 0,		///< GUI files need writing
-		Scene,			///< Scene needs writing
-		Count,
-	};
-}
-
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
 //		 create and configure gui elements, game objects and control engine settings.
 class DebugMenu : public Singleton<DebugMenu>

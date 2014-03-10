@@ -59,7 +59,7 @@ Widget * DebugMenuCommand::CreateButton(const char * a_name, Widget * a_parent, 
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
 	curItem.m_pos = WidgetVector(10.0f, 10.0f);
-	curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Bottom);
+	curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
 	curItem.m_pos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
 	curItem.m_selectFlags = SelectionFlags::Rollover;
 	curItem.m_colour = a_colour;
@@ -101,10 +101,10 @@ void DebugMenuCommandRegistry::Startup(Widget * a_parent)
 	// Change 2D objects
 	lastCreatedCommand = Create("Position",					a_parent, a_parent, DebugMenuCommandAlign::Right, sc_colourPurple);
 	lastCreatedCommand = Create("Shape",					a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
-	lastCreatedCommand = Create("Name",						a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
+	lastCreatedCommand = Create("Widget Name",				a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
 	lastCreatedCommand = Create("Text", 					a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
 	lastCreatedCommand = Create("Texture", 					a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow);
-	lastCreatedCommand = Create("Delete", 					a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
+	lastCreatedCommand = Create("Delete Widget",			a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
 
 	// Change 3D objects
 	lastCreatedCommand = Create("Model",					a_parent, a_parent, DebugMenuCommandAlign::Right, sc_colourGreen);
@@ -113,7 +113,7 @@ void DebugMenuCommandRegistry::Startup(Widget * a_parent)
 	lastCreatedCommand = Create("Clip Size",				a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
 	lastCreatedCommand = Create("Clip Position",			a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue);
 	lastCreatedCommand = Create("Save Template",			a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple);
-	lastCreatedCommand = Create("Delete",					a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
+	lastCreatedCommand = Create("Delete Object",			a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
 }
 
 
@@ -142,26 +142,25 @@ bool DebugMenuCommandRegistry::IsActive() const
 	return false;
 }
 
-bool DebugMenuCommandRegistry::HandleLeftClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+DebugCommandReturnData DebugMenuCommandRegistry::HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 {
 	DEBUG_COMMANDS_LOOP_BEGIN
 		if (debugWidget->IsSelected(SelectionFlags::EditRollover))
 		{
-			debugCommand->Execute(a_selectedWidget, a_selectedGameObject);
-			return true;
+			return debugCommand->Execute(a_selectedWidget, a_selectedGameObject);
 		}
 	DEBUG_COMMANDS_LOOP_END
-	return false;
+
+	Hide();
+
+	return DebugCommandReturnData();
 }
 
-bool DebugMenuCommandRegistry::HandleRightClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 {
-	// Draw from screen coords or last clicked widget
+	// Draw the menu from the last clicked position
+	DebugCommandReturnData retVal;
 	Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
-	if (a_clickedWidget != NULL)
-	{
-		menuDrawPos = a_clickedWidget->GetPos().GetVector();
-	}
 
 	// Determine which way the menus should be drawn in case user clicked too close to right/bottom of screen
 	const Vector2 screenSideLimit(0.15f, 0.15f);
@@ -171,13 +170,30 @@ bool DebugMenuCommandRegistry::HandleRightClick(Widget * a_clickedWidget, Widget
 	menuAlign.m_y = menuDrawPos.GetY() - menuDrawSize.GetY() < -1.0 + screenSideLimit.GetY() ? AlignY::Top : AlignY::Bottom;
 	SetMenuAlignment(&menuAlign);
 
+	// Commands that affect widgets
+	if (a_selectedWidget != NULL)
+	{
+		ShowWidgetCommands();
+		retVal.m_success = true;
+		return retVal;
+	}
+
+	// Commands that affect game objects
+	if (a_selectedGameObject != NULL)
+	{
+		ShowGameObjectCommands();
+		retVal.m_success = true;
+		return retVal;
+	}
+
 	// Check for showing a root level debug command
-	if (a_clickedWidget == NULL && a_selectedWidget == NULL && a_selectedGameObject == NULL)
+	if (a_selectedWidget == NULL && a_selectedGameObject == NULL)
 	{
 		ShowRootCommands();
-		return true;
+		retVal.m_success = true;
+		return retVal;
 	}
-	return false;
+	return retVal;
 }
 
 void DebugMenuCommandRegistry::SetMenuAlignment(Alignment * a_screenAlign)
@@ -248,8 +264,7 @@ void DebugMenuCommandRegistry::SetMenuAlignment(Alignment * a_screenAlign)
 
 void DebugMenuCommandRegistry::ShowRootCommands()
 {
-	InputManager & inMan = InputManager::Get();
-	m_rootCommand->SetOffset(inMan.GetMousePosRelative());
+	m_rootCommand->SetOffset(InputManager::Get().GetMousePosRelative());
 	m_rootCommand->SetActive();
 
 	DEBUG_COMMANDS_LOOP_BEGIN
@@ -263,12 +278,40 @@ void DebugMenuCommandRegistry::ShowRootCommands()
 
 void DebugMenuCommandRegistry::ShowWidgetCommands()
 {
-
+	DEBUG_COMMANDS_LOOP_BEGIN
+		if (strcmp(debugWidget->GetName(), "Position") == 0)
+		{
+			debugWidget->SetActive();
+			debugWidget->SetOffset(InputManager::Get().GetMousePosRelative());
+		} else if (strcmp(debugWidget->GetName(), "Shape") == 0 || 
+			strcmp(debugWidget->GetName(), "Widget Name") == 0 || 
+			strcmp(debugWidget->GetName(), "Text") == 0 || 
+			strcmp(debugWidget->GetName(), "Texture") == 0 || 
+			strcmp(debugWidget->GetName(), "Delete Widget") == 0) 
+		{
+			debugWidget->SetActive();
+		}
+	DEBUG_COMMANDS_LOOP_END
 }
 	
 void DebugMenuCommandRegistry::ShowGameObjectCommands()
 {
-
+	DEBUG_COMMANDS_LOOP_BEGIN
+		if (strcmp(debugWidget->GetName(), "Model") == 0)
+		{
+			debugWidget->SetActive();
+			debugWidget->SetOffset(InputManager::Get().GetMousePosRelative());
+		}
+		else if (strcmp(debugWidget->GetName(), "Name") == 0 ||
+			strcmp(debugWidget->GetName(), "Clip Type") == 0 || 
+			strcmp(debugWidget->GetName(), "Clip Size") == 0 || 
+			strcmp(debugWidget->GetName(), "Clip Position") == 0 || 
+			strcmp(debugWidget->GetName(), "Save Template") == 0 || 
+			strcmp(debugWidget->GetName(), "Delete Object") == 0) 
+		{
+			debugWidget->SetActive();
+		}
+	DEBUG_COMMANDS_LOOP_END
 }
 
 void DebugMenuCommandRegistry::HideRootCommands()
@@ -303,8 +346,10 @@ void DebugMenuCommandRegistry::Hide()
 	DEBUG_COMMANDS_LOOP_END
 }
 
-bool DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
+DebugCommandReturnData DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
 {
+	DebugCommandReturnData retVal;
+
 	// Make a new widget
 	Widget::WidgetDef curItem;
 	curItem.m_colour = sc_colourWhite;
@@ -324,10 +369,11 @@ bool DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
 	Widget * parentWidget = a_widget != NULL ? a_widget : gui.GetActiveMenu();
 	Widget * newWidget = gui.CreateWidget(curItem, parentWidget);
 	newWidget->SetOffset(InputManager::Get().GetMousePosRelative());
-	//m_dirtyFlags.Set(DirtyFlag::GUI);
 		
 	Hide();
-	return newWidget != NULL;
+	retVal.m_success = newWidget != NULL;
+	retVal.m_dirtyFlag = DirtyFlag::GUI;
+	return retVal;
 }
 
 /*

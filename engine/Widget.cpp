@@ -415,6 +415,11 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		m_size.GetString(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "size: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
+		if (m_alignToName[0] != '\0')
+		{
+			menuStream << tabs << StringUtils::s_charTab << "alignTo: "	<< m_alignToName	<< StringUtils::s_charLineEnd;
+		}
+
 		m_pos.GetAlignment().GetStringX(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "alignX: "	<< outBuf	<< StringUtils::s_charLineEnd;
 

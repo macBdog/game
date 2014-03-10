@@ -551,16 +551,21 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	// Let the commands handle what to do
-	m_commands.HandleRightClick(NULL, m_widgetToEdit, m_gameObjectToEdit);
+	m_commands.HandleRightClick(m_widgetToEdit, m_gameObjectToEdit);
 	return true;
 }
 
 bool DebugMenu::OnSelect(bool a_active)
 {
-	// Do not respond to a click if it's been handled by a menu item
-	if (m_commands.IsActive() && m_commands.HandleLeftClick(NULL, m_widgetToEdit, m_gameObjectToEdit))
+	// Respond to a click if it's been handled by a command
+	if (m_commands.IsActive())
 	{
-		return true;
+		DebugCommandReturnData retVal = m_commands.HandleLeftClick(m_widgetToEdit, m_gameObjectToEdit);
+		if (retVal.m_dirtyFlag > DirtyFlag::None)
+		{
+			m_dirtyFlags.Set(retVal.m_dirtyFlag);
+		}
+		return retVal.m_success;
 	}
 
 	// Stop any mouse bound editing on click
