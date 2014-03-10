@@ -104,14 +104,17 @@ class DebugMenuCommandRegistry
 {
 public:
 
-	DebugMenuCommandRegistry() : m_rootCommand(NULL) { }
+	DebugMenuCommandRegistry()
+		: m_btnCreateRoot(NULL)
+		, m_btnWidgetRoot(NULL)
+		, m_btnGameObjectRoot(NULL)	{ }
 	
 	// Linked list of commands that the debug menu can do
 	typedef LinkedListNode<DebugMenuCommand> CommandNode;
 	typedef LinkedList<DebugMenuCommand> CommandList;
 
 	//\brief Add debug menu commands to a list
-	void Startup(Widget * a_parent);
+	void Startup();
 	void Shutdown();
 
 	//\brief State accessors
@@ -141,8 +144,10 @@ private:
 	//\ brief Debug menu command functions
 	DebugCommandReturnData CreateWidget(Widget * a_widget);
 
-	Widget * m_rootCommand;		///< The Create! menu header that appears on right click
-	CommandList m_commands;		///< List of commands that can be executed
+	Widget * m_btnCreateRoot;						///< Pointer to a widget that is created on startup for the first sub menu
+	Widget * m_btnWidgetRoot;						///< Pointer to a widget that is created on startup for functions related to widgets
+	Widget * m_btnGameObjectRoot;					///< Pointer to a widget that is created on startup for functions related to game objects
+	CommandList m_commands;							///< List of commands that can be executed
 };
 
 #endif //_ENGINE_DEBUG_MENU_COMMANDS_

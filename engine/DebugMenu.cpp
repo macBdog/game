@@ -36,7 +36,6 @@ DebugMenu::DebugMenu()
 , m_editMode(EditMode::None)
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
-, m_btnCreateRoot(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
@@ -62,11 +61,8 @@ bool DebugMenu::Startup()
 	Gui & gui = Gui::Get();
 	InputManager & inMan = InputManager::Get();
 
-	// Create the root of the create menu buttons and use it as the parent to each button
-	m_btnCreateRoot = DebugMenuCommand::CreateButton("Create!", gui.GetDebugRoot(), sc_colourRed);
-
 	// Create the debug menu functionality
-	m_commands.Startup(m_btnCreateRoot);
+	m_commands.Startup();
 	
 	// Create the resource selection dialog
 	Widget::WidgetDef curItem;

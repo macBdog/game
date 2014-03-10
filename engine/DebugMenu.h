@@ -153,7 +153,6 @@ private:
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 
-	Widget * m_btnCreateRoot;						///< Pointer to a widget that we create on startup with all other buttons as children
 	DebugMenuCommandRegistry m_commands;			///< List of commands that can be performed by the debug menu
 
 	Widget * m_resourceSelect;
