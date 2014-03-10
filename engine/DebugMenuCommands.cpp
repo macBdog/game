@@ -8,6 +8,7 @@
 DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour)
 : m_gameObjectFunction()
 , m_widgetFunction()
+, m_alignment(DebugMenuCommandAlign::Below)
 , m_widget(NULL)
 {
 	m_widget = CreateButton(a_name, a_parent, a_colour);
@@ -16,7 +17,12 @@ DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colou
 void DebugMenuCommand::SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum a_alignment)
 {
 	m_widget->SetAlignTo(a_alignedTo);
+	m_alignment = a_alignment;
+	SetWidgetAlignment(m_alignment);
+}
 
+void DebugMenuCommand::SetWidgetAlignment(DebugMenuCommandAlign::Enum a_alignment)
+{
 	switch (a_alignment)
 	{
 		case DebugMenuCommandAlign::Right: 
@@ -87,6 +93,7 @@ void DebugMenuCommandRegistry::Startup(Widget * a_parent)
 
 	DebugMenuCommand * lastCreatedCommand = NULL;
 	lastCreatedCommand = Create("Create Widget",			a_parent, a_parent, DebugMenuCommandAlign::Right, sc_colourPurple);
+		lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
 	lastCreatedCommand = Create("Create GameObject",		a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
 	lastCreatedCommand = Create("New Object",				a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Right, sc_colourSkyBlue);
 	lastCreatedCommand = Create("From Template",			a_parent, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
@@ -116,6 +123,7 @@ void DebugMenuCommandRegistry::Shutdown()
 	while (cur != NULL)
 	{
 		CommandNode * next = cur->GetNext();
+		Gui::Get().DestroyWidget(cur->GetData()->GetWidget());
 		delete cur->GetData();
 		delete cur;
 
@@ -137,7 +145,7 @@ bool DebugMenuCommandRegistry::IsActive() const
 bool DebugMenuCommandRegistry::HandleLeftClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 {
 	DEBUG_COMMANDS_LOOP_BEGIN
-		if (debugWidget == a_clickedWidget) 
+		if (debugWidget->IsSelected(SelectionFlags::EditRollover))
 		{
 			debugCommand->Execute(a_selectedWidget, a_selectedGameObject);
 			return true;
@@ -148,22 +156,20 @@ bool DebugMenuCommandRegistry::HandleLeftClick(Widget * a_clickedWidget, Widget 
 
 bool DebugMenuCommandRegistry::HandleRightClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 {
-	// Determine which way the menus should be drawn
-	const Vector2 screenSideLimit(0.15f, 0.15f);
-	const Vector2 menuDrawSize(m_commands.GetHead()->GetData()->GetWidget()->GetSize());
+	// Draw from screen coords or last clicked widget
 	Vector2 menuDrawPos = InputManager::Get().GetMousePosRelative();
 	if (a_clickedWidget != NULL)
 	{
 		menuDrawPos = a_clickedWidget->GetPos().GetVector();
 	}
-	if (menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX())
-	{
-		// TODO User clicked too close to the right extent, draw left instead
-	}
-	if (menuDrawPos.GetY() - menuDrawSize.GetY() < -1.0 - screenSideLimit.GetY())
-	{
-		// TODO User clicked too close to the bottom, draw up instead
-	}
+
+	// Determine which way the menus should be drawn in case user clicked too close to right/bottom of screen
+	const Vector2 screenSideLimit(0.15f, 0.15f);
+	const Vector2 menuDrawSize(m_commands.GetHead()->GetData()->GetWidget()->GetSize());
+	Alignment menuAlign;
+	menuAlign.m_x = menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX() ? AlignX::Left : AlignX::Right;
+	menuAlign.m_y = menuDrawPos.GetY() - menuDrawSize.GetY() < -1.0 + screenSideLimit.GetY() ? AlignY::Top : AlignY::Bottom;
+	SetMenuAlignment(&menuAlign);
 
 	// Check for showing a root level debug command
 	if (a_clickedWidget == NULL && a_selectedWidget == NULL && a_selectedGameObject == NULL)
@@ -172,6 +178,72 @@ bool DebugMenuCommandRegistry::HandleRightClick(Widget * a_clickedWidget, Widget
 		return true;
 	}
 	return false;
+}
+
+void DebugMenuCommandRegistry::SetMenuAlignment(Alignment * a_screenAlign)
+{
+	DEBUG_COMMANDS_LOOP_BEGIN
+		switch (debugCommand->GetAlignment())
+		{
+			case DebugMenuCommandAlign::Right: // Command should be to the right of its sibling
+			{
+				if (a_screenAlign->m_x == AlignX::Left)
+				{
+					debugWidget->SetAlignment(AlignX::Left, AlignY::Top);	
+					debugWidget->SetAlignmentAnchor(AlignX::Right, AlignY::Top);
+				}
+				else
+				{
+					debugWidget->SetAlignment(AlignX::Right, AlignY::Top);	
+					debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+				}
+				break;
+			}
+		case DebugMenuCommandAlign::Below:	// Command should be below its sibling
+		{
+			if (a_screenAlign->m_y == AlignY::Top)
+			{
+				debugWidget->SetAlignment(AlignX::Left, AlignY::Top);	
+				debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Bottom);
+			}
+			else
+			{
+				debugWidget->SetAlignment(AlignX::Left, AlignY::Bottom);	
+				debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+			}
+			break;
+		}
+		case DebugMenuCommandAlign::Above:	// Command should be above its sibling
+		{
+			if (a_screenAlign->m_y == AlignY::Bottom)
+			{
+				debugWidget->SetAlignment(AlignX::Left, AlignY::Bottom);	
+				debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+			}
+			else
+			{
+				debugWidget->SetAlignment(AlignX::Left, AlignY::Top);	
+				debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Bottom);
+			}
+			break;
+		}
+		case DebugMenuCommandAlign::Left:	// Command should be left of its sibling
+		{
+			if (a_screenAlign->m_x == AlignX::Right)
+			{
+				debugWidget->SetAlignment(AlignX::Right, AlignY::Top);	
+				debugWidget->SetAlignmentAnchor(AlignX::Left, AlignY::Top);
+			}
+			else
+			{
+				debugWidget->SetAlignment(AlignX::Left, AlignY::Top);	
+				debugWidget->SetAlignmentAnchor(AlignX::Right, AlignY::Top);
+			}
+			break;
+		}
+			default: break;
+		}	
+	DEBUG_COMMANDS_LOOP_END
 }
 
 void DebugMenuCommandRegistry::ShowRootCommands()
@@ -230,3 +302,64 @@ void DebugMenuCommandRegistry::Hide()
 		debugWidget->SetActive(false);
 	DEBUG_COMMANDS_LOOP_END
 }
+
+bool DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
+{
+	// Make a new widget
+	Widget::WidgetDef curItem;
+	curItem.m_colour = sc_colourWhite;
+	curItem.m_size = WidgetVector(0.35f, 0.35f);
+	
+	// Check for a loaded debug font
+	if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
+	{
+		curItem.m_fontNameHash = debugFont->GetHash();
+	}
+
+	curItem.m_selectFlags = SelectionFlags::Rollover;
+	curItem.m_name = "NEW_WIDGET";
+
+	// Parent is the active menu
+	Gui & gui = Gui::Get();
+	Widget * parentWidget = a_widget != NULL ? a_widget : gui.GetActiveMenu();
+	Widget * newWidget = gui.CreateWidget(curItem, parentWidget);
+	newWidget->SetOffset(InputManager::Get().GetMousePosRelative());
+	//m_dirtyFlags.Set(DirtyFlag::GUI);
+		
+	Hide();
+	return newWidget != NULL;
+}
+
+/*
+if (a_widget == m_btnCreateGameObject)
+	{
+		// Position the create object submenu buttons
+		m_btnCreateGameObjectFromTemplate->SetAlignTo(m_btnCreateGameObject);
+		m_btnCreateGameObjectFromTemplate->SetPos(firstWidgetAlignment);
+		m_btnCreateGameObjectNew->SetAlignTo(m_btnCreateGameObjectFromTemplate);
+		m_btnCreateGameObjectNew->SetPos(widgetAlignment);
+
+		m_btnCreateGameObjectFromTemplate->SetActive(true);
+		m_btnCreateGameObjectNew->SetActive(true);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnCreateGameObjectFromTemplate)
+	{
+		m_editType = EditType::GameObject;
+		m_editMode = EditMode::Template;
+		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "tmp");
+
+		ShowCreateMenu(false);
+		m_handledCommand = true;
+	}
+	else if (a_widget == m_btnCreateGameObjectNew)
+	{
+		// Create a game object
+		if (m_btnCreateGameObject->IsActive())
+		{
+			WorldManager::Get().CreateObject<GameObject>();
+		}		
+		ShowCreateMenu(false);
+		m_handledCommand = true;
+	}
+	*/

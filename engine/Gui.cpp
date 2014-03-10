@@ -170,8 +170,8 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		defFromFile.m_size = size->GetVector2();
 	}
 	// Set alignment and anchor
-	WidgetVector::Alignment align;
-	WidgetVector::Alignment alignAnchor;
+	Alignment align;
+	Alignment alignAnchor;
 	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignX"))
 	{
 		align.SetXFromString(a_widgetFile->FindProperty("alignX")->GetString());

@@ -33,7 +33,7 @@ public:
 	}
 
 	//\brief Test if the delegate has been set up
-	inline bool IsSet() { return m_callback == NULL; }
+	inline bool IsSet() { return m_callback != NULL; }
 	
 	// Cleanup allocation
 	~Delegate()

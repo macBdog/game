@@ -36,27 +36,32 @@ namespace AlignY
 	};
 }
 
+//\brief Alignment structs contain data and utility functions for delcaring a position in 2D space relative to some other position
+struct Alignment
+{
+	Alignment() : m_x(AlignX::Middle), m_y(AlignY::Centre) { }
+	Alignment(AlignX::Enum a_x, AlignY::Enum a_y) : m_x(a_x), m_y(a_y) { }
+		
+	//\brief String equivalents for  alignment constants written in gui files
+	inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
+	inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
+	inline void SetXFromString(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[i]) == 0) { m_x = (AlignX::Enum)i; break; } } }
+	inline void SetYFromString(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[i]) == 0) { m_y = (AlignY::Enum)i; break; } } }
+		
+	//\brief Literal names for alignment types
+	static const char * s_alignXNames[AlignX::Count];
+	static const char * s_alignYNames[AlignY::Count];
+
+	AlignX::Enum m_x;		///< Is widget position relative to left, middle or right
+	AlignY::Enum m_y;		///< Is widget position relative to top, centre or bottom
+};
+
 //\brief A widget vector is a 2D vector with the additional properties
 //       of different coordinate types to deal with widescreen resolutions
 //       and alignment types to create layouts that work in all screen sizes
 class WidgetVector : public Vector2
 {
 public: 
-
-	struct Alignment
-	{
-		Alignment() : m_x(AlignX::Middle), m_y(AlignY::Centre) { }
-		Alignment(AlignX::Enum a_x, AlignY::Enum a_y) : m_x(a_x), m_y(a_y) { }
-		
-		//\brief String equivalents for  alignment constants written in gui files
-		inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
-		inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
-		inline void SetXFromString(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[i]) == 0) { m_x = (AlignX::Enum)i; break; } } }
-		inline void SetYFromString(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[i]) == 0) { m_y = (AlignY::Enum)i; break; } } }
-		
-		AlignX::Enum m_x;		///< Is widget position relative to left, middle or right
-		AlignY::Enum m_y;		///< Is widget position relative to top, centre or bottom
-	};
 
 	//\brief Two float ctor for convenience, default to top left aligning to bottom right
 	inline WidgetVector() 
@@ -85,10 +90,6 @@ public:
 	using Vector2::operator +;
 	using Vector2::operator -;
 	using Vector2::operator *;
-
-	//\brief Literal names for alignment types
-	static const char * s_alignXNames[AlignX::Count];
-	static const char * s_alignYNames[AlignY::Count];
 
 	Alignment m_alignAnchor;				///< Which part of the widget is aligned
 	Alignment m_align;						///< How the widget is aligned relative to another widget
@@ -233,9 +234,9 @@ public:
 	inline void SetOffset(const Vector2 & a_pctOffset) { m_pos = a_pctOffset; }
 	inline void SetDrawPos(const Vector2 & a_pos) { m_drawPos = a_pos; }
 	inline void SetPos(const WidgetVector & a_pos) { m_pos = a_pos; }
-	inline void SetAlignment(const WidgetVector::Alignment & a_align) { m_pos.SetAlignment(a_align); } 
+	inline void SetAlignment(const Alignment & a_align) { m_pos.SetAlignment(a_align); } 
 	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); }
-	inline void SetAlignmentAnchor(const WidgetVector::Alignment & a_align) { m_pos.SetAlignmentAnchor(a_align); } 
+	inline void SetAlignmentAnchor(const Alignment & a_align) { m_pos.SetAlignmentAnchor(a_align); } 
 	inline void SetAlignmentAnchor(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignmentAnchor(a_alignX, a_alignY); }
 	inline void SetSize(Vector2 a_size) { m_size = a_size; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }

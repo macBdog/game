@@ -11,13 +11,13 @@
 
 using namespace std;	//< For fstream operations
 
-const char * WidgetVector::s_alignXNames[AlignX::Count] = 
+const char * Alignment::s_alignXNames[AlignX::Count] = 
 {
 	"left",
 	"middle",
 	"right"
 };
-const char * WidgetVector::s_alignYNames[AlignY::Count] =
+const char * Alignment::s_alignYNames[AlignY::Count] =
 {
 	"top",
 	"centre",
@@ -370,7 +370,7 @@ void Widget::UpdateAlignTo()
 void Widget::Activate() 
 { 
 	// Check then call the callback
-	if (!m_action.IsSet())
+	if (m_action.IsSet())
 	{
 		m_action.Execute(this);
 	}

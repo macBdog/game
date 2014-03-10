@@ -7,6 +7,7 @@
 
 class GameObject;
 class Widget;
+struct Alignment;
 	
 //\brief Space saving macros for command functions that hide or show different options
 #define DEBUG_COMMANDS_LOOP_BEGIN									\
@@ -43,6 +44,7 @@ public:
 
 	//\brief Accessors
 	inline Widget * GetWidget() const { return m_widget; }
+	inline DebugMenuCommandAlign::Enum GetAlignment() const { return m_alignment; }
 
 	//\brief Functions for setting the callbacks that debug commands provide
 	template <typename TObj, typename TMethod>
@@ -51,11 +53,12 @@ public:
 	inline void SetGameObjectFunction(TObj * a_callerObject, TMethod a_callback) { m_gameObjectFunction.SetCallback(a_callerObject, a_callback); }
 
 	//\brief Set the visual hierachy of the command buttons
-	void SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum);
+	void SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum a_alignment);
+	void SetWidgetAlignment(DebugMenuCommandAlign::Enum a_alignment);
 	inline bool Execute(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
 	{
-		if (a_selectedWidget)		{ return m_widgetFunction.Execute(a_selectedWidget); }
-		if (a_selectedGameObject)	{ return m_gameObjectFunction.Execute(a_selectedGameObject); }
+		if (m_widgetFunction.IsSet())		{ return m_widgetFunction.Execute(a_selectedWidget); }
+		if (m_gameObjectFunction.IsSet())	{ return m_gameObjectFunction.Execute(a_selectedGameObject); }
 		return false;
 	}
 
@@ -70,6 +73,7 @@ private:
 
 	Delegate<bool, GameObject *> m_gameObjectFunction;		///< Function if the command is registered on a game object
 	Delegate<bool, Widget *> m_widgetFunction;				///< Function if the command is registered on a widget
+	DebugMenuCommandAlign::Enum m_alignment;				///< How the command is aligned to it's parent command NOTE: this is separate to widget alignment
 	Widget * m_widget;										///< Visual representation of the command button
 };
 
@@ -94,7 +98,7 @@ public:
 	bool HandleLeftClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject);
 	bool HandleRightClick(Widget * a_clickedWidget, Widget * a_selectedWidget, GameObject * a_selectedGameObject);
 
-	//\brief Menu button functionality
+	//\brief Menu button visibility functions
 	void ShowRootCommands();
 	void ShowWidgetCommands();
 	void ShowGameObjectCommands();
@@ -107,6 +111,12 @@ private:
 
 	//\brief Helper function for creating and setting up a new debug menu widget
 	DebugMenuCommand * Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour);
+
+	//\brief Set the alignment of the widgets for each command according to rules for where the user clicked
+	void SetMenuAlignment(Alignment * a_screenAlign);
+
+	//\ brief Debug menu command functions
+	bool CreateWidget(Widget * a_widget);
 
 	Widget * m_rootCommand;
 	CommandList m_commands;

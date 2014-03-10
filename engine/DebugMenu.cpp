@@ -273,7 +273,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 		return false;
 	}
 	
-	// Set visibility and position for the debug
+	// Handle the file list and other dialogs owned by the debug menu
 	return HandleMenuAction(a_widget);
 }
 
@@ -281,65 +281,7 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 {
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
-	m_handledCommand = m_commands.HandleLeftClick(a_widget, m_widgetToEdit, m_gameObjectToEdit);
 	/*
-	if (a_widget == m_btnCreateWidget)
-	{
-		// Make a new widget
-		Widget::WidgetDef curItem;
-		curItem.m_colour = sc_colourWhite;
-		curItem.m_size = WidgetVector(0.35f, 0.35f);
-	
-		// Check for a loaded debug font
-		if (StringHash * debugFont = FontManager::Get().GetDebugFontName())
-		{
-			curItem.m_fontNameHash = debugFont->GetHash();
-		}
-
-		curItem.m_selectFlags = SelectionFlags::Rollover;
-		curItem.m_name = "NEW_WIDGET";
-
-		// Parent is the active menu
-		Widget * parentWidget = m_widgetToEdit != NULL ? m_widgetToEdit : gui.GetActiveMenu();
-		Widget * newWidget = Gui::Get().CreateWidget(curItem, parentWidget);
-		newWidget->SetOffset(m_btnCreateRoot->GetPos());
-		m_dirtyFlags.Set(DirtyFlag::GUI);
-		
-		// Cancel menu display
-		ShowCreateMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCreateGameObject)
-	{
-		// Position the create object submenu buttons
-		m_btnCreateGameObjectFromTemplate->SetAlignTo(m_btnCreateGameObject);
-		m_btnCreateGameObjectFromTemplate->SetPos(firstWidgetAlignment);
-		m_btnCreateGameObjectNew->SetAlignTo(m_btnCreateGameObjectFromTemplate);
-		m_btnCreateGameObjectNew->SetPos(widgetAlignment);
-
-		m_btnCreateGameObjectFromTemplate->SetActive(true);
-		m_btnCreateGameObjectNew->SetActive(true);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCreateGameObjectFromTemplate)
-	{
-		m_editType = EditType::GameObject;
-		m_editMode = EditMode::Template;
-		ShowResourceSelect(WorldManager::Get().GetTemplatePath(), "tmp");
-
-		ShowCreateMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnCreateGameObjectNew)
-	{
-		// Create a game object
-		if (m_btnCreateGameObject->IsActive())
-		{
-			WorldManager::Get().CreateObject<GameObject>();
-		}		
-		ShowCreateMenu(false);
-		m_handledCommand = true;
-	}
 	else if (a_widget == m_btnChangeGUIRoot)
 	{
 		// Show menu options on the right of the menu
@@ -616,9 +558,8 @@ bool DebugMenu::OnActivate(bool a_active)
 bool DebugMenu::OnSelect(bool a_active)
 {
 	// Do not respond to a click if it's been handled by a menu item
-	if (m_handledCommand == true)
+	if (m_commands.IsActive() && m_commands.HandleLeftClick(NULL, m_widgetToEdit, m_gameObjectToEdit))
 	{
-		m_handledCommand = false;
 		return true;
 	}
 
