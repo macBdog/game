@@ -14,38 +14,6 @@
 
 class Widget;
 
-//\brief When editing we can change properties of GUI widgets and also game objects
-namespace EditType
-{
-	enum Enum
-	{
-		None = -1,		///< Not changing anything
-		Widget,			///< Changing a gui widget
-		GameObject,		///< Changing a game object
-		Count,
-	};
-}
-
-//\brief What type of editing mode is being performed 
-namespace EditMode
-{
-	
-	enum Enum
-	{
-		None = -1,
-		Pos,			///< Widget top left stuck to mouse pos
-		Shape,			///< Widget bottom right stuck to mouse pos
-		Texture,		///< File selection dialog active
-		Name,			///< Cursor keys bound to display name
-		Text,			///< Cursor keys bound to text value
-		Model,			///< Setting the model for an object
-		Template,		///< Create an object from a template
-		SaveTemplate,	///< Set the template name for an object
-
-		eEditModeCount,
-	};
-}
-
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
 //		 create and configure gui elements, game objects and control engine settings.
 class DebugMenu : public Singleton<DebugMenu>
@@ -121,11 +89,6 @@ public:
 
 private:
 
-	//\brief Helper function to handle widget visibility and position as a result of actions
-	//\param a_widget is a pointer to the widget that was activated on
-	//\return a bool indicating that the action was handled correctly
-	bool HandleMenuAction(Widget * a_widget);
-
 	static const float sc_gameTimeScaleFast;		// Value of game time scale in fast mode
 	static const float sc_gameTimeScaleSlow;		// Value of game time scale in slow mode
 	static const float sc_cursorSize;				// Size of debug mouse cursor
@@ -144,7 +107,6 @@ private:
 	void HideTextInput();
 
 	bool m_enabled;									///< Is the menu being shown
-	bool m_handledCommand;							///< In the case that we are responding both to a global and a gui command
 	float m_gameTimeScale;							///< How fast the game is running, 1.0 means real time
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames

@@ -5,6 +5,8 @@
 #include "../core/Colour.h"
 #include "../core/Delegate.h"
 
+#include "StringUtils.h"
+
 class GameObject;
 class Widget;
 struct Alignment;
@@ -45,15 +47,58 @@ namespace DebugMenuCommandAlign
 	};
 }
 
+//\brief When editing we can change properties of GUI widgets and also game objects
+namespace EditType
+{
+	enum Enum
+	{
+		None = -1,		///< Not changing anything
+		Widget,			///< Changing a gui widget
+		GameObject,		///< Changing a game object
+		Count,
+	};
+}
+
+//\brief What type of editing mode is being performed 
+namespace EditMode
+{
+	enum Enum
+	{
+		None = -1,
+		Pos,			///< Widget top left stuck to mouse pos
+		Shape,			///< Widget bottom right stuck to mouse pos
+		Texture,		///< File selection dialog active
+		Name,			///< Cursor keys bound to display name
+		Text,			///< Cursor keys bound to text value
+		Model,			///< Setting the model for an object
+		Template,		///< Create an object from a template
+		SaveTemplate,	///< Set the template name for an object
+
+		eEditModeCount,
+	};
+}
+
 //\brief Contains some data that a command can return, passed around by value so remember to keep it small
 struct DebugCommandReturnData
 {
 	DebugCommandReturnData() 
-		: m_success(false)
+		: m_editMode(EditMode::None)
+		, m_editType(EditType::None)
 		, m_dirtyFlag(DirtyFlag::None)
+		, m_textEditString(NULL)
+		, m_resourceSelectPath(NULL)
+		, m_resourceSelectExtension(NULL)
+		, m_success(false)
 		{ }
-	bool m_success;					///< Was the command successful
+	
+	char * m_textEditString;
+	char * m_resourceSelectPath;
+	char * m_resourceSelectExtension;
 	DirtyFlag::Enum m_dirtyFlag;	///< If the command touched a widget or game object it should set a flag
+	EditMode::Enum m_editMode;		///< If the command set a new mode for the debug menu
+	EditType::Enum m_editType;		///< If the command set a new type of editing for the debug menu
+	bool m_success;					///< Was the command successful
+
 };
 
 //\brief Debug menu commands are functions that the debug menu executes from a button press
@@ -107,7 +152,12 @@ public:
 	DebugMenuCommandRegistry()
 		: m_btnCreateRoot(NULL)
 		, m_btnWidgetRoot(NULL)
-		, m_btnGameObjectRoot(NULL)	{ }
+		, m_btnGameObjectRoot(NULL)	
+	{ 
+		m_textEditString[0] = '\0';
+		m_resourceSelectPath[0] = '\0';
+		m_resourceSelectExtension[0] = '\0';
+	}
 	
 	// Linked list of commands that the debug menu can do
 	typedef LinkedListNode<DebugMenuCommand> CommandNode;
@@ -143,6 +193,27 @@ private:
 
 	//\ brief Debug menu command functions
 	DebugCommandReturnData CreateWidget(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetAlignment(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetOffset(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetShape(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetName(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetText(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetTexture(Widget * a_widget);
+	DebugCommandReturnData DeleteWidget(Widget * a_widget);
+
+	DebugCommandReturnData CreateGameObject(GameObject * a_gameObj);
+	DebugCommandReturnData CreateGameObjectFromTemplate(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectModel(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectName(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectClipType(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectClipSize(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectClipPosition(GameObject * a_gameObj);
+	DebugCommandReturnData SaveGameObjectTemplate(GameObject * a_gameObj);
+	DebugCommandReturnData DeleteGameObject(GameObject * a_gameObj);
+
+	char m_textEditString[StringUtils::s_maxCharsPerName];
+	char m_resourceSelectPath[StringUtils::s_maxCharsPerLine];
+	char m_resourceSelectExtension[4];
 
 	Widget * m_btnCreateRoot;						///< Pointer to a widget that is created on startup for the first sub menu
 	Widget * m_btnWidgetRoot;						///< Pointer to a widget that is created on startup for functions related to widgets

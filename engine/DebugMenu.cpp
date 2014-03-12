@@ -28,7 +28,6 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 
 DebugMenu::DebugMenu()
 : m_enabled(false) 
-, m_handledCommand(false)
 , m_gameTimeScale(1.0f)
 , m_dirtyFlags()
 , m_lastMousePosRelative(0.0f)
@@ -88,11 +87,12 @@ bool DebugMenu::Startup()
 	curItem.m_name="Resource List";
 	m_resourceSelectList = gui.CreateWidget(curItem, m_resourceSelect, false);
 	m_resourceSelectList->SetDebugWidget();
-	m_resourceSelectList->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
 	// Ok and Cancel buttons on the resource select dialog
 	m_btnResourceSelectOk = DebugMenuCommand::CreateButton("Ok", m_resourceSelect, sc_colourOrange);
+	m_btnResourceSelectOk->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 	m_btnResourceSelectCancel = DebugMenuCommand::CreateButton("Cancel", m_resourceSelect, sc_colourGrey);
+	m_btnResourceSelectCancel->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
 	// Create text input box for naming objects and files
 	curItem.m_size = WidgetVector(0.85f, 0.4f);
@@ -260,136 +260,16 @@ bool DebugMenu::SaveChanges()
 
 bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 {
-	// Commands can be handled by the menu items here or in the key/button handlers
-	m_handledCommand = false;
-
 	// Do nothing if the debug menu isn't enabled
 	if (!IsDebugMenuEnabled())
 	{
 		return false;
 	}
-	
-	// Handle the file list and other dialogs owned by the debug menu
-	return HandleMenuAction(a_widget);
-}
 
-bool DebugMenu::HandleMenuAction(Widget * a_widget)
-{
 	// Check the widget that was activated matches and we don't have other menus up
 	Gui & gui = Gui::Get();
-	/*
-	else if (a_widget == m_btnChangeGUIRoot)
-	{
-		// Show menu options on the right of the menu
-		m_btnChangeGUIPos->SetAlignTo(m_btnChangeGUIRoot);
-		m_btnChangeGUIPos->SetPos(firstWidgetAlignment);
-		m_btnChangeGUIShape->SetAlignTo(m_btnChangeGUIPos);
-		m_btnChangeGUIShape->SetPos(widgetAlignment);
-		m_btnChangeGUIName->SetAlignTo(m_btnChangeGUIShape);
-		m_btnChangeGUIName->SetPos(widgetAlignment);
-		m_btnChangeGUIText->SetAlignTo(m_btnChangeGUIName);
-		m_btnChangeGUIText->SetPos(widgetAlignment);
-		m_btnChangeGUITexture->SetAlignTo(m_btnChangeGUIText);
-		m_btnChangeGUITexture->SetPos(widgetAlignment);
-		m_btnDeleteGUI->SetAlignTo(m_btnChangeGUITexture);
-		m_btnDeleteGUI->SetPos(widgetAlignment);
 
-		ShowChangeGUIMenu(true);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeGUIPos)
-	{
-		m_editMode = EditMode::Pos;
-		ShowChangeGUIMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeGUIShape)
-	{
-		m_editMode = EditMode::Shape;
-		ShowChangeGUIMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeGUIName)
-	{
-		m_editMode = EditMode::Name;
-		ShowTextInput(m_widgetToEdit->GetName());
-		ShowChangeGUIMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeGUIText)
-	{		
-		m_editMode = EditMode::Text;
-		ShowTextInput(m_widgetToEdit->GetText());
-		ShowChangeGUIMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeGUITexture)
-	{
-		m_editMode = EditMode::Texture;
-		ShowChangeGUIMenu(false);
-		
-		// Bring up the resource selection dialog
-		ShowResourceSelect(TextureManager::Get().GetTexturePath(), "tga");
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnDeleteGUI)
-	{
-		Gui::Get().DestroyWidget(m_widgetToEdit);
-		m_widgetToEdit = NULL;
-
-		m_editMode = EditMode::None;
-		m_editType = EditType::None;
-		ShowChangeGUIMenu(false);
-		m_handledCommand = true;
-		m_dirtyFlags.Set(DirtyFlag::GUI);
-	}
-	else if (a_widget == m_btnChangeObjectRoot)
-	{
-		// Show menu options on the right of the menu
-		m_btnChangeObjectName->SetAlignTo(m_btnChangeObjectRoot);
-		m_btnChangeObjectName->SetPos(firstWidgetAlignment);
-		m_btnChangeObjectModel->SetAlignTo(m_btnChangeObjectName);
-		m_btnChangeObjectModel->SetPos(widgetAlignment);
-		m_btnSaveObjectTemplate->SetAlignTo(m_btnChangeObjectModel);
-		m_btnSaveObjectTemplate->SetPos(widgetAlignment);
-		m_btnDeleteObject->SetAlignTo(m_btnSaveObjectTemplate);
-		m_btnDeleteObject->SetPos(widgetAlignment);
-
-		ShowChangeObjectMenu(true);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeObjectName)
-	{
-		m_editMode = EditMode::Name;
-		ShowTextInput(m_gameObjectToEdit->GetName());
-		ShowChangeObjectMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnChangeObjectModel)
-	{
-		m_editMode = EditMode::Model;
-		ShowResourceSelect(ModelManager::Get().GetModelPath(), "obj");
-		ShowChangeObjectMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnSaveObjectTemplate)
-	{
-		m_editMode = EditMode::SaveTemplate;
-		ShowTextInput(m_gameObjectToEdit->GetTemplate());
-		ShowChangeObjectMenu(false);
-		m_handledCommand = true;
-	}
-	else if (a_widget == m_btnDeleteObject)
-	{
-		WorldManager::Get().DestroyObject(m_gameObjectToEdit->GetId());
-		m_gameObjectToEdit = NULL;
-		m_editMode = EditMode::None;
-		m_editType = EditType::None;
-		ShowChangeObjectMenu(false);
-		m_handledCommand = true;
-		m_dirtyFlags.Set(DirtyFlag::Scene);
-	}
-	else if (a_widget == m_btnResourceSelectOk)
+	if (a_widget == m_btnResourceSelectOk)
 	{
 		// Have just selected a resource for some object
 		switch (m_editType)
@@ -447,16 +327,12 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		HideResoureSelect();
 		m_editType = EditType::None;
 		m_editMode = EditMode::None;
-
-		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnResourceSelectCancel)
 	{
 		HideResoureSelect();
 		m_editType = EditType::None;
 		m_editMode = EditMode::None;
-
-		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnTextInputOk)
 	{
@@ -515,21 +391,16 @@ bool DebugMenu::HandleMenuAction(Widget * a_widget)
 		HideTextInput();
 		m_editType = EditType::None;
 		m_editMode = EditMode::None;
-		m_handledCommand = true;
 	}
 	else if (a_widget == m_btnTextInputCancel)
 	{
 		HideTextInput();
 		m_editType = EditType::None;
 		m_editMode = EditMode::None;
-		m_handledCommand = true;
 	}
-	*/
 
 	// Save anything dirty to file
-	SaveChanges();
-	
-	return m_handledCommand;
+	return SaveChanges();
 }
 
 bool DebugMenu::OnActivate(bool a_active)
@@ -553,13 +424,19 @@ bool DebugMenu::OnActivate(bool a_active)
 
 bool DebugMenu::OnSelect(bool a_active)
 {
-	// Respond to a click if it's been handled by a command
+	// Respond to a click and set internal state if it's been handled by a command
 	if (m_commands.IsActive())
 	{
 		DebugCommandReturnData retVal = m_commands.HandleLeftClick(m_widgetToEdit, m_gameObjectToEdit);
+		m_editMode = retVal.m_editMode;
+		m_editType = retVal.m_editType;
 		if (retVal.m_dirtyFlag > DirtyFlag::None)
 		{
 			m_dirtyFlags.Set(retVal.m_dirtyFlag);
+		}
+		if (retVal.m_resourceSelectPath != NULL)
+		{
+			ShowResourceSelect(retVal.m_resourceSelectPath, retVal.m_resourceSelectExtension);
 		}
 		return retVal.m_success;
 	}
@@ -614,27 +491,31 @@ bool DebugMenu::OnSelect(bool a_active)
 		}
 	}
 
-	// Do picking with all the game objects in the scene
-	if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+	// If we don't already have a widget
+	if (m_widgetToEdit == NULL)
 	{
-		// Picking point is the mouse cursor transformed to 3D space in cam direction
-		const float pickDepth = 100.0f;
-		const float persp = 0.47f;
-		RenderManager & renMan = RenderManager::Get();
-		CameraManager & camMan = CameraManager::Get();
-		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
-		Matrix camMat = camMan.GetViewMatrix();
-		Vector camPos = camMan.GetWorldPos();
-		Vector mouseInput = Vector(	mousePos.GetX() * renMan.GetViewAspect() * pickDepth * persp, 
-									0.0f, 
-									mousePos.GetY() * pickDepth * persp);
-		Vector pickEnd = camPos + camMat.GetLook() * pickDepth;
-		pickEnd += camMat.Transform(mouseInput);
-
-		// Pick an arbitrary object (would have to sort to get the closest)
-		if (m_gameObjectToEdit = curScene->GetSceneObject(camPos, pickEnd))
+		// Do picking with all the game objects in the scene
+		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 		{
-			m_editType = EditType::GameObject;
+			// Picking point is the mouse cursor transformed to 3D space in cam direction
+			const float pickDepth = 100.0f;
+			const float persp = 0.47f;
+			RenderManager & renMan = RenderManager::Get();
+			CameraManager & camMan = CameraManager::Get();
+			Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+			Matrix camMat = camMan.GetViewMatrix();
+			Vector camPos = camMan.GetWorldPos();
+			Vector mouseInput = Vector(	mousePos.GetX() * renMan.GetViewAspect() * pickDepth * persp, 
+										0.0f, 
+										mousePos.GetY() * pickDepth * persp);
+			Vector pickEnd = camPos + camMat.GetLook() * pickDepth;
+			pickEnd += camMat.Transform(mouseInput);
+
+			// Pick an arbitrary object (would have to sort to get the closest)
+			if (m_gameObjectToEdit = curScene->GetSceneObject(camPos, pickEnd))
+			{
+				m_editType = EditType::GameObject;
+			}
 		}
 	}
 
