@@ -110,7 +110,9 @@ bool DebugMenu::Startup()
 
 	// Ok and Cancel buttons on the text input dialog
 	m_btnTextInputOk = DebugMenuCommand::CreateButton("Ok", m_textInput, sc_colourOrange);
+	m_btnTextInputOk->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 	m_btnTextInputCancel = DebugMenuCommand::CreateButton("Cancel", m_textInput, sc_colourGrey);
+	m_btnTextInputCancel->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
 	// Widgets to be used by script
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
@@ -430,13 +432,21 @@ bool DebugMenu::OnSelect(bool a_active)
 		DebugCommandReturnData retVal = m_commands.HandleLeftClick(m_widgetToEdit, m_gameObjectToEdit);
 		m_editMode = retVal.m_editMode;
 		m_editType = retVal.m_editType;
+
+		// If the command touched a resource that needs writing
 		if (retVal.m_dirtyFlag > DirtyFlag::None)
 		{
 			m_dirtyFlags.Set(retVal.m_dirtyFlag);
 		}
+		// If the command required a resource to be selected
 		if (retVal.m_resourceSelectPath != NULL)
 		{
 			ShowResourceSelect(retVal.m_resourceSelectPath, retVal.m_resourceSelectExtension);
+		}
+		// If the command requires some input of text
+		if (retVal.m_textEditString != NULL)
+		{
+			ShowTextInput(retVal.m_textEditString);
 		}
 		return retVal.m_success;
 	}

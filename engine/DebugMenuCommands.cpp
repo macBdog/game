@@ -60,7 +60,7 @@ Widget * DebugMenuCommand::CreateButton(const char * a_name, Widget * a_parent, 
 	// All debug menu elements are created equal
 	Widget::WidgetDef curItem;
 	curItem.m_size = WidgetVector(0.2f, 0.1f);
-	curItem.m_pos = WidgetVector(10.0f, 10.0f);
+	curItem.m_pos = WidgetVector(0.0f, 0.0f);
 	curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
 	curItem.m_pos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
 	curItem.m_selectFlags = SelectionFlags::Rollover;
@@ -107,11 +107,11 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObjectFromTemplate);
 	
 	// Change 2D objects
-	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourPurple);
+	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetAlignment);
 	lastCreatedCommand = Create("Offset",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetOffset);
-	lastCreatedCommand = Create("Shape",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
+	lastCreatedCommand = Create("Shape",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetShape);
 	lastCreatedCommand = Create("Widget Name",				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetName);

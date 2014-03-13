@@ -547,7 +547,7 @@ const char * Widget::GetListItem(unsigned int a_itemId)
 
 Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
 {
-	Vector2 pos = a_alignParent->m_drawPos;
+	Vector2 pos = a_alignParent->m_drawPos + m_pos.GetVector();
 	const float sizeX = m_size.GetX();
 	const float sizeY = m_size.GetY();
 	const float parentSizeX = a_alignParent->GetSize().GetX();
