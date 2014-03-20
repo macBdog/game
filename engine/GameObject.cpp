@@ -227,7 +227,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			outputFile->AddProperty(fileObject, "template", m_template);
 			SerialiseTemplate();
 		}
-
+		
 		GetPos().GetString(vecBuf);
 		outputFile->AddProperty(fileObject, "pos", vecBuf);
 
@@ -237,6 +237,19 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		// And optional ones
 		if (!templated)
 		{
+			if (m_clipType != ClipType::None)
+			{
+				outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[m_clipType]);
+				char vecBuf[StringUtils::s_maxCharsPerName];
+				m_clipVolumeSize.GetString(vecBuf);
+				outputFile->AddProperty(fileObject, "clipSize", vecBuf);
+				m_clipVolumeOffset.GetString(vecBuf);
+				outputFile->AddProperty(fileObject, "clipOffset", vecBuf);
+			}
+			if (!m_clipGroup.IsEmpty())
+			{
+				outputFile->AddProperty(fileObject, "clipGroup", m_clipGroup.GetCString());
+			}
 			if (m_shader != NULL)
 			{
 				// Make sure the shader is not a default engine shader
@@ -272,11 +285,12 @@ void GameObject::SerialiseTemplate()
 	}
 	if (m_clipType != ClipType::None)
 	{
-
 		templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[m_clipType]);
 		char vecBuf[StringUtils::s_maxCharsPerName];
 		m_clipVolumeSize.GetString(vecBuf);
-		templateFile->AddProperty(templateObj, "clipsSize", vecBuf);
+		templateFile->AddProperty(templateObj, "clipSize", vecBuf);
+		m_clipVolumeOffset.GetString(vecBuf);
+		templateFile->AddProperty(templateObj, "clipOffset", vecBuf);
 	}
 	if (!m_clipGroup.IsEmpty())
 	{

@@ -249,6 +249,11 @@ public:
 						{
 							newGameObject->SetClipSize(clipSize->GetVector());
 						}
+						// Clipping offset
+						if (GameFile::Property * clipOffset = object->FindProperty("clipOffset"))
+						{
+							newGameObject->SetClipOffset(clipOffset->GetVector());
+						}
 						// Shader 
 						RenderManager & rMan = RenderManager::Get();
 						if (GameFile::Property * shader = object->FindProperty("shader"))

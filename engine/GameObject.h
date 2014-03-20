@@ -109,6 +109,7 @@ public:
 	inline Shader * GetShader() const { return m_shader; }
 	inline Vector GetPos() const { return  m_worldMat.GetPos() + m_localMat.GetPos(); }
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_localMat.GetPos() + m_clipVolumeOffset; }
+	inline Vector GetClipOffset() { return m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline ClipType::Enum GetClipType() const { return m_clipType; }
 	inline StringHash GetClipGroup() const { return m_clipGroup; }

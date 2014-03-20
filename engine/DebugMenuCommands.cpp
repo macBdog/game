@@ -539,21 +539,33 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectName(GameObject
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectClipType(GameObject * a_gameObj)
 {
 	DebugCommandReturnData retVal;
-
+	retVal.m_editType = EditType::GameObject;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
 	return retVal;
 }
 
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectClipSize(GameObject * a_gameObj)
 {
-	DebugCommandReturnData retVal;
+	Hide();
 
+	DebugCommandReturnData retVal;
+	retVal.m_editMode = EditMode::ClipSize;
+	retVal.m_editType = EditType::GameObject;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
 	return retVal;
 }
 
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectClipPosition(GameObject * a_gameObj)
 {
-	DebugCommandReturnData retVal;
+	Hide();
 
+	DebugCommandReturnData retVal;
+	retVal.m_editMode = EditMode::ClipPosition;
+	retVal.m_editType = EditType::GameObject;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
 	return retVal;
 }
 

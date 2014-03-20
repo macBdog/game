@@ -73,6 +73,9 @@ namespace EditMode
 		Model,			///< Setting the model for an object
 		Template,		///< Create an object from a template
 		SaveTemplate,	///< Set the template name for an object
+		Alignment,		///< Set alignment of a widget
+		ClipPosition,	///< Origin of the clip volume of a game object
+		ClipSize,		///< Size of the clip volume of the game object
 
 		eEditModeCount,
 	};

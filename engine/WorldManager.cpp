@@ -349,6 +349,29 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 				{
 					newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
 				}
+				if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
+				{
+					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+					{
+						newObject->SetClipType(ClipType::Sphere);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+					{
+						newObject->SetClipType(ClipType::Box);
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), a_scenePath);
+					}
+				}
+				if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
+				{
+					newObject->SetClipSize(clipSize->GetVector());
+				}
+				if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
+				{
+					newObject->SetClipOffset(clipOffset->GetVector());
+				}
 				if (childObj->FindProperty("model"))
 				{
 					newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));

@@ -185,47 +185,84 @@ void DebugMenu::Update(float a_dt)
 	}
 	else if (m_gameObjectToEdit != NULL)
 	{
-		// Don't move while a menu is up
-		if (!IsDebugMenuActive())
+		Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
+		float moveAmount = amountToMove.GetX() + amountToMove.GetY();
+		if (m_editType == EditType::GameObject)
 		{
-			// Move object in all dimensions separately
-			Vector curPos = m_gameObjectToEdit->GetPos();			
-			Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
-			if (inMan.IsKeyDepressed(SDLK_x))
+			if (m_editMode == EditMode::ClipPosition)
 			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
+				Vector curPos = m_gameObjectToEdit->GetClipOffset();	
+				if (inMan.IsKeyDepressed(SDLK_x))
 				{
-					m_gameObjectToEdit->AddRot(Vector(amountToMove.GetX() * 16.0f, 0.0f, 0.0f));
+					m_gameObjectToEdit->SetClipOffset(curPos + Vector(moveAmount, 0.0f, 0.0f));
 				}
-				else
+				else if (inMan.IsKeyDepressed(SDLK_y))
 				{
-					m_gameObjectToEdit->SetPos(Vector(curPos.GetX() + amountToMove.GetX(), curPos.GetY(), curPos.GetZ()));
+					m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, moveAmount, 0.0f));
+				}
+				else if (inMan.IsKeyDepressed(SDLK_z))
+				{
+					m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, 0.0f, moveAmount));
 				}
 				m_dirtyFlags.Set(DirtyFlag::Scene);
-			} 
-			else if (inMan.IsKeyDepressed(SDLK_y))
-			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
-				{
-					m_gameObjectToEdit->AddRot(Vector(0.0f, amountToMove.GetX() * 16.0f, 0.0f));
-				}
-				else
-				{
-					m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY() + amountToMove.GetY(), curPos.GetZ()));
-				}
-				m_dirtyFlags.Set(DirtyFlag::Scene);				
 			}
-			else if (inMan.IsKeyDepressed(SDLK_z))
+			else if (m_editMode == EditMode::ClipSize)
 			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
+				Vector curSize = m_gameObjectToEdit->GetClipSize();	
+				if (inMan.IsKeyDepressed(SDLK_x))
 				{
-					m_gameObjectToEdit->AddRot(Vector(0.0f, 0.0f, amountToMove.GetX() * 16.0f));
+					m_gameObjectToEdit->SetClipSize(curSize + Vector(moveAmount, 0.0f, 0.0f));
 				}
-				else
+				else if (inMan.IsKeyDepressed(SDLK_y))
 				{
-					m_gameObjectToEdit->SetPos(Vector(curPos.GetX(), curPos.GetY(), curPos.GetZ() + amountToMove.GetY()));
+					m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, moveAmount, 0.0f));
+				}
+				else if (inMan.IsKeyDepressed(SDLK_z))
+				{
+					m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, 0.0f, moveAmount));
 				}
 				m_dirtyFlags.Set(DirtyFlag::Scene);
+			}
+			else if (!IsDebugMenuActive())
+			{
+				// Move object in all dimensions separately
+				Vector curPos = m_gameObjectToEdit->GetPos();			
+				if (inMan.IsKeyDepressed(SDLK_x))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						m_gameObjectToEdit->AddRot(Vector(moveAmount * 16.0f, 0.0f, 0.0f));
+					}
+					else
+					{
+						m_gameObjectToEdit->SetPos(curPos + Vector(moveAmount, 0.0f, 0.0f));
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
+				} 
+				else if (inMan.IsKeyDepressed(SDLK_y))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						m_gameObjectToEdit->AddRot(Vector(0.0f, moveAmount * 16.0f, 0.0f));
+					}
+					else
+					{
+						m_gameObjectToEdit->SetPos(curPos + Vector(0.0f, moveAmount, 0.0f));
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);				
+				}
+				else if (inMan.IsKeyDepressed(SDLK_z))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						m_gameObjectToEdit->AddRot(Vector(0.0f, 0.0f, moveAmount * 16.0f));
+					}
+					else
+					{
+						m_gameObjectToEdit->SetPos(curPos + Vector(0.0f, 0.0f, moveAmount));
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
+				}
 			}
 		}
 	}
@@ -489,6 +526,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_editType = EditType::Widget;
 		m_widgetToEdit = newSelectedWidget;
 		m_widgetToEdit->SetSelection(SelectionFlags::EditSelected);
+		m_gameObjectToEdit = NULL;
 	}
 	else // Cancel selections
 	{
@@ -522,9 +560,18 @@ bool DebugMenu::OnSelect(bool a_active)
 			pickEnd += camMat.Transform(mouseInput);
 
 			// Pick an arbitrary object (would have to sort to get the closest)
-			if (m_gameObjectToEdit = curScene->GetSceneObject(camPos, pickEnd))
+			GameObject * foundObject = curScene->GetSceneObject(camPos, pickEnd);
+			if (foundObject != NULL)
 			{
+				m_gameObjectToEdit = foundObject;
+				m_widgetToEdit = NULL;
 				m_editType = EditType::GameObject;
+			}
+			else
+			{
+				m_gameObjectToEdit = NULL;
+				m_editType = EditType::None;
+				m_editMode = EditMode::None;
 			}
 		}
 	}

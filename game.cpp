@@ -255,6 +255,7 @@ int main(int argc, char *argv[])
 	TextureManager::Get().Shutdown();
 	ScriptManager::Get().Shutdown();
 	CameraManager::Get().Shutdown();
+	DebugMenu::Get().Shutdown();
 	Gui::Get().Shutdown();
 	RenderManager::Get().Shutdown();
 	InputManager::Get().Shutdown();
