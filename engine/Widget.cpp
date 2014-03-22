@@ -311,6 +311,22 @@ void Widget::AddChild(Widget * a_child)
 	m_children.Insert(newWidgetNode);
 }
 
+bool Widget::RemoveChild(Widget * a_child)
+{
+	WidgetNode * a_cur = m_children.GetHead();
+	while (a_cur != NULL)
+	{
+		if (a_cur->GetData() == a_child)
+		{
+			m_children.Remove(a_cur);
+			delete a_cur;
+			return true;
+		}
+		a_cur = a_cur->GetNext();
+	}
+	return false;
+}
+
 Widget * Widget::Find(const char * a_name)
 {
 	// Non search cases
@@ -334,7 +350,7 @@ Widget * Widget::Find(const char * a_name)
 			return curWidget->GetData();
 		}
 		// Recurse into children's family to find the widget
-		if (curWidget->GetData()->GetChildren() != NULL)
+		if (!curWidget->GetData()->m_children.IsEmpty())
 		{
 			foundWidget = curWidget->GetData()->Find(a_name);
 		}
@@ -342,6 +358,80 @@ Widget * Widget::Find(const char * a_name)
 		curWidget = curWidget->GetNext();
 	}
 	return foundWidget;
+}
+
+bool Widget::RemoveAlignmentTo(Widget * a_alignedTo)
+{
+	bool cleared = false;
+	if (a_alignedTo == NULL)
+	{
+		return false;
+	}
+
+	if (m_children.IsEmpty())
+	{
+		return false;
+	}
+
+	// Clear self
+	if (m_alignTo == a_alignedTo)
+	{
+		ClearAlignTo();
+		cleared = true;
+	}
+
+	// Exhaustive search through children to clear alignment to a widget
+	WidgetNode * cur = m_children.GetHead();
+	while (cur != NULL)
+	{
+		Widget * curWidget = cur->GetData();
+		if (curWidget->m_alignTo == a_alignedTo)
+		{
+			curWidget->ClearAlignTo();
+			cleared = true;
+		}
+		// Recurse into children's family to find the widget
+		if (!curWidget->m_children.IsEmpty())
+		{
+			cleared = curWidget->RemoveAlignmentTo(a_alignedTo);
+		}
+		cur = cur->GetNext();
+	}
+	return cleared;
+}
+
+bool Widget::RemoveFromChildren(Widget * a_child)
+{
+	if (a_child == NULL)
+	{
+		return false;
+	}
+
+	if (m_children.IsEmpty())
+	{
+		return false;
+	}
+
+	// Could possibly early out after the first removal but better to be exhaustive
+	bool removed = RemoveChild(a_child);
+	WidgetNode * cur = m_children.GetHead();
+	while (cur != NULL)
+	{
+		Widget * curWidget = cur->GetData();
+		if (curWidget->RemoveChild(a_child))
+		{
+			removed = true;
+		}
+		if (!curWidget->m_children.IsEmpty())
+		{
+			if (curWidget->RemoveFromChildren(a_child))
+			{
+				removed = true;
+			}
+		}
+		cur = cur->GetNext();
+	}
+	return removed;
 }
 
 void Widget::SetAlignTo(Widget * a_alignWidget)
@@ -354,6 +444,12 @@ void Widget::SetAlignTo(const char * a_alignWidgetName)
 {
 	strcpy(m_alignToName, a_alignWidgetName);
 	UpdateAlignTo();
+}
+
+void Widget::ClearAlignTo()
+{
+	m_alignTo = NULL;
+	m_alignToName[0] = '\0';
 }
 
 void Widget::UpdateAlignTo()

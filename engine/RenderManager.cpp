@@ -695,7 +695,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
 			}
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
-			glScalef(fc->m_size, fc->m_size, 0.0f);
+			glScalef(fc->m_size.GetX(), fc->m_size.GetY(), 0.0f);
 			glCallList(fc->m_displayListId);
 			glPopMatrix();
 			++fc;
@@ -1122,7 +1122,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 
 }
 
-void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour)
+void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_fontCharId, const Vector2 & a_size, Vector a_pos, Colour a_colour)
 {
 	// Don't add more font characters than have been allocated for
 	if (m_fontCharCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
@@ -1136,7 +1136,6 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_
 	fc->m_displayListId = a_fontCharId;
 	fc->m_size = a_size;
 	fc->m_pos = a_pos;
-	fc->m_pos.SetZ(s_renderDepth2D);
 	fc->m_colour = a_colour;
 	fc->m_2d = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
 }

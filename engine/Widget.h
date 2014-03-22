@@ -223,11 +223,14 @@ public:
 	//\brief Append a child widget pointer onto this widget creating a hierachy
 	//\param a_child is a pointer to the allocated widget to append
 	void AddChild(Widget * a_child);
+	bool RemoveChild(Widget * a_child);
 
 	//\brief Property accessors to return the head of the sibling or child widgets
 	//\return The sibling or child widget or NULL if not set
 	inline WidgetNode * GetChildren() { return m_children.GetHead(); }
 	Widget * Find(const char * a_name);
+	bool RemoveAlignmentTo(Widget * a_alignedTo);
+	bool RemoveFromChildren(Widget * a_child);
 
 	//\brief Basic property accessors should remain unchanged for all instances of this class
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
@@ -253,6 +256,7 @@ public:
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
 	void SetAlignTo(Widget * a_alignWidget);
 	void SetAlignTo(const char * a_alignWidgetName);
+	void ClearAlignTo();
 	void UpdateAlignTo();
 	
 	inline WidgetVector GetPos() const { return m_pos; }

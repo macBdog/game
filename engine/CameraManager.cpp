@@ -5,7 +5,7 @@
 #include "CameraManager.h"
 #include "InputManager.h"
 
-const float Camera::sc_defaultCameraSpeed = 24.0f;
+const float Camera::sc_defaultCameraSpeed = 32.0f;
 const float Camera::sc_defaultCameraRotSpeed = 0.01f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;

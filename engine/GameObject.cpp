@@ -71,7 +71,9 @@ bool GameObject::Draw()
 		// Draw the object's name, position, orientation and clip volume over the top
 		if (DebugMenu::Get().IsDebugMenuEnabled() && !DebugMenu::Get().IsDebugMenuActive())
 		{
-			rMan.AddDebugMatrix(m_worldMat);
+			Matrix debugMat = m_worldMat;
+			debugMat.SetPos(GetClipPos());
+			rMan.AddDebugMatrix(debugMat);
 
 			// Draw different debug render shapes accoarding to clip type
 			switch (m_clipType)
@@ -97,7 +99,7 @@ bool GameObject::Draw()
 				default: break;
 			}
 
-			FontManager::Get().DrawDebugString3D(m_name, 1.0f, GetClipPos());
+			FontManager::Get().DrawDebugString3D(m_name, GetClipPos());
 		}
 
 		return true;
@@ -119,7 +121,7 @@ Vector GameObject::GetScale() const
 void GameObject::SetRot(const Vector & a_rot)
 {
 	const Vector oldPos = m_worldMat.GetPos();
-	Quaternion q(Vector(MathUtils::Deg2Rad(a_rot.GetX()), MathUtils::Deg2Rad(a_rot.GetY()), MathUtils::Deg2Rad(a_rot.GetZ())));
+	Quaternion q(MathUtils::Deg2Rad(a_rot));
 	m_worldMat = q.GetRotationMatrix();
 	m_worldMat.SetPos(oldPos);
 }
@@ -134,7 +136,9 @@ void GameObject::SetRot(const Quaternion & a_rot)
 void GameObject::AddRot(const Vector & a_newRot)
 {
 	Quaternion q(MathUtils::Deg2Rad(a_newRot));
+	const Vector oldPos = m_worldMat.GetPos();
 	m_worldMat = m_worldMat.Multiply(q.GetRotationMatrix());
+	m_worldMat.SetPos(oldPos);
 }
 
 bool GameObject::CollidesWith(Vector a_worldPos)

@@ -39,7 +39,7 @@ public:
 	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Gui);
 	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::World);
 	bool DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Debug2D);
-	bool DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
+	bool DrawDebugString3D(const char * a_string, Vector a_pos, Colour a_colour = sc_colourWhite, float a_size = s_debugFontSize3D);
 
 	//\brief Get the symbol for a loaded font name
 	//\param pointer to a cstring of the font name to retreieve

@@ -146,7 +146,7 @@ public:
 	//\param a_fontCharId is the display list ID of the character to call
 	//\param a_size is the size multiplier to use
 	//\param a_pos is the position in 3D space to draw. If a 2D renderLayer is used, the Z component will be ignored
-	void AddFontChar(RenderLayer::Enum a_layer, unsigned int a_fontCharId, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
+	void AddFontChar(RenderLayer::Enum a_layer, unsigned int a_fontCharId, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
 	
 	//\brief Add a line to the debug renderLayer
 	//\param Vector a_point1 start of the line
@@ -222,7 +222,7 @@ private:
 	struct FontChar
 	{
 		unsigned int m_displayListId;
-		float m_size;
+		Vector2 m_size;
 		Vector m_pos;
 		Colour m_colour;
 		bool m_2d;

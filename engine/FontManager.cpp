@@ -12,7 +12,7 @@ using namespace std;	//< For fstream operations
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
 const float FontManager::s_debugFontSize2D = 1.25f;
-const float FontManager::s_debugFontSize3D = 5.0f;
+const float FontManager::s_debugFontSize3D = 32.0f;
 
 bool FontManager::Startup(const char * a_fontPath)
 {
@@ -192,19 +192,22 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 
 bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
+	const bool is2D = a_pos.GetZ() == 0.0f;
 	FontListNode * curFont = m_fonts.GetHead();
+	RenderManager & renderMan = RenderManager::Get();
+	const float viewAspect = renderMan.GetViewAspect();
 	while(curFont != NULL)
 	{
 		if (curFont->GetData()->m_fontName == a_fontNameHash)
 		{
 			// Draw each character in the string
 			Font * font = curFont->GetData();
-			RenderManager & renderMan = RenderManager::Get();
 			float xAdvance = 0.0f;
 
 			// Calculate a scaling ratio for the font to match the requested pixel size, font size limit is 1 meg
 			a_size *= (float)font->m_sizeX / (float)s_maxFontTexSize;
-			Vector2 sizeRatio(a_size / font->m_sizeX / renderMan.GetViewAspect(), a_size / font->m_sizeY);
+			const Vector2 sizeWithAspect = Vector2(is2D ? a_size : a_size * viewAspect, a_size);
+			const Vector2 sizeRatio(sizeWithAspect.GetX() / font->m_sizeX / viewAspect, a_size / font->m_sizeY);
 
 			unsigned int textLength = strlen(a_string);
 			for (unsigned int j = 0; j < textLength; ++j)
@@ -216,18 +219,18 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 					// Do not add a quad for a space
 					if (a_string[j] != ' ') 
 					{
-						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * a_size);
-						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
-						float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * a_size);
+						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX());
+						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
+						float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
 
 						// Align font chars 2D vs 3D
-						if (a_pos.GetZ() == 0.0f)
+						if (is2D)
 						{
-							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, a_size, Vector(xPos, yPos, 0.0f), a_colour);
+							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, yPos, 0.0f), a_colour);
 						}
 						else
 						{
-							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, a_size, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
 						}
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
@@ -262,12 +265,12 @@ bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour
 	return false;
 }
 
-bool FontManager::DrawDebugString3D(const char * a_string, float a_size, Vector a_pos, Colour a_colour)
+bool FontManager::DrawDebugString3D(const char * a_string, Vector a_pos, Colour a_colour, float a_size)
 {
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)
 	{
-		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetHash(), s_debugFontSize3D, a_pos, a_colour, RenderLayer::Debug3D);
+		return DrawString(a_string, m_fonts.GetHead()->GetData()->m_fontName.GetHash(), a_size, a_pos, a_colour, RenderLayer::Debug3D);
 	}
 	else // Not fonts loaded
 	{

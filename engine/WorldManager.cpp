@@ -1,3 +1,4 @@
+#include "DebugMenu.h"
 #include "GameFile.h"
 #include "ModelManager.h"
 #include "RenderManager.h"
@@ -240,6 +241,19 @@ bool Scene::Draw()
 		curObject = curObject->GetNext();
 	}
 
+	// Draw all the lights in the scene when debug menu is up
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		const float lightSize = 0.1f;
+		for (int i = 0; i < m_numLights; ++i)
+		{
+			const Colour drawColour = m_lights[i].m_enabled ? sc_colourYellow : sc_colourGrey;
+			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, lightSize, drawColour);
+			RenderManager::Get().AddDebugLine(m_lights[i].m_pos, m_lights[i].m_pos + m_lights[i].m_dir, drawColour);
+			FontManager::Get().DrawDebugString3D(m_lights[i].m_name, m_lights[i].m_pos, drawColour);
+		}
+	}
+
 	return drawSuccess;
 }
 
@@ -321,6 +335,13 @@ bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT
 			LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
 			while (childGameObject != NULL)
 			{
+				// Chidlren of the scene file can be lighting or game objects, make sure we only create game objects
+				if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
+				{
+					childGameObject = childGameObject->GetNext();
+					continue;
+				}
+
 				const char * templateName = NULL;
 				GameFile::Object * childObj = childGameObject->GetData();
 				if (GameFile::Property * prop = childObj->FindProperty("template"))

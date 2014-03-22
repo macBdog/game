@@ -267,6 +267,15 @@ void Gui::DestroyWidget(Widget * a_widget)
 	// Clean up any links
 	a_widget->ClearAction();
 	
+	// Remove any align to references or references in parent lists
+	MenuListNode * cur = m_menus.GetHead();
+	while(cur != NULL)
+	{
+		cur->GetData()->RemoveAlignmentTo(a_widget);
+		cur->GetData()->RemoveFromChildren(a_widget);
+		cur = cur->GetNext();
+	}
+
 	// Delete child widgets
 	Widget::WidgetNode * curWidget = a_widget->GetChildren();
 	while (curWidget != NULL)
@@ -277,9 +286,7 @@ void Gui::DestroyWidget(Widget * a_widget)
 		curWidget = next;
 	}
 
-	// TODO Remove any align to references
-
-	// Destroy the parent
+	// Nothing else should be hanging on to this, get rid of it
 	delete a_widget;
 }
 
