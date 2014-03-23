@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -101,6 +101,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="OculusCamera.h" />
     <ClInclude Include="Widget.h" />
     <ClInclude Include="WorldManager.h" />
   </ItemGroup>
@@ -129,6 +130,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="OculusCamera.cpp" />
     <ClCompile Include="Widget.cpp" />
     <ClCompile Include="WorldManager.cpp" />
   </ItemGroup>

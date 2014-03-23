@@ -3,6 +3,7 @@
 #include "..\core\MathUtils.h"
 
 #include "CameraManager.h"
+#include "OculusCamera.h"
 #include "InputManager.h"
 
 const float Camera::sc_defaultCameraSpeed = 32.0f;
@@ -25,9 +26,36 @@ void CameraManager::SetFOV(const float & a_newFov)
 	//m_currentCamera->SetFOV(a_newFov)
 }
 
+void CameraManager::Startup(bool a_useVrCamera)
+{
+	if (a_useVrCamera)
+	{
+		m_oculusCamera = new OculusCamera();
+		if (m_oculusCamera != NULL && m_oculusCamera->IsInitialised())
+		{
+			m_currentCamera = m_oculusCamera;
+		}
+	}
+}
+
+void CameraManager::Shutdown()
+{
+	if (m_oculusCamera != NULL)
+	{
+		m_oculusCamera->Shutdown();
+		delete m_oculusCamera;
+	}
+}
+
 void CameraManager::Update(float a_dt)
 {
 	m_currentCamera = &m_gameCamera;
+	
+	// Use VR camera if enabled and initialised correctly
+	if (m_oculusCamera != NULL && m_oculusCamera->IsInitialised())
+	{
+		m_currentCamera = m_oculusCamera;
+	}
 
 	// Process camera controls
 	InputManager & inMan = InputManager::Get();
@@ -85,6 +113,7 @@ void Camera::Update()
 	m_viewMat = Matrix::Identity();
 	m_viewMat = m_viewMat.Multiply(Matrix::GetRotateX(m_orientation.GetY() * m_rotationSpeed));
 	m_viewMat = m_viewMat.Multiply(Matrix::GetRotateZ(m_orientation.GetX() * m_rotationSpeed));
+	m_viewMat.SetPos(m_pos);
 
     // Create the matrix
 	m_mat = Matrix::Identity();

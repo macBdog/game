@@ -7,6 +7,8 @@
 
 #include "Singleton.h"
 
+class OculusCamera;
+
 class Camera
 {
 public:
@@ -26,7 +28,7 @@ public:
     void LookAt(Vector a_worldPos);
 
 	//\brief Update the camera matrix from the inputs
-	void Update();
+	virtual void Update();
 
 	//\ingroup Accessors
 	inline const Matrix & GetMatrix() const { return m_mat; }
@@ -43,7 +45,7 @@ public:
 	inline void SetOrientation(const Vector2 & a_orient) { m_orientation = a_orient; }
 	inline void SetOrientationInput(const Vector2 & a_input) { m_orientationInput = a_input; }
 
-private:
+protected:
 
 	static const float sc_defaultCameraSpeed;		///< Debug camera translation constant
 	static const float sc_defaultCameraRotSpeed;	///< Debug camera rotation speed degrees per second
@@ -64,11 +66,14 @@ public:
 
 	//\brief Contruct a valid camera at the origin look down the Y axis
 	CameraManager() 
-		: m_currentCamera(&m_gameCamera) {}
+		: m_currentCamera(&m_gameCamera) 
+		, m_oculusCamera(NULL)
+	{
+	}
 
 	//\brief Stubbed out for loading cameras for each scene
-	void Startup() {};
-	void Shutdown() {};
+	void Startup(bool a_useVrCamera);
+	void Shutdown();
 	void Update(float a_dt);
 
 	//\brief Accessors for rendering 
@@ -87,6 +92,7 @@ private:
 
 	Camera m_gameCamera;							///< Camera only modified by game/script 
 	Camera m_debugCamera;							///< Camera modified while debug menu is active
+	OculusCamera * m_oculusCamera;					///< Camera used for input from Oculus branded  VR/head mounted displays
 	Camera * m_currentCamera;						///< Pointer to either camera
 };
 

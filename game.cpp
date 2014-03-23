@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 	PhysicsManager::Get().Startup(gameConfig);
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
-	CameraManager::Get().Startup();
+	CameraManager::Get().Startup(gameConfig.GetBool("render", "vr"));
 	Gui::Get().Startup(guiPath);
 	ScriptManager::Get().Startup(scriptPath);
 	
