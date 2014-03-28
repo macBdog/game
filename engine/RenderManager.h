@@ -55,7 +55,6 @@ public:
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(RenderMode::Full)
 					, m_vr(false)
-					, m_vrIpd(s_vrIpd)
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
 					, m_lightingShader(NULL)
@@ -254,7 +253,6 @@ private:
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
-	static const float s_vrIpd;										///< Default inter pupillary distance for vr rendering
 
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime;											///< How long the last frame took
@@ -287,7 +285,6 @@ private:
 	RenderMode::Enum m_renderMode;									///< How the scene is to be rendered
 
 	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
-	float m_vrIpd;													///< Inter pupillary distance to render at
 
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 

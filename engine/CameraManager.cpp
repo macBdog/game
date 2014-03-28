@@ -6,7 +6,7 @@
 #include "OculusCamera.h"
 #include "InputManager.h"
 
-const float Camera::sc_defaultCameraSpeed = 32.0f;
+const float Camera::sc_defaultCameraSpeed = 10.0f;
 const float Camera::sc_defaultCameraRotSpeed = 0.01f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
@@ -105,6 +105,26 @@ void CameraManager::Update(float a_dt)
 	}
 
 	m_currentCamera->Update();
+}
+
+ float CameraManager::GetVRProjectionCentreOffset()
+{
+	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetProjectionCentreOffset() : 0.0f;
+}
+
+float CameraManager::GetVRAspect() {
+
+	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetAspect() : 0.0f; 
+}
+
+float CameraManager::GetVRFOV() 
+{ 
+	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetFOV() : 0.0f; 
+}
+
+float CameraManager::GetVRIPD() 
+{ 
+	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetIPD() : 0.0f; 
 }
 
 void Camera::Update()

@@ -77,6 +77,7 @@ private:
 	static int GUIHideWidget(lua_State * a_luaState);
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);
+	static int DebugLine(lua_State * a_luaState);
 
 	//brief LUA versions of game object functions
 	static int GetGameObjectId(lua_State * a_luaState);

@@ -23,10 +23,9 @@ using namespace std;	//< For fstream operations
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_updateFreq = 1.0f;
 const float RenderManager::s_renderDepth2D = -1.0f;
-const float RenderManager::s_nearClipPlane = 0.5f;
+const float RenderManager::s_nearClipPlane = 0.1f;
 const float RenderManager::s_farClipPlane = 1000.0f;
-const float RenderManager::s_fovAngleY = 50.0f;
-const float RenderManager::s_vrIpd = .065f;
+const float RenderManager::s_fovAngleY = 55.0f;
 
 bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, bool a_vr)
 {
@@ -416,25 +415,10 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glBindTexture(GL_TEXTURE_2D, 0);         
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
 	
-	// Render scene twice, once to each side of the texture
+	// Render scene twice with different render setup for each eye
 	if (m_vr)
 	{
-		// Move left for left eye and leave the buffers full for the next render pass
-		Vector vrDist(-m_vrIpd*0.5f, 0.0f, 0.0f);
-		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
-
-		//glMultMatrixf(params.ViewAdjust);
-		//glMultMatrixf(params.Projection);
-
 		RenderScene(a_viewMatrix, true, false);
-
-		// Move right for the right eye
-		vrDist = Vector(m_vrIpd, 0.0f, 0.0f);
-		a_viewMatrix.SetPos(a_viewMatrix.Transform(vrDist));
-
-		//glMultMatrixf(params.ViewAdjust);
-		//glMultMatrixf(params.Projection);
-
 		RenderScene(a_viewMatrix, false, true);
 	}
 	else // Render once
@@ -494,6 +478,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	}
 
 	// Use scissor to disable the inactive viewport for VR
+	const float projectionCenterOffset = CameraManager::Get().GetVRProjectionCentreOffset();
+	const float vrFovAngleY = CameraManager::Get().GetVRFOV();
+	const float vrAspect = CameraManager::Get().GetVRAspect();
+	const float vrIpd = CameraManager::Get().GetVRIPD();
 	if (m_vr)
 	{
 		glEnable(GL_SCISSOR_TEST);
@@ -556,14 +544,42 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			case RenderLayer::Debug3D:
 			{
 				// Setup projection matrix stack to transform eye space to clip coordinates
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
+				if (m_vr)
+				{
+					if (a_eyeLeft)
+					{
+						glMatrixMode(GL_PROJECTION);
+						glLoadIdentity();
+						glTranslatef(projectionCenterOffset, 0.0f, 0.0f);
+						gluPerspective(vrFovAngleY, vrAspect, s_nearClipPlane, s_farClipPlane);
 
-				// Setup the inverse of the camera transformation in the modelview matrix
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-				glLoadMatrixf(a_viewMatrix.GetValues());
+						glMatrixMode(GL_MODELVIEW);
+						glLoadMatrixf(a_viewMatrix.GetValues());
+						glTranslatef(vrIpd * 0.5f, 0.0f, 0.0f);
+					}
+					else
+					{
+						glMatrixMode(GL_PROJECTION);
+						glLoadIdentity();
+						glTranslatef(-projectionCenterOffset, 0.0f, 0.0f);
+						gluPerspective(vrFovAngleY, vrAspect, s_nearClipPlane, s_farClipPlane);
+
+						glMatrixMode(GL_MODELVIEW);                     
+						glLoadMatrixf(a_viewMatrix.GetValues());
+						glTranslatef(-vrIpd * 0.5f, 0.0f, 0.0f);
+					}
+				}
+				else
+				{
+					glMatrixMode(GL_PROJECTION);
+					glLoadIdentity();
+					gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
+
+					// Setup the inverse of the camera transformation in the modelview matrix
+					glMatrixMode(GL_MODELVIEW);
+					glLoadIdentity();
+					glLoadMatrixf(a_viewMatrix.GetValues());
+				}
 				break;
 			}
 			case RenderLayer::Gui:

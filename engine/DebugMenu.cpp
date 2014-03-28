@@ -803,7 +803,7 @@ void DebugMenu::Draw()
 	renMan.AddDebugMatrix(fakeIdentity);
 
 	// Draw selection box around objects - slightly larger than clip size so there is no z fighting
-	const float extraSelectionSize = 0.5f;
+	const float extraSelectionSize = 0.01f;
 	if (m_gameObjectToEdit != NULL)
 	{
 		switch (m_gameObjectToEdit->GetClipType())

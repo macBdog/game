@@ -12,7 +12,7 @@ using namespace std;	//< For fstream operations
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
 
 const float FontManager::s_debugFontSize2D = 1.25f;
-const float FontManager::s_debugFontSize3D = 32.0f;
+const float FontManager::s_debugFontSize3D = 10.0f;
 
 bool FontManager::Startup(const char * a_fontPath)
 {

@@ -21,7 +21,10 @@ void OculusCamera::Startup()
     // Populate hmdInfo with device name, screen width, height etc
     OVR::HMDInfo hmdInfo;
     m_HMD->GetDeviceInfo(&hmdInfo);
-    
+	m_stereoConfig.SetHMDInfo(hmdInfo);
+	m_stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, hmdInfo.HResolution, hmdInfo.VResolution));
+	m_stereoConfig.SetStereoMode(OVR::Util::Render::Stereo_LeftRight_Multipass);
+	
 	m_sensors[0] = *m_HMD->GetSensor();
 	OVR::SensorFusion SFusion;
     if (m_sensors[0])
@@ -44,10 +47,6 @@ void OculusCamera::Shutdown()
 	for (int i = 0; i < s_numSensors; ++i)
 	{
 		m_sensors[i].Clear();
-		if (m_fusionResults[i] != NULL)
-		{
-			delete m_fusionResults[i];
-		}
 	}
     m_HMD.Clear();
     m_manager.Clear();

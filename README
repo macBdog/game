@@ -84,5 +84,5 @@ a_variable_OUT
 
 Other Notes:
 
-In 3D the Z axis is UP
+In 3D the Z axis is UP, 1 unit is 1 metre
 In 2D the middle of the screen is 0,0, top left of the screen is -1,1. 2D quads are drawn top left to bottom right.

@@ -81,6 +81,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
+		lua_register(m_globalLua, "DebugLine", DebugLine);
 
 		// Register C++ functions available on the global GUI
 		lua_newtable(m_globalLua);
@@ -530,6 +531,23 @@ int ScriptManager::DebugLog(lua_State * a_luaState)
 		LogScriptError(a_luaState, "DebugLog", "expects just one parameter to show on the screen.");
 	}
 
+	return 0;
+}
+
+int ScriptManager::DebugLine(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 6)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		Vector p1((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		Vector p2((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
+		RenderManager::Get().AddDebugLine(p1, p2);
+	}
 	return 0;
 }
 

@@ -80,7 +80,11 @@ public:
 	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetMatrix(); }
 	inline Matrix GetViewMatrix() const { return m_currentCamera->GetViewMatrix(); }
 	inline Vector GetWorldPos() const { return m_currentCamera->GetInversePos(); }
-
+	float GetVRProjectionCentreOffset();
+	float GetVRAspect();
+	float GetVRFOV();
+	float GetVRIPD();
+	
 	///\brief Mutators affecting the currently active camera
 	void SetPosition(const Vector & a_newPos);
 	void SetRotation(const Vector & a_newRot);

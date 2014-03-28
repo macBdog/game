@@ -32,6 +32,10 @@ public:
 	void Startup();
 	void Shutdown();
 	inline bool IsInitialised() { return m_initialised; }
+	inline float GetProjectionCentreOffset() { return m_stereoConfig.GetProjectionCenterOffset(); }
+	inline float GetAspect() { return m_stereoConfig.GetAspect(); }
+	inline float GetFOV() { return m_stereoConfig.GetYFOVDegrees(); }
+	inline float GetIPD() { return m_stereoConfig.GetIPD(); }
 
 	//\brief Update the camera matrix from the inputs
 	virtual void Update();
@@ -45,6 +49,7 @@ private:
     OVR::Ptr<OVR::HMDDevice> m_HMD;
     OVR::Ptr<OVR::SensorDevice> m_sensors[s_numSensors];
 	OVR::SensorFusion *	m_fusionResults[s_numSensors];
+	OVR::Util::Render::StereoConfig m_stereoConfig;
 };
 
 
