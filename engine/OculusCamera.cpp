@@ -60,6 +60,7 @@ void OculusCamera::Update()
 {	
     // Rotate the matrix about the rotation from the oculus sensor
 	m_mat = Matrix::Identity();
+	m_mat.SetPos(m_pos);
     
 	// Oculus world is Y up and looking down +Z, apply transformation to -Y look Z up
 	Quaternion pitchNeg = Quaternion(Vector(1.0f, 0.0f, 0.0f), MathUtils::Deg2Rad(90));
@@ -70,5 +71,4 @@ void OculusCamera::Update()
 	OVR::Quatf oculusQuat = m_fusionResults[0]->GetOrientation();
 	Quaternion quat = Quaternion(oculusQuat.x, oculusQuat.y, oculusQuat.z, oculusQuat.w);
 	quat.ApplyToMatrix(m_mat);
-	m_mat.SetPos(m_pos);
 }
