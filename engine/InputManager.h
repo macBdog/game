@@ -50,10 +50,17 @@ public:
 		, m_fullScreen(false)
 		, m_mousePos(0.0f)
 		, m_lastKeyPress(SDLK_CLEAR)
-		, m_lastKeyRelease(SDLK_CLEAR) 
+		, m_lastKeyRelease(SDLK_CLEAR)
+		, m_numGamePads(0)
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
+
+		// Init gamepad pointers
+		for (int i = 0; i < s_maxGamePads; ++i)
+		{
+			m_gamePads[i] = NULL;
+		}
 	}
 
 	~InputManager() { Shutdown(); }
@@ -82,6 +89,24 @@ public:
 	//\param a_keyVal the SDL key value of the key to check
 	//\return bool true if the button is currently down
 	bool IsKeyDepressed(SDLKey a_key);
+
+	//\ingroup Gamepad functions
+	//\brief Get the number of connected gamepads
+	inline int GetNumGamePads() { return m_numGamePads; }
+	inline bool IsGamePadConnected(int a_gamePadId) { return m_gamePads[a_gamePadId] != NULL; }
+	inline bool IsGamePadButtonDepressed(int a_gamePadId, int a_buttonNum)
+	{
+		return m_gamePads[a_gamePadId] != NULL ? SDL_JoystickGetButton(m_gamePads[a_gamePadId], a_gamePadId) == 1 : false;
+	}
+	inline float GetGamePadAxis(int a_gamePadId, int a_axisId)
+	{
+		float axisVal = 0.0f;
+		if (m_gamePads[a_gamePadId] != NULL)
+		{
+			axisVal = (float)(SDL_JoystickGetAxis(m_gamePads[a_gamePadId], a_axisId)) / 32768.0f;
+		}
+		return axisVal;
+	}
 
 	//\brief Register a function pointer to be called when the app receives a mouse event
 	//\param a_callback is the object that contains the member function to call back
@@ -198,7 +223,8 @@ private:
 	//\return true if at least one event was found
 	bool GetEvents(InputType::Enum a_type, InputSource a_src, InputEventList & a_events_OUT);
 
-	static const unsigned int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
+	static const int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
+	static const int s_maxGamePads = 8;			///< How many gamepads can be connected and playing a game
 
 	InputEvent m_alphaKeysDown;	///< Special input event to catch all keys being pressed
 	InputEvent m_alphaKeysUp;	///< Special input event to catch all keys being released
@@ -209,6 +235,8 @@ private:
 	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
 	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience
 	SDLKey m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
+	SDL_Joystick * m_gamePads[s_maxGamePads];		///< Pointers to all open gamepads
+	int m_numGamePads;								///< How many gamepads are connected
 };
 
 #endif // _ENGINE_INPUT_MANAGER_

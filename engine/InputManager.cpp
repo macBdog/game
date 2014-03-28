@@ -8,6 +8,15 @@ template<> InputManager * Singleton<InputManager>::s_instance = NULL;
 bool InputManager::Startup(bool a_fullScreen)
 {
 	m_fullScreen = a_fullScreen;
+
+	// Init gamepad pointers
+	SDL_JoystickEventState(SDL_ENABLE);
+	m_numGamePads = SDL_NumJoysticks();
+	for (int i = 0; i < m_numGamePads; ++i)
+	{
+		m_gamePads[i] = SDL_JoystickOpen(i);
+	}
+
     return true;
 }
 
@@ -24,6 +33,14 @@ bool InputManager::Shutdown()
 		m_events.Remove(cur);
 		delete cur->GetData();
 		delete cur;
+	}
+
+	// Close gamepads down
+	int connectedPads = SDL_NumJoysticks();
+	for (int i = 0; i < m_numGamePads; ++i)
+	{
+		SDL_JoystickClose(m_gamePads[i]);
+		m_gamePads[i] = NULL;
 	}
 
 	return true;

@@ -75,6 +75,10 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
+		lua_register(m_globalLua, "IsGamePadConnected", IsGamePadConnected);
+		lua_register(m_globalLua, "IsGamePadButtonDown", IsGamePadButtonDown);
+		lua_register(m_globalLua, "GetGamePadLeftStick", GetGamePadLeftStick);
+		lua_register(m_globalLua, "GetGamePadRightStick", GetGamePadRightStick);
 		lua_register(m_globalLua, "SetCameraPosition", SetCameraPosition);
 		lua_register(m_globalLua, "SetCameraRotation", SetCameraRotation);
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
@@ -347,6 +351,77 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, keyIsDown);
 	return 1; // One bool returned
+}
+
+int ScriptManager::IsGamePadConnected(lua_State * a_luaState)
+{
+	bool padConnected = false;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		padConnected = InputManager::Get().IsGamePadConnected(padId);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsGamePadConnected", "expects 1 parameter of the ID of the pad to query.");
+	}
+	lua_pushboolean(a_luaState, padConnected);
+	return 1;
+}
+
+int ScriptManager::IsGamePadButtonDown(lua_State * a_luaState)
+{
+	bool buttonDown = false;
+	if (lua_gettop(a_luaState) == 2)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		int buttonId = (int)lua_tonumber(a_luaState, 2);
+		buttonDown = InputManager::Get().IsGamePadButtonDepressed(padId, buttonId);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsGamePadButtonDown", "expects 2 parameters of the ID of the pad to query and the button to check.");
+	}
+	lua_pushboolean(a_luaState, buttonDown);
+	return 1;
+}
+
+int ScriptManager::GetGamePadLeftStick(lua_State * a_luaState)
+{
+	float xPos = 0.0f;
+	float yPos = 0.0f;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		xPos = InputManager::Get().IsGamePadButtonDepressed(padId, 1);
+		yPos = InputManager::Get().IsGamePadButtonDepressed(padId, 2);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGamePadLeftStick", "expects 1 parameters of the ID of the pad to query.");
+	}
+	lua_pushnumber(a_luaState, xPos);
+	lua_pushnumber(a_luaState, yPos);
+	return 2;
+}
+
+int ScriptManager::GetGamePadRightStick(lua_State * a_luaState)
+{
+	float xPos = 0.0f;
+	float yPos = 0.0f;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		xPos = InputManager::Get().IsGamePadButtonDepressed(padId, 3);
+		yPos = InputManager::Get().IsGamePadButtonDepressed(padId, 4);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGamePadRightStick", "expects 1 parameters of the ID of the pad to query.");
+	}
+	lua_pushnumber(a_luaState, xPos);
+	lua_pushnumber(a_luaState, yPos);
+	return 2;
 }
 
 int ScriptManager::SetCameraPosition(lua_State * a_luaState)
