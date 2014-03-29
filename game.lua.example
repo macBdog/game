@@ -1,0 +1,77 @@
+function Startup()
+	io.write("Game started.\n")
+
+	-- Initialise the game components here
+	
+	-- Main game loop
+	while Update() do
+		Yield()
+	end
+
+	Shutdown()
+end
+
+function Update()
+	-- Update game logic here
+	return true
+end
+
+function Shutdown()
+	io.write("Game shutdown.\n")
+end
+
+Startup()
+
+--[[ Engine Reference follows
+
+Global Functions
+----------------
+dt = GetFrameDelta()
+SetCameraPosition(x, y, z)
+SetCameraRotation(x, y, z)
+SetCameraFOV(f)
+MoveCamera(x,y,z)
+RotateCamera(x,y,z)
+bool = IsKeyDown(keyCodes.character)
+bool = IsGamePadConnected(padId)
+bool = IsGamePadButtonDown(padId, buttonId)
+x,y = GetGamePadLeftStick(padId)
+x,y = GetGamePadRightStick(padId)
+f = GetGamePadLeftTrigger(padId)
+f = GetGamePadRightTrigger(padId)
+DebugPrint("A string to be displayed in a box on screen for one frame")
+DebugLog("A string to be printed into the log")
+DebugLine(x1, y1, z1, x2, y2, z2)
+obj = GameObject:Create("templateName")
+
+GUI Functions
+-------------
+GUI:SetValue("widgetName", "value")
+string = GUI:GetValue("widgetName")
+GUI:Show("widgetName")
+GUI:Hide("widgetName")
+
+GameObject Functions
+--------------------
+i = myGameObject:GetId()
+string = myGameObject:GetName()
+myGameObject:SetName("New Name")
+x,y,z = myGameObject:GetPosition()
+myGameObject:SetPosition(x, y, z)
+x,y,z = myGameObject:GetRotation()
+myGameObject:SetRotation(x, y, z)
+f = myGameObject:GetScale()
+myGameObject:SetScale(x, y, z)
+f = myGameObject:GetLifeTime()
+myGameObject:SetLifeTime(newLifeTime)
+myGameObject:SetSleeping()
+myGameObject:SetActive()
+bool = myGameObject:IsSleeping()
+bool = myGameObject:IsActive()
+myGameObject:EnableCollision()
+myGameObject:DisableCollision()
+bool = myGameObject:HasCollisions()
+{} = myGameObject:GetCollisions()
+myGameObject:PlayAnimation("AnimationName")
+myGameObject:Destroy()
+]]

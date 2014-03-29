@@ -1,3 +1,7 @@
+#include "../core/Vector.h"
+#include "../core/Matrix.h"
+#include "../core/Quaternion.h"
+
 #include "AnimationManager.h"
 #include "CameraManager.h"
 #include "DebugMenu.h"
@@ -79,9 +83,13 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "IsGamePadButtonDown", IsGamePadButtonDown);
 		lua_register(m_globalLua, "GetGamePadLeftStick", GetGamePadLeftStick);
 		lua_register(m_globalLua, "GetGamePadRightStick", GetGamePadRightStick);
+		lua_register(m_globalLua, "GetGamePadLeftTrigger", GetGamePadLeftTrigger);
+		lua_register(m_globalLua, "GetGamePadRightTrigger", GetGamePadRightTrigger);
 		lua_register(m_globalLua, "SetCameraPosition", SetCameraPosition);
 		lua_register(m_globalLua, "SetCameraRotation", SetCameraRotation);
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
+		lua_register(m_globalLua, "MoveCamera", MoveCamera);
+		lua_register(m_globalLua, "RotateCamera", RotateCamera);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
@@ -393,8 +401,8 @@ int ScriptManager::GetGamePadLeftStick(lua_State * a_luaState)
 	if (lua_gettop(a_luaState) == 1)
 	{
 		int padId = (int)lua_tonumber(a_luaState, 1);
-		xPos = InputManager::Get().IsGamePadButtonDepressed(padId, 1);
-		yPos = InputManager::Get().IsGamePadButtonDepressed(padId, 2);
+		xPos = InputManager::Get().GetGamePadAxis(padId, 0);
+		yPos = InputManager::Get().GetGamePadAxis(padId, 1);
 	}
 	else
 	{
@@ -412,8 +420,8 @@ int ScriptManager::GetGamePadRightStick(lua_State * a_luaState)
 	if (lua_gettop(a_luaState) == 1)
 	{
 		int padId = (int)lua_tonumber(a_luaState, 1);
-		xPos = InputManager::Get().IsGamePadButtonDepressed(padId, 3);
-		yPos = InputManager::Get().IsGamePadButtonDepressed(padId, 4);
+		xPos = InputManager::Get().GetGamePadAxis(padId, 4);
+		yPos = InputManager::Get().GetGamePadAxis(padId, 3);
 	}
 	else
 	{
@@ -422,6 +430,46 @@ int ScriptManager::GetGamePadRightStick(lua_State * a_luaState)
 	lua_pushnumber(a_luaState, xPos);
 	lua_pushnumber(a_luaState, yPos);
 	return 2;
+}
+
+int ScriptManager::GetGamePadLeftTrigger(lua_State * a_luaState)
+{
+	float pos = 0.0f;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		float rawVal = InputManager::Get().GetGamePadAxis(padId, 2);
+		if (rawVal >= 0.0f) 
+		{
+			pos = rawVal;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGamePadLeftTrigger", "expects 1 parameters of the ID of the pad to query.");
+	}
+	lua_pushnumber(a_luaState, pos);
+	return 1;
+}
+
+int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
+{
+	float pos = 0.0f;
+	if (lua_gettop(a_luaState) == 1)
+	{
+		int padId = (int)lua_tonumber(a_luaState, 1);
+		float rawVal = InputManager::Get().GetGamePadAxis(padId, 2);
+		if (rawVal <= 0.0f) 
+		{
+			pos = fabsf(rawVal);
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGamePadRightTrigger", "expects 1 parameters of the ID of the pad to query.");
+	}
+	lua_pushnumber(a_luaState, pos);
+	return 1;
 }
 
 int ScriptManager::SetCameraPosition(lua_State * a_luaState)
@@ -460,14 +508,54 @@ int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 
 int ScriptManager::SetCameraFOV(lua_State * a_luaState)
 {
-	if (lua_gettop(a_luaState) == 3)
+	if (lua_gettop(a_luaState) == 1)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
 		CameraManager::Get().SetFOV((float)lua_tonumber(a_luaState, 1));	
 	}
 	else // Wrong number of parms
 	{
-		LogScriptError(a_luaState, "SetCameraFOV", "expects 3 number parameters.");
+		LogScriptError(a_luaState, "SetCameraFOV", "expects 1 number parameter.");
+	}
+	return 0;
+}
+
+int ScriptManager::MoveCamera(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		Vector moveVec((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3));
+		CameraManager & camMan = CameraManager::Get();
+		Matrix viewMat = camMan.GetViewMatrix();
+		Vector camNewPos = viewMat.GetPos() + viewMat.Transform(moveVec);
+		camMan.SetPosition(camNewPos);
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "MoveCamera", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::RotateCamera(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		Vector rotVec((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		CameraManager & camMan = CameraManager::Get();
+		Matrix camMat = camMan.GetCameraMatrix();
+		Quaternion rotQ(rotVec);
+		rotQ.ApplyToMatrix(camMat);
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "RotateCamera", "expects 3 number parameters.");
 	}
 	return 0;
 }

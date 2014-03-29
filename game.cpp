@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	}
 
     // Initialize SDL video
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
     {
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to init SDL");
         return 1;

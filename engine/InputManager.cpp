@@ -11,10 +11,14 @@ bool InputManager::Startup(bool a_fullScreen)
 
 	// Init gamepad pointers
 	SDL_JoystickEventState(SDL_ENABLE);
-	m_numGamePads = SDL_NumJoysticks();
-	for (int i = 0; i < m_numGamePads; ++i)
+	m_numGamepads = SDL_NumJoysticks();
+	for (int i = 0; i < m_numGamepads; ++i)
 	{
-		m_gamePads[i] = SDL_JoystickOpen(i);
+		m_gamepads[i] = SDL_JoystickOpen(i);
+		for (int j = 0; j < s_maxGamepadButtons; ++j)
+		{
+			m_depressedGamepadButtons[i][j] = false;
+		}
 	}
 
     return true;
@@ -37,10 +41,10 @@ bool InputManager::Shutdown()
 
 	// Close gamepads down
 	int connectedPads = SDL_NumJoysticks();
-	for (int i = 0; i < m_numGamePads; ++i)
+	for (int i = 0; i < m_numGamepads; ++i)
 	{
-		SDL_JoystickClose(m_gamePads[i]);
-		m_gamePads[i] = NULL;
+		SDL_JoystickClose(m_gamepads[i]);
+		m_gamepads[i] = NULL;
 	}
 
 	return true;
@@ -122,6 +126,16 @@ bool InputManager::Update(const SDL_Event & a_event)
 				default: break;
 			}
 			ProcessMouseUp(but);
+			break;
+		}
+		case SDL_JOYBUTTONDOWN:
+		{
+			ProcessGamepadButtonDown(a_event.jbutton.which, a_event.jbutton.button);
+			break;
+		}
+		case SDL_JOYBUTTONUP:
+		{
+			ProcessGamepadButtonUp(a_event.jbutton.which, a_event.jbutton.button);
 			break;
 		}
         default: break;
@@ -302,5 +316,25 @@ bool InputManager::ProcessKeyDown(SDLKey a_key)
 		curEvent = curEvent->GetNext();
 	}
 
+	return false;
+}
+
+bool InputManager::ProcessGamepadButtonDown(int a_gamepadId, int a_buttonId)
+{
+	if (a_gamepadId < s_maxGamepads && a_buttonId < s_maxGamepadButtons)
+	{
+		m_depressedGamepadButtons[a_gamepadId][a_buttonId] = true;
+		return true;
+	}
+	return false;
+}
+
+bool InputManager::ProcessGamepadButtonUp(int a_gamepadId, int a_buttonId)
+{
+	if (a_gamepadId < s_maxGamepads && a_buttonId < s_maxGamepadButtons)
+	{
+		m_depressedGamepadButtons[a_gamepadId][a_buttonId] = false;
+		return true;
+	}
 	return false;
 }

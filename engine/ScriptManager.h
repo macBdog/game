@@ -72,9 +72,13 @@ private:
 	static int IsGamePadButtonDown(lua_State * a_luaState);
 	static int GetGamePadLeftStick(lua_State * a_luaState);
 	static int GetGamePadRightStick(lua_State * a_luaState);
+	static int GetGamePadLeftTrigger(lua_State * a_luaState);
+	static int GetGamePadRightTrigger(lua_State * a_luaState);
 	static int SetCameraPosition(lua_State * a_luaState);
 	static int SetCameraRotation(lua_State * a_luaState);
 	static int SetCameraFOV(lua_State * a_luaState);
+	static int MoveCamera(lua_State * a_luaState);
+	static int RotateCamera(lua_State * a_luaState);
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);

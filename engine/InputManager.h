@@ -51,15 +51,15 @@ public:
 		, m_mousePos(0.0f)
 		, m_lastKeyPress(SDLK_CLEAR)
 		, m_lastKeyRelease(SDLK_CLEAR)
-		, m_numGamePads(0)
+		, m_numGamepads(0)
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
 
 		// Init gamepad pointers
-		for (int i = 0; i < s_maxGamePads; ++i)
+		for (int i = 0; i < s_maxGamepads; ++i)
 		{
-			m_gamePads[i] = NULL;
+			m_gamepads[i] = NULL;
 		}
 	}
 
@@ -92,18 +92,18 @@ public:
 
 	//\ingroup Gamepad functions
 	//\brief Get the number of connected gamepads
-	inline int GetNumGamePads() { return m_numGamePads; }
-	inline bool IsGamePadConnected(int a_gamePadId) { return m_gamePads[a_gamePadId] != NULL; }
-	inline bool IsGamePadButtonDepressed(int a_gamePadId, int a_buttonNum)
+	inline int GetNumGamePads() { return m_numGamepads; }
+	inline bool IsGamePadConnected(int a_gamepadId) { return m_gamepads[a_gamepadId] != NULL; }
+	inline bool IsGamePadButtonDepressed(int a_gamepadId, int a_buttonId)
 	{
-		return m_gamePads[a_gamePadId] != NULL ? SDL_JoystickGetButton(m_gamePads[a_gamePadId], a_gamePadId) == 1 : false;
+		return a_gamepadId < s_maxGamepads && a_buttonId < s_maxGamepadButtons ? m_depressedGamepadButtons[a_gamepadId][a_buttonId] : false;
 	}
-	inline float GetGamePadAxis(int a_gamePadId, int a_axisId)
+	inline float GetGamePadAxis(int a_gamepadId, int a_axisId)
 	{
 		float axisVal = 0.0f;
-		if (m_gamePads[a_gamePadId] != NULL)
+		if (m_gamepads[a_gamepadId] != NULL)
 		{
-			axisVal = (float)(SDL_JoystickGetAxis(m_gamePads[a_gamePadId], a_axisId)) / 32768.0f;
+			axisVal = (float)(SDL_JoystickGetAxis(m_gamepads[a_gamepadId], a_axisId)) / 32768.0f;
 		}
 		return axisVal;
 	}
@@ -205,6 +205,8 @@ private:
 	bool ProcessMouseDown(MouseButton::Enum a_button);
 	bool ProcessMouseUp(MouseButton::Enum a_button);
     bool ProcessMouseMove();
+	bool ProcessGamepadButtonDown(int a_gamepadId, int a_buttonId);
+	bool ProcessGamepadButtonUp(int a_gamepadId, int a_buttonId);
 
 	//\brief Alias to store a list of registered input events
 	typedef LinkedListNode<InputEvent> InputEventNode;
@@ -224,7 +226,8 @@ private:
 	bool GetEvents(InputType::Enum a_type, InputSource a_src, InputEventList & a_events_OUT);
 
 	static const int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
-	static const int s_maxGamePads = 8;			///< How many gamepads can be connected and playing a game
+	static const int s_maxGamepads = 8;			///< How many gamepads can be connected and playing a game
+	static const int s_maxGamepadButtons = 16;	///< How many buttons are supported on each gamepad
 
 	InputEvent m_alphaKeysDown;	///< Special input event to catch all keys being pressed
 	InputEvent m_alphaKeysUp;	///< Special input event to catch all keys being released
@@ -235,8 +238,9 @@ private:
 	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
 	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience
 	SDLKey m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
-	SDL_Joystick * m_gamePads[s_maxGamePads];		///< Pointers to all open gamepads
-	int m_numGamePads;								///< How many gamepads are connected
+	SDL_Joystick * m_gamepads[s_maxGamepads];		///< Pointers to all open gamepads
+	int m_numGamepads;								///< How many gamepads are connected
+	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];
 };
 
 #endif // _ENGINE_INPUT_MANAGER_
