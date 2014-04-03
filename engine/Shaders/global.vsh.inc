@@ -1,5 +1,9 @@
 const char * globalVertexShader = 
 "uniform float Time; \n" 
+"uniform float LifeTime; \n"
+"uniform float FrameTime; \n"
+"uniform float ViewWidth; \n"
+"uniform float ViewHeight; \n"
 "uniform mat4 ObjMat; \n"
 "varying vec2 OutTexCoord; \n"
 "float rand(vec2 co) \n"

@@ -188,9 +188,12 @@ bool RenderManager::Shutdown()
 	}
 
 	// Clean up the framebuffer resources
-	glDeleteFramebuffers(1, &m_frameBuffer);
-	glDeleteTextures(1, &m_colourBuffer);
-	glDeleteRenderbuffers(1, &m_depthBuffer);   
+	for (int i = 0; i < RenderStage::Count; ++i)
+	{
+		glDeleteFramebuffers(1, &m_frameBuffers[i]);
+		glDeleteTextures(1, &m_colourBuffers[i]);
+		glDeleteRenderbuffers(1, &m_depthBuffers[i]);   
+	}
 
 	// And any managed shaders
 	ManagedShaderNode * next = m_managedShaders.GetHead();
@@ -385,35 +388,39 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
     // Reset The View
     glLoadIdentity();
 
-	// Create the framebuffer for whole scene pixel shaders
-	glGenFramebuffers(1, &m_frameBuffer);
-	glGenTextures(1, &m_colourBuffer);                                                                                               
-    glGenRenderbuffers(1, &m_depthBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+	// Create the framebuffers for each render stage
+	bool framebuffersOk = true;
+	for (int i = 0; i < RenderStage::Count; ++i)
+	{
+		// Generate whole scene render targets
+		glGenFramebuffers(1, &m_frameBuffers[i]);
+		glGenTextures(1, &m_colourBuffers[i]);                                                                                               
+		glGenRenderbuffers(1, &m_depthBuffers[i]);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[i]);
 
-	// The texture to render the scene to
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffer);
- 
-	// Filtering for whole scene rendering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colourBuffer, 0);
+		// Colour parameters
+		glBindTexture(GL_TEXTURE_2D, m_colourBuffers[i]);
+ 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colourBuffers[i], 0);
 
-	// The depth buffer
-	glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+		// Depth parameters
+		glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffers[i]);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffers[i]);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);	
+		framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+	}
+
+	return framebuffersOk;
 }
 
 void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
-	// Do offscreen rendering pass to framebuffer
+	// Do offscreen rendering pass to first stage framebuffer
 	glBindTexture(GL_TEXTURE_2D, 0);         
-    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::VR]);		//<< Render to first stage buffer
 	
 	// Render scene twice with different render setup for each eye
 	if (m_vr)
@@ -425,8 +432,58 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	{
 		RenderScene(a_viewMatrix);
 	}
+
+	// Start rendering to the first render stage
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::VR]);			//<< Render using first stage buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);	//<< Render to next stage colour
+
+	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
+	glEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// Now draw framebuffer to screen
+	// Draw framebuffer in ortho
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	// Render once or twice
+	if (m_vr)
+	{	
+		m_vrShader->UseShader();
+		const float vpWidth = (float)m_viewWidth * 0.5f;
+		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
+		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
+	}
+	else
+	{
+		m_textureShader->UseShader();
+		RenderFramebuffer();
+	}
+
+	// Now render with full scene shader if specified
+	Matrix identity;
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
+	bool bUseDefaultShader = true;
+	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
+	{
+		if (Shader * pSceneShader = pCurScene->GetShader())
+		{
+			pSceneShader->UseShader(shaderData);
+			bUseDefaultShader = false;
+		}
+	}
+
+	// Otherwise use the default
+	if (bUseDefaultShader)
+	{	
+		m_textureShader->UseShader(shaderData);
+	}
+
+	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
@@ -440,21 +497,19 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-    glBindTexture(GL_TEXTURE_2D, m_colourBuffer);   
-	
-	// Render once or twice
-	if (m_vr)
-	{	
-		m_vrShader->UseShader();
-		const float vpWidth = (float)m_viewWidth * 0.5f;
-		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
-		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
-	}
-	else
-	{
-		RenderFramebuffer();
-	}
 
+	// Final drawing pass
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);   
+	
+	// Draw whole screen triangle pair
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glBegin(GL_TRIANGLE_STRIP);
+		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, s_renderDepth2D);
+		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, s_renderDepth2D);
+		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
+		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
+	glEnd();
+	
 	// Unbind shader
     glUseProgram(0);
     glEnable(GL_DEPTH_TEST);
@@ -779,27 +834,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 }
 
 void RenderManager::RenderFramebuffer()
-{
-	Matrix identity;
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
-	
-	// Use the full scene shader if specified 
-	bool bUseDefaultShader = true;
-	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
-	{
-		if (Shader * pSceneShader = pCurScene->GetShader())
-		{
-			pSceneShader->UseShader(shaderData);
-			bUseDefaultShader = false;
-		}
-	}
-
-	// Otherwise use the default
-	if (bUseDefaultShader)
-	{	
-		m_textureShader->UseShader(shaderData);
-	}
-	
+{	
 	// Draw whole screen triangle pair
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBegin(GL_TRIANGLE_STRIP);

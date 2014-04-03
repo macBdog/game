@@ -42,6 +42,17 @@ namespace RenderLayer
 	};
 }
 
+//\brief Render stages define full size target buffers for post processing
+namespace RenderStage
+{
+	enum Enum
+	{
+		Scene = 0,		//< Shader defined per scene at full size
+		VR,				//< Separate buffer for VR processing also full size
+		Count,
+	};
+}
+
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
 //		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
@@ -70,6 +81,12 @@ public:
 					, m_updateTimer(0.0f) 
 	{ 
 		m_shaderPath[0] = '\0'; 
+		for (int i = 0; i < RenderStage::Count; ++i)
+		{
+			m_frameBuffers[i] = 0;
+			m_colourBuffers[i] = 0;
+			m_depthBuffers[i] = 0;
+		}
 	}
 	~RenderManager() { Shutdown(); }
 
@@ -268,9 +285,13 @@ private:
 	unsigned int m_modelCount[RenderLayer::Count];					///< Number of models to render
 	unsigned int m_fontCharCount[RenderLayer::Count];				///< Number for font characters to render
 
-	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffer
+	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffers for each stage
 	unsigned int m_colourBuffer;									///< Identifier for the texture to render to
-	unsigned int m_depthBuffer;										///< Identifier for the buffer for pixel depth
+	unsigned int m_depthBuffer;										///< Identifier for the buffers for pixel depth per stage
+
+	unsigned int m_frameBuffers[RenderStage::Count];				///< Identifier for the whole scene framebuffers for each stage
+	unsigned int m_colourBuffers[RenderStage::Count];				///< Identifier for the texture to render to
+	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
