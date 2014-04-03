@@ -420,7 +420,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
 	// Do offscreen rendering pass to first stage framebuffer
 	glBindTexture(GL_TEXTURE_2D, 0);         
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::VR]);		//<< Render to first stage buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
 	
 	// Render scene twice with different render setup for each eye
 	if (m_vr)
@@ -434,8 +434,8 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	}
 
 	// Start rendering to the first render stage
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::VR]);			//<< Render using first stage buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);	//<< Render to next stage colour
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::VR]);			//<< Render to next stage colour
 
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
@@ -449,20 +449,6 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
-	// Render once or twice
-	if (m_vr)
-	{	
-		m_vrShader->UseShader();
-		const float vpWidth = (float)m_viewWidth * 0.5f;
-		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
-		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
-	}
-	else
-	{
-		m_textureShader->UseShader();
-		RenderFramebuffer();
-	}
 
 	// Now render with full scene shader if specified
 	Matrix identity;
@@ -483,6 +469,15 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		m_textureShader->UseShader(shaderData);
 	}
 
+	// Draw whole screen triangle pair
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glBegin(GL_TRIANGLE_STRIP);
+		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, s_renderDepth2D);
+		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, s_renderDepth2D);
+		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
+		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
+	glEnd();
+
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
@@ -499,17 +494,22 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glLoadIdentity();
 
 	// Final drawing pass
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);   
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::VR]);   
 	
-	// Draw whole screen triangle pair
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
-	glEnd();
-	
+	// Render once or twice
+	if (m_vr)
+	{	
+		m_vrShader->UseShader();
+		const float vpWidth = (float)m_viewWidth * 0.5f;
+		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
+		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
+	}
+	else
+	{
+		m_textureShader->UseShader();
+		RenderFramebuffer();
+	}
+
 	// Unbind shader
     glUseProgram(0);
     glEnable(GL_DEPTH_TEST);
