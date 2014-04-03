@@ -51,6 +51,10 @@ bool ModelManager::Shutdown()
 
 bool ModelManager::Update(float a_dt)
 {
+#ifdef _RELEASE
+	return true;
+#endif
+
 	if (m_updateTimer < m_updateFreq)
 	{
 		m_updateTimer += a_dt;

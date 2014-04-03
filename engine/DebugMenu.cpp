@@ -57,6 +57,10 @@ DebugMenu::DebugMenu()
 
 bool DebugMenu::Startup()
 {
+#ifdef _RELEASE
+	return true;
+#endif
+
 	Gui & gui = Gui::Get();
 	InputManager & inMan = InputManager::Get();
 

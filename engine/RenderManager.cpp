@@ -229,6 +229,10 @@ bool RenderManager::Update(float a_dt)
 	m_lastRenderTime = a_dt;
 	m_renderTime += a_dt;
 
+#ifdef _RELEASE
+	return true;
+#endif
+
 	if (m_updateTimer < m_updateFreq)
 	{
 		m_updateTimer += a_dt;
@@ -596,7 +600,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		switch ((RenderLayer::Enum)i)
 		{
 			case RenderLayer::World:
+#ifdef _DEBUG
 			case RenderLayer::Debug3D:
+#endif
 			{
 				// Setup projection matrix stack to transform eye space to clip coordinates
 				if (m_vr)
@@ -1193,14 +1199,17 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_
 
 void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 {
+#ifdef _DEBUG
 	Vector startPos = a_mat.GetPos();
 	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
 	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
 	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetUp(), sc_colourBlue);			// Blue for Z axis up
+#endif
 }
 
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
+#ifdef _DEBUG
 	// Draw a wireframe sphere with three circles in each dimension
 	const unsigned int numSegments = 16;
 	Vector lineStart = a_worldPos;
@@ -1236,10 +1245,12 @@ void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_ra
 			AddDebugLine(lineStart, lineEnd, a_colour);
 		}
 	}
+#endif
 }
 
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
+#ifdef _DEBUG
 	// Define the corners of the box
 	Vector halfSize = a_dimensions * 0.5f;
 	Vector corners[8];
@@ -1263,12 +1274,15 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	AddLine(RenderLayer::Debug3D, corners[3], corners[0], a_colour);
 	AddLine(RenderLayer::Debug3D, corners[7], corners[4], a_colour);
 	AddLine(RenderLayer::Debug3D, corners[3], corners[7], a_colour);
+#endif
 }
 
 void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dimensions, Colour a_colour)
 {
+#ifdef _DEBUG
 	// TODO
 	AddDebugAxisBox(a_worldMat.GetPos(), a_dimensions);
+#endif
 }
 
 void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shaderName)

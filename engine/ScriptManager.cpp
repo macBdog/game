@@ -195,6 +195,15 @@ bool ScriptManager::Update(float a_dt)
 	// Cache off last delta
 	m_lastFrameDelta = a_dt;
 
+#ifdef _RELEASE
+	// Call back to LUA main thread
+	if (m_gameLua != NULL)
+	{
+		lua_resume(m_gameLua, NULL, 0);
+		return true;
+	}
+#endif
+
 	// Check if a script needs updating
 	if (m_updateTimer < m_updateFreq)
 	{
@@ -231,6 +240,8 @@ bool ScriptManager::Update(float a_dt)
 			next = next->GetNext();
 		}
 	}
+
+	
 
 	// Don't update scripts while debugging
 	if (DebugMenu::Get().IsDebugMenuEnabled())

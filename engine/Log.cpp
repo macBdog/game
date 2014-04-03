@@ -35,6 +35,10 @@ bool Log::Shutdown()
 
 void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
 {
+#ifdef _RELEASE
+	return;
+#endif
+
     char levelBuf[128];
     char categoryBuf[128];
 	levelBuf[0] = '\0';
@@ -107,6 +111,10 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
 
 void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
 {
+#ifdef _RELEASE
+	return;
+#endif
+
 	// Add message to write once list
 	unsigned int msgHash = StringHash::GenerateCRC(a_message, false);
 	unsigned int unused;
@@ -149,8 +157,13 @@ void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const 
 		}
 	}
 }
+
 void Log::Update(float a_dt)
 {
+#ifdef _RELEASE
+	return;
+#endif
+
 	// Walk through the list printing out debug lists
 	LogDisplayNode * curEntry = m_displayList.GetHead();
 	float logDisplayPosY = 1.0f;
