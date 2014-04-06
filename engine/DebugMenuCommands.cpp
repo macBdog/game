@@ -97,14 +97,12 @@ void DebugMenuCommandRegistry::Startup()
 	m_btnWidgetRoot = DebugMenuCommand::CreateButton("Change Widget", gui.GetDebugRoot(), sc_colourRed);
 	m_btnGameObjectRoot = DebugMenuCommand::CreateButton("Change Object", gui.GetDebugRoot(), sc_colourRed);
 
+	// Create root of the create menu that appears if no objects are selected
 	DebugMenuCommand * lastCreatedCommand = NULL;
 	lastCreatedCommand = Create("Create Widget",			m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
 	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
-	lastCreatedCommand = Create("New Object",				m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Right, sc_colourSkyBlue);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
-	lastCreatedCommand = Create("From Template",			m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
-	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObjectFromTemplate);
 	
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue);
@@ -133,6 +131,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectClipSize);
 	lastCreatedCommand = Create("Clip Position",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectClipPosition);
+	lastCreatedCommand = Create("Set Template",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
+	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectTemplate);
 	lastCreatedCommand = Create("Save Template",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::SaveGameObjectTemplate);
 	lastCreatedCommand = Create("Delete Object",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
@@ -329,6 +329,7 @@ void DebugMenuCommandRegistry::ShowGameObjectCommands()
 			strcmp(debugWidget->GetName(), "Clip Type") == 0 || 
 			strcmp(debugWidget->GetName(), "Clip Size") == 0 || 
 			strcmp(debugWidget->GetName(), "Clip Position") == 0 || 
+			strcmp(debugWidget->GetName(), "Set Template") == 0 ||
 			strcmp(debugWidget->GetName(), "Save Template") == 0 || 
 			strcmp(debugWidget->GetName(), "Delete Object") == 0) 
 		{
@@ -493,21 +494,6 @@ DebugCommandReturnData DebugMenuCommandRegistry::CreateGameObject(GameObject * a
 	return retVal;
 }
 
-DebugCommandReturnData DebugMenuCommandRegistry::CreateGameObjectFromTemplate(GameObject * a_gameObj)
-{
-	Hide();
-	sprintf(m_resourceSelectPath, "%s", WorldManager::Get().GetTemplatePath());
-	sprintf(m_resourceSelectExtension, "tmp");
-
-	DebugCommandReturnData retVal;
-	retVal.m_editType = EditType::GameObject;
-	retVal.m_editMode = EditMode::Template;
-	retVal.m_resourceSelectPath = &m_resourceSelectPath[0];
-	retVal.m_resourceSelectExtension = &m_resourceSelectExtension[0];
-	retVal.m_success = true;
-	return retVal;
-}
-
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectModel(GameObject * a_gameObj)
 {
 	DebugCommandReturnData retVal;
@@ -565,6 +551,21 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectClipPosition(Ga
 	retVal.m_editMode = EditMode::ClipPosition;
 	retVal.m_editType = EditType::GameObject;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectTemplate(GameObject * a_gameObj)
+{
+	Hide();
+	sprintf(m_resourceSelectPath, "%s", WorldManager::Get().GetTemplatePath());
+	sprintf(m_resourceSelectExtension, "tmp");
+
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::GameObject;
+	retVal.m_editMode = EditMode::Template;
+	retVal.m_resourceSelectPath = &m_resourceSelectPath[0];
+	retVal.m_resourceSelectExtension = &m_resourceSelectExtension[0];
 	retVal.m_success = true;
 	return retVal;
 }

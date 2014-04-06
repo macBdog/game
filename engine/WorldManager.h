@@ -335,7 +335,7 @@ public:
 				newGameObject->SetId(m_totalSceneNumObjects++);
 				newGameObject->SetState(GameObjectState::Loading);
 				newGameObject->SetName("NEW_GAME_OBJECT");
-				newGameObject->SetPos(Vector(0.0f, 0.0f, 10.0f));
+				newGameObject->SetPos(Vector(0.0f, 0.0f, 0.0f));
 				
 				// Add to currently active scene
 				sceneToAddObjectTo->AddObject(newGameObject);

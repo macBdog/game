@@ -205,12 +205,12 @@ private:
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 
 	DebugCommandReturnData CreateGameObject(GameObject * a_gameObj);
-	DebugCommandReturnData CreateGameObjectFromTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectModel(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectName(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectClipType(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectClipSize(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectClipPosition(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeGameObjectTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData SaveGameObjectTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData DeleteGameObject(GameObject * a_gameObj);
 

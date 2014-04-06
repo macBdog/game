@@ -337,13 +337,25 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				WorldManager & worldMan = WorldManager::Get();
 				if (m_editMode == EditMode::Template)
 				{
-					// Delete the old object
-					if (m_gameObjectToEdit)
+					// Create new object
+					if (GameObject * newGameObj = worldMan.CreateObject<GameObject>(m_resourceSelectList->GetSelectedListItem()))
 					{
-						worldMan.DestroyObject(m_gameObjectToEdit->GetId());
+						// Set properties of new object to match that of old object
+						newGameObj->SetPos(m_gameObjectToEdit->GetPos());
+
+						// Destroy old object
+						if (m_gameObjectToEdit)
+						{
+							worldMan.DestroyObject(m_gameObjectToEdit->GetId());
+						}
+						m_gameObjectToEdit = newGameObj;
+					
+						m_dirtyFlags.Set(DirtyFlag::Scene);
 					}
-					worldMan.CreateObject<GameObject>(m_resourceSelectList->GetSelectedListItem());
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					else
+					{
+						Log::Get().WriteEngineErrorNoParams("Failed to set template on game object.");
+					}
 				}
 
 				// Early out for no object
@@ -807,7 +819,7 @@ void DebugMenu::Draw()
 	renMan.AddDebugMatrix(fakeIdentity);
 
 	// Draw selection box around objects - slightly larger than clip size so there is no z fighting
-	const float extraSelectionSize = 0.01f;
+	const float extraSelectionSize = 0.025f;
 	if (m_gameObjectToEdit != NULL)
 	{
 		switch (m_gameObjectToEdit->GetClipType())
