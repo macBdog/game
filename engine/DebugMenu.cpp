@@ -501,6 +501,13 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			ShowTextInput(retVal.m_textEditString);
 		}
+		// If the command cleared the selection of items
+		if (retVal.m_clearSelection)
+		{
+			m_widgetToEdit->ClearSelection();
+			m_widgetToEdit = NULL;
+			m_gameObjectToEdit = NULL;
+		}
 		return retVal.m_success;
 	}
 

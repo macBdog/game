@@ -91,6 +91,7 @@ struct DebugCommandReturnData
 		, m_textEditString(NULL)
 		, m_resourceSelectPath(NULL)
 		, m_resourceSelectExtension(NULL)
+		, m_clearSelection(false)
 		, m_success(false)
 		{ }
 	
@@ -100,6 +101,7 @@ struct DebugCommandReturnData
 	DirtyFlag::Enum m_dirtyFlag;	///< If the command touched a widget or game object it should set a flag
 	EditMode::Enum m_editMode;		///< If the command set a new mode for the debug menu
 	EditType::Enum m_editType;		///< If the command set a new type of editing for the debug menu
+	bool m_clearSelection;			///< If the command clears the selected object
 	bool m_success;					///< Was the command successful
 
 };

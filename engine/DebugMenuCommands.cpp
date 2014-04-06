@@ -474,10 +474,11 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetTexture(Widget * a_
 
 DebugCommandReturnData DebugMenuCommandRegistry::DeleteWidget(Widget * a_widget)
 {
-	DebugCommandReturnData retVal;
-	Gui::Get().DestroyWidget(a_widget);
 	Hide();
-
+	Gui::Get().DestroyWidget(a_widget);
+	
+	DebugCommandReturnData retVal;
+	retVal.m_clearSelection = true;
 	retVal.m_dirtyFlag = DirtyFlag::GUI;
 	retVal.m_success = a_widget == NULL;
 	return retVal;
@@ -485,10 +486,10 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteWidget(Widget * a_widget)
 
 DebugCommandReturnData DebugMenuCommandRegistry::CreateGameObject(GameObject * a_gameObj)
 {
-	DebugCommandReturnData retVal;
-	WorldManager::Get().CreateObject<GameObject>();
 	Hide();
-	
+	WorldManager::Get().CreateObject<GameObject>();
+
+	DebugCommandReturnData retVal;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;
 	retVal.m_success = true;
 	return retVal;
@@ -496,6 +497,8 @@ DebugCommandReturnData DebugMenuCommandRegistry::CreateGameObject(GameObject * a
 
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectModel(GameObject * a_gameObj)
 {
+	Hide();
+
 	DebugCommandReturnData retVal;
 	sprintf(m_resourceSelectPath, "%s", ModelManager::Get().GetModelPath());
 	sprintf(m_resourceSelectExtension, "obj");
@@ -505,7 +508,6 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeGameObjectModel(GameObjec
 	retVal.m_resourceSelectExtension = &m_resourceSelectExtension[0];
 	retVal.m_success = true;
 
-	Hide();
 	return retVal;
 }
 
@@ -585,9 +587,10 @@ DebugCommandReturnData DebugMenuCommandRegistry::SaveGameObjectTemplate(GameObje
 DebugCommandReturnData DebugMenuCommandRegistry::DeleteGameObject(GameObject * a_gameObj)
 {
 	Hide();
+	WorldManager::Get().DestroyObject(a_gameObj->GetId());
 
 	DebugCommandReturnData retVal;
-	WorldManager::Get().DestroyObject(a_gameObj->GetId());
+	retVal.m_clearSelection = true;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;
 	retVal.m_success = true;
 	return retVal;

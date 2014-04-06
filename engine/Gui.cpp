@@ -281,7 +281,7 @@ void Gui::DestroyWidget(Widget * a_widget)
 	while (curWidget != NULL)
 	{
 		Widget::WidgetNode * next = curWidget->GetNext();
-		DestroyWidget(next->GetData());
+		DestroyWidget(curWidget->GetData());
 		delete curWidget;
 		curWidget = next;
 	}
