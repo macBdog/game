@@ -62,6 +62,14 @@ public:
 	inline bool IsEmpty() const { return m_length == 0; }
 	inline unsigned int GetLength() const { return m_length; }
 
+	//\brief Convenience method to new a node and insert it
+	inline void InsertNew(T * a_data)
+	{
+		LinkedListNode<T> * newNode = new LinkedListNode<T>();
+		newNode->SetData(a_data);
+		Insert(newNode);
+	}
+
 	//\brief Add a node to the list
 	inline void Insert(LinkedListNode<T> * a_node)
 	{
@@ -84,6 +92,13 @@ public:
 		m_cursor = a_node;
 
 		m_length++;
+	}
+
+	//\brief Convenience method to delete the node
+	inline void RemoveDelete(LinkedListNode<T> * a_node)
+	{
+		Remove(a_node);
+		delete a_node;
 	}
 
 	//\brief Link next to prev and vice versa

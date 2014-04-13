@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "Log.h"
 #include "InputManager.h"
 #include "FileManager.h"
@@ -50,9 +52,14 @@ bool Gui::Startup(const char * a_guiPath)
 		
 		m_menus.Insert(newMenuNode);
 	}
-	
-	// Set the active menu to the first loaded menu
-	m_activeMenu = m_menus.GetHead()->GetData();
+
+	// Default the active menu
+	if (m_startupMenu == NULL)
+	{
+		Log::Get().WriteGameErrorNoParams("No menu found with beginLoaded set to true, defaulting to the first menu loaded!");
+		m_startupMenu = m_menus.GetHead()->GetData();
+	}
+	m_activeMenu = m_startupMenu;
 
 	// Setup the mouse cursor element if present in config file
 	m_cursor.SetActive(false);
@@ -101,8 +108,12 @@ bool Gui::Update(float a_dt)
 	// Draw debug menu elements over the top of the menu
 	m_debugRoot.Draw();
 
-	// Draw mouse cursor over the top of the gui
-	if (!DebugMenu::Get().IsDebugMenuEnabled())
+	// Draw the name of the current menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		FontManager::Get().DrawDebugString2D(m_activeMenu->GetName(), Vector2(-1.0, 1.0f));
+	}
+	else // Draw game mouse cursor over the top of the gui
 	{
 		m_cursor.Draw();
 	}
@@ -264,30 +275,61 @@ Widget * Gui::FindWidget(const char * a_widgetName)
 
 void Gui::DestroyWidget(Widget * a_widget)
 {
-	// Clean up any links
-	a_widget->ClearAction();
+#ifdef _DEBUG
+	// First check that this is a debug widget
+	if (a_widget->IsDebugWidget())
+	{
+		assert(m_debugRoot.RemoveFromChildren(a_widget));
+		delete a_widget;
+	}
+	else
+	{
+#endif
+		// Clean up any links
+		a_widget->ClearAction();
 	
-	// Remove any align to references or references in parent lists
-	MenuListNode * cur = m_menus.GetHead();
-	while(cur != NULL)
-	{
-		cur->GetData()->RemoveAlignmentTo(a_widget);
-		cur->GetData()->RemoveFromChildren(a_widget);
-		cur = cur->GetNext();
-	}
+		// Remove any children
+		a_widget->RemoveChildren();
 
-	// Delete child widgets
-	Widget::WidgetNode * curWidget = a_widget->GetChildren();
-	while (curWidget != NULL)
-	{
-		Widget::WidgetNode * next = curWidget->GetNext();
-		DestroyWidget(curWidget->GetData());
-		delete curWidget;
-		curWidget = next;
-	}
+		// Remove any align to references or references in parent lists, menus should be the ultimate parent of any widget
+		MenuListNode * removed = NULL;
+		bool removedFromChild = false;
+		MenuListNode * cur = m_menus.GetHead();
+		while (cur != NULL)
+		{
+			MenuListNode * next = cur->GetNext();
+			Widget * curParent = cur->GetData();
+			if (curParent == a_widget)
+			{
+				removed = cur;
+			}
+			else if (cur->GetData()->RemoveFromChildren(a_widget))
+			{
+				removedFromChild = true;
+			}
+			
+			// Need to exhaustively remove any alignment to this widget
+			curParent->RemoveAlignmentTo(a_widget);
 
-	// Nothing else should be hanging on to this, get rid of it
-	delete a_widget;
+			cur = next;
+		}
+		
+		// Nothing else should be hanging on to this, get rid of it
+		if (removed != NULL)
+		{
+			m_menus.RemoveDelete(removed);
+		}
+		else if (removedFromChild)
+		{
+			delete a_widget;
+		}
+		else // Something went wrong
+		{
+			assert(false);
+		}
+#ifdef _DEBUG
+	}
+#endif
 }
 
 bool Gui::MouseInputHandler(bool active)
@@ -343,6 +385,7 @@ Widget * Gui::GetActiveWidget()
 bool Gui::LoadMenu(const char * a_menuFile)
 {
 	// Load the menu file
+	Widget * createdMenu = NULL;
 	GameFile * menuFile = new GameFile();
 	if (menuFile->Load(a_menuFile))
 	{
@@ -351,37 +394,44 @@ bool Gui::LoadMenu(const char * a_menuFile)
 		{
 			if (GameFile::Property * nameProp = menuObject->FindProperty("name"))
 			{
-				Widget * parentMenu = new Widget();
-				parentMenu->SetName(menuFile->GetString("menu", "name"));
-				parentMenu->SetFilePath(a_menuFile);
-				parentMenu->SetActive(false);
+				createdMenu = new Widget();
+				createdMenu->SetName(menuFile->GetString("menu", "name"));
+				createdMenu->SetFilePath(a_menuFile);
+				createdMenu->SetActive(false);
 
 				// TODO Support for non fullscreen menus
-				parentMenu->SetSize(Vector2(2.0f, 2.0f));
-				parentMenu->SetDrawPos(Vector2(-1.0, 1.0));
+				createdMenu->SetSize(Vector2(2.0f, 2.0f));
+				createdMenu->SetDrawPos(Vector2(-1.0, 1.0));
 
 				// Load child elements of the menu
 				LinkedListNode<GameFile::Object> * childWidget = menuObject->GetChildren();
 				while (childWidget != NULL)
 				{
 					GameFile::Object * curObject = childWidget->GetData();
-					Widget * newChild = CreateWidget(curObject, parentMenu);
+					Widget * newChild = CreateWidget(curObject, createdMenu);
 					// If not specified in the file, align child widgets to the parent menu
 					if (!newChild->HasAlignTo())
 					{
-						newChild->SetAlignTo(parentMenu);
+						newChild->SetAlignTo(createdMenu);
 					}
 					childWidget = childWidget->GetNext();
 				}
 
 				// Add to list of menus
-				MenuListNode * newMenuNode = new MenuListNode();
-				newMenuNode->SetData(parentMenu);
-				m_menus.Insert(newMenuNode);
+				m_menus.InsertNew(createdMenu);
 			}
 			else // No properties present
 			{
 				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file %s, menu does not have a name property.", a_menuFile);
+			}
+
+			// Set the active menu to the last menu with the begin loaded property
+			if (createdMenu != NULL && menuObject->FindProperty("beginLoaded"))
+			{
+				if (menuObject->FindProperty("beginLoaded")->GetBool())
+				{
+					m_startupMenu = createdMenu;
+				}
 			}
 		}
 		else // Unexpected file format, no root element
@@ -423,19 +473,16 @@ bool Gui::LoadMenus(const char * a_guiPath)
 
 bool Gui::UnloadMenus()
 {
-	MenuListNode * next = m_menus.GetHead();
-	while(next != NULL)
+	MenuListNode * cur = m_menus.GetHead();
+	while(cur != NULL)
 	{
 		// Cache off next pointer
-		MenuListNode * cur = next;
-		next = cur->GetNext();
-
-		// Remove from list
-		m_menus.Remove(cur);
+		MenuListNode * next = cur->GetNext();
 		
-		// Clean up all widgets and family
+		// Clean up widget and family and delete it
 		DestroyWidget(cur->GetData());
-		delete cur;
+
+		cur = next;
 	}
 
 	return true;

@@ -31,7 +31,7 @@ const Colour Widget::sc_editSelectedColour = Colour(0.05f, 0.85f, 0.85f, 0.0f);
 
 Widget::~Widget()
 {
-	// Iterate through all items and deletes and deallocs
+	// Delete list items owned by this widget
 	LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
 	while(nextItem != NULL)
 	{
@@ -306,23 +306,40 @@ bool Widget::IsSelected(SelectionFlags::Enum a_selectMode)
 
 void Widget::AddChild(Widget * a_child)
 {
-	WidgetNode * newWidgetNode = new WidgetNode();
-	newWidgetNode->SetData(a_child);
-	m_children.Insert(newWidgetNode);
+	m_children.InsertNew(a_child);
 }
 
 bool Widget::RemoveChild(Widget * a_child)
 {
-	WidgetNode * a_cur = m_children.GetHead();
-	while (a_cur != NULL)
+	// This will not handle align references or parent lists, just child relationships!
+	WidgetNode * cur = m_children.GetHead();
+	while (cur != NULL)
 	{
-		if (a_cur->GetData() == a_child)
+		WidgetNode * next = cur->GetNext();
+		if (cur->GetData() == a_child)
 		{
-			m_children.Remove(a_cur);
-			delete a_cur;
+			m_children.RemoveDelete(cur);
 			return true;
 		}
-		a_cur = a_cur->GetNext();
+		cur = next;
+	}
+	return false;
+}
+
+bool Widget::RemoveChildren()
+{
+	// This will not handle align references or parent lists, just child relationships!
+	WidgetNode * cur = m_children.GetHead();
+	while (cur != NULL)
+	{
+		WidgetNode * next = cur->GetNext();
+		if (cur->GetData()->m_children.GetLength() > 0)
+		{
+			cur->GetData()->RemoveChildren();
+		}
+		m_children.Remove(cur);
+		delete cur;
+		cur = next;
 	}
 	return false;
 }
@@ -412,10 +429,10 @@ bool Widget::RemoveFromChildren(Widget * a_child)
 		return false;
 	}
 
-	// Could possibly early out after the first removal but better to be exhaustive
+	// Early out after the first removal but better to be exhaustive
 	bool removed = RemoveChild(a_child);
 	WidgetNode * cur = m_children.GetHead();
-	while (cur != NULL)
+	while (cur != NULL && !removed)
 	{
 		Widget * curWidget = cur->GetData();
 		if (curWidget->RemoveChild(a_child))
@@ -431,6 +448,7 @@ bool Widget::RemoveFromChildren(Widget * a_child)
 		}
 		cur = cur->GetNext();
 	}
+	
 	return removed;
 }
 
@@ -492,6 +510,12 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		menuStream << tabs << "widget" << StringUtils::s_charLineEnd;
 		menuStream << tabs << "{" << StringUtils::s_charLineEnd;
 		menuStream << tabs << StringUtils::s_charTab << "name: "	<< m_name				<< StringUtils::s_charLineEnd;
+
+		// Write the begin loaded property out
+		if (Gui::Get().GetStartupMenu() == this)
+		{
+			menuStream << tabs << StringUtils::s_charTab << "beginLoaded: true"	<< StringUtils::s_charLineEnd;
+		}
 
 		strncpy(outBuf, m_text, strlen(m_text) + 1);
 		menuStream << tabs << StringUtils::s_charTab << "text: " << outBuf << StringUtils::s_charLineEnd;
@@ -555,9 +579,11 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuOutput << "menu"	<< StringUtils::s_charLineEnd;
 			menuOutput << "{"		<< StringUtils::s_charLineEnd;
 			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
-			if (m_script[0] != '\0')
+					
+			// Write the begin loaded property out
+			if (Gui::Get().GetStartupMenu() == this)
 			{
-				menuOutput << StringUtils::s_charTab		<< "script: "	<< m_script << StringUtils::s_charLineEnd;
+				menuOutput << StringUtils::s_charTab << "beginLoaded: true"	<< StringUtils::s_charLineEnd;
 			}
 
 			// Write out any children of this child

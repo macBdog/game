@@ -164,7 +164,6 @@ public:
 	{
 		m_name[0] = '\0';
 		m_alignToName[0] = '\0';
-		m_script[0] = '\0';
 		m_text[0] = '\0';
 		m_filePath[0] = '\0';
 	}
@@ -224,10 +223,12 @@ public:
 	//\param a_child is a pointer to the allocated widget to append
 	void AddChild(Widget * a_child);
 	bool RemoveChild(Widget * a_child);
+	bool RemoveChildren();
 
 	//\brief Property accessors to return the head of the sibling or child widgets
 	//\return The sibling or child widget or NULL if not set
 	inline WidgetNode * GetChildren() { return m_children.GetHead(); }
+	inline bool HasChildren() { return m_children.GetLength() > 0; }
 	Widget * Find(const char * a_name);
 	bool RemoveAlignmentTo(Widget * a_alignedTo);
 	bool RemoveFromChildren(Widget * a_child);
@@ -247,7 +248,6 @@ public:
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetFontSize(float a_newSize) { m_fontSize = a_newSize; }
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
-	inline void SetScript(const char * a_script) { sprintf(m_script, "%s", a_script); }
 	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
 	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetSelectFlags(SelectionFlags::Enum a_flags) { m_selectFlags = a_flags; }
@@ -262,7 +262,6 @@ public:
 	inline WidgetVector GetPos() const { return m_pos; }
 	inline WidgetVector GetSize() const { return m_size; }
 	inline const char * GetName() const { return m_name; }
-	inline const char * GetScript() const { return m_script; }
 	inline const char * GetText() const { return m_text; }
 	inline const char * GetFilePath() const { return m_filePath; }
 	inline Widget * GetAlignTo() const { return m_alignTo; }
@@ -327,7 +326,6 @@ private:
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
 	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
-	char m_script[StringUtils::s_maxCharsPerName];			///< Script filename
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
 	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property
 

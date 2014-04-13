@@ -147,6 +147,7 @@ void DebugMenuCommandRegistry::Shutdown()
 	{
 		CommandNode * next = cur->GetNext();
 		Gui::Get().DestroyWidget(cur->GetData()->GetWidget());
+
 		delete cur->GetData();
 		delete cur;
 

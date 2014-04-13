@@ -17,7 +17,10 @@ class Gui : public Singleton<Gui>
 public:
 
 	// Constructor just for initialisation list
-	Gui() : m_activeMenu(NULL) { m_guiPath[0] = '\0'; }
+	Gui() 
+		: m_activeMenu(NULL)
+		, m_startupMenu(NULL)
+	{ m_guiPath[0] = '\0'; }
 
 	// Destructor cleans up all allocations
 	~Gui() { Shutdown(); }
@@ -47,6 +50,7 @@ public:
 	//\brief Utility function to get the base containers
 	inline Widget * GetDebugRoot() { return &m_debugRoot; }
 	inline Widget * GetActiveMenu() { return m_activeMenu; }
+	inline Widget * GetStartupMenu() { return m_startupMenu; }
 
 	//brief Return the top widget with different selection flags
 	Widget * GetActiveWidget();
@@ -81,6 +85,7 @@ private:
 	Widget m_debugRoot;		// All debug menu elements are children of this
 	Widget m_cursor;		// A special widget for the mouse position
 	Widget * m_activeMenu;	// The current menu that's active of editing and display
+	Widget * m_startupMenu;	// The widget that has been marked as the menu that should be loaded when the game starts
 };
 
 
