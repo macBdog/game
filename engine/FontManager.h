@@ -46,6 +46,8 @@ public:
 	//\return pointer to a StringHash or NULL for failure
 	StringHash * GetLoadedFontName(const char * a_fontName);
 	const char * GetLoadedFontName(unsigned int a_fontNameHash);
+	const char * GetLoadedFontNameForId(int m_fontId);
+	inline int GetNumLoadedFonts() { return m_fonts.GetLength(); }
 
 	//\brief Get a default font name
 	StringHash * GetDebugFontName();

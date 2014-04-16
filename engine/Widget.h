@@ -198,6 +198,7 @@ public:
 
 	//\brief Base implementation will tint for selection
 	void Draw();
+	void DrawAlignment();
 
 	//\brief Update selection flags for the widget and family based on a position
 	//\param a_pos is the position to update from, usually the mouse pos

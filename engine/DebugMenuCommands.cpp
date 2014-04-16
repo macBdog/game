@@ -7,11 +7,12 @@
 
 #include "DebugMenuCommands.h"
 
-DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour)
+DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour, EditType::Enum a_parentMenu)
 : m_gameObjectFunction()
 , m_widgetFunction()
 , m_alignment(DebugMenuCommandAlign::Below)
 , m_widget(NULL)
+, m_parentMenu(a_parentMenu)
 {
 	m_widget = CreateButton(a_name, a_parent, a_colour);
 }
@@ -79,12 +80,12 @@ Widget * DebugMenuCommand::CreateButton(const char * a_name, Widget * a_parent, 
 	return retWidget;
 }
 
-DebugMenuCommand * DebugMenuCommandRegistry::Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour)
+DebugMenuCommand * DebugMenuCommandRegistry::Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour, EditType::Enum a_parentMenu)
 {
-	DebugMenuCommand * newCommand = new DebugMenuCommand(a_name, a_parent, a_colour);	
+	DebugMenuCommand * newCommand = new DebugMenuCommand(a_name, a_parent, a_colour, a_parentMenu);	
 	newCommand->SetAlignment(a_alignTo, a_align);
-	CommandNode * newNode = new CommandNode();											
-	newNode->SetData(newCommand);														
+	CommandNode * newNode = new CommandNode();
+	newNode->SetData(newCommand);										
 	m_commands.Insert(newNode);
 	return newCommand;
 }
@@ -99,43 +100,45 @@ void DebugMenuCommandRegistry::Startup()
 
 	// Create root of the create menu that appears if no objects are selected
 	DebugMenuCommand * lastCreatedCommand = NULL;
-	lastCreatedCommand = Create("Create Widget",			m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple);
+	lastCreatedCommand = Create("Create Widget",			m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple, EditType::None);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
-	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
+	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::None);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
 	
 	// Change 2D objects
-	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue);
+	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetAlignment);
-	lastCreatedCommand = Create("Offset",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
+	lastCreatedCommand = Create("Offset",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetOffset);
-	lastCreatedCommand = Create("Shape",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple);
+	lastCreatedCommand = Create("Shape",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetShape);
-	lastCreatedCommand = Create("Widget Name",				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
+	lastCreatedCommand = Create("Widget Name",				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetName);
-	lastCreatedCommand = Create("Text", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
+	lastCreatedCommand = Create("Text", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetText);
-	lastCreatedCommand = Create("Texture", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow);
+	lastCreatedCommand = Create("Font", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::Widget);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFont);
+	lastCreatedCommand = Create("Texture", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetTexture);
-	lastCreatedCommand = Create("Delete Widget",			m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
+	lastCreatedCommand = Create("Delete Widget",			m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::DeleteWidget);
 
 	// Change 3D objects
-	lastCreatedCommand = Create("Model",					m_btnGameObjectRoot, m_btnGameObjectRoot, DebugMenuCommandAlign::Right, sc_colourGreen);
+	lastCreatedCommand = Create("Model",					m_btnGameObjectRoot, m_btnGameObjectRoot, DebugMenuCommandAlign::Right, sc_colourGreen, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectModel);
-	lastCreatedCommand = Create("Name",						m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange);
+	lastCreatedCommand = Create("Name",						m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectName);
-	lastCreatedCommand = Create("Clip Type",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow);
+	lastCreatedCommand = Create("Clip Type",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectClipType);
-	lastCreatedCommand = Create("Clip Size",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue);
+	lastCreatedCommand = Create("Clip Size",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectClipSize);
-	lastCreatedCommand = Create("Clip Position",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue);
+	lastCreatedCommand = Create("Clip Position",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectClipPosition);
-	lastCreatedCommand = Create("Set Template",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen);
+	lastCreatedCommand = Create("Set Template",				m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::ChangeGameObjectTemplate);
-	lastCreatedCommand = Create("Save Template",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple);
+	lastCreatedCommand = Create("Save Template",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::SaveGameObjectTemplate);
-	lastCreatedCommand = Create("Delete Object",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey);
+	lastCreatedCommand = Create("Delete Object",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::DeleteGameObject);
 }
 
@@ -292,8 +295,7 @@ void DebugMenuCommandRegistry::ShowRootCommands()
 	m_btnCreateRoot->SetActive();
 
 	DEBUG_COMMANDS_LOOP_BEGIN
-		if (strcmp(debugWidget->GetName(), "Create Widget") == 0 || 
-			strcmp(debugWidget->GetName(), "Create GameObject") == 0) 
+		if (debugCommand->GetParentMenu() == EditType::None) 
 		{
 			debugWidget->SetActive();
 		}
@@ -306,13 +308,7 @@ void DebugMenuCommandRegistry::ShowWidgetCommands()
 	m_btnWidgetRoot->SetActive();
 
 	DEBUG_COMMANDS_LOOP_BEGIN
-		if (strcmp(debugWidget->GetName(), "Alignment") == 0 ||
-			strcmp(debugWidget->GetName(), "Offset") == 0 || 
-			strcmp(debugWidget->GetName(), "Shape") == 0 || 
-			strcmp(debugWidget->GetName(), "Widget Name") == 0 || 
-			strcmp(debugWidget->GetName(), "Text") == 0 || 
-			strcmp(debugWidget->GetName(), "Texture") == 0 || 
-			strcmp(debugWidget->GetName(), "Delete Widget") == 0) 
+		if (debugCommand->GetParentMenu() == EditType::Widget) 
 		{
 			debugWidget->SetActive();
 		}
@@ -325,14 +321,7 @@ void DebugMenuCommandRegistry::ShowGameObjectCommands()
 	m_btnGameObjectRoot->SetActive();
 
 	DEBUG_COMMANDS_LOOP_BEGIN
-		if (strcmp(debugWidget->GetName(), "Model") == 0 ||
-			strcmp(debugWidget->GetName(), "Name") == 0 ||
-			strcmp(debugWidget->GetName(), "Clip Type") == 0 || 
-			strcmp(debugWidget->GetName(), "Clip Size") == 0 || 
-			strcmp(debugWidget->GetName(), "Clip Position") == 0 || 
-			strcmp(debugWidget->GetName(), "Set Template") == 0 ||
-			strcmp(debugWidget->GetName(), "Save Template") == 0 || 
-			strcmp(debugWidget->GetName(), "Delete Object") == 0) 
+		if (debugCommand->GetParentMenu() == EditType::GameObject) 
 		{
 			debugWidget->SetActive();
 		}
@@ -405,8 +394,12 @@ DebugCommandReturnData DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
 
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetAlignment(Widget * a_widget)
 {
-	DebugCommandReturnData retVal;
+	Hide();
 
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::Widget;
+	retVal.m_editMode = EditMode::Alignment;
+	retVal.m_success = true;
 	return retVal;
 }
 
@@ -454,6 +447,17 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetText(Widget * a_wid
 	retVal.m_editType = EditType::Widget;
 	retVal.m_editMode = EditMode::Text;
 	retVal.m_textEditString = &m_textEditString[0];
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetFont(Widget * a_widget)
+{
+	Hide();
+	
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::Widget;
+	retVal.m_editMode = EditMode::Font;
 	retVal.m_success = true;
 	return retVal;
 }

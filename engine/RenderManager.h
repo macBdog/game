@@ -169,6 +169,8 @@ public:
 	//\param Vector a_point2 end of the line
 	//\param Colour a_tint the colour of the line
 	inline void AddDebugLine(Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite) { AddLine(RenderLayer::Debug3D, a_point1, a_point2, a_tint); }
+	inline void AddDebugLine2D(Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite) { AddLine2D(RenderLayer::Debug2D, a_point1, a_point2, a_tint); }
+	inline void AddDebugQuad2D(Vector2 a_topLeft, Vector2 a_size, Colour a_tint = sc_colourWhite) { AddQuad2D(RenderLayer::Debug2D, a_topLeft, a_size, NULL, TextureOrientation::Normal, a_tint); }
 
 	//\brief A matrix is position and orientation displayed with lines
 	//\param a const ref of the matrix containing the position and orientation to display

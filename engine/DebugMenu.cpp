@@ -7,6 +7,7 @@
 #include "Log.h"
 #include "ModelManager.h"
 #include "RenderManager.h"
+#include "StringHash.h"
 #include "TextureManager.h"
 #include "Widget.h"
 #include "WorldManager.h"
@@ -330,6 +331,10 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureCategory::Gui));
 					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
+				else if (m_editMode == EditMode::Font)
+				{
+					m_widgetToEdit->SetFontName(StringHash::GenerateCRC(m_resourceSelectList->GetSelectedListItem()));
+				}
 				break;
 			}
 			case EditType::GameObject:
@@ -491,16 +496,25 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			m_dirtyFlags.Set(retVal.m_dirtyFlag);
 		}
+
 		// If the command required a resource to be selected
 		if (retVal.m_resourceSelectPath != NULL)
 		{
 			ShowResourceSelect(retVal.m_resourceSelectPath, retVal.m_resourceSelectExtension);
 		}
+
 		// If the command requires some input of text
 		if (retVal.m_textEditString != NULL)
 		{
 			ShowTextInput(retVal.m_textEditString);
 		}
+
+		// If the commmand requires choosing a font
+		if (retVal.m_editType == EditType::Widget && retVal.m_editMode == EditMode::Font)
+		{
+			ShowFontSelect();
+		}
+
 		// If the command cleared the selection of items
 		if (retVal.m_clearSelection)
 		{
@@ -730,6 +744,44 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	fileMan.CleanupFileList(resourceFiles);
 }
 
+void DebugMenu::ShowFontSelect()
+{
+	// Position and display the elements of the dialog
+	m_resourceSelect->SetActive();
+	m_resourceSelectList->SetActive();
+	m_btnResourceSelectOk->SetActive();
+	m_btnResourceSelectCancel->SetActive();
+
+	// Position buttons on the panel
+	const float buttonSpacingX = 0.025f;
+	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
+	Vector2 parentSize = m_resourceSelect->GetSize();
+	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
+	m_resourceSelect->SetOffset(parentPos);
+
+	// Position the list of resources
+	m_resourceSelectList->SetOffset(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
+
+	// Position the Ok and Cancel buttons
+	Vector2 buttonSize = m_btnResourceSelectOk->GetSize();
+	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
+								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
+	m_btnResourceSelectOk->SetOffset(buttonPos);
+
+	buttonPos.SetX(parentPos.GetX() + parentSize.GetX() - buttonSize.GetX() - buttonSpacingX);
+	m_btnResourceSelectCancel->SetOffset(buttonPos);
+	m_resourceSelectList->ClearListItems();
+	
+	// Add fonts list to widget
+	FontManager & fontMan = FontManager::Get();
+	
+	const int numFonts = fontMan.GetNumLoadedFonts();
+	for (int i = 0; i < numFonts; ++i)
+	{
+		m_resourceSelectList->AddListItem(fontMan.GetLoadedFontNameForId(i));
+	}
+}
+
 void DebugMenu::ShowTextInput(const char * a_startingText)
 {
 	// Position and display the elements of the dialog
@@ -846,6 +898,12 @@ void DebugMenu::Draw()
 		}
 	}
 	
+	// Draw selected widget alignment
+	if (m_editMode == EditMode::Alignment && m_widgetToEdit != NULL)
+	{
+		m_widgetToEdit->DrawAlignment();
+	}
+
 	// Show mouse pos at cursor
 	char mouseBuf[16];
 	Vector2 mousePos = InputManager::Get().GetMousePosRelative();

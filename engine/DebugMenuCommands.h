@@ -70,6 +70,7 @@ namespace EditMode
 		Texture,		///< File selection dialog active
 		Name,			///< Cursor keys bound to display name
 		Text,			///< Cursor keys bound to text value
+		Font,			///< Setting font on widget
 		Model,			///< Setting the model for an object
 		Template,		///< Create an object from a template
 		SaveTemplate,	///< Set the template name for an object
@@ -112,12 +113,13 @@ class DebugMenuCommand
 public:
 
 	//\brief Commands have a name, widget and delegate function to call on click
-	DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour);
+	DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour, EditType::Enum a_parentMenu);
 	~DebugMenuCommand() { }
 
 	//\brief Accessors
 	inline Widget * GetWidget() const { return m_widget; }
 	inline DebugMenuCommandAlign::Enum GetAlignment() const { return m_alignment; }
+	inline EditType::Enum GetParentMenu() const { return m_parentMenu; }
 
 	//\brief Functions for setting the callbacks that debug commands provide
 	template <typename TObj, typename TMethod>
@@ -148,6 +150,7 @@ private:
 	Delegate<DebugCommandReturnData, Widget *> m_widgetFunction;				///< Function if the command is registered on a widget
 	DebugMenuCommandAlign::Enum m_alignment;									///< How the command is aligned to it's parent command NOTE: this is separate to widget alignment
 	Widget * m_widget;															///< Visual representation of the command button
+	EditType::Enum m_parentMenu;												///< Which menu the command should appear in, None means root
 };
 
 class DebugMenuCommandRegistry
@@ -190,8 +193,8 @@ public:
 	
 private:
 
-	//\brief Helper function for creating and setting up a new debug menu widget
-	DebugMenuCommand * Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour);
+	//\brief Helper function for creating and setting up a new debug menu command from a widget
+	DebugMenuCommand * Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour, EditType::Enum a_parentMenu);
 
 	//\brief Set the alignment of the widgets for each command according to rules for where the user clicked
 	void SetMenuAlignment(Alignment * a_screenAlign);
@@ -203,6 +206,7 @@ private:
 	DebugCommandReturnData ChangeWidgetShape(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetName(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetText(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetFont(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetTexture(Widget * a_widget);
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 

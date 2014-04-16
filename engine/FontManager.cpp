@@ -310,6 +310,22 @@ const char * FontManager::GetLoadedFontName(unsigned int a_fontNameHash)
 	return NULL;
 }
 
+const char * FontManager::GetLoadedFontNameForId(int a_fontId)
+{
+	int fontCount = 0;
+	FontListNode * curFont = m_fonts.GetHead();
+	while(curFont != NULL)
+	{
+		if (fontCount++ == a_fontId)
+		{
+			return curFont->GetData()->m_fontName.GetCString();
+		}
+		curFont = curFont->GetNext();
+	}
+
+	return NULL;
+}
+
 StringHash * FontManager::GetDebugFontName()
 {
 	if (m_fonts.GetLength() > 0)

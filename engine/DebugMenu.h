@@ -76,6 +76,9 @@ public:
 	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
 	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = NULL);
 
+	//\brief Show the resource selection dialog to enable a font to be chosen
+	void ShowFontSelect();
+
 	//\brief Show the text input dialog to enable something to be named
 	//\param a_startingText An optional pointer to a c string with the text that should be displayed
 	void ShowTextInput(const char * a_startingText = NULL);

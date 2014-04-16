@@ -183,6 +183,32 @@ void Widget::Draw()
 	}
 }
 
+void Widget::DrawAlignment()
+{
+	const float boxSize = 0.05f;
+	const float halfBox = boxSize * 0.5f;
+	RenderManager & rMan = RenderManager::Get();
+		
+	// Show crosshair of alignment anchor
+	Vector2 pos = m_drawPos;
+	Colour drawColour = sc_colourPurple;
+	Vector2 alignPos = Vector2(pos.GetX() + halfBox, pos.GetY() - halfBox);
+	rMan.AddDebugLine2D(alignPos - Vector2(halfBox, 0.0f), alignPos + Vector2(halfBox, 0.0f), drawColour);
+	rMan.AddDebugLine2D(alignPos - Vector2(0.0f, halfBox), alignPos + Vector2(0.0f, halfBox), drawColour);
+
+	// Show all alignment anchors
+	drawColour.SetA(0.25);
+	Vector2 sizeVec(boxSize);
+	for (int x = 0; x < AlignX::Count; ++x)
+	{
+		for (int y = 0; y < AlignY::Count; ++y)
+		{
+			Vector2 anchorPos(pos.GetX() + boxSize + (m_size.GetX() * 0.5f * x), pos.GetY() - (m_size.GetY() * 0.5f * y));
+			rMan.AddDebugQuad2D(Vector2(anchorPos.GetX() - boxSize, anchorPos.GetY() + boxSize), Vector2(boxSize), drawColour);
+		}
+	}
+}
+
 void Widget::UpdateSelection(WidgetVector a_pos)
 {
 	// Don't select debug menu elements if we aren't in debug mode
