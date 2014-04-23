@@ -5,6 +5,42 @@
 #include <assert.h>
 #include <stdlib.h>
 
+class Page
+{
+public:
+
+	//\brief Setup the size of the page
+	Page(size_t a_size)
+		: m_size(0)
+		, m_next(NULL)
+		, m_prev(NULL)
+		, m_memory(NULL)
+	{
+		m_memory = malloc(a_size);
+		assert(m_memory != NULL);
+	}
+	
+	~Page()
+	{
+		free(m_memory);
+	}
+	
+	inline void AddNext(size_t a_size)
+	{
+		assert(m_next == NULL);
+		m_next = (Page*)malloc(sizeof(Page));
+		m_next(a_size);
+		assert(m_next != NULL);
+		m_next->m_prev = this;
+	}
+	
+private:
+	size_t m_size;
+	Page * m_next;
+	Page * m_prev;
+	void * m_memory;
+};
+
 //\brief For use where contiguous resizable array like storage is required. 
 //	 It's intended usage is to estimate the maximum number of elements
 //	 upon construction then Add and Get in order to make use of cache/prefetch.
@@ -20,10 +56,11 @@ public:
 		: m_itemSize(0)
 		, m_numAllocations(0)
 		, m_numItemsPerAllocation(0)
-		, m_memory(NULL)
+		, m_headAllocation(NULL)
 	{
 		m_itemSize = sizeof(T);
-		m_memory = malloc(m_itemSize * a_numElements);
+		m_headAllocation = malloc(sizeof(Page));
+		m_headAllocation(m_itemSize * a_numElements);
 		m_numAllocations = 1;
 		m_numItemsPerAllocation = a_numElements;
 	}
@@ -79,7 +116,7 @@ private:
 	size_t m_itemSize;
 	int m_numAllocations;
 	int m_numItemsPerAllocation;
-	void * m_memory;
+	Page * m_headAllocation;
 	
 };
 
