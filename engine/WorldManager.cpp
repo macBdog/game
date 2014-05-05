@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "DebugMenu.h"
 #include "GameFile.h"
 #include "ModelManager.h"
@@ -7,21 +9,33 @@
 
 template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
 
+Scene::Scene() 
+: m_firstGameObjectId(-1)
+, m_numObjects(0)
+, m_state(SceneState::Unloaded) 
+, m_beginLoaded(false)
+, m_shader(NULL)
+, m_numLights(0)
+{ 
+	m_name[0] = '\0';
+	m_filePath[0] = '\0';
+
+	// Allocate memory for the scene's object pool
+	m_objects.Init(s_numObjects, sizeof(GameObject));
+	sprintf(m_name, "defaultScene");
+}
+
 Scene::~Scene()
 {
-	// Clean up memory allocated for scene list
-	SceneObject * next = m_objects.GetHead();
-	while(next != NULL)
+	// Shutdown all game objects in the scene
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		// Cache off next pointer
-		SceneObject * cur = next;
-		next = cur->GetNext();
-
-		m_objects.Remove(cur);
-		delete cur->GetData();
-		delete cur;
+		if (GameObject * gameObj = m_objects.Get(i))
+		{
+			gameObj->Shutdown();
+		}
 	}
-
+	
 	// Clean up shader if set
 	if (m_shader != NULL)
 	{
@@ -29,38 +43,192 @@ Scene::~Scene()
 	}
 }
 
-void Scene::AddObject(GameObject * a_newObject)
+bool Scene::Load(const char * a_scenePath)
 {
-	// TODO Scene objects should also have a heap, implement memory management
-	if (SceneObject * newSceneObject = new SceneObject())
-	{
-		newSceneObject->SetData(a_newObject);
-		a_newObject->Startup();
-		a_newObject->SetState(GameObjectState::Active);
-		m_objects.Insert(newSceneObject);
+	GameFile * sceneFile = new GameFile();
+	sceneFile->Load(a_scenePath);
 
-		++m_numObjects;
+	// Create a new widget and copy properties from file
+	if (GameFile::Object * sceneObject = sceneFile->FindObject("scene"))
+	{
+		// Set various properties of a scene
+		bool propsOk = true;
+		if (GameFile::Object * sceneObj = sceneFile->FindObject("scene"))
+		{
+			GameFile::Property * nameProp = sceneObj->FindProperty("name");
+			GameFile::Property * beginLoadedProp = sceneObj->FindProperty("beginLoaded");
+			if (nameProp && beginLoadedProp)
+			{
+				SetFilePath(a_scenePath);
+				SetName(nameProp->GetString());
+				SetBeginLoaded(beginLoadedProp->GetBool());
+
+				// Set whole scene shader if specified
+				if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
+				{
+					RenderManager::Get().ManageShader(this, shaderProp->GetString());
+				}
+			}
+			// Support for up to four lights per scene
+			GameFile::Object * lightingObj = sceneObj->FindObject("lighting");
+			if (lightingObj)
+			{
+				int numLights = 0;
+				LinkedListNode<GameFile::Object> * nextLight = lightingObj->GetChildren();
+				while (nextLight != NULL)
+				{
+					// Check there aren't more lights than we support
+					if (numLights >= Shader::s_maxLights)
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", a_scenePath, Shader::s_maxLights);
+						propsOk = false;
+						break;
+					}
+					GameFile::Object * light = nextLight->GetData();
+					GameFile::Property * lName = light->FindProperty("name");
+					GameFile::Property * lPos = light->FindProperty("pos");
+					GameFile::Property * lDir = light->FindProperty("dir");
+					GameFile::Property * lAmbient = light->FindProperty("ambient");
+					GameFile::Property * lDiffuse = light->FindProperty("diffuse");
+					GameFile::Property * lSpecular = light->FindProperty("specular");
+					if (lName && lPos && lDir && lAmbient && lDiffuse && lSpecular)
+					{
+						AddLight(lName->GetString(), 
+							lPos->GetVector(),
+							lDir->GetVector(),
+							lAmbient->GetFloat(),
+							lDiffuse->GetFloat(),
+							lSpecular->GetFloat());
+						numLights++;
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.");
+						propsOk = false;
+					}
+					nextLight = nextLight->GetNext();
+				}
+			}
+		}
+		else
+		{
+			propsOk = false;
+		}
+
+		// Load child game objects of the scene
+		LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
+		while (childGameObject != NULL)
+		{
+			// Chidlren of the scene file can be lighting or game objects, make sure we only create game objects
+			if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
+			{
+				childGameObject = childGameObject->GetNext();
+				continue;
+			}
+
+			const char * templateName = NULL;
+			GameFile::Object * childObj = childGameObject->GetData();
+			if (GameFile::Property * prop = childObj->FindProperty("template"))
+			{
+				templateName = prop->GetString();
+			}
+				
+			// Create object with optional template values and add to the scene
+			GameObject * newObject = WorldManager::Get().CreateObject(templateName, this);
+
+			// Override any templated values
+			if (templateName != NULL)
+			{
+				newObject->SetTemplate(templateName);
+			}
+
+			if (childObj->FindProperty("name"))
+			{
+				newObject->SetName(childObj->FindProperty("name")->GetString());
+			}
+			if (childObj->FindProperty("pos"))
+			{
+				newObject->SetPos(childObj->FindProperty("pos")->GetVector());
+			}
+			if (childObj->FindProperty("rot"))
+			{
+				newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
+			}
+			if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
+			{
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+				{
+					newObject->SetClipType(ClipType::Sphere);
+				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+				{
+					newObject->SetClipType(ClipType::Box);
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), a_scenePath);
+				}
+			}
+			if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
+			{
+				newObject->SetClipSize(clipSize->GetVector());
+			}
+			if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
+			{
+				newObject->SetClipOffset(clipOffset->GetVector());
+			}
+			if (childObj->FindProperty("model"))
+			{
+				newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));
+			}
+			if (childObj->FindProperty("shader"))
+			{
+				RenderManager::Get().ManageShader(newObject, childObj->FindProperty("shader")->GetString());
+			}
+			else if (HasLights())
+			{
+				// Set default shader
+				newObject->SetShader(RenderManager::Get().GetLightingShader());		
+			}
+				
+			childGameObject = childGameObject->GetNext();
+		}
+
+		// No properties present
+		if (!propsOk) 
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, scene does not have required properties.", a_scenePath);
+			return false;
+		}
 	}
+	else // Unexpected file format, no root element
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, no valid scene parent element.", a_scenePath);
+		return false;
+	}
+	
+	return true;
+}
+
+GameObject * Scene::AddObject()
+{
+	// Scene objects are stored contiguously in object ID order
+	GameObject * newGameObject = m_objects.Add(m_numObjects++);
+	assert(newGameObject != NULL);
+	if (m_firstGameObjectId == -1)
+	{
+		m_firstGameObjectId = newGameObject->GetId();
+	}
+	return newGameObject;
 }
 
 bool Scene::RemoveObject(unsigned int a_objectId)
 {
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
-	{
-		// Delete a target with a specific id
-		GameObject * gameObject = curObject->GetData();
-		if (gameObject->GetId() == a_objectId)
-		{
-			m_objects.Remove(curObject);
-			delete gameObject;
-			delete curObject;
-			return true;
-		}
+	GameObject * gameObj = m_objects.Get(a_objectId);
+	assert(gameObj != NULL);
+	gameObj->Shutdown();
 	
-		curObject = curObject->GetNext();
-	}
-
+	// TODO! return m_objects.Remove(a_objectId);
 	return false;
 }
 
@@ -81,39 +249,18 @@ bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Vector & a
 	return false;
 }
 
-GameObject * Scene::GetSceneObject(unsigned int a_objectId)
-{
-	// Iterate through all objects in the scene
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
-	{
-		// To find a target with a specific id
-		GameObject * gameObject = curObject->GetData();
-		if (gameObject->GetId() == a_objectId)
-		{
-			return gameObject;
-		}
-	
-		curObject = curObject->GetNext();
-	}
-
-	return NULL;
-}
-
 GameObject * Scene::GetSceneObject(const char * a_objName)
 {
 	// Iterate through all objects in the scene
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		// To find a target with a specific id
-		GameObject * gameObject = curObject->GetData();
-		if (strstr(gameObject->GetName(),a_objName) != 0)
+		if (GameObject * gameObj = m_objects.Get(i))
 		{
-			return gameObject;
+			if (strstr(gameObj->GetName(),a_objName) != 0)
+			{
+				return gameObj;
+			}
 		}
-	
-		curObject = curObject->GetNext();
 	}
 
 	return NULL;
@@ -122,52 +269,84 @@ GameObject * Scene::GetSceneObject(const char * a_objName)
 GameObject * Scene::GetSceneObject(Vector a_worldPos)
 {
 	// Iterate through all objects in the scene
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		// To the first object that intersects with a point
-		GameObject * gameObject = curObject->GetData();
-		if (gameObject->CollidesWith(a_worldPos))
+		if (GameObject * gameObj = m_objects.Get(i))
 		{
-			return gameObject;
+			// To the first object that intersects with a point
+			if (gameObj->CollidesWith(a_worldPos))
+			{
+				return gameObj;
+			}
 		}
-	
-		curObject = curObject->GetNext();
 	}
-
 	return NULL;
 }
 
 GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 {
 	// Iterate through all objects in the scene
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		// To the first object that intersects with a point
-		GameObject * gameObject = curObject->GetData();
-		if (gameObject->CollidesWith(a_lineStart, a_lineEnd))
+		if (GameObject * gameObj = m_objects.Get(i))
 		{
-			return gameObject;
+			// To the first object that intersects with a point
+			if (gameObj->CollidesWith(a_lineStart, a_lineEnd))
+			{
+				return gameObj;
+			}
 		}
-	
-		curObject = curObject->GetNext();
 	}
-
 	return NULL;
+}
+
+void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
+{
+	for (int i = 0; i < m_numObjects; ++i)
+	{
+		if (GameObject * gameObj = m_objects.Get(i))
+		{
+			// Test if script owned before destruction
+			bool destroyObject = !a_destroyScriptOwned && gameObj->IsScriptOwned() ? false : true;
+			if (destroyObject)
+			{
+				gameObj->Shutdown();
+			}
+		}
+	}
+	m_numObjects = 0;
+	m_firstGameObjectId = -1;
+	m_objects.Reset();
+}
+
+void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
+{
+	// Remove all objects including scene and script owned objects
+	for (int i = 0; i < m_numObjects; ++i)
+	{
+		if (GameObject * gameObj = m_objects.Get(i))
+		{
+			gameObj->Shutdown();
+		}
+	}
+	m_numObjects = 0;
+	m_firstGameObjectId = -1;
+	m_objects.Reset();
+
+	// Load scene front scratch so we are back with just scene objects and no script objects
+	Load(m_filePath);
 }
 
 bool Scene::Update(float a_dt)
 {
 	// Iterate through all objects in the scene and update state
 	bool updateSuccess = true;
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		GameObject * gameObject = curObject->GetData();
-		updateSuccess &= gameObject->Update(a_dt);
-
-		curObject = curObject->GetNext();
+		if (GameObject * gameObj = m_objects.Get(i))
+		{
+			updateSuccess &= gameObj->Update(a_dt);
+		}
 	}
 
 	// Now state and position have been updated, submit resources to be rendered
@@ -207,20 +386,17 @@ void Scene::Serialise()
 	}
 	
 	// Add each object in the scene
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		// Alias the game object in the scene
-		GameObject * childGameObject = curObject->GetData();
-
-		// Do not save out objects created by script
-		if (!childGameObject->IsScriptOwned())
+		if (GameObject * gameObj = m_objects.Get(i))
 		{
-			// Add the object to the game file
-			childGameObject->Serialise(sceneFile, sceneObject);
+			// Do not save out objects created by script
+			if (!gameObj->IsScriptOwned())
+			{
+				// Add the object to the game file
+				gameObj->Serialise(sceneFile, sceneObject);
+			}
 		}
-
-		curObject = curObject->GetNext();
 	}
 	
 	// Write all the game file data to a file
@@ -232,13 +408,12 @@ bool Scene::Draw()
 {
 	// Iterate through all objects in the scene and update state
 	bool drawSuccess = true;
-	SceneObject * curObject = m_objects.GetHead();
-	while (curObject != NULL)
+	for (int i = 0; i < m_numObjects; ++i)
 	{
-		GameObject * gameObject = curObject->GetData();
-		drawSuccess &= gameObject->Draw();
-
-		curObject = curObject->GetNext();
+		if (GameObject * gameObj = m_objects.Get(i))
+		{
+			drawSuccess &= gameObj->Draw();
+		}
 	}
 
 	// Draw all the lights in the scene when debug menu is up
@@ -255,181 +430,6 @@ bool Scene::Draw()
 	}
 
 	return drawSuccess;
-}
-
-bool WorldManager::LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT)
-{
-	// Quick safety check
-	if (a_sceneToLoad_OUT != NULL)
-	{
-		GameFile * sceneFile = new GameFile();
-		sceneFile->Load(a_scenePath);
-
-		// Create a new widget and copy properties from file
-		if (GameFile::Object * sceneObject = sceneFile->FindObject("scene"))
-		{
-			// Set various properties of a scene
-			bool propsOk = true;
-			if (GameFile::Object * sceneObj = sceneFile->FindObject("scene"))
-			{
-				GameFile::Property * nameProp = sceneObj->FindProperty("name");
-				GameFile::Property * beginLoadedProp = sceneObj->FindProperty("beginLoaded");
-				if (nameProp && beginLoadedProp)
-				{
-					a_sceneToLoad_OUT->SetName(nameProp->GetString());
-					a_sceneToLoad_OUT->SetBeginLoaded(beginLoadedProp->GetBool());
-
-					// Set whole scene shader if specified
-					if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
-					{
-						RenderManager::Get().ManageShader(a_sceneToLoad_OUT, shaderProp->GetString());
-					}
-				}
-				// Support for up to four lights per scene
-				GameFile::Object * lightingObj = sceneObj->FindObject("lighting");
-				if (lightingObj)
-				{
-					int numLights = 0;
-					LinkedListNode<GameFile::Object> * nextLight = lightingObj->GetChildren();
-					while (nextLight != NULL)
-					{
-						// Check there aren't more lights than we support
-						if (numLights >= Shader::s_maxLights)
-						{
-							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", a_scenePath, Shader::s_maxLights);
-							propsOk = false;
-							break;
-						}
-						GameFile::Object * light = nextLight->GetData();
-						GameFile::Property * lName = light->FindProperty("name");
-						GameFile::Property * lPos = light->FindProperty("pos");
-						GameFile::Property * lDir = light->FindProperty("dir");
-						GameFile::Property * lAmbient = light->FindProperty("ambient");
-						GameFile::Property * lDiffuse = light->FindProperty("diffuse");
-						GameFile::Property * lSpecular = light->FindProperty("specular");
-						if (lName && lPos && lDir && lAmbient && lDiffuse && lSpecular)
-						{
-							a_sceneToLoad_OUT->AddLight(lName->GetString(), 
-														lPos->GetVector(),
-														lDir->GetVector(),
-														lAmbient->GetFloat(),
-														lDiffuse->GetFloat(),
-														lSpecular->GetFloat());
-							numLights++;
-						}
-						else
-						{
-							Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.");
-							propsOk = false;
-						}
-						nextLight = nextLight->GetNext();
-					}
-				}
-			}
-			else
-			{
-				propsOk = false;
-			}
-
-			// Load child game objects of the scene
-			LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
-			while (childGameObject != NULL)
-			{
-				// Chidlren of the scene file can be lighting or game objects, make sure we only create game objects
-				if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
-				{
-					childGameObject = childGameObject->GetNext();
-					continue;
-				}
-
-				const char * templateName = NULL;
-				GameFile::Object * childObj = childGameObject->GetData();
-				if (GameFile::Property * prop = childObj->FindProperty("template"))
-				{
-					templateName = prop->GetString();
-				}
-				
-				// Create object with optional template values and add to the scene
-				GameObject * newObject = CreateObject<GameObject>(templateName, a_sceneToLoad_OUT);
-
-				// Override any templated values
-				if (templateName != NULL)
-				{
-					newObject->SetTemplate(templateName);
-				}
-
-				if (childObj->FindProperty("name"))
-				{
-					newObject->SetName(childObj->FindProperty("name")->GetString());
-				}
-				if (childObj->FindProperty("pos"))
-				{
-					newObject->SetPos(childObj->FindProperty("pos")->GetVector());
-				}
-				if (childObj->FindProperty("rot"))
-				{
-					newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
-				}
-				if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
-				{
-					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
-					{
-						newObject->SetClipType(ClipType::Sphere);
-					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
-					{
-						newObject->SetClipType(ClipType::Box);
-					}
-					else
-					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), a_scenePath);
-					}
-				}
-				if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
-				{
-					newObject->SetClipSize(clipSize->GetVector());
-				}
-				if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
-				{
-					newObject->SetClipOffset(clipOffset->GetVector());
-				}
-				if (childObj->FindProperty("model"))
-				{
-					newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));
-				}
-				if (childObj->FindProperty("shader"))
-				{
-					RenderManager::Get().ManageShader(newObject, childObj->FindProperty("shader")->GetString());
-				}
-				else if (a_sceneToLoad_OUT->HasLights())
-				{
-					// Set default shader
-					newObject->SetShader(RenderManager::Get().GetLightingShader());		
-				}
-				
-				childGameObject = childGameObject->GetNext();
-			}
-
-			// No properties present
-			if (!propsOk) 
-			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, scene does not have required properties.", a_scenePath);
-				return false;
-			}
-		}
-		else // Unexpected file format, no root element
-		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, no valid scene parent element.", a_scenePath);
-			return false;
-		}
-	}
-	else // No valid scene to write into
-	{
-		Log::Get().WriteEngineErrorNoParams("Scene load failed because there is no place in memory to write to.");
-		return false;
-	}
-
-	return true;
 }
 
 bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath)
@@ -455,7 +455,8 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 		// Add to the loaded scenes if begin loaded
 		// TODO Implement memory management
 		Scene * newScene = new Scene();
-		if (LoadScene(fullPath, newScene))
+		assert(newScene != NULL);
+		if (newScene->Load(fullPath))
 		{
 			if (newScene->IsBeginLoaded())
 			{
@@ -536,6 +537,172 @@ bool WorldManager::Update(float a_dt)
 	return updateOk;
 }
 
+GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_scene)
+{
+	// Check there is a valid scene to add the object to
+	Scene * sceneToAddObjectTo = NULL;
+	if (a_scene == NULL)
+	{
+		sceneToAddObjectTo = m_currentScene;
+	}
+	else
+	{
+		sceneToAddObjectTo = a_scene;
+	}
+
+	// Early out if no scene
+	if (sceneToAddObjectTo == NULL)
+	{
+		Log::Get().WriteEngineErrorNoParams("Cannot create an object, there is no scene to add it to!");
+		return NULL;
+	}
+
+	// Add a new game object to the scene
+	GameObject * newGameObject = sceneToAddObjectTo->AddObject();
+
+	// Template paths are either fully qualified or relative to the config template dir
+	ModelManager & modelMan = ModelManager::Get();
+	if (a_templatePath)
+	{
+		char fileNameBuf[StringUtils::s_maxCharsPerLine];
+		if (!strstr(a_templatePath, ":\\"))
+		{
+			sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
+
+			// Add on file extension if not present
+			if (!strstr(fileNameBuf, ".tmp"))
+			{
+				const char * fileExt = ".tmp\0";
+				unsigned char lastChar = strlen(fileNameBuf);
+				strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt)+1);
+			}
+		} 
+		else // Already fully qualified
+		{
+			sprintf(fileNameBuf, "%s", a_templatePath);
+		}
+
+		// Open the template file
+		GameFile templateFile(fileNameBuf);
+		if (templateFile.IsLoaded())
+		{
+			// Create from template properties
+			newGameObject->SetId(m_totalSceneNumObjects++);
+			newGameObject->SetState(GameObjectState::Loading);
+			newGameObject->SetTemplate(a_templatePath);
+			if (GameFile::Object * object = templateFile.FindObject("gameObject"))
+			{	
+				bool validObject = true;
+						
+				// Model file
+				if (GameFile::Property * model = object->FindProperty("model"))
+				{
+					if (Model * newModel = modelMan.GetModel(model->GetString()))
+					{
+						newGameObject->SetModel(newModel);
+					}
+					else // Failure of model load will report errors
+					{
+						validObject = false;
+					}
+				}
+				// Clipping type
+				bool hasCollision = false;
+				if (GameFile::Property * clipType = object->FindProperty("clipType"))
+				{
+					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+					{
+						hasCollision = true;
+						newGameObject->SetClipType(ClipType::Sphere);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+					{
+						hasCollision = true;
+						newGameObject->SetClipType(ClipType::Box);
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
+					}
+				}
+				// Clipping size
+				if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
+				{
+					newGameObject->SetClipSize(clipSize->GetVector());
+				}
+				// Clipping offset
+				if (GameFile::Property * clipOffset = object->FindProperty("clipOffset"))
+				{
+					newGameObject->SetClipOffset(clipOffset->GetVector());
+				}
+				// Shader 
+				RenderManager & rMan = RenderManager::Get();
+				if (GameFile::Property * shader = object->FindProperty("shader"))
+				{
+					// First try to find if the shader is already loaded
+					rMan.ManageShader(newGameObject, shader->GetString());
+				}
+				else if (sceneToAddObjectTo->HasLights())
+				{
+					// Otherwise use lighting if the scene has been specified with lights
+					newGameObject->SetShader(rMan.GetLightingShader());
+				}
+
+				// Add collision
+				PhysicsManager & pMan = PhysicsManager::Get();
+				if (hasCollision && 
+					newGameObject->GetClipType() > ClipType::None &&
+					newGameObject->GetClipSize().LengthSquared() > 0.0f)
+				{
+					// Set the collision group up first
+					if (GameFile::Property * clipGroup = object->FindProperty("clipGroup"))
+					{
+						if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
+						{
+							newGameObject->SetClipGroup(clipGroup->GetString());
+						}
+						else
+						{
+							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
+						}
+					}
+
+					// Add object to collision world
+					pMan.AddCollisionObject(newGameObject);
+				}
+
+				// Optionally add to physics world
+				if (GameFile::Property * physics = object->FindProperty("physics"))
+				{
+					if (physics->GetBool())
+					{
+						pMan.AddPhysicsObject(newGameObject);
+					}
+				}
+			}
+			else // Can't find the first object
+			{
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to find a root gameObject node for template file %s", a_templatePath);
+				return NULL;
+			}
+		}
+		else // Load failed
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
+			return NULL;
+		}
+	}
+	else // Set properties for default object
+	{
+		newGameObject->SetId(m_totalSceneNumObjects++);
+		newGameObject->SetState(GameObjectState::Loading);
+		newGameObject->SetName("NEW_GAME_OBJECT");
+		newGameObject->SetPos(Vector(0.0f, 0.0f, 0.0f));
+	}
+
+	return newGameObject;
+}
+
 bool WorldManager::DestroyObject(unsigned int a_objectId, bool a_destroyScriptBindings) 
 { 
 	if (GameObject * obj = GetGameObject(a_objectId))
@@ -554,49 +721,28 @@ bool WorldManager::DestroyObject(unsigned int a_objectId, bool a_destroyScriptBi
 	return false; 
 }
 
-bool WorldManager::DestoryAllObjects(bool a_destroyScriptOwned)
+void WorldManager::DestroyAllObjects(bool a_destroyScriptOwned)
 {
-	// Iterate through all objects in the scene
-	bool objectDestroyed = false;
-	LinkedListNode<GameObject> * curObject = m_currentScene->GetHeadObject();
-	while (curObject != NULL)
+	// Iterate through all scenes and destroy objects
+	m_totalSceneNumObjects = 0;
+	SceneNode * next = m_scenes.GetHead();
+	while(next != NULL)
 	{
-		// Cache off next pointer as destruction will unlink the destroyed object from the list
-		LinkedListNode<GameObject> * nextObj = curObject->GetNext();
-
-		// Test if script owned before destruction
-		GameObject * gameObject = curObject->GetData();
-		bool destroyObject = !a_destroyScriptOwned && gameObject->IsScriptOwned() ? false : true;
-		if (destroyObject)
-		{
-			objectDestroyed &= DestroyObject(gameObject->GetId());
-		}
-		curObject = nextObj;
+		next->GetData()->RemoveAllObjects(a_destroyScriptOwned);
+		next = next->GetNext();
 	}
-	
-	return objectDestroyed;
 }
 
-bool WorldManager::DestoryAllScriptOwnedObjects(bool a_destroyScriptBindings)
+void WorldManager::DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings)
 {
-	// Iterate through all objects in the scene
-	bool objectDestroyed = false;
-	LinkedListNode<GameObject> * curObject = m_currentScene->GetHeadObject();
-	while (curObject != NULL)
+	// Iterate through all scenes and destroy objects
+	m_totalSceneNumObjects = 0;
+	SceneNode * next = m_scenes.GetHead();
+	while(next != NULL)
 	{
-		// Cache off next pointer as destruction will unlink the destroyed object from the list
-		LinkedListNode<GameObject> * nextObj = curObject->GetNext();
-
-		// Only destroy script owned objects
-		GameObject * gameObject = curObject->GetData();
-		if (gameObject->IsScriptOwned())
-		{
-			objectDestroyed &= DestroyObject(gameObject->GetId(), a_destroyScriptBindings);
-		}
-		curObject = nextObj;
+		next->GetData()->RemoveAllScriptOwnedObjects(a_destroyScriptBindings);
+		next = next->GetNext();
 	}
-	
-	return objectDestroyed;
 }
 
 GameObject * WorldManager::GetGameObject(unsigned int a_objectId)

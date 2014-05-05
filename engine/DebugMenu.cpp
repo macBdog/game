@@ -343,7 +343,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_editMode == EditMode::Template)
 				{
 					// Create new object
-					if (GameObject * newGameObj = worldMan.CreateObject<GameObject>(m_resourceSelectList->GetSelectedListItem()))
+					if (GameObject * newGameObj = worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem()))
 					{
 						// Set properties of new object to match that of old object
 						newGameObj->SetPos(m_gameObjectToEdit->GetPos());

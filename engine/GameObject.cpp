@@ -35,6 +35,12 @@ bool GameObject::Update(float a_dt)
 		return true;
 	}
 
+	// Become active if ready
+	if (m_state == GameObjectState::Loading && m_model != NULL && m_shader != NULL)
+	{
+		m_state = GameObjectState::Active;
+	}
+
 	// Tick the object's life
 	m_lifeTime += a_dt;
 	
@@ -106,6 +112,25 @@ bool GameObject::Draw()
 	}
 
 	return false;
+}
+
+bool GameObject::Shutdown() 
+{
+	// Empty collision list and remove from physics simulation
+	if (m_physics != NULL)
+	{
+		PhysicsManager & physMan = PhysicsManager::Get();
+		physMan.ClearCollisions(this);
+		physMan.RemovePhysicsObject(this);
+	}
+
+	// Remove references to managed resources
+	if (m_shader != NULL)
+	{
+		RenderManager::Get().UnManageShader(this);
+	}
+
+	return true;
 }
 
 Quaternion GameObject::GetRot() const
@@ -315,19 +340,3 @@ void GameObject::SerialiseTemplate()
 	templateFile->Write(templatePath);
 }
 
-void GameObject::Destroy() 
-{
-	// Empty collision list and remove from physics simulation
-	if (m_physics != NULL)
-	{
-		PhysicsManager & physMan = PhysicsManager::Get();
-		physMan.ClearCollisions(this);
-		physMan.RemovePhysicsObject(this);
-	}
-
-	// Remove references to managed resources
-	if (m_shader != NULL)
-	{
-		RenderManager::Get().UnManageShader(this);
-	}
-}

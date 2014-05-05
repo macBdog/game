@@ -28,6 +28,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 // Registration of game object functions
 const luaL_Reg ScriptManager::s_gameObjectFuncs[] = {
 	{"Create", CreateGameObject},
+	{"Get", GetGameObject},
 	{NULL, NULL}
 };
 
@@ -229,7 +230,7 @@ bool ScriptManager::Update(float a_dt)
 				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
 
 				// Clean up any script-owned objects
-				WorldManager::Get().DestoryAllScriptOwnedObjects();
+				WorldManager::Get().DestroyAllScriptOwnedObjects();
 
 				// Kick the script VM in the guts
 				Shutdown();
@@ -332,7 +333,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	}
 
 	// Create the new object
-	if (GameObject * newGameObject = WorldManager::Get().CreateObject<GameObject>(templatePath))
+	if (GameObject * newGameObject = WorldManager::Get().CreateObject(templatePath))
 	{
 		// Allocate memory for an push userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
@@ -353,6 +354,64 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	}
 
 	return 1; // Userdata with metatable at the top of the stack is returned
+}
+
+int ScriptManager::GetGameObject(lua_State * a_luaState)
+{
+	if (a_luaState == NULL)
+	{
+		return -1;
+	}
+
+	// Make sure an id has been supplied
+	int numArgs = lua_gettop(a_luaState);
+    if (numArgs != 2) 
+	{
+        LogScriptError(a_luaState, "GetGameObject", "GameObject:Get error, expecting 2 argument: class (before the scope operator) then name or ID of the game object.");
+		lua_pushnil(a_luaState);
+		return 1;
+	}  
+
+	// Get the object by name or ID
+	GameObject * gameObj = NULL;
+	size_t stringLen  = 0;
+	const char * objName = luaL_checklstring(a_luaState, 2, &stringLen);
+	if (objName != NULL)
+	{
+		gameObj = WorldManager::Get().GetGameObject(objName);
+	}
+	else
+	{
+		gameObj = WorldManager::Get().GetGameObject((unsigned int)lua_tonumber(a_luaState, 1));
+	}
+
+	if (gameObj != NULL)
+	{
+		// Allocate memory for an push userdata onto the stack
+		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
+		*userData = gameObj->GetId();
+
+		// Push the metatable where gameobject functions are stored onto the stack
+		luaL_getmetatable(a_luaState, "GameObject.Registry");
+
+		// Pop the metatable from the stack and sets it as the metatable for the userdata (at index -2)
+		lua_setmetatable(a_luaState, -2);
+
+		// Push a copy of the userdata with the attached metatable onto the stack
+		lua_pushvalue(a_luaState, -1);
+
+		// Create a reference in the registry for the object at the top of the stack (our userdata with metatable)
+		int ref = luaL_ref(a_luaState, LUA_REGISTRYINDEX);
+		gameObj->SetScriptReference(ref);
+	
+		return 1; // Userdata with metatable at the top of the stack is returned
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGameObject", "GameObject:Get error, could not find an object with specified name or ID.");
+		lua_pushnil(a_luaState);
+		return 1;
+	}
 }
 
 int ScriptManager::IsKeyDown(lua_State * a_luaState)

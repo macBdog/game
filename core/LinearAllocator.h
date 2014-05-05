@@ -97,7 +97,7 @@ public:
 			else
 			{
 				// Set last pointer to new section of memory
-				m_memoryPtr =  m_memoryEnd;
+				m_memoryPtr = m_memoryEnd;
 
 				// Clear the memory that was just allocated
 				if (a_zeroMemory)

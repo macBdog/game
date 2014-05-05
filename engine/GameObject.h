@@ -2,6 +2,7 @@
 #define _ENGINE_GAME_OBJECT_
 #pragma once
 
+#include <assert.h>
 #include <iostream>
 #include <fstream>
 
@@ -76,17 +77,17 @@ public:
 			SetTemplate("");
 		}
 
-	~GameObject() { Destroy(); }
+	~GameObject() { assert(m_physics == NULL); }
 
 	//\brief Lifecycle functionality inherited by children
 	bool Startup() { return true; }
 	bool Update(float a_dt);
 	bool Draw();
-	bool Shutdown() { return true; }
+	bool Shutdown();
 
 	//\brief State mutators and accessors
-	inline void SetSleeping() { if (m_state == GameObjectState::Active) m_state = GameObjectState::Sleep; }
-	inline void SetActive()	  { if (m_state == GameObjectState::Sleep) m_state = GameObjectState::Active; }
+	inline void SetSleeping() { m_state = GameObjectState::Sleep; }
+	inline void SetActive()	  { m_state = GameObjectState::Active; }
 	inline bool IsActive()	  { return m_state == GameObjectState::Active; }
 	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
@@ -166,9 +167,6 @@ public:
 	static const char * s_clipTypeStrings[ClipType::Count];	///< String literals for the clip types
 
 private:
-
-	//\brief Destruction is private as it should only be handled by object management
-	void Destroy();
 
 	//\ingroup Local properties
 	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids

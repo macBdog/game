@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "../core/LinkedList.h"
+#include "../core/PageAllocator.h"
 
 #include "GameObject.h"
 #include "Log.h"
@@ -37,20 +38,21 @@ class Scene
 public:
 	
 	//\brief Set scene count to 0 on construction
-	Scene() 
-		: m_numObjects(0)
-		, m_state(SceneState::Unloaded) 
-		, m_beginLoaded(false)
-		, m_shader(NULL)
-		, m_numLights(0)
-		{ sprintf(m_name, "defaultScene"); }
-
+	Scene();
+		
 	// Cleanup the of objects in the scene on destruction
 	~Scene();
+	
+	//\brief Read scene details from a file into a scene object
+	//\param a_scenePath is a string containing the filename of a scene file
+	//\param a_sceneToLoad_OUT is a pointer to a scene object to modify with data from the scene path
+	bool Load(const char * a_scenePath);
 
 	//\brief Adding and removing objects from the scene
-	void AddObject(GameObject * a_newObject);
+	GameObject * AddObject();
 	bool RemoveObject(unsigned int a_objectId);
+	void RemoveAllObjects(bool a_destroyScriptOwned);
+	void RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings);
 
 	//\brief Adding lights to the scene
 	//\return false if there are already the maximum number of lights in the scene
@@ -62,7 +64,7 @@ public:
 	//\brief Get an object by it's ID
 	//\param a_objectId is the ID of the object to get
 	//\return a pointer a game object if one exists with that name, otherwise NULL
-	GameObject * GetSceneObject(unsigned int a_objectId);
+	inline GameObject * GetSceneObject(unsigned int a_objectId) { return m_objects.Get(a_objectId); }
 
 	//\brief Get an object by name
 	//\param a_objName is the string name of object to get
@@ -92,6 +94,7 @@ public:
 	
 	//\brief Resource mutators and accessors
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
+	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
 	inline void SetBeginLoaded(bool a_begin) { m_beginLoaded = a_begin; }
 	inline bool IsBeginLoaded() { return m_beginLoaded; }
 	inline Shader * GetShader() { return m_shader; }
@@ -99,30 +102,25 @@ public:
 	
 	//\brief Write all objects in the scene out to a scene file
 	void Serialise();
-
-protected:
-
-	//\brief Accessor for the world to remove all objects
-	inline LinkedListNode<GameObject> * GetHeadObject() { return m_objects.GetHead(); }
-
+	 
 private:
-
-	//\brief Alias to refer to a group of objects
-	typedef LinkedListNode<GameObject> SceneObject;
-	typedef LinkedList<GameObject> SceneObjects;
 
 	//\brief Draw will cause active objects in the scene to submit resources to the render manager
 	//\return true if resources were submitted without issue
 	bool Draw();
 
-	SceneObjects m_objects;											///< All the objects in the current scene
+	static const int s_numObjects = 16000;							///< Each GameObject is about 500 bytes, should be less than 16M
+
+	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
+	int m_firstGameObjectId;										///< Id of the first game object so objects are stored in ID order
+	int m_numObjects;												///< How many objects are in the scene
 	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
+	char m_filePath[StringUtils::s_maxCharsPerLine];				///< Path of the scene for reloading
 	Shader::Light m_lights[Shader::s_maxLights];					///< The lights in the scene
-	unsigned int m_numObjects;										///< How many objects are in the default scene
 	SceneState::Enum m_state;										///< What state the scene is in
 	bool m_beginLoaded;												///< If the scene should be loaded and rendering on startup
-	Shader * m_shader;												///< Shader for the whole scene
 	int m_numLights;												///< The number of lights in the scene
+	Shader * m_shader;												///< Shader for the whole scene
 };
 
 //\brief WorldManager handles object and scene management.
@@ -153,199 +151,7 @@ public:
 	//\param a_templatePath Pointer to a cstring with an optional game file to create from
 	//\param a_scene a pointer to the scene to add the object to, will try the current if NULL
 	//\return A pointer to the newly created game object of NULL for failure
-	template <typename T>
-	T * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL)
-	{
-		// Check there is a valid scene to add the object to
-		Scene * sceneToAddObjectTo = NULL;
-		if (a_scene == NULL)
-		{
-			sceneToAddObjectTo = m_currentScene;
-		}
-		else
-		{
-			sceneToAddObjectTo = a_scene;
-		}
-
-		// Early out if no scene
-		if (sceneToAddObjectTo == NULL)
-		{
-			Log::Get().WriteEngineErrorNoParams("Cannot create an object, there is no scene to add it to!");
-			return NULL;
-		}
-
-		// TODO Please allocate a heap for game object memory
-
-		// Template paths are either fully qualified or relative to the config template dir
-		ModelManager & modelMan = ModelManager::Get();
-		if (a_templatePath)
-		{
-			char fileNameBuf[StringUtils::s_maxCharsPerLine];
-			if (!strstr(a_templatePath, ":\\"))
-			{
-				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
-
-				// Add on file extension if not present
-				if (!strstr(fileNameBuf, ".tmp"))
-				{
-					const char * fileExt = ".tmp\0";
-					unsigned char lastChar = strlen(fileNameBuf);
-					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt)+1);
-				}
-			} 
-			else // Already fully qualified
-			{
-				sprintf(fileNameBuf, "%s", a_templatePath);
-			}
-
-			// Open the template file
-			GameFile templateFile(fileNameBuf);
-			if (templateFile.IsLoaded())
-			{
-				// Create from template properties
-				// TODO memory management kill std::new
-				if (T * newGameObject = new T())
-				{
-					newGameObject->SetId(m_totalSceneNumObjects++);
-					newGameObject->SetState(GameObjectState::Loading);
-					newGameObject->SetTemplate(a_templatePath);
-					if (GameFile::Object * object = templateFile.FindObject("gameObject"))
-					{	
-						bool validObject = true;
-						
-						// Model file
-						if (GameFile::Property * model = object->FindProperty("model"))
-						{
-							if (Model * newModel = modelMan.GetModel(model->GetString()))
-							{
-								newGameObject->SetModel(newModel);
-							}
-							else // Failure of model load will report errors
-							{
-								validObject = false;
-							}
-						}
-						// Clipping type
-						bool hasCollision = false;
-						if (GameFile::Property * clipType = object->FindProperty("clipType"))
-						{
-							if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
-							{
-								hasCollision = true;
-								newGameObject->SetClipType(ClipType::Sphere);
-							}
-							else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
-							{
-								hasCollision = true;
-								newGameObject->SetClipType(ClipType::Box);
-							}
-							else
-							{
-								Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
-							}
-						}
-						// Clipping size
-						if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
-						{
-							newGameObject->SetClipSize(clipSize->GetVector());
-						}
-						// Clipping offset
-						if (GameFile::Property * clipOffset = object->FindProperty("clipOffset"))
-						{
-							newGameObject->SetClipOffset(clipOffset->GetVector());
-						}
-						// Shader 
-						RenderManager & rMan = RenderManager::Get();
-						if (GameFile::Property * shader = object->FindProperty("shader"))
-						{
-							// First try to find if the shader is already loaded
-							rMan.ManageShader(newGameObject, shader->GetString());
-						}
-						else if (sceneToAddObjectTo->HasLights())
-						{
-							// Otherwise use lighting if the scene has been specified with lights
-							newGameObject->SetShader(rMan.GetLightingShader());
-						}
-
-						// Add collision
-						PhysicsManager & pMan = PhysicsManager::Get();
-						if (hasCollision && 
-							newGameObject->GetClipType() > ClipType::None &&
-							newGameObject->GetClipSize().LengthSquared() > 0.0f)
-						{
-							// Set the collision group up first
-							if (GameFile::Property * clipGroup = object->FindProperty("clipGroup"))
-							{
-								if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
-								{
-									newGameObject->SetClipGroup(clipGroup->GetString());
-								}
-								else
-								{
-									Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
-								}
-							}
-
-							// Add object to collision world
-							pMan.AddCollisionObject(newGameObject);
-						}
-
-						// Optionally add to physics world
-						if (GameFile::Property * physics = object->FindProperty("physics"))
-						{
-							if (physics->GetBool())
-							{
-								pMan.AddPhysicsObject(newGameObject);
-							}
-						}
-
-						// Add to currently active scene
-						if (validObject)
-						{
-							sceneToAddObjectTo->AddObject(newGameObject);
-							return newGameObject;
-						}
-						else
-						{
-							return NULL;
-						}
-					}
-					else // Can't find the first object
-					{
-						Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to find a root gameObject node for template file %s", a_templatePath);
-						return NULL;
-					}
-				}
-				else // Can't create the game object
-				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to allocate memory to create game object from template file %s", a_templatePath);
-					return NULL;
-				}
-			}
-			else // Load failed
-			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
-				return NULL;
-			}
-		}
-		else // Create default object
-		{
-			if (T * newGameObject = new T())
-			{
-				newGameObject->SetId(m_totalSceneNumObjects++);
-				newGameObject->SetState(GameObjectState::Loading);
-				newGameObject->SetName("NEW_GAME_OBJECT");
-				newGameObject->SetPos(Vector(0.0f, 0.0f, 0.0f));
-				
-				// Add to currently active scene
-				sceneToAddObjectTo->AddObject(newGameObject);
-
-				return newGameObject;
-			}
-		}
-
-		return NULL;
-	}
+	GameObject * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL);
 	
 	//\brief Remove a created object from the world
 	//\param a_destroyScriptBindings true if the script management bindings should be killed
@@ -355,12 +161,12 @@ public:
 	//\brief Destroy all objects in the current scene
 	//\param a_destroyScriptOwned bool to specify destruction of scripts owned objects
 	//\return true if any objects were destroyed
-	bool DestoryAllObjects(bool a_destroyScriptOwned = false);
+	void DestroyAllObjects(bool a_destroyScriptOwned = false);
 
 	//\brief Destroy all objects owned by script in the current scene
 	//\param a_destroyScriptBindings bool to specify destruction of bindings to scripts, usually wanted as script is going bye bye
 	//\return true if any objects were destroyed
-	bool DestoryAllScriptOwnedObjects(bool a_destroyScriptBindings = true);
+	void DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings = true);
 
 	//\brief Get a pointer to an existing object in the world.
 	//\param a_objectId the unique game id for this object
@@ -377,11 +183,6 @@ public:
 	inline const char * GetScenePath() { return m_scenePath; }
 
 private:
-
-	//\brief Read scene details from a file into a scene object
-	//\param a_scenePath is a string containing the filename of a scene file
-	//\param a_sceneToLoad_OUT is a pointer to a scene object to modify with data from the scene path
-	bool LoadScene(const char * a_scenePath, Scene * a_sceneToLoad_OUT);
 
 	//\brief Alias to refer to a group of objects
 	typedef LinkedListNode<Scene> SceneNode;

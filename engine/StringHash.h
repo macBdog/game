@@ -43,10 +43,11 @@ public:
 
 private:
 
+	static const int s_stringHashSize = 64;
 	static const unsigned int s_stdCRCTable[256];		// Hash table generated using CRC-32 in PKZip, WinZip and Ethernet
 
 	unsigned int m_hash;	// Storage for the crc equivalent
-	char m_cString[256];	// Storage for the original string
+	char m_cString[s_stringHashSize];	// Storage for the original string
 };
 
 #endif //_CORE_STRING_HASH

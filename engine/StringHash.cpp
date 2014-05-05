@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "StringUtils.h"
 
 #include "StringHash.h"
@@ -44,6 +46,11 @@ const unsigned int StringHash::s_stdCRCTable[256] = {
 
 unsigned int StringHash::GenerateCRC(const char * a_string, bool a_convertToLower)
 {
+	if (strlen(a_string) >= s_stringHashSize)
+	{
+		assert(false);
+	}
+
 	// Start out with all bits set high
 	register unsigned int ulCRC = 0xffffffff; 
 
@@ -69,6 +76,11 @@ unsigned int StringHash::GenerateCRC(const char * a_string, bool a_convertToLowe
 
 unsigned int StringHash::GenerateCRCBinary(const unsigned int * a_binaryData, unsigned int a_length)
 {
+	if (a_length >= s_stringHashSize)
+	{
+		assert(false);
+	}
+
 	// Start out with all bits set high
 	register unsigned int ulCRC = 0xffffffff; 
 
@@ -90,12 +102,20 @@ StringHash::StringHash()
 
 StringHash::StringHash(const char * a_sourceString)
 {
+	if (strlen(a_sourceString) >= s_stringHashSize)
+	{
+		assert(false);
+	}
 	memcpy(m_cString, a_sourceString, strlen(a_sourceString)+1);
 	m_hash = GenerateCRC(a_sourceString, false);
 }
 
 void StringHash::SetCString(const char * a_newString) 
 { 
+	if (strlen(a_newString) >= s_stringHashSize)
+	{
+		assert(false);
+	}
 	memcpy(m_cString, a_newString, strlen(a_newString)+1);
 	m_hash = GenerateCRC(a_newString, false);
 }

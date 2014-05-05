@@ -492,7 +492,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteWidget(Widget * a_widget)
 DebugCommandReturnData DebugMenuCommandRegistry::CreateGameObject(GameObject * a_gameObj)
 {
 	Hide();
-	WorldManager::Get().CreateObject<GameObject>();
+	WorldManager::Get().CreateObject();
 
 	DebugCommandReturnData retVal;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;

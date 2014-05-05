@@ -5,19 +5,52 @@
 #include <assert.h>
 #include <stdlib.h>
 
+//\brief An allocation meant to store multiple copies of what the allocator stores
+template <class T>
 class Page
 {
 public:
 
 	//\brief Setup the size of the page
-	Page(size_t a_size)
+	Page()
 		: m_size(0)
-		, m_next(NULL)
-		, m_prev(NULL)
+		, m_itemSize(0)
+		, m_maxItems(0)
 		, m_memory(NULL)
+	{ }
+
+	inline bool Init(size_t a_itemSize, unsigned int a_maxItems)
 	{
-		m_memory = malloc(a_size);
+		m_size = a_itemSize * a_maxItems;
+		m_itemSize = a_itemSize;
+		m_maxItems = a_maxItems;
+		m_memory = (T*)(malloc(m_size));
+#ifdef _DEBUG
+		memset(m_memory, 0, m_size);
+#endif
+		return m_memory != NULL;
+	}
+
+	inline T * Add(unsigned int a_index)
+	{
 		assert(m_memory != NULL);
+		if (a_index >= 0 && a_index < m_maxItems)
+		{
+			// Offset into block of memory is garbage, call placement new
+			T * newObject = new (m_memory + a_index) T();
+			return newObject;
+		}
+		return NULL;
+	}
+
+	inline T * Get(unsigned int a_index)
+	{
+		assert(m_memory != NULL);
+		if (a_index >= 0 && a_index < m_maxItems)
+		{
+			return m_memory + a_index;
+		}
+		return NULL;
 	}
 	
 	~Page()
@@ -25,20 +58,11 @@ public:
 		free(m_memory);
 	}
 	
-	inline void AddNext(size_t a_size)
-	{
-		assert(m_next == NULL);
-		m_next = (Page*)malloc(sizeof(Page));
-		m_next(a_size);
-		assert(m_next != NULL);
-		m_next->m_prev = this;
-	}
-	
 private:
 	size_t m_size;
-	Page * m_next;
-	Page * m_prev;
-	void * m_memory;
+	size_t m_itemSize;
+	unsigned int m_maxItems;
+	T * m_memory;
 };
 
 //\brief For use where contiguous resizable array like storage is required. 
@@ -52,72 +76,56 @@ class PageAllocator
 public:
 
 	//\brief Setup the size of the initial and every subsequent allocation
-	PageAllocator(int a_numElements)
+	PageAllocator()
 		: m_itemSize(0)
-		, m_numAllocations(0)
-		, m_numItemsPerAllocation(0)
-		, m_headAllocation(NULL)
+		, m_numPages(0)
+		, m_itemsPerPage(0)
+	{ }
+
+	inline bool Init(unsigned int a_numItems, size_t a_itemSize)
 	{
-		m_itemSize = sizeof(T);
-		m_headAllocation = malloc(sizeof(Page));
-		m_headAllocation(m_itemSize * a_numElements);
-		m_numAllocations = 1;
-		m_numItemsPerAllocation = a_numElements;
+		m_itemSize = a_itemSize;
+		m_itemsPerPage = a_numItems;
+		return m_pages[m_numPages++].Init(m_itemSize, m_itemsPerPage);
 	}
 
-	inline T & Add(int a_index)
+	inline T * Add(unsigned int a_index)
 	{
-		if (m_memory != NULL)
+		// Calculate position in page from index
+		int pagePos = a_index - ((m_numPages-1) * m_itemsPerPage);
+
+		// Try to add to current page, otherwise setup a new page and add to that
+		void * newAlloc = m_pages[m_numPages-1].Add(pagePos);
+		if (newAlloc == NULL)
 		{
-			if (a_index < m_numItemsPerAllocation * m_numAllocations)
-			{
-				return *((T*)m_memory + (m_itemSize * a_index));
-			}
-			else // Need to allocate extra memory for the items
-			{
-				// TODO
-				assert(false);
-				return *((T*)m_memory);
-			}
+			m_pages[m_numPages++].Init(m_itemSize, m_itemsPerPage);
+			newAlloc = m_pages[m_numPages-1].Add(pagePos);
 		}
-
-		assert(false);
-		return *((T*)m_memory);
+		assert(newAlloc != NULL);
+		return (T*)newAlloc;
 	}
 
-	inline T & Get(int a_index)
+	inline bool Reset()
 	{
-		if (m_memory != NULL && a_index < m_numItemsPerAllocation * m_numAllocations)
-		{
-			return *(T*)(m_memory + (m_itemSize * a_index)));
-		}
-
-		assert(false);
-		return *(T*)(m_memory);
+		m_numPages = 1;
+		return true;
 	}
 
-	inline T * Get(int a_index)
+	inline T * Get(unsigned int a_index)
 	{
-		if (m_memory != NULL && a_index < m_numItemsPerAllocation * m_numAllocations)
-		{
-			return (T*)(m_memory + (m_itemSize * a_index));
-		}
-
-		assert(false);
-		return NULL;
-	}
-
-	~PageAllocator()
-	{
-		free(m_memory);
+		// Calculate position in page from index
+		int pagePos = a_index - ((m_numPages-1) * m_itemsPerPage);
+		return (T*)m_pages[m_numPages-1].Get(pagePos);
 	}
 
 private:
-	size_t m_itemSize;
-	int m_numAllocations;
-	int m_numItemsPerAllocation;
-	Page * m_headAllocation;
-	
+
+	static const int s_maxPages = 32;	///< Pages are 20 byte classes so assume a max number of pages
+
+	Page<T> m_pages[s_maxPages];		///< Contiguous array of pointers to allocations
+	size_t m_itemSize;					///< How big each item is inside each page
+	unsigned int m_itemsPerPage;		///< The number of items in each page
+	unsigned int m_numPages;			///< How many pages are currently being utilised
 };
 
 #endif // _CORE_PAGE_ALLOCATOR_

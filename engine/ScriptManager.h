@@ -67,6 +67,7 @@ private:
 	//\brief LUA versions of game functions made avaiable from C++
 	static int GetFrameDelta(lua_State * a_luaState);
 	static int CreateGameObject(lua_State * a_luaState);
+	static int GetGameObject(lua_State * a_luaState);
 	static int IsKeyDown(lua_State * a_luaState);
 	static int IsGamePadConnected(lua_State * a_luaState);
 	static int IsGamePadButtonDown(lua_State * a_luaState);

@@ -74,6 +74,7 @@
     <ClInclude Include="LinkedList.h" />
     <ClInclude Include="MathUtils.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="PageAllocator.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
