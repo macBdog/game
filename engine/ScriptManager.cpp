@@ -223,8 +223,9 @@ bool ScriptManager::Update(float a_dt)
 			FileManager::Timestamp curTimeStamp;
 			ManagedScript * curScript = next->GetData();
 			FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
-			if (curTimeStamp > curScript->m_timeStamp)
+			if (curTimeStamp > curScript->m_timeStamp || m_forceReloadScripts)
 			{
+				m_forceReloadScripts = false;
 				scriptsReloaded = true;
 				curScript->m_timeStamp = curTimeStamp;
 				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
@@ -241,8 +242,6 @@ bool ScriptManager::Update(float a_dt)
 			next = next->GetNext();
 		}
 	}
-
-	
 
 	// Don't update scripts while debugging
 	if (DebugMenu::Get().IsDebugMenuEnabled())
@@ -400,10 +399,9 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 		// Push a copy of the userdata with the attached metatable onto the stack
 		lua_pushvalue(a_luaState, -1);
 
-		// Create a reference in the registry for the object at the top of the stack (our userdata with metatable)
+		// Create a reference in the registry for the object at the top of the stack (our userdata with metatable) and pop it
 		int ref = luaL_ref(a_luaState, LUA_REGISTRYINDEX);
-		gameObj->SetScriptReference(ref);
-	
+
 		return 1; // Userdata with metatable at the top of the stack is returned
 	}
 	else

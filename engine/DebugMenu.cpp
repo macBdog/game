@@ -291,8 +291,20 @@ bool DebugMenu::SaveChanges()
 			// Handle each flag type
 			switch (curFlag)
 			{
-				case DirtyFlag::GUI:	Gui::Get().GetActiveMenu()->Serialise();				changesSaved = true; break;
-				case DirtyFlag::Scene:	WorldManager::Get().GetCurrentScene()->Serialise();		changesSaved = true; break;
+				case DirtyFlag::GUI:	
+				{
+					Gui::Get().GetActiveMenu()->Serialise();				
+					changesSaved = true; 
+					break;
+				}
+				case DirtyFlag::Scene:	
+				{
+					Scene * curScene = WorldManager::Get().GetCurrentScene();
+					curScene->Serialise();		
+					curScene->ResetFileDateStamp();
+					changesSaved = true; 
+					break;
+				}
 				default: break;
 			}
 			m_dirtyFlags.Clear(curFlag);

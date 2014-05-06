@@ -88,6 +88,9 @@ public:
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);
 
+	//\brief Called when the game writes to disk and triggers a reload, no reason to reload again
+	void ResetFileDateStamp();
+
 	//\brief Get the number of objects in the scene
 	//\return uint of the number of objects
 	inline unsigned int GetNumObjects() { return m_numObjects; }
@@ -110,12 +113,16 @@ private:
 	bool Draw();
 
 	static const int s_numObjects = 16000;							///< Each GameObject is about 500 bytes, should be less than 16M
+	static const float s_updateFreq;								///< How often the scene should check it's config on disk for updates
 
 	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
 	int m_firstGameObjectId;										///< Id of the first game object so objects are stored in ID order
 	int m_numObjects;												///< How many objects are in the scene
 	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
 	char m_filePath[StringUtils::s_maxCharsPerLine];				///< Path of the scene for reloading
+	FileManager::Timestamp m_timeStamp;								///< When the scene file was last edited
+	float m_updateTimer;											///< The amount of time elapsed since the last file datestamp check
+	float m_updateFreq;												///< How often the file resource is checked for changes
 	Shader::Light m_lights[Shader::s_maxLights];					///< The lights in the scene
 	SceneState::Enum m_state;										///< What state the scene is in
 	bool m_beginLoaded;												///< If the scene should be loaded and rendering on startup

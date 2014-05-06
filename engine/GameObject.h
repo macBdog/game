@@ -164,32 +164,31 @@ public:
 	void Serialise(GameFile * a_outputFile, GameFile::Object * a_parent);
 	void SerialiseTemplate();
 
-	static const char * s_clipTypeStrings[ClipType::Count];	///< String literals for the clip types
+	static const char * s_clipTypeStrings[ClipType::Count];				///< String literals for the clip types
 
 private:
 
-	//\ingroup Local properties
-	unsigned int		  m_id;					///< Unique identifier, objects can be resolved from ids
-	GameObject *		  m_child;				///< Pointer to first child game obhject
-	GameObject *		  m_next;				///< Pointer to sibling game objects
-	CollisionList		  m_collisions;			///< List of objects that this game object has collided with this frame
-	Model *				  m_model;				///< Pointer to a mesh for display purposes
-	Shader *			  m_shader;				///< Pointer to a shader owned by the render manager to draw with
-	PhysicsObject *		  m_physics;			///< Pointer to physics manager object for collisions and dynamics
-	AnimationBlender *	  m_blender;			///< Pointer to an animation blender if present
-	GameObjectState::Enum m_state;				///< What state the object is in
-	float				  m_lifeTime;			///< How long this guy has been active
-	ClipType::Enum		  m_clipType;			///< What kind of shape represents the bounds of the object
-	Vector				  m_clipVolumeSize;		///< Dimensions of the clipping volume for culling and picking
-	Vector				  m_clipVolumeOffset;	///< How far from the pivot of the object the clip volume is
-	bool				  m_clipping;			///< If collision is enabled
-	StringHash			  m_clipGroup;			///< What group the object belongs to
-	Matrix				  m_worldMat;			///< Position and orientation in the world
-	Matrix				  m_localMat;			///< Position and orientation relative to world mat, used for animation
-	Matrix				  m_finalMat;			///< Aggregate of world and local only used by render
+	unsigned int		  m_id;											///< Unique identifier, objects can be resolved from ids
+	GameObject *		  m_child;										///< Pointer to first child game obhject
+	GameObject *		  m_next;										///< Pointer to sibling game objects
+	CollisionList		  m_collisions;									///< List of objects that this game object has collided with this frame
+	Model *				  m_model;										///< Pointer to a mesh for display purposes
+	Shader *			  m_shader;										///< Pointer to a shader owned by the render manager to draw with
+	PhysicsObject *		  m_physics;									///< Pointer to physics manager object for collisions and dynamics
+	AnimationBlender *	  m_blender;									///< Pointer to an animation blender if present
+	GameObjectState::Enum m_state;										///< What state the object is in
+	float				  m_lifeTime;									///< How long this guy has been active
+	ClipType::Enum		  m_clipType;									///< What kind of shape represents the bounds of the object
+	Vector				  m_clipVolumeSize;								///< Dimensions of the clipping volume for culling and picking
+	Vector				  m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
+	bool				  m_clipping;									///< If collision is enabled
+	StringHash			  m_clipGroup;									///< What group the object belongs to and can collide with
+	Matrix				  m_worldMat;									///< Position and orientation in the world
+	Matrix				  m_localMat;									///< Position and orientation relative to world mat, used for animation
+	Matrix				  m_finalMat;									///< Aggregate of world and local only used by render
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
-	int					  m_scriptRef;			///< If the object is created and managed by script, the ID on the script side is stored here
+	int					  m_scriptRef;									///< If the object is created and managed by script, the ID on the script side is stored here
 };
 
 #endif // _ENGINE_GAME_OBJECT_

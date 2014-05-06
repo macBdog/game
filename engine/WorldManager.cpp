@@ -9,6 +9,8 @@
 
 template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
 
+const float Scene::s_updateFreq = 1.0f;								///< How often the scene should check it's config on disk for updates
+
 Scene::Scene() 
 : m_firstGameObjectId(-1)
 , m_numObjects(0)
@@ -16,6 +18,8 @@ Scene::Scene()
 , m_beginLoaded(false)
 , m_shader(NULL)
 , m_numLights(0)
+, m_updateTimer(0.0f)
+, m_updateFreq(s_updateFreq)
 { 
 	m_name[0] = '\0';
 	m_filePath[0] = '\0';
@@ -47,6 +51,7 @@ bool Scene::Load(const char * a_scenePath)
 {
 	GameFile * sceneFile = new GameFile();
 	sceneFile->Load(a_scenePath);
+	FileManager::Get().GetFileTimeStamp(a_scenePath, m_timeStamp);
 
 	// Create a new widget and copy properties from file
 	if (GameFile::Object * sceneObject = sceneFile->FindObject("scene"))
@@ -314,6 +319,8 @@ void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
 			}
 		}
 	}
+
+	m_numLights = 0;
 	m_numObjects = 0;
 	m_firstGameObjectId = -1;
 	m_objects.Reset();
@@ -329,6 +336,8 @@ void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 			gameObj->Shutdown();
 		}
 	}
+
+	m_numLights = 0;
 	m_numObjects = 0;
 	m_firstGameObjectId = -1;
 	m_objects.Reset();
@@ -352,7 +361,31 @@ bool Scene::Update(float a_dt)
 	// Now state and position have been updated, submit resources to be rendered
 	bool drawSuccess = Draw();
 
+#ifdef _DEBUG
+	// Check if the scene needs to be reloaded
+	if (m_updateTimer < m_updateFreq)
+	{
+		m_updateTimer += a_dt;
+	}
+	else
+	{
+		m_updateTimer = 0.0f;
+		FileManager::Timestamp curTimeStamp;
+		FileManager::Get().GetFileTimeStamp(m_filePath, curTimeStamp);
+		if (curTimeStamp > m_timeStamp)
+		{
+			ScriptManager::Get().ReloadScripts();
+			ResetFileDateStamp();
+		}
+	}
+#endif
+
 	return updateSuccess && drawSuccess;
+}
+
+void Scene::ResetFileDateStamp()
+{
+	FileManager::Get().GetFileTimeStamp(m_filePath, m_timeStamp);
 }
 
 void Scene::Serialise()

@@ -69,15 +69,17 @@ bool AnimationManager::Shutdown()
 
 bool AnimationManager::Update(float a_dt)
 {
+#ifdef _DEBUG
 	// Check if an animation needs updating
-	int reloadedAnims = 0;
 	if (m_updateTimer < m_updateFreq)
 	{
 		m_updateTimer += a_dt;
+		return true;
 	}
 	else // Due for an update, scan all disk resources
 	{
 		// Test all animations for modification
+		int reloadedAnims = 0;
 		m_updateTimer = 0.0f;
 		ManagedAnimNode * next = m_anims.GetHead();
 		while (next != NULL)
@@ -96,9 +98,10 @@ bool AnimationManager::Update(float a_dt)
 			}
 			next = next->GetNext();
 		}
+		return reloadedAnims > 0;
 	}
-
-	return reloadedAnims > 0;
+#endif
+	return true;
 }
 
 bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & a_animName)

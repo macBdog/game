@@ -23,6 +23,7 @@ public:
 		, m_lastFrameDelta(0.0f)
 		, m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
+		, m_forceReloadScripts(false)
 		{ m_scriptPath[0] = '\0'; }
 	~ScriptManager() { Shutdown(); }
 
@@ -36,6 +37,9 @@ public:
 	//\brief Remove the script side version of an object so the script isn't left hanging
 	//\param a_gameObject pointer to object to unbind and set null on script side
 	void DestroyObjectScriptBindings(GameObject * a_gameObj);
+
+	//\brief Trigger the script files to be torn down reloaded as would happen when the on disk file changes
+	inline void ReloadScripts() { m_updateTimer = m_updateFreq + 1.0f; m_forceReloadScripts = true; }
 
 private:
 
@@ -131,6 +135,7 @@ private:
 	float m_lastFrameDelta;										///< Cache of the delta for the last update received by the script manager
 	float m_updateFreq;											///< How often the script manager should check for changes to shaders
 	float m_updateTimer;										///< If we are due for a scan and update of scripts
+	bool m_forceReloadScripts;									///< If some other game system wants to force a reload, it's done here
 };
 
 #endif // _ENGINE_SCRIPT_MANAGER
