@@ -71,6 +71,7 @@ namespace EditMode
 		Name,			///< Cursor keys bound to display name
 		Text,			///< Cursor keys bound to text value
 		Font,			///< Setting font on widget
+		FontSize,		///< Setting font size on widget
 		Model,			///< Setting the model for an object
 		Template,		///< Create an object from a template
 		SaveTemplate,	///< Set the template name for an object
@@ -207,6 +208,7 @@ private:
 	DebugCommandReturnData ChangeWidgetName(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetText(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetFont(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetFontSize(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetTexture(Widget * a_widget);
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 

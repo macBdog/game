@@ -185,6 +185,12 @@ void DebugMenu::Update(float a_dt)
 				m_dirtyFlags.Set(DirtyFlag::GUI);
 				break;
 			}
+			case EditMode::FontSize:
+			{
+				m_widgetToEdit->SetFontSize((mousePos - m_widgetToEdit->GetPos()).LengthSquared() * 3.0f);
+				break;
+			}
+
 			default: break;
 		}
 	}
@@ -538,7 +544,9 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 
 	// Stop any mouse bound editing on click
-	if (m_editMode == EditMode::Pos  || m_editMode == EditMode::Shape)
+	if (m_editMode == EditMode::Pos  || 
+		m_editMode == EditMode::Shape ||
+		m_editMode == EditMode::FontSize)
 	{
 		m_editMode = EditMode::None;
 

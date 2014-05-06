@@ -118,6 +118,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetText);
 	lastCreatedCommand = Create("Font", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFont);
+	lastCreatedCommand = Create("FontSize", 				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFontSize);
 	lastCreatedCommand = Create("Texture", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetTexture);
 	lastCreatedCommand = Create("Delete Widget",			m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::Widget);
@@ -458,6 +460,17 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetFont(Widget * a_wid
 	DebugCommandReturnData retVal;
 	retVal.m_editType = EditType::Widget;
 	retVal.m_editMode = EditMode::Font;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetFontSize(Widget * a_widget)
+{
+	Hide();
+	
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::Widget;
+	retVal.m_editMode = EditMode::FontSize;
 	retVal.m_success = true;
 	return retVal;
 }
