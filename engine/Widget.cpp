@@ -147,7 +147,7 @@ void Widget::Draw()
 		// Always display text for a widget
 		if (m_text[0] != '\0') 
 		{
-			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, drawPos, m_colour, renderLayer);
+			FontManager::Get().DrawString(m_text, m_fontNameHash, m_fontSize, drawPos, selectColour, renderLayer);
 		}
 
 		// Draw any list items
@@ -196,17 +196,18 @@ void Widget::DrawAlignment()
 	rMan.AddDebugLine2D(alignPos - Vector2(halfBox, 0.0f), alignPos + Vector2(halfBox, 0.0f), drawColour);
 	rMan.AddDebugLine2D(alignPos - Vector2(0.0f, halfBox), alignPos + Vector2(0.0f, halfBox), drawColour);
 
-	// Show all alignment anchors
+	// Show nine alignment anchors
 	drawColour.SetA(0.25);
-	Vector2 sizeVec(boxSize);
-	for (int x = 0; x < AlignX::Count; ++x)
-	{
-		for (int y = 0; y < AlignY::Count; ++y)
-		{
-			Vector2 anchorPos(pos.GetX() + boxSize + (m_size.GetX() * 0.5f * x), pos.GetY() - (m_size.GetY() * 0.5f * y));
-			rMan.AddDebugQuad2D(Vector2(anchorPos.GetX() - boxSize, anchorPos.GetY() + boxSize), Vector2(boxSize), drawColour);
-		}
-	}
+	Vector2 boxSizeVec(boxSize);
+	Vector2 anchorPos(pos.GetX(), pos.GetY());																	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos = Vector2(pos.GetX(), anchorPos.GetY() - (m_size.GetY() * 0.5f) + (boxSizeVec.GetY() * 0.5f));	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos = Vector2(pos.GetX(), anchorPos.GetY() - (m_size.GetY() * 0.5f) + (boxSizeVec.GetY() * 0.5f));	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
+	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
 }
 
 void Widget::UpdateSelection(WidgetVector a_pos)
