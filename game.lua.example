@@ -50,6 +50,9 @@ GUI:SetValue("widgetName", "value")
 string = GUI:GetValue("widgetName")
 GUI:Show("widgetName")
 GUI:Hide("widgetName")
+GUI:Activate("widgetName")
+string = GUI:GetSelected()
+GUI:SetSelected("widgetName")
 
 GameObject Functions
 --------------------

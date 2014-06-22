@@ -88,6 +88,9 @@ private:
 	static int GUISetValue(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);
 	static int GUIHideWidget(lua_State * a_luaState);
+	static int GUIActivateWidget(lua_State * a_luaState);
+	static int GUIGetSelectedWidget(lua_State * a_luaState);
+	static int GUISetSelectedWidget(lua_State * a_luaState);
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);
 	static int DebugLine(lua_State * a_luaState);

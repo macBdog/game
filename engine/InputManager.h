@@ -79,7 +79,9 @@ public:
 
 	//\brief Access for the mouse coords for any part in the engine
 	inline Vector2 GetMousePosAbsolute() const { return m_mousePos; }
+	inline void SetMousePosAbsolute(const Vector2 & a_newPos) { m_mousePos = a_newPos; }
 	Vector2 GetMousePosRelative();
+	void SetMousePosRelative(const Vector2 & a_newPos);
 
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional

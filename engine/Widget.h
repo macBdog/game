@@ -232,6 +232,7 @@ public:
 	inline WidgetNode * GetChildren() { return m_children.GetHead(); }
 	inline bool HasChildren() { return m_children.GetLength() > 0; }
 	Widget * Find(const char * a_name);
+	Widget * FindSelected();
 	bool RemoveAlignmentTo(Widget * a_alignedTo);
 	bool RemoveFromChildren(Widget * a_child);
 
@@ -262,6 +263,7 @@ public:
 	void UpdateAlignTo();
 	
 	inline WidgetVector GetPos() const { return m_pos; }
+	inline Vector2 GetDrawPos() const { return m_drawPos; }
 	inline WidgetVector GetSize() const { return m_size; }
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetText() const { return m_text; }

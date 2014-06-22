@@ -381,7 +381,7 @@ bool Widget::RemoveChildren()
 
 Widget * Widget::Find(const char * a_name)
 {
-	// Non search cases
+	// Non search case
 	if (strcmp(m_name, a_name) == 0)
 	{
 		return this;
@@ -392,7 +392,7 @@ Widget * Widget::Find(const char * a_name)
 		return NULL;
 	}
 
-	// Exhaustive search through child and siblings to find widget with name
+	// Exhaustive search through child and siblings to find selected widget
 	Widget * foundWidget = NULL;
 	WidgetNode * curWidget = m_children.GetHead();
 	while (curWidget != NULL && foundWidget == NULL)
@@ -410,6 +410,41 @@ Widget * Widget::Find(const char * a_name)
 		curWidget = curWidget->GetNext();
 	}
 	return foundWidget;
+}
+
+Widget * Widget::FindSelected()
+{
+	// Early out for this widget being selected
+	if (IsSelected())
+	{
+		return this;
+	}
+
+	if (m_children.IsEmpty())
+	{
+		return NULL;
+	}
+
+	// Exhaustive search through child and siblings to find selected widget
+	WidgetNode * curWidget = m_children.GetHead();
+	while (curWidget != NULL)
+	{
+		if (curWidget->GetData()->IsSelected())
+		{
+			return curWidget->GetData();
+		}
+		// Recurse into children's family to find the widget
+		if (!curWidget->GetData()->m_children.IsEmpty())
+		{
+			if (curWidget->GetData()->IsSelected())
+			{
+				return curWidget->GetData();
+			}
+		}
+		// Keep searching the widget list
+		curWidget = curWidget->GetNext();
+	}
+	return NULL;
 }
 
 bool Widget::RemoveAlignmentTo(Widget * a_alignedTo)

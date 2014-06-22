@@ -278,6 +278,18 @@ Widget * Gui::FindWidget(const char * a_widgetName)
 	return foundWidget;
 }
 
+Widget * Gui::FindSelectedWidget()
+{
+	// Only search the active menu, nothing outside of active can be selected
+	Widget * foundWidget = NULL;
+	if (m_activeMenu != NULL)
+	{
+		return m_activeMenu->FindSelected();
+	}
+
+	return NULL;
+}
+
 void Gui::DestroyWidget(Widget * a_widget)
 {
 #ifdef _DEBUG

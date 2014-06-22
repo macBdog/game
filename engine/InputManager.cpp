@@ -169,7 +169,16 @@ Vector2 InputManager::GetMousePosRelative()
 	RenderManager & renderMan = RenderManager::Get();
 	float relX = m_mousePos.GetX() / renderMan.GetViewWidth();
 	float relY = m_mousePos.GetY() / renderMan.GetViewHeight();
-	return Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f); 
+	return Vector2(relX*2.0f-1.0f, 1.0f-relY*2.0f);
+}
+
+void InputManager::SetMousePosRelative(const Vector2 & a_newPos)
+{
+	// Convert from container to screen space
+	RenderManager & renderMan = RenderManager::Get();
+	float absX = (a_newPos.GetX()+1.0f) * (renderMan.GetViewWidth()*0.5f);
+	float absY = (1.0f-a_newPos.GetY()) * (renderMan.GetViewHeight()*0.5f);
+	m_mousePos = Vector2(absX, absY);
 }
 
 bool InputManager::IsKeyDepressed(SDLKey a_key)

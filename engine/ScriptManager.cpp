@@ -22,6 +22,9 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"SetValue", GUISetValue},
 	{"Show", GUIShowWidget},
 	{"Hide", GUIHideWidget},
+	{"Activate", GUIActivateWidget},
+	{"GetSelected", GUIGetSelectedWidget},
+	{"SetSelected", GUISetSelectedWidget},
 	{NULL, NULL}
 };
 
@@ -724,6 +727,65 @@ int ScriptManager::GUIHideWidget(lua_State * a_luaState)
 	}
 
 	LogScriptError(a_luaState, "GUI:Hide", "could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::GUIActivateWidget(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->DoActivation();
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:ActivateWidet", "expects 1 parameter: name of the element.");
+	}
+
+	LogScriptError(a_luaState, "GUI:ActivateWidet", "could not find the GUI element to activate.");
+	return 0;
+}
+
+int ScriptManager::GUIGetSelectedWidget(lua_State * a_luaState)
+{	
+	if (Widget * selectedElem = Gui::Get().FindSelectedWidget())
+	{
+		lua_pushstring(a_luaState, selectedElem->GetName());
+		return 1;
+	}
+
+	return 0;
+}
+
+int ScriptManager::GUISetSelectedWidget(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				InputManager::Get().SetMousePosRelative(foundElem->GetDrawPos());
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetSelectedWidget", "expects 1 parameter: name of the element.");
+	}
+
+	LogScriptError(a_luaState, "GUI:GUISetSelectedWidget", "could not find the GUI element to set selected.");
 	return 0;
 }
 
