@@ -16,6 +16,7 @@ template<> Gui * Singleton<Gui>::s_instance = NULL;
 bool Gui::s_cursorBlink = false;
 float Gui::s_cursorBlinkTimer = 0.0f;
 const float Gui::s_cursorBlinkTime = 0.55f;
+float Gui::s_widgetPulseTimer = 0.0f;
 
 bool Gui::Startup(const char * a_guiPath)
 {
@@ -98,6 +99,10 @@ bool Gui::Update(float a_dt)
 
 	// Process mouse position for selection of widgets
 	UpdateSelection();
+
+	// Update the pulsing of selected widgets
+	s_widgetPulseTimer += a_dt * 16.0f;
+	Widget::s_selectedColourValue = sin(s_widgetPulseTimer);
 
 	// Draw all elements of the active menu
 	if (m_activeMenu != NULL)

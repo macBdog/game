@@ -160,7 +160,8 @@ public:
 		, m_children()
 		, m_debugRender(false)
 		, m_alwaysRender(false)
-		, m_selectedListItemId(SelectionFlags::None)
+		, m_selectedListItemId(-1)
+		, m_rolloverListItemId(-1)
 	{
 		m_name[0] = '\0';
 		m_alignToName[0] = '\0';
@@ -292,9 +293,13 @@ public:
 	void RemoveListItem(const char * a_existingItemName);
 	void ClearListItems();
 	void SetSelectedListItem(unsigned int a_itemId);
+	void SetRolloverListItem(unsigned int a_itemId);
 	void SetSelectedListItem(const char * a_itemName);
+	void SetRolloverListItem(const char * a_itemName);
 	const char * GetListItem(unsigned int a_itemId);
 	inline const char * GetSelectedListItem() { return GetListItem(m_selectedListItemId); } 
+
+	static float s_selectedColourValue;	///< Value to attenuate a selected widget's colour with, only one selected widget ever
 
 private:
 
@@ -329,9 +334,10 @@ private:
 	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
 	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property
-
 	LinkedList<StringHash> m_listItems;						///< Any string items that belong to this widget for lists and combo boxes
-	unsigned int m_selectedListItemId;						///< Which item is currently selected
+	int m_rolloverListItemId;								///< Which item is currently being rolled over, negative for none
+	int m_selectedListItemId;								///< Which item is currently selected, negative for none
+
 };
 
 

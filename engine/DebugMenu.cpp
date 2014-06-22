@@ -334,6 +334,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 	if (a_widget == m_btnResourceSelectOk)
 	{
 		// Have just selected a resource for some object
+		const char * newResource = m_resourceSelectList->GetSelectedListItem();
 		switch (m_editType)
 		{
 			case EditType::Widget: 
@@ -344,9 +345,16 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				// Setting a texture on a widget
 				if (m_editMode == EditMode::Texture)
 				{
-					char tgaBuf[StringUtils::s_maxCharsPerLine];
-					sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), m_resourceSelectList->GetSelectedListItem());
-					m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureCategory::Gui));
+					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
+					{
+						char tgaBuf[StringUtils::s_maxCharsPerLine];
+						sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), newResource);
+						m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureCategory::Gui));
+					}
+					else // Clear the texture
+					{
+						m_widgetToEdit->SetTexture(NULL);
+					}
 					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
 				else if (m_editMode == EditMode::Font)
@@ -361,23 +369,26 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_editMode == EditMode::Template)
 				{
 					// Create new object
-					if (GameObject * newGameObj = worldMan.CreateObject(m_resourceSelectList->GetSelectedListItem()))
+					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
-						// Set properties of new object to match that of old object
-						newGameObj->SetPos(m_gameObjectToEdit->GetPos());
-
-						// Destroy old object
-						if (m_gameObjectToEdit)
+						if (GameObject * newGameObj = worldMan.CreateObject(newResource))
 						{
-							worldMan.DestroyObject(m_gameObjectToEdit->GetId());
-						}
-						m_gameObjectToEdit = newGameObj;
+							// Set properties of new object to match that of old object
+							newGameObj->SetPos(m_gameObjectToEdit->GetPos());
+
+							// Destroy old object
+							if (m_gameObjectToEdit)
+							{
+								worldMan.DestroyObject(m_gameObjectToEdit->GetId());
+							}
+							m_gameObjectToEdit = newGameObj;
 					
-						m_dirtyFlags.Set(DirtyFlag::Scene);
-					}
-					else
-					{
-						Log::Get().WriteEngineErrorNoParams("Failed to set template on game object.");
+							m_dirtyFlags.Set(DirtyFlag::Scene);
+						}
+						else
+						{
+							Log::Get().WriteEngineErrorNoParams("Failed to set template on game object.");
+						}
 					}
 				}
 
@@ -387,14 +398,21 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				// Setting a model on a game object
 				if (m_editMode == EditMode::Model)
 				{
-					char objBuf[StringUtils::s_maxCharsPerLine];
-					sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
-					
-					// Load the model and set it as the current model to edit
-					if (Model * newModel = ModelManager::Get().GetModel(objBuf))
+					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
-						m_gameObjectToEdit->SetModel(newModel);
-						m_dirtyFlags.Set(DirtyFlag::Scene);
+						char objBuf[StringUtils::s_maxCharsPerLine];
+						sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
+					
+						// Load the model and set it as the current model to edit
+						if (Model * newModel = ModelManager::Get().GetModel(objBuf))
+						{
+							m_gameObjectToEdit->SetModel(newModel);
+							m_dirtyFlags.Set(DirtyFlag::Scene);
+						}
+					} 
+					else // Clear the model
+					{
+						m_gameObjectToEdit->SetModel(NULL);
 					}
 				}
 				break;
@@ -745,8 +763,11 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	buttonPos.SetX(parentPos.GetX() + parentSize.GetX() - buttonSize.GetX() - buttonSpacingX);
 	m_btnResourceSelectCancel->SetOffset(buttonPos);
 
-	// Add resource list to widget
+	// Add a null option for clearing selection
 	m_resourceSelectList->ClearListItems();
+	m_resourceSelectList->AddListItem("");
+
+	// Add resource list to widget
 	FileManager & fileMan = FileManager::Get();
 	FileManager::FileList resourceFiles;
 	fileMan.FillFileList(a_startingPath, resourceFiles, a_fileExtensionFilter);

@@ -78,6 +78,7 @@ private:
 	static bool s_cursorBlink;
 	static float s_cursorBlinkTimer;
 	static const float s_cursorBlinkTime;
+	static float s_widgetPulseTimer;
 	
 	char m_guiPath[StringUtils::s_maxCharsPerLine];
 	MenuList m_menus;		// All menus loaded from data or created on the fly

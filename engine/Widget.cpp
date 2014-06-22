@@ -29,6 +29,8 @@ const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.05f, 0.2f, 0.2f, 0.2f);
 const Colour Widget::sc_editSelectedColour = Colour(0.05f, 0.85f, 0.85f, 0.0f);
 
+float Widget::s_selectedColourValue = 0.0f;	///< Value to attenuate a selected widget's colour with, only one selected widget ever
+
 Widget::~Widget()
 {
 	// Delete list items owned by this widget
@@ -65,8 +67,8 @@ void Widget::Draw()
 		RenderLayer::Enum renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
 		switch (m_selection)
 		{
-			case SelectionFlags::Rollover:		selectColour -= sc_rolloverColour;		break;
-			case SelectionFlags::Selected:		selectColour -= sc_selectedColour;		break;
+			case SelectionFlags::Rollover:		selectColour -= sc_rolloverColour * s_selectedColourValue;	break;
+			case SelectionFlags::Selected:		selectColour -= sc_selectedColour * s_selectedColourValue;	break;
 			
 			// Draw a selection box around a selected widget
 			case SelectionFlags::EditRollover:	
@@ -163,6 +165,12 @@ void Widget::Draw()
 				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
 				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
 				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, NULL, TextureOrientation::Normal, selectColour - sc_rolloverColour);
+			}
+			else if (numItems == m_rolloverListItemId)
+			{
+				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
+				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
+				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, NULL, TextureOrientation::Normal, selectColour - sc_selectedColour);
 			}
 
 			// Now draw the item text
@@ -270,7 +278,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 			if (a_pos.GetX() >= testPos.GetX() && a_pos.GetX() <= testPos.GetX() + testSize.GetX() && 
 				a_pos.GetY() <= testPos.GetY() && a_pos.GetY() >= testPos.GetY() - testSize.GetY())
 			{
-				m_selectedListItemId = numItems;
+				m_rolloverListItemId = numItems;
 				break;
 			}
 
@@ -518,6 +526,12 @@ void Widget::Activate()
 	else if (!m_debugRender)
 	{
 		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Widget named %s does not have an action set.", GetName());
+	}
+
+	// Update selection if a list has been clicked on
+	if (m_selection > SelectionFlags::None && m_listItems.GetLength() > 0 && m_rolloverListItemId >= 0)
+	{
+		m_selectedListItemId = m_rolloverListItemId;
 	}
 }
 
