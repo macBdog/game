@@ -633,6 +633,11 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 			menuStream << tabs << StringUtils::s_charTab << "texture: " << m_texture->GetFileName() << StringUtils::s_charLineEnd;
 		}
 
+		if (m_scriptFuncName[0] != '\0')
+		{
+			menuStream << tabs << StringUtils::s_charTab << "action: " << m_scriptFuncName << StringUtils::s_charLineEnd;
+		}
+
 		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
 
 		// Serialise any children of this child

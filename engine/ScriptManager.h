@@ -8,6 +8,7 @@
 #include "Singleton.h"
 
 class GameObject;
+class Widget;
 struct lua_State;
 struct luaL_Reg;
 
@@ -40,6 +41,10 @@ public:
 
 	//\brief Trigger the script files to be torn down reloaded as would happen when the on disk file changes
 	inline void ReloadScripts() { m_updateTimer = m_updateFreq + 1.0f; m_forceReloadScripts = true; }
+
+	//\brief Callback handler for when a widget with a script binding is clicked
+	//\param A pointer to the widget that was interacted with
+	bool OnWidgetAction(Widget * a_widget);
 
 private:
 
@@ -91,6 +96,7 @@ private:
 	static int GUIActivateWidget(lua_State * a_luaState);
 	static int GUIGetSelectedWidget(lua_State * a_luaState);
 	static int GUISetSelectedWidget(lua_State * a_luaState);
+	static int GUISetActiveMenu(lua_State * a_luaState);
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);
 	static int DebugLine(lua_State * a_luaState);

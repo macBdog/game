@@ -165,6 +165,7 @@ public:
 	{
 		m_name[0] = '\0';
 		m_alignToName[0] = '\0';
+		m_scriptFuncName[0] = '\0';
 		m_text[0] = '\0';
 		m_filePath[0] = '\0';
 	}
@@ -257,6 +258,7 @@ public:
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
+	inline void SetScriptFuncName(const char * a_scriptName) { strncpy(m_scriptFuncName, a_scriptName, strlen(a_scriptName) + 1); }
 	void SetAlignTo(Widget * a_alignWidget);
 	void SetAlignTo(const char * a_alignWidgetName);
 	void ClearAlignTo();
@@ -270,6 +272,7 @@ public:
 	inline const char * GetFilePath() const { return m_filePath; }
 	inline Widget * GetAlignTo() const { return m_alignTo; }
 	inline bool HasAlignTo() const { return m_alignTo != NULL || m_alignToName[0] != '\0'; }
+	inline const char * GetScriptFuncName() { return m_scriptFuncName; }
 
 	//\brief Execute the callback if defined
 	void Activate();
@@ -334,6 +337,7 @@ private:
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
 	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
+	char m_scriptFuncName[StringUtils::s_maxCharsPerName];	///< The name of the global LUA script to call on activation
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
 	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property
 	LinkedList<StringHash> m_listItems;						///< Any string items that belong to this widget for lists and combo boxes

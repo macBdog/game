@@ -25,6 +25,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"Activate", GUIActivateWidget},
 	{"GetSelected", GUIGetSelectedWidget},
 	{"SetSelected", GUISetSelectedWidget},
+	{"SetActiveMenu", GUISetActiveMenu},
 	{NULL, NULL}
 };
 
@@ -280,6 +281,13 @@ void ScriptManager::DestroyObjectScriptBindings(GameObject * a_gameObject)
 		lua_settable(m_globalLua, LUA_REGISTRYINDEX);
 		a_gameObject->SetScriptReference(-1);
 	}
+}
+
+bool ScriptManager::OnWidgetAction(Widget * a_widget)
+{
+	lua_getglobal(m_gameLua, a_widget->GetScriptFuncName());
+	lua_call(m_gameLua, 0, 0);
+	return true;
 }
 
 int ScriptManager::YieldLuaEnvironment(lua_State * a_luaState)
@@ -786,6 +794,30 @@ int ScriptManager::GUISetSelectedWidget(lua_State * a_luaState)
 	}
 
 	LogScriptError(a_luaState, "GUI:GUISetSelectedWidget", "could not find the GUI element to set selected.");
+	return 0;
+}
+
+int ScriptManager::GUISetActiveMenu(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				Gui::Get().SetActiveMenu(foundElem);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:GUISetActiveMenu", "expects 1 parameter: name of the menu.");
+	}
+
+	LogScriptError(a_luaState, "GUI:GUISetActiveMenu", "could not find the menu to set active.");
 	return 0;
 }
 

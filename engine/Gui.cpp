@@ -250,6 +250,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 				newWidget->SetTexture(tex);
 			}
 		}
+		if (GameFile::Property * action = a_widgetFile->FindProperty("action"))
+		{		
+			newWidget->SetScriptFuncName(action->GetString());
+			newWidget->SetAction(&ScriptManager::Get(), &ScriptManager::OnWidgetAction);
+		}
 		return newWidget;
 	}
 	return NULL;

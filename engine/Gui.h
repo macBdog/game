@@ -52,6 +52,7 @@ public:
 	inline Widget * GetDebugRoot() { return &m_debugRoot; }
 	inline Widget * GetActiveMenu() { return m_activeMenu; }
 	inline Widget * GetStartupMenu() { return m_startupMenu; }
+	inline void SetActiveMenu(Widget * a_newMenu) { m_activeMenu = a_newMenu; }
 
 	//brief Return the top widget with different selection flags
 	Widget * GetActiveWidget();
