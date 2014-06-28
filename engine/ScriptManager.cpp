@@ -26,6 +26,8 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetSelected", GUIGetSelectedWidget},
 	{"SetSelected", GUISetSelectedWidget},
 	{"SetActiveMenu", GUISetActiveMenu},
+	{"EnableMouse", GUIEnableMouse},
+	{"DisableMouse", GUIDisableMouse},
 	{NULL, NULL}
 };
 
@@ -95,6 +97,8 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
 		lua_register(m_globalLua, "MoveCamera", MoveCamera);
 		lua_register(m_globalLua, "RotateCamera", RotateCamera);
+		lua_register(m_globalLua, "NewScene", NewScene);
+		lua_register(m_globalLua, "SetScene", SetScene);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
@@ -324,10 +328,10 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	}
 
 	int numArgs = lua_gettop(a_luaState);
-    if (numArgs != 2) 
+    if (numArgs < 2) 
 	{
-        return luaL_error(a_luaState, "GameObject:Create error, expecting 2 argument: class (before the scope operator) then template name."); 
-	}  
+        return luaL_error(a_luaState, "GameObject:Create error, expecting at least 2 arguments: class (before the scope operator) then template name."); 
+	}
 
 	// Qualify template path with template extension
 	const char * templateName = luaL_checkstring(a_luaState, 2);
@@ -342,8 +346,17 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 		strcpy(templatePath, templateName);
 	}
 
+	// Get the scene to add to if specified
+	WorldManager & worldMan = WorldManager::Get();
+	Scene * sceneToAddTo = NULL;
+	if (numArgs == 3)
+	{
+		const char * sceneName = luaL_checkstring(a_luaState, 3);
+		sceneToAddTo = worldMan.GetScene(sceneName);
+	}
+
 	// Create the new object
-	if (GameObject * newGameObject = WorldManager::Get().CreateObject(templatePath))
+	if (GameObject * newGameObject = worldMan.CreateObject(templatePath, sceneToAddTo))
 	{
 		// Allocate memory for an push userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
@@ -639,6 +652,44 @@ int ScriptManager::RotateCamera(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::NewScene(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * sceneName = lua_tostring(a_luaState, 1);
+		if (sceneName != NULL)
+		{
+			WorldManager::Get().SetNewScene(sceneName);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "NewScene", "expects 1 parameter: name of the scene to set.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetScene(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * sceneName = lua_tostring(a_luaState, 1);
+		if (sceneName != NULL)
+		{
+			WorldManager::Get().SetCurrentScene(sceneName);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetScene", "expects 1 parameter: name of the scene to set.");
+	}
+	return 0;
+}
+
 int ScriptManager::GUIGetValue(lua_State * a_luaState)
 {
 	char strValue[StringUtils::s_maxCharsPerName];
@@ -821,6 +872,20 @@ int ScriptManager::GUISetActiveMenu(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::GUIEnableMouse(lua_State * a_luaState)
+{
+	Gui::Get().EnableMouseCursor();
+	InputManager::Get().EnableMouseInput();
+	return 0;
+}
+
+int ScriptManager::GUIDisableMouse(lua_State * a_luaState)
+{
+	Gui::Get().DisableMouseCursor();
+	InputManager::Get().DisableMouseInput();
+	return 0;
+}
+
 int ScriptManager::DebugPrint(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -930,6 +995,10 @@ int ScriptManager::SetGameObjectName(lua_State * a_luaState)
 			const char * newName = lua_tostring(a_luaState, 2);
 			gameObj->SetName(newName);
 			return 0;
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetName", "cannot find the game object referred to.");
 		}
 	}
 	 

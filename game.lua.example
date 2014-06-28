@@ -32,6 +32,8 @@ SetCameraRotation(x, y, z)
 SetCameraFOV(f)
 MoveCamera(x,y,z)
 RotateCamera(x,y,z)
+NewScene("newSceneName")
+SetScene("existingSceneName")
 bool = IsKeyDown(keyCodes.character)
 bool = IsGamePadConnected(padId)
 bool = IsGamePadButtonDown(padId, buttonId)
@@ -53,6 +55,9 @@ GUI:Hide("widgetName")
 GUI:Activate("widgetName")
 string = GUI:GetSelected()
 GUI:SetSelected("widgetName")
+GUI:SetActiveMenu("MenuName")
+GUI:EnableMouse()
+GUI:DisableMouse()
 
 GameObject Functions
 --------------------

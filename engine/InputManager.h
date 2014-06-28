@@ -52,6 +52,7 @@ public:
 		, m_lastKeyPress(SDLK_CLEAR)
 		, m_lastKeyRelease(SDLK_CLEAR)
 		, m_numGamepads(0)
+		, m_mouseEnabled(true)
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
@@ -82,6 +83,8 @@ public:
 	inline void SetMousePosAbsolute(const Vector2 & a_newPos) { m_mousePos = a_newPos; }
 	Vector2 GetMousePosRelative();
 	void SetMousePosRelative(const Vector2 & a_newPos);
+	inline void DisableMouseInput() { m_mouseEnabled = false; }
+	inline void EnableMouseInput() { m_mouseEnabled = true; }
 
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional
@@ -236,6 +239,7 @@ private:
 	InputEventList m_events;	///< List of events to match up to actions
 	bool m_focus;				///< If the app currently has OS focus
 	bool m_fullScreen;			///< If the app is fullscreen, input manager needs to handle focus
+	bool m_mouseEnabled;		///< If the mouse is enabled for input processing
 	Vector2 m_mousePos;			///< Cache of mouse coords for convenience
 	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
 	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience

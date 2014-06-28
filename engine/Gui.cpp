@@ -68,8 +68,7 @@ bool Gui::Startup(const char * a_guiPath)
 	{
 		if (GameFile::Property * mouseCursorProp = configObj->FindProperty("mouseCursorTexture"))
 		{
-			sprintf(fileName, "%s%s", a_guiPath, mouseCursorProp->GetString());
-			m_cursor.SetTexture(TextureManager::Get().GetTexture(fileName, TextureCategory::Gui));
+			m_cursor.SetTexture(TextureManager::Get().GetTexture(mouseCursorProp->GetString(), TextureCategory::Gui));
 			m_cursor.SetAlignment(AlignX::Middle, AlignY::Centre);
 			m_cursor.SetOffset(Vector2(0.0f, 0.0f));
 			m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
@@ -512,9 +511,10 @@ bool Gui::UnloadMenus()
 
 void Gui::UpdateSelection()
 {
-	// Any children of the active menu will be updated
+	// Always update the debug menu
 	m_debugRoot.UpdateSelection(m_cursor.GetPos());
 	
+	// Any children of the active menu will be updated
 	if (!DebugMenu::Get().IsDebugMenuActive() && m_activeMenu != NULL)
 	{
 		m_activeMenu->UpdateSelection(m_cursor.GetPos());

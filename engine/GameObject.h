@@ -73,7 +73,7 @@ public:
 		, m_localMat(Matrix::Identity())
 		, m_scriptRef(-1)
 		{ 
-			SetName("UNAMED_GAME_OBJECT");
+			SetName("UNNAMED_GAME_OBJECT");
 			SetTemplate("");
 		}
 

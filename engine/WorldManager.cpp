@@ -12,8 +12,7 @@ template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
 const float Scene::s_updateFreq = 1.0f;								///< How often the scene should check it's config on disk for updates
 
 Scene::Scene() 
-: m_firstGameObjectId(-1)
-, m_numObjects(0)
+: m_numObjects(0)
 , m_state(SceneState::Unloaded) 
 , m_beginLoaded(false)
 , m_shader(NULL)
@@ -32,7 +31,7 @@ Scene::Scene()
 Scene::~Scene()
 {
 	// Shutdown all game objects in the scene
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -215,15 +214,12 @@ bool Scene::Load(const char * a_scenePath)
 	return true;
 }
 
-GameObject * Scene::AddObject()
+GameObject * Scene::AddObject(unsigned int a_objectId)
 {
 	// Scene objects are stored contiguously in object ID order
-	GameObject * newGameObject = m_objects.Add(m_numObjects++);
+	GameObject * newGameObject = m_objects.Add(m_numObjects);
+	m_numObjects++;
 	assert(newGameObject != NULL);
-	if (m_firstGameObjectId == -1)
-	{
-		m_firstGameObjectId = newGameObject->GetId();
-	}
 	return newGameObject;
 }
 
@@ -254,10 +250,19 @@ bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Vector & a
 	return false;
 }
 
+GameObject * Scene::GetSceneObject(unsigned int a_storageId)
+{
+	if (a_storageId < m_numObjects)
+	{
+		return m_objects.Get(a_storageId);
+	}
+	return NULL;
+}
+
 GameObject * Scene::GetSceneObject(const char * a_objName)
 {
 	// Iterate through all objects in the scene
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -274,7 +279,7 @@ GameObject * Scene::GetSceneObject(const char * a_objName)
 GameObject * Scene::GetSceneObject(Vector a_worldPos)
 {
 	// Iterate through all objects in the scene
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -291,7 +296,7 @@ GameObject * Scene::GetSceneObject(Vector a_worldPos)
 GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 {
 	// Iterate through all objects in the scene
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -307,7 +312,7 @@ GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 
 void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
 {
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -322,14 +327,13 @@ void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
 
 	m_numLights = 0;
 	m_numObjects = 0;
-	m_firstGameObjectId = -1;
 	m_objects.Reset();
 }
 
 void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 {
 	// Remove all objects including scene and script owned objects
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -339,7 +343,6 @@ void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 
 	m_numLights = 0;
 	m_numObjects = 0;
-	m_firstGameObjectId = -1;
 	m_objects.Reset();
 
 	// Load scene front scratch so we are back with just scene objects and no script objects
@@ -350,7 +353,7 @@ bool Scene::Update(float a_dt)
 {
 	// Iterate through all objects in the scene and update state
 	bool updateSuccess = true;
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -419,7 +422,7 @@ void Scene::Serialise()
 	}
 	
 	// Add each object in the scene
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -441,7 +444,7 @@ bool Scene::Draw()
 {
 	// Iterate through all objects in the scene and update state
 	bool drawSuccess = true;
-	for (int i = 0; i < m_numObjects; ++i)
+	for (unsigned int i = 0; i < m_numObjects; ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
@@ -471,6 +474,9 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	memset(&m_templatePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_templatePath, a_templatePath, sizeof(char) * strlen(a_templatePath) + 1);
 
+	// Allocate memory for the global world lookup directory
+	m_objectLookup.Init(s_numLookup, sizeof(ObjectLookup));
+
 	// Generate list to iterate through all scenes in the scenepath and load them
 	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_scenePath, a_scenePath, sizeof(char) * strlen(a_scenePath) + 1);
@@ -478,7 +484,6 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".scn");
 
 	// Load each scene in the directory
-	unsigned int numSceneFiles = 0;
 	FileManager::FileListNode * curNode = sceneFiles.GetHead();
 	while(curNode != NULL)
 	{
@@ -491,21 +496,19 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 		assert(newScene != NULL);
 		if (newScene->Load(fullPath))
 		{
+			// Insert into list
+			SceneNode * newSceneNode = new SceneNode();
+			newSceneNode->SetData(newScene);
+			m_scenes.Insert(newSceneNode);
+
 			if (newScene->IsBeginLoaded())
 			{
-				// Insert into list
-				SceneNode * newSceneNode = new SceneNode();
-				newSceneNode->SetData(newScene);
-				m_scenes.Insert(newSceneNode);
-
 				// Set current scene to the first loaded scene
 				if (m_currentScene == NULL)
 				{
 					m_currentScene = newScene;
 				}
 			}
-
-			++numSceneFiles;
 		}
 		else
 		{
@@ -519,7 +522,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	FileManager::Get().CleanupFileList(sceneFiles);
 
 	// If no scenes, setup the default scene
-	if (numSceneFiles == 0)
+	if (m_scenes.GetLength() == 0)
 	{
 		Log::Get().WriteEngineErrorNoParams("No scene files or no scenes set to start on load, creating a default scene.");
 		Scene * newScene = new Scene();
@@ -558,16 +561,12 @@ bool WorldManager::Shutdown()
 
 bool WorldManager::Update(float a_dt)
 {
-	// Iterate through all loaded scenes and update them
-	bool updateOk = true;
-	SceneNode * next = m_scenes.GetHead();
-	while(next != NULL)
+	// Only update the active scene
+	if (m_currentScene != NULL)
 	{
-		updateOk &= next->GetData()->Update(a_dt);
-		next = next->GetNext();
+		return m_currentScene->Update(a_dt);
 	}
-
-	return updateOk;
+	return false;
 }
 
 GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_scene)
@@ -591,7 +590,11 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	}
 
 	// Add a new game object to the scene
-	GameObject * newGameObject = sceneToAddObjectTo->AddObject();
+	GameObject * newGameObject = sceneToAddObjectTo->AddObject(m_totalGameObjects);
+	ObjectLookup * lookup = m_objectLookup.Add(m_totalGameObjects);
+	lookup->m_scene = sceneToAddObjectTo;
+	lookup->m_storageId = sceneToAddObjectTo->GetNumObjects() - 1;
+	newGameObject->SetId(m_totalGameObjects++);
 
 	// Template paths are either fully qualified or relative to the config template dir
 	ModelManager & modelMan = ModelManager::Get();
@@ -620,7 +623,6 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		if (templateFile.IsLoaded())
 		{
 			// Create from template properties
-			newGameObject->SetId(m_totalSceneNumObjects++);
 			newGameObject->SetState(GameObjectState::Loading);
 			newGameObject->SetTemplate(a_templatePath);
 			if (GameFile::Object * object = templateFile.FindObject("gameObject"))
@@ -727,7 +729,6 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	}
 	else // Set properties for default object
 	{
-		newGameObject->SetId(m_totalSceneNumObjects++);
 		newGameObject->SetState(GameObjectState::Loading);
 		newGameObject->SetName("NEW_GAME_OBJECT");
 		newGameObject->SetPos(Vector(0.0f, 0.0f, 0.0f));
@@ -757,7 +758,7 @@ bool WorldManager::DestroyObject(unsigned int a_objectId, bool a_destroyScriptBi
 void WorldManager::DestroyAllObjects(bool a_destroyScriptOwned)
 {
 	// Iterate through all scenes and destroy objects
-	m_totalSceneNumObjects = 0;
+	m_totalGameObjects = 0;
 	SceneNode * next = m_scenes.GetHead();
 	while(next != NULL)
 	{
@@ -769,7 +770,7 @@ void WorldManager::DestroyAllObjects(bool a_destroyScriptOwned)
 void WorldManager::DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings)
 {
 	// Iterate through all scenes and destroy objects
-	m_totalSceneNumObjects = 0;
+	m_totalGameObjects = 0;
 	SceneNode * next = m_scenes.GetHead();
 	while(next != NULL)
 	{
@@ -780,26 +781,54 @@ void WorldManager::DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings)
 
 GameObject * WorldManager::GetGameObject(unsigned int a_objectId)
 {
-	// First try to find the object in the current scene
-	if (GameObject * foundObject = m_currentScene->GetSceneObject(a_objectId))
+	// Use the lookup to reference the scene and object directly
+	if (ObjectLookup * lookup = m_objectLookup.Get(a_objectId))
 	{
-		return foundObject;
-	}
-	else // Look through each scene for the target object
-	{
-		SceneNode * next = m_scenes.GetHead();
-		while(next != NULL)
-		{
-			if (GameObject * foundObject = next->GetData()->GetSceneObject(a_objectId))
-			{
-				return foundObject;
-			}
-			next = next->GetNext();
-		}
+		return lookup->m_scene->GetSceneObject(lookup->m_storageId);
 	}
 
 	// Failure case
 	return NULL;
+}
+
+Scene * WorldManager::GetScene(const char * a_sceneName)
+{
+	SceneNode * next = m_scenes.GetHead();
+	while(next != NULL)
+	{
+		Scene * curScene = next->GetData();
+		if (strcmp(a_sceneName, curScene->GetName()) == 0)
+		{
+			return curScene;
+		}
+		next = next->GetNext();
+	}
+
+	return NULL;
+}
+
+void WorldManager::SetCurrentScene(const char * a_sceneName)
+{
+	if (Scene * existingScene = GetScene(a_sceneName))
+	{
+		SetCurrentScene(existingScene);
+	}
+}
+
+void WorldManager::SetNewScene(const char * a_sceneName)
+{
+	// Create new scene and set name
+	Scene * newScene = new Scene();
+	assert(newScene != NULL);
+	newScene->SetName(a_sceneName);
+
+	// Insert into list of scenes
+	SceneNode * newSceneNode = new SceneNode();
+	newSceneNode->SetData(newScene);
+	m_scenes.Insert(newSceneNode);
+
+	// Set current scene to the first loaded scene
+	SetCurrentScene(newScene);
 }
 
 GameObject * WorldManager::GetGameObject(const char * a_objName)

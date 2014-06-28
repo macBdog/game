@@ -49,7 +49,7 @@ public:
 	bool Load(const char * a_scenePath);
 
 	//\brief Adding and removing objects from the scene
-	GameObject * AddObject();
+	GameObject * AddObject(unsigned int a_objectId);
 	bool RemoveObject(unsigned int a_objectId);
 	void RemoveAllObjects(bool a_destroyScriptOwned);
 	void RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings);
@@ -57,14 +57,15 @@ public:
 	//\brief Adding lights to the scene
 	//\return false if there are already the maximum number of lights in the scene
 	bool AddLight(const char * a_name, const Vector & a_pos, const Vector & a_dir, float a_ambient, float a_diffuse, float a_specular);
-	inline const Shader::Light & GetLight(int a_lightId) { return m_lights[a_lightId]; }
-	inline int GetNumLights() { return m_numLights; }
-	inline bool HasLights() { return m_numLights > 0; }
+	inline const Shader::Light & GetLight(int a_lightId) const { return m_lights[a_lightId]; }
+	inline int GetNumLights() const { return m_numLights; }
+	inline bool HasLights() const { return m_numLights > 0; }
+	inline const char * GetName() const { return m_name; }
 
 	//\brief Get an object by it's ID
 	//\param a_objectId is the ID of the object to get
 	//\return a pointer a game object if one exists with that name, otherwise NULL
-	inline GameObject * GetSceneObject(unsigned int a_objectId) { return m_objects.Get(a_objectId); }
+	GameObject * GetSceneObject(unsigned int a_objectId);
 
 	//\brief Get an object by name
 	//\param a_objName is the string name of object to get
@@ -93,7 +94,7 @@ public:
 
 	//\brief Get the number of objects in the scene
 	//\return uint of the number of objects
-	inline unsigned int GetNumObjects() { return m_numObjects; }
+	inline unsigned int GetNumObjects() const { return m_numObjects; }
 	
 	//\brief Resource mutators and accessors
 	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
@@ -116,8 +117,7 @@ private:
 	static const float s_updateFreq;								///< How often the scene should check it's config on disk for updates
 
 	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
-	int m_firstGameObjectId;										///< Id of the first game object so objects are stored in ID order
-	int m_numObjects;												///< How many objects are in the scene
+	unsigned int m_numObjects;										///< How many objects are in the scene
 	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
 	char m_filePath[StringUtils::s_maxCharsPerLine];				///< Path of the scene for reloading
 	FileManager::Timestamp m_timeStamp;								///< When the scene file was last edited
@@ -139,7 +139,7 @@ public:
 
 	//\brief Ctor calls through to startup
 	WorldManager() 
-		: m_totalSceneNumObjects(0)
+		: m_totalGameObjects(0)
 		, m_currentScene(NULL) { m_templatePath[0] = '\0'; m_scenePath[0] = '\0'; }
 	~WorldManager() { Shutdown(); }
 
@@ -183,7 +183,11 @@ public:
 
 	//\brief Get the scene that the world is currently showing
 	//\return A pointer to a scene
-	Scene * GetCurrentScene() { return m_currentScene; }
+	inline Scene * GetCurrentScene() { return m_currentScene; }
+	inline void SetCurrentScene(Scene * a_scene) { m_currentScene = a_scene; }
+	Scene * GetScene(const char * a_sceneName);
+	void SetCurrentScene(const char * a_sceneName);
+	void SetNewScene(const char * a_sceneName);
 
 	//\brief Accessor for the relative paths
 	inline const char * GetTemplatePath() { return m_templatePath; }
@@ -191,12 +195,22 @@ public:
 
 private:
 
+	//\brief An object lookup maps a globally unique ID to a scene and object storage ID for that scene
+	struct ObjectLookup
+	{
+		ObjectLookup() : m_scene(NULL), m_storageId(0) {}
+		Scene * m_scene;			///< The scene that stores the object
+		unsigned int m_storageId;	///< The position in the scene's storage array of the object
+	};
+
+	static const int s_numLookup = 655360;					///< Each ObjectLookup is about 48 bits, 20M of total lookup storage
+
 	//\brief Alias to refer to a group of objects
 	typedef LinkedListNode<Scene> SceneNode;
-	
+	PageAllocator<ObjectLookup> m_objectLookup;				///< Collection of lookups for finding game objects in O(1) time
 	LinkedList<Scene> m_scenes;								///< All the currently loaded scenes are added to this list
 	Scene * m_currentScene;									///< The currently active scene
-	unsigned int m_totalSceneNumObjects;					///< Total object count across all scenes, drives ID creation
+	unsigned int m_totalGameObjects;						///< Total object count across all scenes, drives ID creation
 	char m_templatePath[StringUtils::s_maxCharsPerLine];	///< Path for templates
 	char m_scenePath[StringUtils::s_maxCharsPerLine];		///< Path for scene files
 };

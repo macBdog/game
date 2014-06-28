@@ -89,6 +89,9 @@ private:
 	static int SetCameraFOV(lua_State * a_luaState);
 	static int MoveCamera(lua_State * a_luaState);
 	static int RotateCamera(lua_State * a_luaState);
+	static int NewScene(lua_State * a_luaState);
+	static int SetScene(lua_State * a_luaState);
+
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);
@@ -97,6 +100,9 @@ private:
 	static int GUIGetSelectedWidget(lua_State * a_luaState);
 	static int GUISetSelectedWidget(lua_State * a_luaState);
 	static int GUISetActiveMenu(lua_State * a_luaState);
+	static int GUIEnableMouse(lua_State * a_luaState);
+	static int GUIDisableMouse(lua_State * a_luaState);
+	
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);
 	static int DebugLine(lua_State * a_luaState);

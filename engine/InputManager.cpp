@@ -197,6 +197,11 @@ bool InputManager::IsKeyDepressed(SDLKey a_key)
 
 bool InputManager::ProcessMouseUp(MouseButton::Enum a_button)
 {
+	if (!DebugMenu::Get().IsDebugMenuEnabled() && !m_mouseEnabled)
+	{
+		return false;
+	}
+
 	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
 	while(curEvent != NULL)
