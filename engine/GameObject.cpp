@@ -36,7 +36,7 @@ bool GameObject::Update(float a_dt)
 	}
 
 	// Become active if ready
-	if (m_state == GameObjectState::Loading && m_model != NULL && m_shader != NULL)
+	if (m_state == GameObjectState::Loading && m_model != NULL)
 	{
 		m_state = GameObjectState::Active;
 	}

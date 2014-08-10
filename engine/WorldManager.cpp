@@ -714,6 +714,9 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						pMan.AddPhysicsObject(newGameObject);
 					}
 				}
+
+				// All loading operations have completed
+				newGameObject->SetState(GameObjectState::Active);
 			}
 			else // Can't find the first object
 			{
@@ -729,7 +732,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	}
 	else // Set properties for default object
 	{
-		newGameObject->SetState(GameObjectState::Loading);
+		newGameObject->SetState(GameObjectState::Active);
 		newGameObject->SetName("NEW_GAME_OBJECT");
 		newGameObject->SetPos(Vector(0.0f, 0.0f, 0.0f));
 	}

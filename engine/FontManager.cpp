@@ -26,7 +26,7 @@ bool FontManager::Startup(const char * a_fontPath)
 	FileManager::FileList fontFiles;
 	FileManager::Get().FillFileList(a_fontPath, fontFiles, ".fnt");
 	FileManager::FileListNode * curNode = fontFiles.GetHead();
-
+	
 	// Cache off the font path as textures are relative to fonts
 	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
@@ -83,7 +83,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 	FontListNode * newFontNode = new FontListNode();
 	newFontNode->SetData(new Font());
 	Font * newFont = newFontNode->GetData();
-
+	
 	// Open the file and parse each line 
 	if (file.is_open())
 	{
@@ -101,7 +101,6 @@ bool FontManager::LoadFont(const char * a_fontName)
 			char shortFontName[StringUtils::s_maxCharsPerLine];
 			sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true));
 			newFont->m_fontName.SetCString(shortFontName);
-
 			file.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33			
 			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
 								   &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
@@ -109,7 +108,7 @@ bool FontManager::LoadFont(const char * a_fontName)
 			// As we try to render all fonts the same size, fail to load fonts greater than a meg
 			if (sizeW > s_maxFontTexSize || sizeH > s_maxFontTexSize)
 			{
-				Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than meg in resolution.", shortFontName);
+				Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than 1 meg in resolution.", shortFontName);
 				file.close();
 				return false;
 			}
@@ -162,7 +161,6 @@ bool FontManager::LoadFont(const char * a_fontName)
 		file.close();
 
 		m_fonts.Insert(newFontNode);
-
 		return true;
 	}
 	else

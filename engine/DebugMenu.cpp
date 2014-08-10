@@ -359,7 +359,10 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				}
 				else if (m_editMode == EditMode::Font)
 				{
-					m_widgetToEdit->SetFontName(StringHash::GenerateCRC(m_resourceSelectList->GetSelectedListItem()));
+					if (m_resourceSelectList->GetSelectedListItem())
+					{
+						m_widgetToEdit->SetFontName(StringHash::GenerateCRC(m_resourceSelectList->GetSelectedListItem()));
+					}
 				}
 				break;
 			}

@@ -50,11 +50,21 @@ int main(int argc, char *argv[])
 	}
 
 	// Setup relative pathing if defined
-	if (configFile.GetString("config", "gameDataPath") != NULL)
+	const char * gameDataPathFromFile = configFile.GetString("config", "gameDataPath");
+	if (gameDataPathFromFile != NULL)
 	{
-		sprintf(gameDataPath, "%s", configFile.GetString("config", "gameDataPath"));
+		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
+
+		// Check to see if the dot operator is being used
+		if (strstr(gameDataPathFromFile, ".\\") != NULL)
+		{
+			const char * executableName = "game.exe";
+			strncpy(gameDataPath, argv[0], strlen(argv[0]) - strlen(executableName));
+		}
 	}
+
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);
 
     // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
@@ -115,6 +125,7 @@ int main(int argc, char *argv[])
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 	
+
 	// Process resource paths
 	char gameConfigPath[StringUtils::s_maxCharsPerLine];
 	char texturePath[StringUtils::s_maxCharsPerLine];
@@ -158,6 +169,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting up subsystems");
+
 	// Subsystem startup
 	MathUtils::InitialiseRandomNumberGenerator();
     RenderManager::Get().Startup(sc_colourBlack, shaderPath, gameConfig.GetBool("render", "vr"));
@@ -181,6 +194,8 @@ int main(int argc, char *argv[])
 	float fps = 0.0f;
 
     bool active = true;
+
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting game loop");
 
     while (active)
     {

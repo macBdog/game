@@ -95,7 +95,7 @@ bool Gui::Update(float a_dt)
 {
 	// Update mouse position
 	m_cursor.SetOffset(InputManager::Get().GetMousePosRelative()); 
-
+	
 	// Process mouse position for selection of widgets
 	UpdateSelection();
 
@@ -129,7 +129,7 @@ bool Gui::Update(float a_dt)
 		s_cursorBlink = !s_cursorBlink;
 		s_cursorBlinkTimer = 0.0f;
 	}
-
+	
 	return true;
 }
 
