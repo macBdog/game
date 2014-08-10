@@ -404,6 +404,12 @@ void Scene::Serialise()
 	sceneFile->AddProperty(sceneObject, "name", m_name);
 	sceneFile->AddProperty(sceneObject, "beginLoaded", StringUtils::BoolToString(m_beginLoaded));
 
+	// Optional properties of the scene
+	if (m_shader != NULL) 
+	{
+		sceneFile->AddProperty(sceneObject, "shader", m_shader->GetName());
+	}
+
 	// Add lighting section
 	if (HasLights())
 	{

@@ -58,11 +58,11 @@ int main(int argc, char *argv[])
 
 		// Check to see if the dot operators are being used
 		const char * executableName = "game.exe";
+		const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
 		if (strstr(gameDataPathFromFile, "..\\") != NULL)
 		{
 			char partialPath[StringUtils::s_maxCharsPerLine];
 			partialPath[0] = '\0';
-			const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
 			strncpy(partialPath, argv[0], partialLength);
 			partialPath[partialLength] = '\0';
 			const char * lastSlash = strrchr(partialPath, '\\');
@@ -74,7 +74,9 @@ int main(int argc, char *argv[])
 		}
 		else if (strstr(gameDataPathFromFile, ".\\") != NULL)
 		{
-			strncpy(gameDataPath, argv[0], strlen(argv[0]) - strlen(executableName));
+			strncpy(gameDataPath, argv[0], partialLength);
+			gameDataPath[partialLength] = '\0';
+			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, ".\\") + 1);
 		}
 	}
 
