@@ -42,7 +42,7 @@ Scene::~Scene()
 	// Clean up shader if set
 	if (m_shader != NULL)
 	{
-		delete m_shader;
+		RenderManager::Get().UnManageShader(this);
 	}
 }
 
