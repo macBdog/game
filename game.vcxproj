@@ -40,12 +40,12 @@
     <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\Debug;$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\SDL-1.2.15\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -76,7 +76,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>.\external\SDL-1.2.15\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
       <AdditionalDependencies>winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL.lib;SDLmain.lib;glu32.lib;opengl32.lib;LinearMath.lib;BulletDynamics.lib;BulletCollision.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>

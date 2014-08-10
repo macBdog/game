@@ -37,12 +37,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -101,6 +101,7 @@
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="StringHash.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Texture.h" />
@@ -130,6 +131,7 @@
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="Texture.cpp" />

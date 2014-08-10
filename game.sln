@@ -17,35 +17,21 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
-		MinSizeRel|Win32 = MinSizeRel|Win32
 		Release|Win32 = Release|Win32
-		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.Debug|Win32.ActiveCfg = Debug|Win32
 		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.Debug|Win32.Build.0 = Debug|Win32
-		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.MinSizeRel|Win32.ActiveCfg = Release|Win32
-		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.Release|Win32.ActiveCfg = Release|Win32
 		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.Release|Win32.Build.0 = Release|Win32
-		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
-		{1B27BCB9-2807-42C7-8E17-3029DC8B8D9A}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.Debug|Win32.ActiveCfg = Debug|Win32
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.Debug|Win32.Build.0 = Debug|Win32
-		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.MinSizeRel|Win32.ActiveCfg = Release|Win32
-		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.Release|Win32.ActiveCfg = Release|Win32
 		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.Release|Win32.Build.0 = Release|Win32
-		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
-		{AB48ED82-4B06-4DA6-A83A-4FE555AEEB10}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.Debug|Win32.Build.0 = Debug|Win32
-		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.MinSizeRel|Win32.ActiveCfg = Release|Win32
-		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.Release|Win32.ActiveCfg = Release|Win32
 		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.Release|Win32.Build.0 = Release|Win32
-		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
-		{5A800C3F-9279-4258-9CF6-55F4663FBD9C}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
