@@ -364,7 +364,7 @@ bool Scene::Update(float a_dt)
 	// Now state and position have been updated, submit resources to be rendered
 	bool drawSuccess = Draw();
 
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// Check if the scene needs to be reloaded
 	if (m_updateTimer < m_updateFreq)
 	{

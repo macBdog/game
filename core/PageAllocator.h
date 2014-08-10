@@ -25,7 +25,7 @@ public:
 		m_itemSize = a_itemSize;
 		m_maxItems = a_maxItems;
 		m_memory = (T*)(malloc(m_size));
-#ifdef _DEBUG
+#ifndef _RELEASE
 		memset(m_memory, 0, m_size);
 #endif
 		return m_memory != NULL;

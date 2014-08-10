@@ -69,7 +69,7 @@ bool AnimationManager::Shutdown()
 
 bool AnimationManager::Update(float a_dt)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// Check if an animation needs updating
 	if (m_updateTimer < m_updateFreq)
 	{

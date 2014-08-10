@@ -62,7 +62,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
     <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\external\SDL-1.2.15\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\SDL-1.2.15\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Designer;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

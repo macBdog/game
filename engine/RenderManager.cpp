@@ -600,7 +600,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		switch ((RenderLayer::Enum)i)
 		{
 			case RenderLayer::World:
-#ifdef _DEBUG
+#ifndef _RELEASE
 			case RenderLayer::Debug3D:
 #endif
 			{
@@ -1199,7 +1199,7 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_
 
 void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	Vector startPos = a_mat.GetPos();
 	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
 	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
@@ -1209,7 +1209,7 @@ void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// Draw a wireframe sphere with three circles in each dimension
 	const unsigned int numSegments = 16;
 	Vector lineStart = a_worldPos;
@@ -1250,7 +1250,7 @@ void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_ra
 
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// Define the corners of the box
 	Vector halfSize = a_dimensions * 0.5f;
 	Vector corners[8];
@@ -1279,7 +1279,7 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 
 void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dimensions, Colour a_colour)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// TODO
 	AddDebugAxisBox(a_worldMat.GetPos(), a_dimensions);
 #endif

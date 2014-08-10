@@ -296,7 +296,7 @@ Widget * Gui::FindSelectedWidget()
 
 void Gui::DestroyWidget(Widget * a_widget)
 {
-#ifdef _DEBUG
+#ifndef _RELEASE
 	// First check that this is a debug widget
 	if (a_widget->IsDebugWidget())
 	{
@@ -348,7 +348,7 @@ void Gui::DestroyWidget(Widget * a_widget)
 		{
 			assert(false);
 		}
-#ifdef _DEBUG
+#ifndef _RELEASE
 	}
 #endif
 }
