@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
 	bool useRelativePaths = false;
 	char configFilePath[StringUtils::s_maxCharsPerLine];
 	char gameDataPath[StringUtils::s_maxCharsPerLine];
-	memset(&configFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&gameDataPath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	configFilePath[0] = '\0';
+	gameDataPath[0] = '\0';
 	if (argc > 1)
 	{
 		memcpy(&configFilePath, argv, strlen(argv[1]));
@@ -56,10 +56,24 @@ int main(int argc, char *argv[])
 		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
 
-		// Check to see if the dot operator is being used
-		if (strstr(gameDataPathFromFile, ".\\") != NULL)
+		// Check to see if the dot operators are being used
+		const char * executableName = "game.exe";
+		if (strstr(gameDataPathFromFile, "..\\") != NULL)
 		{
-			const char * executableName = "game.exe";
+			char partialPath[StringUtils::s_maxCharsPerLine];
+			partialPath[0] = '\0';
+			const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
+			strncpy(partialPath, argv[0], partialLength);
+			partialPath[partialLength] = '\0';
+			const char * lastSlash = strrchr(partialPath, '\\');
+			const int pathLength = strlen(argv[0]) - strlen(executableName) - strlen(lastSlash);
+			strncpy(gameDataPath, argv[0], pathLength);
+			gameDataPath[pathLength] = '\0';
+			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, "..\\") + 3);
+
+		}
+		else if (strstr(gameDataPathFromFile, ".\\") != NULL)
+		{
 			strncpy(gameDataPath, argv[0], strlen(argv[0]) - strlen(executableName));
 		}
 	}
