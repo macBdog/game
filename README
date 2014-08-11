@@ -1,4 +1,4 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: Animation system. Rewrite WorldManager object lookup to be constant time.
+WHAT IS THE CURRENT SHORT TERM GOAL: DK2 support. Skeletal animations, not just root motion.
 TASK QUEUE: Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 
@@ -27,7 +27,7 @@ Technology Choices:
 Organisation:
 
 core/     
-Code for atomic data structures, collections and containers. Anything that exists here does not need to include any other file in the solution, generally. Most of the code here should be declaritive, not procedural (very little cpp expected).
+Code for atomic data structures, collections and containers. Anything that exists here does not need to include any other file in the solution, generally. Most of the code here should be declaritive, not procedural (very little .cpp expected).
 
 engine/
 Functions required by the engine to perform the basic tasks of running a game - processing inputs, rendering things to the screen, loading resources and the like. Nothing feature specific to reside here.
@@ -53,8 +53,8 @@ Style:
 #include "core/coreBar.h"
 #include "core/coreBaz.h"
 
-#include "engine/engineThing.h"
 #include "engine/anotherThing.h"
+#include "engine/engineThing.h"
 
 #include "thisFilesHeader.h"
 
