@@ -53,6 +53,7 @@ public:
 		, m_lastKeyRelease(SDLK_CLEAR)
 		, m_numGamepads(0)
 		, m_mouseEnabled(true)
+		, m_gamePadCheckTimer(0.0f)
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
@@ -72,7 +73,8 @@ public:
 
 	//\brief Shutdown will clean up memory for input event list
 	bool Shutdown();
-	bool Update(const SDL_Event & a_event);
+	bool Update(float a_dt);
+	bool EventPump(const SDL_Event & a_event);
 
 	//\brief Enable or disable the app for OS focus. This will toggle rendering and input grab
 	//\param The new app focus setting
@@ -233,6 +235,7 @@ private:
 	static const int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
 	static const int s_maxGamepads = 8;			///< How many gamepads can be connected and playing a game
 	static const int s_maxGamepadButtons = 16;	///< How many buttons are supported on each gamepad
+	static const float s_gamePadCheckTime;		///< Interval for waiting to check for new gamepads
 
 	InputEvent m_alphaKeysDown;	///< Special input event to catch all keys being pressed
 	InputEvent m_alphaKeysUp;	///< Special input event to catch all keys being released
@@ -240,6 +243,7 @@ private:
 	bool m_focus;				///< If the app currently has OS focus
 	bool m_fullScreen;			///< If the app is fullscreen, input manager needs to handle focus
 	bool m_mouseEnabled;		///< If the mouse is enabled for input processing
+	float m_gamePadCheckTimer;	///< Timer to check for new plugged in gamepads
 	Vector2 m_mousePos;			///< Cache of mouse coords for convenience
 	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
 	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience

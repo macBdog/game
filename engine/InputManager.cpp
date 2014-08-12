@@ -5,6 +5,8 @@
 
 template<> InputManager * Singleton<InputManager>::s_instance = NULL;
 
+const float InputManager::s_gamePadCheckTime = 2.0f;	///< Timer to check for new plugged in gamepads
+
 bool InputManager::Startup(bool a_fullScreen)
 {
 	m_fullScreen = a_fullScreen;
@@ -50,7 +52,37 @@ bool InputManager::Shutdown()
 	return true;
 }
 
-bool InputManager::Update(const SDL_Event & a_event)
+bool InputManager::Update(float a_dt)
+{
+	// Check for new gamepads and enable them
+	m_gamePadCheckTimer += a_dt;
+	if (m_numGamepads == 0 && m_gamePadCheckTimer >= s_gamePadCheckTime)
+	{
+		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+		const int numGamePads = SDL_NumJoysticks();
+		if (numGamePads > 0)
+		{
+			m_numGamepads = numGamePads;
+			for (int i = 0; i < m_numGamepads; ++i)
+			{
+				if (m_gamepads[i] == NULL)
+				{
+					m_gamepads[i] = SDL_JoystickOpen(i);
+					for (int j = 0; j < s_maxGamepadButtons; ++j)
+					{
+						m_depressedGamepadButtons[i][j] = false;
+					}
+				}
+			}
+		}
+		m_gamePadCheckTimer = 0.0f;
+	}
+
+	return true;
+}
+
+bool InputManager::EventPump(const SDL_Event & a_event)
 {
 	// Cache off rendermanager as it gets used plenty here
 	RenderManager & renderMan = RenderManager::Get();

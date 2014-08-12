@@ -219,10 +219,11 @@ int main(int argc, char *argv[])
 		unsigned int startFrame = Time::GetSystemTime();
 
         // Message processing loop
+		InputManager::Get().Update(lastFrameTimeSec);
         SDL_Event event;
         while (active && SDL_PollEvent(&event))
         {
-            active = InputManager::Get().Update(event);
+            active = InputManager::Get().EventPump(event);
         }
 
 		// Speed up or slow time down for debugging
