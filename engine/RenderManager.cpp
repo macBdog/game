@@ -783,22 +783,27 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		Shader * pLastModelShader = NULL;	
 		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
 		{
-			if (rm->m_shader != pLastShader)
+			// Draw each object of each model with it's own material
+			for (unsigned int k = 0; k < rm->m_model->GetNumObjects(); ++k)
 			{
-				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-				shaderData.m_mat = rm->m_mat;
-				shaderData.m_lifeTime = rm->m_lifeTime;
-				pLastModelShader->UseShader(shaderData);
+				Object * obj = rm->m_model->GetObject(k);
+				if (rm->m_shader != pLastShader)
+				{
+					pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
+					shaderData.m_mat = rm->m_mat;
+					shaderData.m_lifeTime = rm->m_lifeTime;
+					pLastModelShader->UseShader(shaderData);
+				}
+				glPushMatrix();
+				glMultMatrixf(rm->m_mat->GetValues());
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, obj->GetMaterial()->m_ambient.GetValues());
+				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, obj->GetMaterial()->m_diffuse.GetValues());
+				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, obj->GetMaterial()->m_specular.GetValues());
+				glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, obj->GetMaterial()->m_emission.GetValues());
+				glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, obj->GetMaterial()->m_shininess);
+				glCallList(obj->GetDisplayListId());
+				glPopMatrix();
 			}
-			glPushMatrix();
-			glMultMatrixf(rm->m_mat->GetValues());
-			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rm->m_model->GetMaterial()->m_ambient.GetValues());
-			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rm->m_model->GetMaterial()->m_diffuse.GetValues());
-			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, rm->m_model->GetMaterial()->m_specular.GetValues());
-			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, rm->m_model->GetMaterial()->m_emission.GetValues());
-			glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, rm->m_model->GetMaterial()->m_shininess);
-			glCallList(rm->m_model->GetDisplayListId());
-			glPopMatrix();
 			++rm;
 		}
 		
@@ -1128,40 +1133,44 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	}
 
 	// If we have not generated buffers for this model
-	if (!a_model->IsDisplayListGenerated())
+	for (unsigned int i = 0; i < a_model->GetNumObjects(); ++i)
 	{
-		// Alias model data
-		unsigned int numVerts = a_model->GetNumVertices();
-		Texture * diffuseTex = a_model->GetDiffuseTexture();
-		Vector * verts = a_model->GetVertices();
-		TexCoord * uvs = a_model->GetUvs();
-
-		GLuint displayListId = glGenLists(1);
-		glNewList(displayListId, GL_COMPILE);
-
-		// Bind the texture and set colour
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		if (diffuseTex != NULL)
+		Object * obj = a_model->GetObject(i);
+		if (!obj->IsDisplayListGenerated())
 		{
-			glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
+			// Alias model data
+			unsigned int numVertices = obj->GetNumVertices();
+			Texture * diffuseTex = obj->GetMaterial()->GetDiffuseTexture();
+			Vector * verts = obj->GetVertices();
+			TexCoord * uvs = obj->GetUvs();
+
+			GLuint displayListId = glGenLists(1);
+			glNewList(displayListId, GL_COMPILE);
+
+			// Bind the texture and set colour
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			if (diffuseTex != NULL)
+			{
+				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
+			}
+			glBegin(GL_TRIANGLES);
+			// Draw vertices in threes
+			for (unsigned int i = 0; i < numVertices; i += Model::s_vertsPerTri)
+			{
+				glTexCoord2f(uvs[i].GetX(), uvs[i].GetY()); 
+				glVertex3f(verts[i].GetX(), verts[i].GetY(), verts[i].GetZ());
+
+				glTexCoord2f(uvs[i+1].GetX(), uvs[i+1].GetY()); 
+				glVertex3f(verts[i+1].GetX(), verts[i+1].GetY(), verts[i+1].GetZ());
+
+				glTexCoord2f(uvs[i+2].GetX(), uvs[i+2].GetY()); 
+				glVertex3f(verts[i+2].GetX(), verts[i+2].GetY(), verts[i+2].GetZ());
+			}
+			glEnd();
+			glEndList();
+
+			obj->SetDisplayListId(displayListId);
 		}
-		glBegin(GL_TRIANGLES);
-		// Draw vertices in threes
-		for (unsigned int i = 0; i < numVerts; i += Model::s_vertsPerTri)
-		{
-			glTexCoord2f(uvs[i].GetX(), uvs[i].GetY()); 
-			glVertex3f(verts[i].GetX(), verts[i].GetY(), verts[i].GetZ());
-
-			glTexCoord2f(uvs[i+1].GetX(), uvs[i+1].GetY()); 
-			glVertex3f(verts[i+1].GetX(), verts[i+1].GetY(), verts[i+1].GetZ());
-
-			glTexCoord2f(uvs[i+2].GetX(), uvs[i+2].GetY()); 
-			glVertex3f(verts[i+2].GetX(), verts[i+2].GetY(), verts[i+2].GetZ());
-		}
-		glEnd();
-		glEndList();
-
-		a_model->SetDisplayListId(displayListId);
 	}
 
 	RenderModel * r = m_models[a_renderLayer];

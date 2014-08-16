@@ -6,9 +6,11 @@
 template<> ModelManager * Singleton<ModelManager>::s_instance = NULL;
 
 const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64k for managed model info
-const unsigned int ModelManager::s_loadingVertPoolSize = 32768;		// 32k for temporary loading of model vertices
-const unsigned int ModelManager::s_loadingNormalPoolSize = 32768;	// 32k for temporary loading of model normals
-const unsigned int ModelManager::s_loadingUvPoolSize = 32768;		// 32k for temporary loading texture coords
+const unsigned int ModelManager::s_loadingVertPoolSize = 65536;		// 64k for temporary loading of model vertices
+const unsigned int ModelManager::s_loadingNormalPoolSize = 65536;	// 64k for temporary loading of model normals
+const unsigned int ModelManager::s_loadingUvPoolSize = 65536;		// 64k for temporary loading texture coords
+const unsigned int ModelManager::s_objectPoolSize = 65536;			// 64k for objects
+const unsigned int ModelManager::s_materialPoolSize = 65536;		// 64k for materials
 
 const float ModelManager::s_updateFreq = 1.0f;
 
@@ -24,8 +26,10 @@ bool ModelManager::Startup(const char * a_modelPath)
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
 
-	// Init model memory pool
+	// Init model object and material memory pool
 	m_modelPool.Init(s_modelPoolSize);
+	m_objectPool.Init(s_objectPoolSize);
+	m_materialPool.Init(s_materialPoolSize);
 
 	// Init temporary loading pools
 	m_loadingVertPool.Init(s_loadingVertPoolSize);
@@ -45,6 +49,11 @@ bool ModelManager::Shutdown()
 {
 	// Cleanup memory
 	m_modelPool.Done();
+	m_objectPool.Done();
+	m_materialPool.Done();
+	m_loadingVertPool.Done();
+	m_loadingNormalPool.Done();
+	m_loadingUvPool.Done();
 
 	return true;
 }
@@ -76,7 +85,8 @@ bool ModelManager::Update(float a_dt)
 				if (curTimestamp > curModel->m_timeStamp)
 				{
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path);
-					modelReloaded = curModel->m_model.Load(curModel->m_path, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool);
+					ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
+					modelReloaded = curModel->m_model.Load(curModel->m_path, mdp);
 					curModel->m_timeStamp = curTimestamp;
 
 					m_loadingVertPool.Reset();
@@ -118,7 +128,8 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	else if (ManagedModel * newModel = m_modelPool.Allocate(sizeof(ManagedModel)))
 	{
 		// Insert the newly allocated model
-		if (newModel->m_model.Load(fileNameBuf, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool))
+		ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
+		if (newModel->m_model.Load(fileNameBuf, mdp))
 		{
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
 			sprintf(newModel->m_path, "%s", fileNameBuf);

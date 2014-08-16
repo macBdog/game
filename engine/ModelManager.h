@@ -57,6 +57,9 @@ public:
 	static const unsigned int s_loadingVertPoolSize;			///< The maximum number of verts that could be loaded from model file
 	static const unsigned int s_loadingNormalPoolSize;			///< The maximum number of normals that could be loaded from a model file
 	static const unsigned int s_loadingUvPoolSize;				///< The maximum number of tex coords that could be loaded from a model file
+
+	static const unsigned int s_objectPoolSize;					///< The maximum number and size of objects that could be loaded from a model file
+	static const unsigned int s_materialPoolSize;				///< The maximum number and size of materials that could be loaded from a model file
 	
 private:
 
@@ -73,7 +76,7 @@ private:
 		char m_path[StringUtils::s_maxCharsPerLine];			///< The full path for reloading
 	};
 
-	typedef HashMap<unsigned int, ManagedModel *> modelMap;
+	typedef HashMap<unsigned int, ManagedModel *> ModelMap;
 
 	LinearAllocator<ManagedModel> m_modelPool;					///< Memory pool for each model category
 	
@@ -81,7 +84,10 @@ private:
 	LinearAllocator<Vector> m_loadingNormalPool;				///< Temporary pool of normals used when reading a model file
 	LinearAllocator<TexCoord> m_loadingUvPool;					///< Temporary pool of tex corrds used when reading a model file
 
-	modelMap m_modelMap;										///< List of models for each category
+	LinearAllocator<Object> m_objectPool;						///< Pool for object storage
+	LinearAllocator<Material> m_materialPool;					///< Pool for material storage
+
+	ModelMap m_modelMap;										///< List of models for each category
 	char m_modelPath[StringUtils::s_maxCharsPerLine];			///< Cache off model path 
 	float m_updateFreq;											///< How often the model manager should check for changes
 	float m_updateTimer;										///< If we are due for a scan and update of models
