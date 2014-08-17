@@ -82,9 +82,15 @@ public:
 	//\return a pointer to a game object or NULL if no hits
 	GameObject * GetSceneObject(Vector a_lineStart, Vector a_lineEnd);
 
-	//\brief TODO Stubbed out for implementation
-	GameObject * GetSceneObjects(Vector a_worldPos);
-	GameObject * GetSceneObjects(Vector a_lineStart, Vector a_lineEnd);
+	//\brief Get the first light in the scene that envelops a world position
+	//\param a world pos vector near the light
+	//\return a pointer to the light or NULL if no light
+	const Shader::Light * GetLight(Vector a_worldPos) const;
+
+	//\brief Get the first light in the scene that intersects with a line segment
+	//\param a world pos vector near the light
+	//\return a pointer to the light or NULL if no light
+	const Shader::Light * GetLight(Vector a_lineStart, Vector a_lineEnd) const;
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);

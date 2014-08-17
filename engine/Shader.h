@@ -37,6 +37,8 @@ public:
 		Vector m_ambient;								///< Ambient light colour is an aproximation of all reflected light
 		Vector m_diffuse;								///< Colour of light scattered equally off a lit surface
 		Vector m_specular;								///< Colour of light reflected in one direction off a lit surface
+
+		static const float s_lightDrawSize;				///< The size the light is drawn in the in game editor
 	};
 
 	//\brief Useful collection of uniform name, location and value data

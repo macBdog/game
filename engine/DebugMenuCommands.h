@@ -55,6 +55,7 @@ namespace EditType
 		None = -1,		///< Not changing anything
 		Widget,			///< Changing a gui widget
 		GameObject,		///< Changing a game object
+		Light,			///< Change a light
 		Count,
 	};
 }

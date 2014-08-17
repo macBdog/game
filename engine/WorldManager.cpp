@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "GameFile.h"
 #include "ModelManager.h"
@@ -310,6 +311,34 @@ GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 	return NULL;
 }
 
+const Shader::Light * Scene::GetLight(Vector a_worldPos) const
+{
+	// Iterate through all lights in the scene
+	for (int i = 0; i < m_numLights; ++i)
+	{
+		const Shader::Light * curLight = &m_lights[i];
+		if (fabs((a_worldPos - curLight->m_pos).Length()) < Shader::Light::s_lightDrawSize)
+		{
+			return curLight;
+		}
+	}
+	return NULL;
+}
+
+const Shader::Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd) const
+{
+	// Iterate through all lights in the scene
+	for (int i = 0; i < m_numLights; ++i)
+	{
+		const Shader::Light * curLight = &m_lights[i];
+		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Shader::Light::s_lightDrawSize))
+		{
+			return curLight;
+		}
+	}
+	return NULL;
+}
+
 void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
 {
 	for (unsigned int i = 0; i < m_numObjects; ++i)
@@ -461,11 +490,10 @@ bool Scene::Draw()
 	// Draw all the lights in the scene when debug menu is up
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		const float lightSize = 0.1f;
 		for (int i = 0; i < m_numLights; ++i)
 		{
 			const Colour drawColour = m_lights[i].m_enabled ? sc_colourYellow : sc_colourGrey;
-			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, lightSize, drawColour);
+			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, Shader::Light::s_lightDrawSize, drawColour);
 			RenderManager::Get().AddDebugLine(m_lights[i].m_pos, m_lights[i].m_pos + m_lights[i].m_dir, drawColour);
 			FontManager::Get().DrawDebugString3D(m_lights[i].m_name, m_lights[i].m_pos, drawColour);
 		}

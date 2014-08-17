@@ -2,6 +2,9 @@
 
 #include "Log.h"
 
+// The size the light is drawn in the in game editor
+const float Shader::Light::s_lightDrawSize = 0.1f;		
+
 // Light data is written to shader in an array of floats
 float Shader::s_lightingData[Shader::s_maxLights * Shader::s_numLightParameters * Shader::s_numFloatsPerParameter];
 

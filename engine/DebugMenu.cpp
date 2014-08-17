@@ -36,6 +36,7 @@ DebugMenu::DebugMenu()
 , m_editMode(EditMode::None)
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
+, m_lightToEdit(NULL)
 , m_resourceSelect(NULL)
 , m_resourceSelectList(NULL)
 , m_btnResourceSelectOk(NULL)
@@ -560,6 +561,7 @@ bool DebugMenu::OnSelect(bool a_active)
 			m_widgetToEdit->ClearSelection();
 			m_widgetToEdit = NULL;
 			m_gameObjectToEdit = NULL;
+			m_lightToEdit = NULL;
 		}
 		return retVal.m_success;
 	}
@@ -605,6 +607,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_widgetToEdit = newSelectedWidget;
 		m_widgetToEdit->SetSelection(SelectionFlags::EditSelected);
 		m_gameObjectToEdit = NULL;
+		m_lightToEdit = NULL;
 	}
 	else // Cancel selections
 	{
@@ -620,38 +623,63 @@ bool DebugMenu::OnSelect(bool a_active)
 	// If we don't already have a widget
 	if (m_widgetToEdit == NULL)
 	{
+		// Picking point is the mouse cursor transformed to 3D space in cam direction
+		bool selectedObject = false;
+		const float pickDepth = 100.0f;
+		const float persp = 0.47f;
+		RenderManager & renMan = RenderManager::Get();
+		CameraManager & camMan = CameraManager::Get();
+		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+		Matrix camMat = camMan.GetViewMatrix();
+		Vector camPos = camMan.GetWorldPos();
+		Vector mouseInput = Vector(	mousePos.GetX() * renMan.GetViewAspect() * pickDepth * persp, 
+									0.0f, 
+									mousePos.GetY() * pickDepth * persp);
+		Vector pickEnd = camPos + camMat.GetLook() * pickDepth;
+		pickEnd += camMat.Transform(mouseInput);
+
 		// Do picking with all the game objects in the scene
 		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 		{
-			// Picking point is the mouse cursor transformed to 3D space in cam direction
-			const float pickDepth = 100.0f;
-			const float persp = 0.47f;
-			RenderManager & renMan = RenderManager::Get();
-			CameraManager & camMan = CameraManager::Get();
-			Vector2 mousePos = InputManager::Get().GetMousePosRelative();
-			Matrix camMat = camMan.GetViewMatrix();
-			Vector camPos = camMan.GetWorldPos();
-			Vector mouseInput = Vector(	mousePos.GetX() * renMan.GetViewAspect() * pickDepth * persp, 
-										0.0f, 
-										mousePos.GetY() * pickDepth * persp);
-			Vector pickEnd = camPos + camMat.GetLook() * pickDepth;
-			pickEnd += camMat.Transform(mouseInput);
-
 			// Pick an arbitrary object (would have to sort to get the closest)
 			GameObject * foundObject = curScene->GetSceneObject(camPos, pickEnd);
 			if (foundObject != NULL)
 			{
 				m_gameObjectToEdit = foundObject;
 				m_widgetToEdit = NULL;
+				m_lightToEdit = NULL;
 				m_editType = EditType::GameObject;
-			}
-			else
-			{
-				m_gameObjectToEdit = NULL;
-				m_editType = EditType::None;
-				m_editMode = EditMode::None;
+				selectedObject = true;
 			}
 		}
+
+		// Couldn't find a game object, try a light
+		if (!selectedObject)
+		{
+			if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+			{
+				const Shader::Light * foundLight = curScene->GetLight(camPos, pickEnd);
+				if (foundLight != NULL)
+				{
+					m_lightToEdit = foundLight;
+					m_gameObjectToEdit = NULL;
+					m_widgetToEdit = NULL;
+					m_editType = EditType::Light;
+					selectedObject = true;
+				}
+			}
+		}
+
+		// Couldn't find anything, clear selection flags
+		if (!selectedObject)
+		{
+			m_widgetToEdit = NULL;
+			m_gameObjectToEdit = NULL;
+			m_lightToEdit = NULL;
+			m_editType = EditType::None;
+			m_editMode = EditMode::None;
+		}
+
 	}
 
 	// Cancel all menu display
@@ -940,6 +968,12 @@ void DebugMenu::Draw()
 			}
 			default: break;
 		}
+	}
+
+	// Draw selection box around lights
+	if (m_lightToEdit != NULL)
+	{
+		renMan.AddDebugSphere(m_lightToEdit->m_pos, Shader::Light::s_lightDrawSize + extraSelectionSize, sc_colourRed);
 	}
 	
 	// Draw selected widget alignment
