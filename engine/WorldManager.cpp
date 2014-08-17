@@ -311,12 +311,12 @@ GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 	return NULL;
 }
 
-const Shader::Light * Scene::GetLight(Vector a_worldPos) const
+Shader::Light * Scene::GetLightAtPos(Vector a_worldPos)
 {
 	// Iterate through all lights in the scene
 	for (int i = 0; i < m_numLights; ++i)
 	{
-		const Shader::Light * curLight = &m_lights[i];
+		Shader::Light * curLight = &m_lights[i];
 		if (fabs((a_worldPos - curLight->m_pos).Length()) < Shader::Light::s_lightDrawSize)
 		{
 			return curLight;
@@ -325,12 +325,12 @@ const Shader::Light * Scene::GetLight(Vector a_worldPos) const
 	return NULL;
 }
 
-const Shader::Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd) const
+Shader::Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
 {
 	// Iterate through all lights in the scene
 	for (int i = 0; i < m_numLights; ++i)
 	{
-		const Shader::Light * curLight = &m_lights[i];
+		Shader::Light * curLight = &m_lights[i];
 		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Shader::Light::s_lightDrawSize))
 		{
 			return curLight;

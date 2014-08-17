@@ -85,12 +85,12 @@ public:
 	//\brief Get the first light in the scene that envelops a world position
 	//\param a world pos vector near the light
 	//\return a pointer to the light or NULL if no light
-	const Shader::Light * GetLight(Vector a_worldPos) const;
+	Shader::Light * GetLightAtPos(Vector a_worldPos);
 
 	//\brief Get the first light in the scene that intersects with a line segment
 	//\param a world pos vector near the light
 	//\return a pointer to the light or NULL if no light
-	const Shader::Light * GetLight(Vector a_lineStart, Vector a_lineEnd) const;
+	Shader::Light * GetLight(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);

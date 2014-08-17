@@ -168,6 +168,8 @@ void DebugMenu::Update(float a_dt)
 	}
 
 	// Handle editing actions tied to mouse move
+	const Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
+	const float moveAmount = amountToMove.GetX() + amountToMove.GetY();
 	if (m_editType == EditType::Widget && m_widgetToEdit != NULL)
 	{
 		Vector2 mousePos = inMan.GetMousePosRelative();
@@ -197,42 +199,22 @@ void DebugMenu::Update(float a_dt)
 	}
 	else if (m_gameObjectToEdit != NULL)
 	{
-		Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
-		float moveAmount = amountToMove.GetX() + amountToMove.GetY();
 		if (m_editType == EditType::GameObject)
 		{
 			if (m_editMode == EditMode::ClipPosition)
 			{
 				Vector curPos = m_gameObjectToEdit->GetClipOffset();	
-				if (inMan.IsKeyDepressed(SDLK_x))
-				{
-					m_gameObjectToEdit->SetClipOffset(curPos + Vector(moveAmount, 0.0f, 0.0f));
-				}
-				else if (inMan.IsKeyDepressed(SDLK_y))
-				{
-					m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, moveAmount, 0.0f));
-				}
-				else if (inMan.IsKeyDepressed(SDLK_z))
-				{
-					m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, 0.0f, moveAmount));
-				}
+				if (inMan.IsKeyDepressed(SDLK_x))			m_gameObjectToEdit->SetClipOffset(curPos + Vector(moveAmount, 0.0f, 0.0f));		
+				else if (inMan.IsKeyDepressed(SDLK_y))		m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, moveAmount, 0.0f));
+				else if (inMan.IsKeyDepressed(SDLK_z))		m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, 0.0f, moveAmount));
 				m_dirtyFlags.Set(DirtyFlag::Scene);
 			}
 			else if (m_editMode == EditMode::ClipSize)
 			{
 				Vector curSize = m_gameObjectToEdit->GetClipSize();	
-				if (inMan.IsKeyDepressed(SDLK_x))
-				{
-					m_gameObjectToEdit->SetClipSize(curSize + Vector(moveAmount, 0.0f, 0.0f));
-				}
-				else if (inMan.IsKeyDepressed(SDLK_y))
-				{
-					m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, moveAmount, 0.0f));
-				}
-				else if (inMan.IsKeyDepressed(SDLK_z))
-				{
-					m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, 0.0f, moveAmount));
-				}
+				if (inMan.IsKeyDepressed(SDLK_x))			m_gameObjectToEdit->SetClipSize(curSize + Vector(moveAmount, 0.0f, 0.0f));
+				else if (inMan.IsKeyDepressed(SDLK_y))		m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, moveAmount, 0.0f));
+				else if (inMan.IsKeyDepressed(SDLK_z))		m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, 0.0f, moveAmount));
 				m_dirtyFlags.Set(DirtyFlag::Scene);
 			}
 			else if (!IsDebugMenuActive())
@@ -272,6 +254,52 @@ void DebugMenu::Update(float a_dt)
 					else
 					{
 						m_gameObjectToEdit->SetPos(curPos + Vector(0.0f, 0.0f, moveAmount));
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
+				}
+			}
+		}
+	}
+
+	if (m_lightToEdit != NULL)
+	{
+		if (m_editType == EditType::Light)
+		{
+			if (!IsDebugMenuActive())
+			{
+				if (inMan.IsKeyDepressed(SDLK_x))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						//m_lightToEdit->AddRot(Vector(moveAmount * 16.0f, 0.0f, 0.0f));
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
+				} 
+				else if (inMan.IsKeyDepressed(SDLK_y))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						//m_gameObjectToEdit->AddRot(Vector(0.0f, moveAmount * 16.0f, 0.0f));
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);				
+				}
+				else if (inMan.IsKeyDepressed(SDLK_z))
+				{
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						//m_gameObjectToEdit->AddRot(Vector(0.0f, 0.0f, moveAmount * 16.0f));
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
 					}
 					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
@@ -658,7 +686,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 			{
-				const Shader::Light * foundLight = curScene->GetLight(camPos, pickEnd);
+				Shader::Light * foundLight = curScene->GetLight(camPos, pickEnd);
 				if (foundLight != NULL)
 				{
 					m_lightToEdit = foundLight;
