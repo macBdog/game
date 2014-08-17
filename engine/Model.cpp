@@ -285,19 +285,19 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 						for (unsigned int i = 0; i < numFaces; ++i)
 						{                
 							// Set the face data up
-							objectVerts[numObjectVertices]		= verts[vertIndices[0]];
-							objectNormals[numObjectVertices]	= normals[normIndices[0]];
-							objectUvs[numObjectVertices]		= uvs[uvIndices[0]];
+							objectVerts[numObjectVertices]		= verts[vertIndices[0] - objectVertOffset];
+							objectNormals[numObjectVertices]	= normals[normIndices[0] - objectNormOffset];
+							objectUvs[numObjectVertices]		= uvs[uvIndices[0] - objectUvOffset];
 							numObjectVertices++;
 
-							objectVerts[numObjectVertices]		= verts[vertIndices[1]];
-							objectNormals[numObjectVertices]	= normals[normIndices[1]];
-							objectUvs[numObjectVertices]		= uvs[uvIndices[1]];
+							objectVerts[numObjectVertices]		= verts[vertIndices[1] - objectVertOffset];
+							objectNormals[numObjectVertices]	= normals[normIndices[1] - objectNormOffset];
+							objectUvs[numObjectVertices]		= uvs[uvIndices[1] - objectUvOffset];
 							numObjectVertices++;
 
-							objectVerts[numObjectVertices]		= verts[vertIndices[2]];
-							objectNormals[numObjectVertices]	= normals[normIndices[2]];
-							objectUvs[numObjectVertices]		= uvs[uvIndices[2]];
+							objectVerts[numObjectVertices]		= verts[vertIndices[2] - objectVertOffset];
+							objectNormals[numObjectVertices]	= normals[normIndices[2] - objectNormOffset];
+							objectUvs[numObjectVertices]		= uvs[uvIndices[2] - objectUvOffset];
 							numObjectVertices++;
 
 							// Advance to the next face
