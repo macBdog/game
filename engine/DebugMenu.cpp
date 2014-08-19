@@ -193,6 +193,14 @@ void DebugMenu::Update(float a_dt)
 				m_widgetToEdit->SetFontSize((mousePos - m_widgetToEdit->GetPos()).LengthSquared() * 3.0f);
 				break;
 			}
+			case EditMode::Colour:
+			{
+				const Vector2 colourVec = (mousePos - m_widgetToEdit->GetPos());
+				const float colorMag = colourVec.LengthSquared() * 3.0f;
+				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
+				m_widgetToEdit->SetColour(modColour);
+				break;
+			}
 
 			default: break;
 		}
@@ -1010,9 +1018,27 @@ void DebugMenu::Draw()
 		m_widgetToEdit->DrawAlignment();
 	}
 
+	// Draw magnitude of size editing
+	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+	if (m_widgetToEdit != NULL && m_editMode == EditMode::FontSize)
+	{
+		char sizeBuf[16];
+		sprintf(sizeBuf, "%f", m_widgetToEdit->GetFontSize());
+		renMan.AddDebugArrow2D(m_widgetToEdit->GetPos(), mousePos, sc_colourWhite);
+		fontMan.DrawDebugString2D(sizeBuf, mousePos, sc_colourWhite);
+	}
+
+	if (m_widgetToEdit != NULL && m_editMode == EditMode::Colour)
+	{
+		char colourBuf[64];
+		const Colour widgetColour = m_widgetToEdit->GetColour();
+		sprintf(colourBuf, "%f, %f, %f, %f", widgetColour.GetR(), widgetColour.GetG(), widgetColour.GetB(), widgetColour.GetA());
+		renMan.AddDebugArrow2D(m_widgetToEdit->GetPos(), mousePos, widgetColour);
+		fontMan.DrawDebugString2D(colourBuf, mousePos, widgetColour);
+	}
+
 	// Show mouse pos at cursor
 	char mouseBuf[16];
-	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 	sprintf(mouseBuf, "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
 	Vector2 displayPos(mousePos.GetX() + sc_cursorSize, mousePos.GetY() - sc_cursorSize);
 	fontMan.DrawDebugString2D(mouseBuf, displayPos, sc_colourGreen);

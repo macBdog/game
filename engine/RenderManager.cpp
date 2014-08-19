@@ -1206,6 +1206,32 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_
 	fc->m_2d = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
 }
 
+void RenderManager::AddDebugArrow(Vector a_start, Vector a_end, Colour a_tint)
+{
+	Vector arrowHead = (a_start - a_end);
+	const float arrowHeadSize = arrowHead.LengthSquared() * 0.1f;
+	arrowHead.Normalise();
+	const Vector arrowPointX = a_end + (arrowHead * arrowHeadSize) + Vector(arrowHeadSize, 0.0f, 0.0f);
+	const Vector arrowPointY = a_end + (arrowHead * arrowHeadSize) + Vector(0.0f, arrowHeadSize, 0.0f);
+	const Vector arrowPointZ = a_end + (arrowHead * arrowHeadSize) + Vector(0.0f, 0.0f, arrowHeadSize);
+	AddLine(RenderLayer::Debug3D, a_start, a_end, a_tint);
+	AddLine(RenderLayer::Debug3D, a_end, arrowPointX, a_tint);
+	AddLine(RenderLayer::Debug3D, a_end, arrowPointY, a_tint);
+	AddLine(RenderLayer::Debug3D, a_end, arrowPointZ, a_tint);
+}
+
+void RenderManager::AddDebugArrow2D(Vector2 a_start, Vector2 a_end, Colour a_tint)
+{
+	Vector2 arrowHead = (a_start - a_end);
+	const float arrowHeadSize = arrowHead.LengthSquared() * 0.1f;
+	arrowHead.Normalise();
+	const Vector2 arrowPointX = a_end + (arrowHead * arrowHeadSize) + Vector2(arrowHeadSize, 0.0f);
+	const Vector2 arrowPointY = a_end - (arrowHead * arrowHeadSize) - Vector2(arrowHeadSize, 0.0f);
+	AddLine2D(RenderLayer::Debug2D, a_start, a_end, a_tint);
+	AddLine2D(RenderLayer::Debug2D, a_end, arrowPointX, a_tint);
+	AddLine2D(RenderLayer::Debug2D, a_end, arrowPointY, a_tint);
+}
+
 void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 {
 #ifndef _RELEASE

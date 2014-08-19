@@ -104,6 +104,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
 	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::None);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
+	lastCreatedCommand = Create("Create Light",				m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange, EditType::None);
+	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateLight);
 	
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
@@ -120,6 +122,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFont);
 	lastCreatedCommand = Create("FontSize", 				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFontSize);
+	lastCreatedCommand = Create("Colour", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::Widget);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetColour);
 	lastCreatedCommand = Create("Texture", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetTexture);
 	lastCreatedCommand = Create("Delete Widget",			m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::Widget);
@@ -475,6 +479,17 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetFontSize(Widget * a
 	return retVal;
 }
 
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetColour(Widget * a_widget)
+{
+	Hide();
+	
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::Widget;
+	retVal.m_editMode = EditMode::Colour;
+	retVal.m_success = true;
+	return retVal;
+}
+
 DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetTexture(Widget * a_widget)
 {
 	DebugCommandReturnData retVal;
@@ -609,6 +624,17 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteGameObject(GameObject * a
 
 	DebugCommandReturnData retVal;
 	retVal.m_clearSelection = true;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::CreateLight(GameObject * a_gameObj)
+{
+	Hide();
+	WorldManager::Get().GetCurrentScene()->AddLight("NEW_LIGHT", Vector(0.0f), Vector(0.0f, 1.0f, 0.0f), 0.5f, 0.5f, 0.5f);
+
+	DebugCommandReturnData retVal;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;
 	retVal.m_success = true;
 	return retVal;

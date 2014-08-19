@@ -270,6 +270,8 @@ public:
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetText() const { return m_text; }
 	inline const char * GetFilePath() const { return m_filePath; }
+	inline float GetFontSize() const { return m_fontSize; }
+	inline Colour GetColour() const { return m_colour; }
 	inline Widget * GetAlignTo() const { return m_alignTo; }
 	inline bool HasAlignTo() const { return m_alignTo != NULL || m_alignToName[0] != '\0'; }
 	inline const char * GetScriptFuncName() { return m_scriptFuncName; }

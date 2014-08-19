@@ -171,6 +171,10 @@ public:
 	inline void AddDebugLine(Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite) { AddLine(RenderLayer::Debug3D, a_point1, a_point2, a_tint); }
 	inline void AddDebugLine2D(Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite) { AddLine2D(RenderLayer::Debug2D, a_point1, a_point2, a_tint); }
 	inline void AddDebugQuad2D(Vector2 a_topLeft, Vector2 a_size, Colour a_tint = sc_colourWhite) { AddQuad2D(RenderLayer::Debug2D, a_topLeft, a_size, NULL, TextureOrientation::Normal, a_tint); }
+	
+	//\brief Add a arrow point from a source point to destination
+	void AddDebugArrow(Vector a_start, Vector a_end, Colour a_tint = sc_colourWhite);
+	void AddDebugArrow2D(Vector2 a_start, Vector2 a_end, Colour a_tint = sc_colourWhite);
 
 	//\brief A matrix is position and orientation displayed with lines
 	//\param a const ref of the matrix containing the position and orientation to display

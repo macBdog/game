@@ -69,6 +69,7 @@ public:
 	inline float GetY() const { return y; }
 	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f", x, y); }
 	static Vector2 Vector2Zero() { return Vector2(0.0f, 0.0f); }
+	void Normalise() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; } }
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y; }

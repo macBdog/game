@@ -73,12 +73,16 @@ namespace EditMode
 		Text,			///< Cursor keys bound to text value
 		Font,			///< Setting font on widget
 		FontSize,		///< Setting font size on widget
+		Colour,			///< Setting colour on a widget
 		Model,			///< Setting the model for an object
 		Template,		///< Create an object from a template
 		SaveTemplate,	///< Set the template name for an object
 		Alignment,		///< Set alignment of a widget
 		ClipPosition,	///< Origin of the clip volume of a game object
 		ClipSize,		///< Size of the clip volume of the game object
+		LightAmbient,	///< Change the colour of the ambient component of a light
+		LightDiffuse,	///< Change the colour of the diffuse component of a light
+		LightSpecular,	///< Change the colour of the specular component of a light
 
 		eEditModeCount,
 	};
@@ -210,6 +214,7 @@ private:
 	DebugCommandReturnData ChangeWidgetText(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetFont(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetFontSize(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetColour(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetTexture(Widget * a_widget);
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 
@@ -222,6 +227,12 @@ private:
 	DebugCommandReturnData ChangeGameObjectTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData SaveGameObjectTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData DeleteGameObject(GameObject * a_gameObj);
+
+	DebugCommandReturnData CreateLight(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeLightAmbient(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeLightDiffuse(GameObject * a_gameObj);
+	DebugCommandReturnData ChangeLightSpecular(GameObject * a_gameObj);
+	DebugCommandReturnData DeleteLight(GameObject * a_gameObj);
 
 	char m_textEditString[StringUtils::s_maxCharsPerName];
 	char m_resourceSelectPath[StringUtils::s_maxCharsPerLine];
