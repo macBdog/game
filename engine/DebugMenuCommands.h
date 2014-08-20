@@ -10,6 +10,7 @@
 class GameObject;
 class Widget;
 struct Alignment;
+struct Light;
 	
 //\brief Space saving macros for command functions that hide or show different options
 #define DEBUG_COMMANDS_LOOP_BEGIN									\
@@ -80,9 +81,9 @@ namespace EditMode
 		Alignment,		///< Set alignment of a widget
 		ClipPosition,	///< Origin of the clip volume of a game object
 		ClipSize,		///< Size of the clip volume of the game object
-		LightAmbient,	///< Change the colour of the ambient component of a light
-		LightDiffuse,	///< Change the colour of the diffuse component of a light
-		LightSpecular,	///< Change the colour of the specular component of a light
+		Ambient,		///< Change the colour of the ambient component of a light
+		Diffuse,		///< Change the colour of the diffuse component of a light
+		Specular,		///< Change the colour of the specular component of a light
 
 		eEditModeCount,
 	};
@@ -132,14 +133,17 @@ public:
 	inline void SetWidgetFunction(TObj * a_callerObject, TMethod a_callback) { m_widgetFunction.SetCallback(a_callerObject, a_callback); }
 	template <typename TObj, typename TMethod>
 	inline void SetGameObjectFunction(TObj * a_callerObject, TMethod a_callback) { m_gameObjectFunction.SetCallback(a_callerObject, a_callback); }
+	template <typename TObj, typename TMethod>
+	inline void SetLightFunction(TObj * a_callerObject, TMethod a_callback) { m_lightFunction.SetCallback(a_callerObject, a_callback); }
 
 	//\brief Set the visual hierachy of the command buttons
 	void SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum a_alignment);
 	void SetWidgetAlignment(DebugMenuCommandAlign::Enum a_alignment);
-	inline DebugCommandReturnData Execute(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+	inline DebugCommandReturnData Execute(Widget * a_selectedWidget, GameObject * a_selectedGameObject, Light * a_selectedLight)
 	{
 		if (m_widgetFunction.IsSet())		{ return m_widgetFunction.Execute(a_selectedWidget); }
 		if (m_gameObjectFunction.IsSet())	{ return m_gameObjectFunction.Execute(a_selectedGameObject); }
+		if (m_lightFunction.IsSet())		{ return m_lightFunction.Execute(a_selectedLight); }
 		return DebugCommandReturnData();
 	}
 
@@ -154,7 +158,8 @@ private:
 
 	Delegate<DebugCommandReturnData, GameObject *> m_gameObjectFunction;		///< Function if the command is registered on a game object
 	Delegate<DebugCommandReturnData, Widget *> m_widgetFunction;				///< Function if the command is registered on a widget
-	DebugMenuCommandAlign::Enum m_alignment;									///< How the command is aligned to it's parent command NOTE: this is separate to widget alignment
+	Delegate<DebugCommandReturnData, Light *> m_lightFunction;					///< Function if the command is registered on a light
+	DebugMenuCommandAlign::Enum m_alignment;									///< How the command button is aligned to it's parent command NOTE: this is separate to widget alignment
 	Widget * m_widget;															///< Visual representation of the command button
 	EditType::Enum m_parentMenu;												///< Which menu the command should appear in, None means root
 };
@@ -185,16 +190,18 @@ public:
 	bool IsActive() const;
 
 	//\brief Handlers for various things that can happen from the debug menu
-	DebugCommandReturnData HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject);
-	DebugCommandReturnData HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject);
+	DebugCommandReturnData HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject, Light * a_selectedLight);
+	DebugCommandReturnData HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject, Light * a_selectedLight);
 
 	//\brief Menu button visibility functions
 	void ShowRootCommands();
 	void ShowWidgetCommands();
 	void ShowGameObjectCommands();
+	void ShowLightCommands();
 	void HideRootCommands();
 	void HideWidgetCommands();
 	void HideGameObjectCommands();
+	void HideLightCommands();
 	void Hide();
 	
 private:
@@ -228,11 +235,11 @@ private:
 	DebugCommandReturnData SaveGameObjectTemplate(GameObject * a_gameObj);
 	DebugCommandReturnData DeleteGameObject(GameObject * a_gameObj);
 
-	DebugCommandReturnData CreateLight(GameObject * a_gameObj);
-	DebugCommandReturnData ChangeLightAmbient(GameObject * a_gameObj);
-	DebugCommandReturnData ChangeLightDiffuse(GameObject * a_gameObj);
-	DebugCommandReturnData ChangeLightSpecular(GameObject * a_gameObj);
-	DebugCommandReturnData DeleteLight(GameObject * a_gameObj);
+	DebugCommandReturnData CreateLight(Light * a_light);
+	DebugCommandReturnData ChangeLightAmbient(Light * a_light);
+	DebugCommandReturnData ChangeLightDiffuse(Light * a_light);
+	DebugCommandReturnData ChangeLightSpecular(Light * a_light);
+	DebugCommandReturnData DeleteLight(Light * a_light);
 
 	char m_textEditString[StringUtils::s_maxCharsPerName];
 	char m_resourceSelectPath[StringUtils::s_maxCharsPerLine];
@@ -241,6 +248,7 @@ private:
 	Widget * m_btnCreateRoot;						///< Pointer to a widget that is created on startup for the first sub menu
 	Widget * m_btnWidgetRoot;						///< Pointer to a widget that is created on startup for functions related to widgets
 	Widget * m_btnGameObjectRoot;					///< Pointer to a widget that is created on startup for functions related to game objects
+	Widget * m_btnLightRoot;						///< Pointer to a widget that is created on startup for functions related to lighting and lights
 	CommandList m_commands;							///< List of commands that can be executed
 };
 

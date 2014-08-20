@@ -100,7 +100,7 @@ bool Scene::Load(const char * a_scenePath)
 					{
 						AddLight(lName->GetString(), 
 							lPos->GetVector(),
-							lDir->GetVector(),
+							lDir->GetQuaternion(),
 							lAmbient->GetFloat(),
 							lDiffuse->GetFloat(),
 							lSpecular->GetFloat());
@@ -234,7 +234,7 @@ bool Scene::RemoveObject(unsigned int a_objectId)
 	return false;
 }
 
-bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Vector & a_dir, float a_ambient, float a_diffuse, float a_specular)
+bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular)
 {
 	if (m_numLights < Shader::s_maxLights)
 	{
@@ -247,6 +247,33 @@ bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Vector & a
 		m_lights[m_numLights].m_specular = a_specular;
 		m_numLights++;
 		return true;
+	}
+	else
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not add light, the max lights is %d!", Shader::s_maxLights);
+	}
+	return false;
+}
+
+bool Scene::RemoveLight(const char * a_name)
+{
+	for (unsigned int i = 0; i < Shader::s_maxLights; ++i)
+	{
+		
+		if (strcmp(m_lights[i].m_name, a_name) == 0)
+		{
+			// If the light we are looking for is on the end of the light array
+			if (m_numLights == i)
+			{
+				memset(&m_lights[i], 0, sizeof(Light));
+			}
+			else // Swap the end light with this one
+			{
+				memcpy(&m_lights[i], &m_lights[m_numLights-1], sizeof(Light));
+			}
+			--m_numLights;
+			return true;
+		}
 	}
 	return false;
 }
@@ -311,13 +338,13 @@ GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 	return NULL;
 }
 
-Shader::Light * Scene::GetLightAtPos(Vector a_worldPos)
+Light * Scene::GetLightAtPos(Vector a_worldPos)
 {
 	// Iterate through all lights in the scene
 	for (int i = 0; i < m_numLights; ++i)
 	{
-		Shader::Light * curLight = &m_lights[i];
-		if (fabs((a_worldPos - curLight->m_pos).Length()) < Shader::Light::s_lightDrawSize)
+		Light * curLight = &m_lights[i];
+		if (fabs((a_worldPos - curLight->m_pos).Length()) < Light::s_lightDrawSize)
 		{
 			return curLight;
 		}
@@ -325,13 +352,13 @@ Shader::Light * Scene::GetLightAtPos(Vector a_worldPos)
 	return NULL;
 }
 
-Shader::Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
+Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
 {
 	// Iterate through all lights in the scene
 	for (int i = 0; i < m_numLights; ++i)
 	{
-		Shader::Light * curLight = &m_lights[i];
-		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Shader::Light::s_lightDrawSize))
+		Light * curLight = &m_lights[i];
+		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Light::s_lightDrawSize))
 		{
 			return curLight;
 		}
@@ -493,8 +520,8 @@ bool Scene::Draw()
 		for (int i = 0; i < m_numLights; ++i)
 		{
 			const Colour drawColour = m_lights[i].m_enabled ? sc_colourYellow : sc_colourGrey;
-			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, Shader::Light::s_lightDrawSize, drawColour);
-			RenderManager::Get().AddDebugLine(m_lights[i].m_pos, m_lights[i].m_pos + m_lights[i].m_dir, drawColour);
+			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, Light::s_lightDrawSize, drawColour);
+			RenderManager::Get().AddDebugLine(m_lights[i].m_pos, m_lights[i].m_pos + m_lights[i].m_dir.GetXYZ(), drawColour);
 			FontManager::Get().DrawDebugString3D(m_lights[i].m_name, m_lights[i].m_pos, drawColour);
 		}
 	}

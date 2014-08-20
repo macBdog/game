@@ -15,6 +15,7 @@
 #include "Singleton.h"
 #include "StringUtils.h"
 
+struct Light;
 class Shader;
 
 //\brief SceneState keeps track of which scenes are loaded
@@ -56,10 +57,14 @@ public:
 
 	//\brief Adding lights to the scene
 	//\return false if there are already the maximum number of lights in the scene
-	bool AddLight(const char * a_name, const Vector & a_pos, const Vector & a_dir, float a_ambient, float a_diffuse, float a_specular);
-	inline const Shader::Light & GetLight(int a_lightId) const { return m_lights[a_lightId]; }
+	bool AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular);
+	bool RemoveLight(const char * a_name);
+	inline const Light & GetLight(int a_lightId) const { return m_lights[a_lightId]; }
 	inline int GetNumLights() const { return m_numLights; }
 	inline bool HasLights() const { return m_numLights > 0; }
+
+	//\brief Get the name of the scene
+	//\return pointer to C string containing name of scene as referenced in file on disk
 	inline const char * GetName() const { return m_name; }
 
 	//\brief Get an object by it's ID
@@ -85,12 +90,12 @@ public:
 	//\brief Get the first light in the scene that envelops a world position
 	//\param a world pos vector near the light
 	//\return a pointer to the light or NULL if no light
-	Shader::Light * GetLightAtPos(Vector a_worldPos);
+	Light * GetLightAtPos(Vector a_worldPos);
 
 	//\brief Get the first light in the scene that intersects with a line segment
 	//\param a world pos vector near the light
 	//\return a pointer to the light or NULL if no light
-	Shader::Light * GetLight(Vector a_lineStart, Vector a_lineEnd);
+	Light * GetLight(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Update all the objects in the scene
 	bool Update(float a_dt);
@@ -129,7 +134,7 @@ private:
 	FileManager::Timestamp m_timeStamp;								///< When the scene file was last edited
 	float m_updateTimer;											///< The amount of time elapsed since the last file datestamp check
 	float m_updateFreq;												///< How often the file resource is checked for changes
-	Shader::Light m_lights[Shader::s_maxLights];					///< The lights in the scene
+	Light m_lights[Shader::s_maxLights];							///< The lights in the scene
 	SceneState::Enum m_state;										///< What state the scene is in
 	bool m_beginLoaded;												///< If the scene should be loaded and rendering on startup
 	int m_numLights;												///< The number of lights in the scene

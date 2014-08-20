@@ -150,6 +150,7 @@ public:
 																					(w*a_quat.x + x*a_quat.w + y*a_quat.z - z*a_quat.y),
 																					(w*a_quat.y - x*a_quat.z + y*a_quat.w + z*a_quat.x),
 																					(w*a_quat.z + x*a_quat.y - y*a_quat.x + z*a_quat.w)	); }
+	Quaternion operator *= (const Quaternion & a_quat) const { return Quaternion(x, y, z, w) * a_quat; }
 private:
 	float x, y, z, w;
 };

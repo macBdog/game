@@ -6,9 +6,35 @@
 
 #include <GL/glew.h>
 
+#include "../core/Colour.h"
 #include "../core/Matrix.h"
+#include "../core/Quaternion.h"
 
 #include "StringUtils.h"
+
+//\brief Lighting data passed between the game config files and the standard lighting shader
+struct Light
+{
+	Light() 
+		: m_enabled(false)
+		, m_pos(0.0f)
+		, m_dir(0.0f)
+		, m_ambient(0.0f)
+		, m_diffuse(0.0f)
+		, m_specular(0.0f) 
+		{ 
+			m_name[0] = '\0'; 
+		}
+	bool m_enabled;									///< If the light is currently on
+	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the light is used for attaching lights to objects
+	Vector m_pos;									///< World position of the light
+	Quaternion m_dir;								///< Direction the light is facing, zero means its an omni light
+	Colour m_ambient;								///< Ambient light colour is an aproximation of all reflected light
+	Colour m_diffuse;								///< Colour of light scattered equally off a lit surface
+	Colour m_specular;								///< Colour of light reflected in one direction off a lit surface
+
+	static const float s_lightDrawSize;				///< The size the light is drawn in the in game editor
+};
 
 //\brief Abstraction of a simple GLSL shader framework
 class Shader
@@ -16,30 +42,6 @@ class Shader
 public:
 
 	static const int s_maxLights = 4; ///< Maximum amount of light data passed to lighting shaders
-
-	//\brief Lighting data passed between the game config files and the standard lighting shader
-	struct Light
-	{
-		Light() 
-			: m_enabled(false)
-			, m_pos(0.0f)
-			, m_dir(0.0f)
-			, m_ambient(0.0f)
-			, m_diffuse(0.0f)
-			, m_specular(0.0f) 
-			{ 
-				m_name[0] = '\0'; 
-			}
-		bool m_enabled;									///< If the light is currently on
-		char m_name[StringUtils::s_maxCharsPerName];	///< Name of the light is used for attaching lights to objects
-		Vector m_pos;									///< World position of the light
-		Vector m_dir;									///< Direction the light is facing, zero means its an omni light
-		Vector m_ambient;								///< Ambient light colour is an aproximation of all reflected light
-		Vector m_diffuse;								///< Colour of light scattered equally off a lit surface
-		Vector m_specular;								///< Colour of light reflected in one direction off a lit surface
-
-		static const float s_lightDrawSize;				///< The size the light is drawn in the in game editor
-	};
 
 	//\brief Useful collection of uniform name, location and value data
 	template <typename TDataType>
@@ -166,17 +168,17 @@ public:
 				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetZ();
 				// TODO Support for light direction
 				// Ambient
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetX();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetY();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetZ();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetR();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetG();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetB();
 				// Diffuse
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetX();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetY();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetZ();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetR();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetG();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetB();
 				//Specular
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetX();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetY();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetZ();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetR();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetG();
+				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetB();
 			}
 		}
 

@@ -25,7 +25,8 @@ public:
 	inline float GetB() const { return b; }
 	inline float GetA() const { return a; }
 	inline float * GetValues() { return &r; }
-	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%d, %d, %d, %d", (int)(r*255.0f), (int)(g*255.0f), (int)(b*255.0f), (int)(a*255.0f)); }
+	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f, %f", r, g, b, a); }
+	inline void GetStringAsRGBAInt(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%d, %d, %d, %d", (int)(r*255.0f), (int)(g*255.0f), (int)(b*255.0f), (int)(a*255.0f)); }
 
 	//\brief Standard arithmatic operator overloads
 	Colour operator + (const Colour & a_val) const { return Colour(r + a_val.r, g + a_val.g, b + a_val.b, a + a_val.a); }
@@ -54,6 +55,7 @@ static const Colour sc_colourPurple         = Colour(1.0f, 0.0f, 1.0f, 1.0f);
 static const Colour sc_colourPink			= Colour(1.0f, 0.5f, 0.9f, 1.0f);
 static const Colour sc_colourYellow			= Colour(1.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourOrange			= Colour(1.0f, 0.33f, 0.0f, 1.0f);
-static const Colour sc_colourBrown			= Colour(0.625, 0.2f, 0.0f, 1.0f);
+static const Colour sc_colourBrown			= Colour(0.625f, 0.2f, 0.0f, 1.0f);
+static const Colour sc_colourMauve			= Colour(0.35f, 0.1875f, 1.0f, 1.0f);
 
 #endif //_CORE_COLOUR_

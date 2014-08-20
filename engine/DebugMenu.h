@@ -10,9 +10,9 @@
 #include "DebugMenuCommands.h"
 #include "GameObject.h"
 #include "Gui.h"
-#include "Shader.h"
 #include "Singleton.h"
 
+struct Light;
 class Widget;
 
 //\brief The Debug Menu handles all in-game editing functionality. The current version will
@@ -118,7 +118,7 @@ private:
 	EditMode::Enum m_editMode;						///< If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
-	Shader::Light * m_lightToEdit;					///< If a light has been selected to edit, this will be set
+	Light * m_lightToEdit;							///< If a light has been selected to edit, this will be set
 
 	DebugMenuCommandRegistry m_commands;			///< List of commands that can be performed by the debug menu
 

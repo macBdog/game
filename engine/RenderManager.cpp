@@ -531,7 +531,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 	{
 		for (int i = 0; i < curScene->GetNumLights(); ++i)
 		{
-			const Shader::Light & light = curScene->GetLight(i);
+			const Light & light = curScene->GetLight(i);
 			shaderData.m_lights[i] = light;
 		}
 	}

@@ -72,8 +72,8 @@ public:
 			const char * colString = (const char *)m_data;
 			if (strstr(colString, ","))
 			{
-				int r, g, b, a = 0;
-				sscanf(StringUtils::TrimString(colString), "%d,%d,%d,%d", &r, &g, &b, &a);
+				float r, g, b, a = 0.0f;
+				sscanf(StringUtils::TrimString(colString), "%f,%f,%f,%f", &r, &g, &b, &a);
 				return Colour(r, g, b, a);
 			}
 			return sc_colourWhite;

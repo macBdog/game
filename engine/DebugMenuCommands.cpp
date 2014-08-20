@@ -97,6 +97,7 @@ void DebugMenuCommandRegistry::Startup()
 	m_btnCreateRoot = DebugMenuCommand::CreateButton("Create!", gui.GetDebugRoot(), sc_colourRed);
 	m_btnWidgetRoot = DebugMenuCommand::CreateButton("Change Widget", gui.GetDebugRoot(), sc_colourRed);
 	m_btnGameObjectRoot = DebugMenuCommand::CreateButton("Change Object", gui.GetDebugRoot(), sc_colourRed);
+	m_btnLightRoot = DebugMenuCommand::CreateButton("Change Light", gui.GetDebugRoot(), sc_colourRed);
 
 	// Create root of the create menu that appears if no objects are selected
 	DebugMenuCommand * lastCreatedCommand = NULL;
@@ -104,8 +105,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
 	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::None);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
-	lastCreatedCommand = Create("Create Light",				m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourOrange, EditType::None);
-	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateLight);
+	lastCreatedCommand = Create("Create Light",				m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::None);
+	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::CreateLight);
 	
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
@@ -120,9 +121,9 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetText);
 	lastCreatedCommand = Create("Font", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFont);
-	lastCreatedCommand = Create("FontSize", 				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
+	lastCreatedCommand = Create("FontSize", 				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPink, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetFontSize);
-	lastCreatedCommand = Create("Colour", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::Widget);
+	lastCreatedCommand = Create("Colour", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourMauve, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetColour);
 	lastCreatedCommand = Create("Texture", 					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetTexture);
@@ -146,6 +147,16 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::SaveGameObjectTemplate);
 	lastCreatedCommand = Create("Delete Object",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::GameObject);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::DeleteGameObject);
+
+	// Change lights
+	lastCreatedCommand = Create("Ambient",					m_btnLightRoot, m_btnLightRoot, DebugMenuCommandAlign::Right, sc_colourOrange, EditType::Light);
+	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::ChangeLightAmbient);
+	lastCreatedCommand = Create("Diffuse",					m_btnLightRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::Light);
+	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::ChangeLightDiffuse);
+	lastCreatedCommand = Create("Specular",					m_btnLightRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::Light);
+	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::ChangeLightSpecular);
+	lastCreatedCommand = Create("Delete Light",			m_btnGameObjectRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGrey, EditType::Light);
+	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::DeleteLight);
 }
 
 
@@ -175,12 +186,12 @@ bool DebugMenuCommandRegistry::IsActive() const
 	return false;
 }
 
-DebugCommandReturnData DebugMenuCommandRegistry::HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+DebugCommandReturnData DebugMenuCommandRegistry::HandleLeftClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject, Light * a_selectedLight)
 {
 	DEBUG_COMMANDS_LOOP_BEGIN
 		if (debugWidget->IsSelected(SelectionFlags::EditRollover))
 		{
-			return debugCommand->Execute(a_selectedWidget, a_selectedGameObject);
+			return debugCommand->Execute(a_selectedWidget, a_selectedGameObject, a_selectedLight);
 		}
 	DEBUG_COMMANDS_LOOP_END
 
@@ -189,7 +200,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleLeftClick(Widget * a_sele
 	return DebugCommandReturnData();
 }
 
-DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject)
+DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_selectedWidget, GameObject * a_selectedGameObject, Light * a_selectedLight)
 {
 	// Draw the menu from the last clicked position
 	DebugCommandReturnData retVal;
@@ -215,6 +226,14 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
 	if (a_selectedGameObject != NULL)
 	{
 		ShowGameObjectCommands();
+		retVal.m_success = true;
+		return retVal;
+	}
+
+	// Commands that affect lights
+	if (a_selectedLight != NULL)
+	{
+		ShowLightCommands();
 		retVal.m_success = true;
 		return retVal;
 	}
@@ -334,6 +353,19 @@ void DebugMenuCommandRegistry::ShowGameObjectCommands()
 	DEBUG_COMMANDS_LOOP_END
 }
 
+void DebugMenuCommandRegistry::ShowLightCommands()
+{
+	m_btnLightRoot->SetOffset(InputManager::Get().GetMousePosRelative());
+	m_btnLightRoot->SetActive();
+
+	DEBUG_COMMANDS_LOOP_BEGIN
+		if (debugCommand->GetParentMenu() == EditType::Light) 
+		{
+			debugWidget->SetActive();
+		}
+	DEBUG_COMMANDS_LOOP_END
+}
+
 void DebugMenuCommandRegistry::HideRootCommands()
 {
 	m_btnCreateRoot->SetActive(false);
@@ -357,11 +389,17 @@ void DebugMenuCommandRegistry::HideGameObjectCommands()
 
 }
 
+void DebugMenuCommandRegistry::HideLightCommands()
+{
+
+}
+
 void DebugMenuCommandRegistry::Hide()
 {
 	m_btnCreateRoot->SetActive(false);
 	m_btnWidgetRoot->SetActive(false);
 	m_btnGameObjectRoot->SetActive(false);
+	m_btnLightRoot->SetActive(false);
 
 	DEBUG_COMMANDS_LOOP_BEGIN
 		debugWidget->SetActive(false);
@@ -629,12 +667,60 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteGameObject(GameObject * a
 	return retVal;
 }
 
-DebugCommandReturnData DebugMenuCommandRegistry::CreateLight(GameObject * a_gameObj)
+DebugCommandReturnData DebugMenuCommandRegistry::CreateLight(Light * a_light)
 {
 	Hide();
-	WorldManager::Get().GetCurrentScene()->AddLight("NEW_LIGHT", Vector(0.0f), Vector(0.0f, 1.0f, 0.0f), 0.5f, 0.5f, 0.5f);
+	WorldManager::Get().GetCurrentScene()->AddLight("NEW_LIGHT", Vector(0.0f), Quaternion(), Colour(0.5f), Colour(0.5f), Colour(0.5f));
 
 	DebugCommandReturnData retVal;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeLightAmbient(Light * a_light)
+{
+	Hide();
+
+	DebugCommandReturnData retVal;
+	retVal.m_editMode = EditMode::Ambient;
+	retVal.m_editType = EditType::Light;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeLightDiffuse(Light * a_light)
+{
+	Hide();
+
+	DebugCommandReturnData retVal;
+	retVal.m_editMode = EditMode::Diffuse;
+	retVal.m_editType = EditType::Light;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeLightSpecular(Light * a_light)
+{
+	Hide();
+
+	DebugCommandReturnData retVal;
+	retVal.m_editMode = EditMode::Specular;
+	retVal.m_editType = EditType::Light;
+	retVal.m_dirtyFlag = DirtyFlag::Scene;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::DeleteLight(Light * a_light)
+{
+	Hide();
+	WorldManager::Get().GetCurrentScene()->RemoveLight(a_light->m_name);
+
+	DebugCommandReturnData retVal;
+	retVal.m_clearSelection = true;
 	retVal.m_dirtyFlag = DirtyFlag::Scene;
 	retVal.m_success = true;
 	return retVal;

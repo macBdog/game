@@ -168,11 +168,11 @@ void DebugMenu::Update(float a_dt)
 	}
 
 	// Handle editing actions tied to mouse move
+	const Vector2 mousePos = inMan.GetMousePosRelative();
 	const Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
 	const float moveAmount = amountToMove.GetX() + amountToMove.GetY();
 	if (m_editType == EditType::Widget && m_widgetToEdit != NULL)
 	{
-		Vector2 mousePos = inMan.GetMousePosRelative();
 		switch (m_editMode)
 		{
 			case EditMode::Pos:
@@ -190,18 +190,17 @@ void DebugMenu::Update(float a_dt)
 			}
 			case EditMode::FontSize:
 			{
-				m_widgetToEdit->SetFontSize((mousePos - m_widgetToEdit->GetPos()).LengthSquared() * 3.0f);
+				m_widgetToEdit->SetFontSize((Vector2::Vector2Zero() - mousePos).LengthSquared() * 3.0f);
 				break;
 			}
 			case EditMode::Colour:
 			{
-				const Vector2 colourVec = (mousePos - m_widgetToEdit->GetPos());
+				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
 				const float colorMag = colourVec.LengthSquared() * 3.0f;
 				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
 				m_widgetToEdit->SetColour(modColour);
 				break;
 			}
-
 			default: break;
 		}
 	}
@@ -269,49 +268,78 @@ void DebugMenu::Update(float a_dt)
 		}
 	}
 
-	if (m_lightToEdit != NULL)
+
+	if (m_editType == EditType::Light && m_lightToEdit != NULL)
 	{
-		if (m_editType == EditType::Light)
+		if (!IsDebugMenuActive())
 		{
-			if (!IsDebugMenuActive())
+			if (inMan.IsKeyDepressed(SDLK_x))
 			{
-				if (inMan.IsKeyDepressed(SDLK_x))
+				if (inMan.IsKeyDepressed(SDLK_LALT))
 				{
-					if (inMan.IsKeyDepressed(SDLK_LALT))
-					{
-						//m_lightToEdit->AddRot(Vector(moveAmount * 16.0f, 0.0f, 0.0f));
-					}
-					else
-					{
-						m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
-					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
-				} 
-				else if (inMan.IsKeyDepressed(SDLK_y))
-				{
-					if (inMan.IsKeyDepressed(SDLK_LALT))
-					{
-						//m_gameObjectToEdit->AddRot(Vector(0.0f, moveAmount * 16.0f, 0.0f));
-					}
-					else
-					{
-						m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
-					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);				
+					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(moveAmount * 16.0f, 0.0f, 0.0f)));
+					m_lightToEdit->m_dir *= moveAmount;
 				}
-				else if (inMan.IsKeyDepressed(SDLK_z))
+				else
 				{
-					if (inMan.IsKeyDepressed(SDLK_LALT))
-					{
-						//m_gameObjectToEdit->AddRot(Vector(0.0f, 0.0f, moveAmount * 16.0f));
-					}
-					else
-					{
-						m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
-					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
 				}
+				m_dirtyFlags.Set(DirtyFlag::Scene);
+			} 
+			else if (inMan.IsKeyDepressed(SDLK_y))
+			{
+				if (inMan.IsKeyDepressed(SDLK_LALT))
+				{
+					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, moveAmount * 16.0f, 0.0f)));
+					m_lightToEdit->m_dir *= moveAmount;
+				}
+				else
+				{
+					m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
+				}
+				m_dirtyFlags.Set(DirtyFlag::Scene);				
 			}
+			else if (inMan.IsKeyDepressed(SDLK_z))
+			{
+				if (inMan.IsKeyDepressed(SDLK_LALT))
+				{
+					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, 0.0f, moveAmount * 16.0f)));
+					m_lightToEdit->m_dir *= moveAmount;
+				}
+				else
+				{
+					m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
+				}
+				m_dirtyFlags.Set(DirtyFlag::Scene);
+			}
+		}
+		switch (m_editMode)
+		{
+			case EditMode::Ambient:
+			{
+				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
+				const float colorMag = colourVec.LengthSquared() * 3.0f;
+				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
+				m_lightToEdit->m_ambient = modColour;
+				break;
+			}
+			case EditMode::Diffuse:
+			{
+				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
+				const float colorMag = colourVec.LengthSquared() * 3.0f;
+				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
+				m_lightToEdit->m_diffuse = modColour;
+				break;
+			}
+			case EditMode::Specular:
+			{
+				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
+				const float colorMag = colourVec.LengthSquared() * 3.0f;
+				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
+				m_lightToEdit->m_specular = modColour;
+				break;
+			}
+			default: break;
 		}
 	}
 
@@ -554,7 +582,7 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	// Let the commands handle what to do
-	m_commands.HandleRightClick(m_widgetToEdit, m_gameObjectToEdit);
+	m_commands.HandleRightClick(m_widgetToEdit, m_gameObjectToEdit, m_lightToEdit);
 	return true;
 }
 
@@ -563,7 +591,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Respond to a click and set internal state if it's been handled by a command
 	if (m_commands.IsActive())
 	{
-		DebugCommandReturnData retVal = m_commands.HandleLeftClick(m_widgetToEdit, m_gameObjectToEdit);
+		DebugCommandReturnData retVal = m_commands.HandleLeftClick(m_widgetToEdit, m_gameObjectToEdit, m_lightToEdit);
 		m_editMode = retVal.m_editMode;
 		m_editType = retVal.m_editType;
 
@@ -594,7 +622,10 @@ bool DebugMenu::OnSelect(bool a_active)
 		// If the command cleared the selection of items
 		if (retVal.m_clearSelection)
 		{
-			m_widgetToEdit->ClearSelection();
+			if (m_widgetToEdit != NULL)
+			{
+				m_widgetToEdit->ClearSelection();
+			}
 			m_widgetToEdit = NULL;
 			m_gameObjectToEdit = NULL;
 			m_lightToEdit = NULL;
@@ -694,13 +725,14 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 			{
-				Shader::Light * foundLight = curScene->GetLight(camPos, pickEnd);
+				Light * foundLight = curScene->GetLight(camPos, pickEnd);
 				if (foundLight != NULL)
 				{
 					m_lightToEdit = foundLight;
 					m_gameObjectToEdit = NULL;
 					m_widgetToEdit = NULL;
 					m_editType = EditType::Light;
+					m_editMode = EditMode::None;
 					selectedObject = true;
 				}
 			}
@@ -1009,7 +1041,7 @@ void DebugMenu::Draw()
 	// Draw selection box around lights
 	if (m_lightToEdit != NULL)
 	{
-		renMan.AddDebugSphere(m_lightToEdit->m_pos, Shader::Light::s_lightDrawSize + extraSelectionSize, sc_colourRed);
+		renMan.AddDebugSphere(m_lightToEdit->m_pos, Light::s_lightDrawSize + extraSelectionSize, sc_colourRed);
 	}
 	
 	// Draw selected widget alignment
@@ -1024,17 +1056,36 @@ void DebugMenu::Draw()
 	{
 		char sizeBuf[16];
 		sprintf(sizeBuf, "%f", m_widgetToEdit->GetFontSize());
-		renMan.AddDebugArrow2D(m_widgetToEdit->GetPos(), mousePos, sc_colourWhite);
+		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, sc_colourWhite);
 		fontMan.DrawDebugString2D(sizeBuf, mousePos, sc_colourWhite);
 	}
 
+	// Draw colour editing widget
 	if (m_widgetToEdit != NULL && m_editMode == EditMode::Colour)
 	{
 		char colourBuf[64];
 		const Colour widgetColour = m_widgetToEdit->GetColour();
-		sprintf(colourBuf, "%f, %f, %f, %f", widgetColour.GetR(), widgetColour.GetG(), widgetColour.GetB(), widgetColour.GetA());
-		renMan.AddDebugArrow2D(m_widgetToEdit->GetPos(), mousePos, widgetColour);
+		widgetColour.GetString(colourBuf);
+		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, widgetColour);
 		fontMan.DrawDebugString2D(colourBuf, mousePos, widgetColour);
+	}
+
+	// Draw light editing widget
+	if (m_lightToEdit != NULL && m_editType == EditType::Light && m_editMode != EditMode::None)
+	{
+
+		Colour colourVal(0.0f);
+		switch (m_editMode)
+		{
+			case EditMode::Ambient: colourVal = m_lightToEdit->m_ambient; break; 
+			case EditMode::Diffuse: colourVal = m_lightToEdit->m_diffuse; break;
+			case EditMode::Specular: colourVal = m_lightToEdit->m_specular; break;
+			default: break;
+		}
+		char colourBuf[64];
+		colourVal.GetString(colourBuf);
+		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, colourVal);
+		fontMan.DrawDebugString2D(colourBuf, mousePos, colourVal);
 	}
 
 	// Show mouse pos at cursor
