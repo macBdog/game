@@ -456,7 +456,8 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 	// Now render with full scene shader if specified
 	Matrix identity;
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
+	Matrix camMat = CameraManager::Get().GetCameraMatrix();
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity, &camMat);
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -523,7 +524,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 {
 	// Setup fresh data to pass to shaders
 	Matrix identity;
-	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity);
+	Matrix camMat = CameraManager::Get().GetCameraMatrix();
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity, &camMat);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -790,7 +792,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				if (rm->m_shader != pLastShader)
 				{
 					pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-					shaderData.m_mat = rm->m_mat;
+					shaderData.m_objMat = rm->m_mat;
 					shaderData.m_lifeTime = rm->m_lifeTime;
 					pLastModelShader->UseShader(shaderData);
 				}

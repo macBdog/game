@@ -80,13 +80,15 @@ public:
 						float a_frameTime, 
 						float a_viewWidth,
 						float a_viewHeight,
-						Matrix * a_mat)
+						Matrix * a_objMat,
+						Matrix * a_camMat)
 						: m_time(a_time)
 						, m_lifeTime(a_lifeTime)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight) 
-						, m_mat(a_mat)
+						, m_objMat(a_objMat)
+						, m_camMat(a_camMat)
 						{ }
 
 		float m_time;					///< How much time in seconds has passed since the app has started
@@ -94,7 +96,8 @@ public:
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
-		Matrix * m_mat;					///< Pointer to matrix containing game object position
+		Matrix * m_objMat;				///< Pointer to matrix containing game object position
+		Matrix * m_camMat;					///< Pointer to matrix containing game object position
 		Light m_lights[s_maxLights];	///< Support for multiple lights in the scene
 	};
 
@@ -140,6 +143,7 @@ public:
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");
 			m_objectMatrix.Init(m_shader, "ObjMat");
+			m_cameraMatrix.Init(m_shader, "CamMat");
 			m_lights.Init(m_shader, "Lights");
 			return true;
 		}
@@ -191,7 +195,8 @@ public:
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
 		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightParameters * s_numFloatsPerParameter, &s_lightingData[0]); 
-		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_FALSE, a_data.m_mat->GetValues());
+		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_FALSE, a_data.m_objMat->GetValues());
+		glUniformMatrix4fv(m_cameraMatrix.m_id, 1, GL_FALSE, a_data.m_camMat->GetValues());
 	}
 
     ~Shader() {
@@ -224,6 +229,7 @@ private:
 	Uniform<float> m_viewWidth;
 	Uniform<float> m_viewHeight;
 	Uniform<Matrix> m_objectMatrix;
+	Uniform<Matrix> m_cameraMatrix;
 	Uniform<Light> m_lights;
 };
 

@@ -5,6 +5,7 @@ const char * globalVertexShader =
 "uniform float ViewWidth; \n"
 "uniform float ViewHeight; \n"
 "uniform mat4 ObjMat; \n"
+"uniform mat4 CamMat; \n"
 "varying vec2 OutTexCoord; \n"
 "float rand(vec2 co) \n"
 "{ \n"
