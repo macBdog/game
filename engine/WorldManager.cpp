@@ -101,9 +101,9 @@ bool Scene::Load(const char * a_scenePath)
 						AddLight(lName->GetString(), 
 							lPos->GetVector(),
 							lDir->GetQuaternion(),
-							lAmbient->GetFloat(),
-							lDiffuse->GetFloat(),
-							lSpecular->GetFloat());
+							lAmbient->GetColour(),
+							lDiffuse->GetColour(),
+							lSpecular->GetColour());
 						numLights++;
 					}
 					else
