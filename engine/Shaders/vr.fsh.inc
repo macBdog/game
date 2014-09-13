@@ -1,5 +1,5 @@
 const char * vrFragmentShader = 
-"uniform sampler2D Texture0; \n"
+"uniform sampler2D DiffuseTexture; \n"
 "varying vec2 OutTexCoord; \n"
 "uniform vec2 LensCenter; \n"
 "uniform vec2 ScreenCenter; \n"
@@ -25,6 +25,6 @@ const char * vrFragmentShader =
 "	} \n"
 "   else \n"
 "	{ \n"
-"		gl_FragColor = texture2D(Texture0, tc); \n"		
+"		gl_FragColor = texture2D(DiffuseTexture, tc); \n"		
 "	} \n"
 "} \n";

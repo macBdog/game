@@ -80,15 +80,17 @@ public:
 						float a_frameTime, 
 						float a_viewWidth,
 						float a_viewHeight,
-						Matrix * a_objMat,
-						Matrix * a_camMat)
+						Matrix * a_objectMatrix,
+						Matrix * a_viewMatrix,
+						Matrix * a_projectionMatrix)
 						: m_time(a_time)
 						, m_lifeTime(a_lifeTime)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight) 
-						, m_objMat(a_objMat)
-						, m_camMat(a_camMat)
+						, m_objectMatrix(a_objectMatrix)
+						, m_viewMatrix(a_viewMatrix)
+						, m_projectionMatrix(a_projectionMatrix)
 						{ }
 
 		float m_time;					///< How much time in seconds has passed since the app has started
@@ -96,8 +98,9 @@ public:
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
-		Matrix * m_objMat;				///< Pointer to matrix containing game object position
-		Matrix * m_camMat;					///< Pointer to matrix containing game object position
+		Matrix * m_objectMatrix;		///< Pointer to matrix containing game object position
+		Matrix * m_viewMatrix;			///< Pointer to matrix containing game object position
+		Matrix * m_projectionMatrix;
 		Light m_lights[s_maxLights];	///< Support for multiple lights in the scene
 	};
 
@@ -136,14 +139,17 @@ public:
 			glLinkProgram(m_shader);
 
 			// Set up the standard uniforms
-			m_texture.Init(m_shader, "Texture0");
+			m_diffuseTexture.Init(m_shader, "DiffuseTexture");
+			m_normalTexture.Init(m_shader, "NormalTexture");
+			m_specularTexture.Init(m_shader, "SpecularTexture");
 			m_time.Init(m_shader, "Time");
 			m_lifeTime.Init(m_shader, "LifeTime");
 			m_frameTime.Init(m_shader, "FrameTime");
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");
-			m_objectMatrix.Init(m_shader, "ObjMat");
-			m_cameraMatrix.Init(m_shader, "CamMat");
+			m_objectMatrix.Init(m_shader, "ObjectMatrix");
+			m_viewMatrix.Init(m_shader, "ViewMatrix");
+			m_projectionMatrix.Init(m_shader, "ProjectionMatrix");
 			m_lights.Init(m_shader, "Lights");
 			return true;
 		}
@@ -185,18 +191,20 @@ public:
 				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetB();
 			}
 		}
-
 		glUseProgram(m_shader);
 		glActiveTexture(GL_TEXTURE0);
-		glUniform1i(m_texture.m_id, 0);
+		glUniform1i(m_diffuseTexture.m_id, 0);
+		glUniform1i(m_normalTexture.m_id, 1);
+		glUniform1i(m_specularTexture.m_id, 2);
 		glUniform1f(m_time.m_id, a_data.m_time);
 		glUniform1f(m_lifeTime.m_id, a_data.m_lifeTime);
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
-		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightParameters * s_numFloatsPerParameter, &s_lightingData[0]); 
-		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_FALSE, a_data.m_objMat->GetValues());
-		glUniformMatrix4fv(m_cameraMatrix.m_id, 1, GL_FALSE, a_data.m_camMat->GetValues());
+		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightParameters * s_numFloatsPerParameter, &s_lightingData[0]);
+		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_TRUE, a_data.m_objectMatrix->GetValues());
+		glUniformMatrix4fv(m_viewMatrix.m_id, 1, GL_TRUE, a_data.m_viewMatrix->GetValues());
+		glUniformMatrix4fv(m_projectionMatrix.m_id, 1, GL_TRUE, a_data.m_projectionMatrix->GetValues());
 	}
 
     ~Shader() {
@@ -222,14 +230,17 @@ private:
 	GLuint m_fragmentShader;						///< Pixel shader
 	GLuint m_shader;								///< Linked program
 
-	Uniform<int> m_texture;							///< Standard set of uniforms follow
+	Uniform<int> m_diffuseTexture;					///< Standard set of uniforms follow
+	Uniform<int> m_normalTexture;
+	Uniform<int> m_specularTexture;
 	Uniform<float> m_time;
 	Uniform<float> m_lifeTime;
 	Uniform<float> m_frameTime;
 	Uniform<float> m_viewWidth;
 	Uniform<float> m_viewHeight;
 	Uniform<Matrix> m_objectMatrix;
-	Uniform<Matrix> m_cameraMatrix;
+	Uniform<Matrix> m_viewMatrix;
+	Uniform<Matrix> m_projectionMatrix;
 	Uniform<Light> m_lights;
 };
 

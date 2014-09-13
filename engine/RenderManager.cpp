@@ -378,18 +378,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 
     // Setup our viewport
     glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
-
-    // Change to the projection matrix and set our viewing volume
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    // Set our perspective
-    gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
-
-    // Make sure we're chaning the model view and not the projection
-    glMatrixMode(GL_MODELVIEW);
-
-    // Reset The View
     glLoadIdentity();
 
 	// Create the framebuffers for each render stage
@@ -423,6 +411,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
 	// Do offscreen rendering pass to first stage framebuffer
+	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
 	
@@ -440,24 +429,17 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	// Start rendering to the first render stage
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::VR]);			//<< Render to next stage colour
-
+	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// Draw framebuffer in ortho
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
 	// Now render with full scene shader if specified
-	Matrix identity;
-	Matrix camMat = CameraManager::Get().GetCameraMatrix();
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity, &camMat);
+	Matrix identityMat = Matrix::Identity();
+	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identityMat, &identityMat, &orthoMat);
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -474,14 +456,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		m_textureShader->UseShader(shaderData);
 	}
 
-	// Draw whole screen triangle pair
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
-	glEnd();
+	RenderFramebuffer();
 
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -491,30 +466,24 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// Draw framebuffer in ortho
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
 	// Final drawing pass
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::VR]);   
 	
 	// Render once or twice
 	if (m_vr)
 	{	
-		m_vrShader->UseShader();
+		m_vrShader->UseShader(shaderData);
 		const float vpWidth = (float)m_viewWidth * 0.5f;
 		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
 		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
 	}
 	else
 	{
-		m_textureShader->UseShader();
+		m_textureShader->UseShader(shaderData);
 		RenderFramebuffer();
 	}
-
+	
 	// Unbind shader
     glUseProgram(0);
     glEnable(GL_DEPTH_TEST);
@@ -523,9 +492,10 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_flushBuffers)
 {
 	// Setup fresh data to pass to shaders
-	Matrix identity;
-	Matrix camMat = CameraManager::Get().GetCameraMatrix();
-	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identity, &camMat);
+	Matrix identityMatrix = Matrix::Identity();
+	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
+	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.3334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identityMatrix, &a_viewMatrix, &perspectiveMatrix);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -611,47 +581,40 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				{
 					if (a_eyeLeft)
 					{
-						glMatrixMode(GL_PROJECTION);
-						glLoadIdentity();
-						glTranslatef(projectionCenterOffset, 0.0f, 0.0f);
-						gluPerspective(vrFovAngleY, vrAspect, s_nearClipPlane, s_farClipPlane);
+						Matrix leftEyeProjectionMatrix = perspectiveMatrix;
+						leftEyeProjectionMatrix.Translate(Vector(projectionCenterOffset, 0.0f, 0.0f));
+						shaderData.m_projectionMatrix = &leftEyeProjectionMatrix;
 
-						glMatrixMode(GL_MODELVIEW);
-						glLoadMatrixf(a_viewMatrix.GetValues());
-						glTranslatef(vrIpd * 0.5f, 0.0f, 0.0f);
+						Matrix leftEyeViewMatrix = a_viewMatrix;
+						leftEyeViewMatrix.Translate(Vector(vrIpd * 0.5f, 0.0f, 0.0f));
+						shaderData.m_viewMatrix = &leftEyeViewMatrix;
 					}
 					else
 					{
-						glMatrixMode(GL_PROJECTION);
-						glLoadIdentity();
-						glTranslatef(-projectionCenterOffset, 0.0f, 0.0f);
-						gluPerspective(vrFovAngleY, vrAspect, s_nearClipPlane, s_farClipPlane);
+						Matrix rightEyeProjectionMatrix = perspectiveMatrix;
+						rightEyeProjectionMatrix.Translate(Vector(-projectionCenterOffset, 0.0f, 0.0f));
+						shaderData.m_projectionMatrix = &rightEyeProjectionMatrix;
 
-						glMatrixMode(GL_MODELVIEW);                     
-						glLoadMatrixf(a_viewMatrix.GetValues());
-						glTranslatef(-vrIpd * 0.5f, 0.0f, 0.0f);
+						Matrix rightEyeViewMatrix = a_viewMatrix;
+						rightEyeViewMatrix.Translate(Vector(-vrIpd * 0.5f, 0.0f, 0.0f));
+						shaderData.m_viewMatrix = &rightEyeViewMatrix;
 					}
 				}
 				else
 				{
-					glMatrixMode(GL_PROJECTION);
-					glLoadIdentity();
-					gluPerspective(s_fovAngleY, m_aspect, s_nearClipPlane, s_farClipPlane);
-
-					// Setup the inverse of the camera transformation in the modelview matrix
-					glMatrixMode(GL_MODELVIEW);
-					glLoadIdentity();
-					glLoadMatrixf(a_viewMatrix.GetValues());
+					// Setup projection transformation matrices for the shaders
+					shaderData.m_projectionMatrix = &perspectiveMatrix;
+					shaderData.m_viewMatrix = &a_viewMatrix;
 				}
 				break;
 			}
+#ifndef _RELEASE
+			case RenderLayer::Debug2D:
+#endif
 			case RenderLayer::Gui:
 			{
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -100000.0, 100000.0);
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
+				shaderData.m_projectionMatrix = &orthoMatrix;
+				shaderData.m_viewMatrix = &identityMatrix;
 				break;
 			}
 			default: break;
@@ -666,7 +629,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		// Use the texture shader on world objects
 		glEnable(GL_TEXTURE_2D);
 		Shader * pLastShader = m_textureShader;
-		m_textureShader->UseShader(shaderData);
 
 		// Submit the tris
 		Tri * t = m_tris[i];
@@ -713,6 +675,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 
 		// Submit the quad
 		Quad * q = m_quads[i];
+		shaderData.m_objectMatrix = &identityMatrix;
 		for (unsigned int j = 0; j < m_quadCount[i]; ++j)
 		{
 			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
@@ -761,22 +724,26 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
 		{
 			glEnable(GL_TEXTURE_2D);
-			m_textureShader->UseShader(shaderData);
 			pLastShader = m_textureShader;
 		}
+
 		FontChar * fc = m_fontChars[i];
+		Matrix fontCharMat = Matrix::Identity();
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
 		{
-			glPushMatrix();
-			glTranslatef(fc->m_pos.GetX(), fc->m_pos.GetY(), fc->m_pos.GetZ());
+			fontCharMat.SetIdentity();
 			if (!fc->m_2d)
 			{
-				glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+				// TODO: Rotate matrix to face camera
 			}
+
+			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), 1.0f));
+			fontCharMat.SetPos(fc->m_pos);
+			shaderData.m_objectMatrix = &fontCharMat;
+			pLastShader->UseShader(shaderData);
+
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
-			glScalef(fc->m_size.GetX(), fc->m_size.GetY(), 0.0f);
 			glCallList(fc->m_displayListId);
-			glPopMatrix();
 			++fc;
 		}
 
@@ -789,22 +756,18 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			for (unsigned int k = 0; k < rm->m_model->GetNumObjects(); ++k)
 			{
 				Object * obj = rm->m_model->GetObject(k);
-				if (rm->m_shader != pLastShader)
-				{
-					pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-					shaderData.m_objMat = rm->m_mat;
-					shaderData.m_lifeTime = rm->m_lifeTime;
-					pLastModelShader->UseShader(shaderData);
-				}
-				glPushMatrix();
-				glMultMatrixf(rm->m_mat->GetValues());
+				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
+				shaderData.m_projectionMatrix = &perspectiveMatrix;
+				shaderData.m_viewMatrix = &a_viewMatrix;
+				shaderData.m_objectMatrix = rm->m_mat;
+				shaderData.m_lifeTime = rm->m_lifeTime;
+				pLastModelShader->UseShader(shaderData);
 				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, obj->GetMaterial()->m_ambient.GetValues());
 				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, obj->GetMaterial()->m_diffuse.GetValues());
 				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, obj->GetMaterial()->m_specular.GetValues());
 				glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, obj->GetMaterial()->m_emission.GetValues());
 				glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, obj->GetMaterial()->m_shininess);
 				glCallList(obj->GetDisplayListId());
-				glPopMatrix();
 			}
 			++rm;
 		}
@@ -812,8 +775,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		// Swith to colour shader for lines as they cannot be textured
 		if (m_lineCount[i] > 0)
 		{
-			glDisable(GL_TEXTURE_2D);
-			m_colourShader->UseShader();
+			//glDisable(GL_TEXTURE_2D);
+			shaderData.m_objectMatrix = &identityMatrix;
+			m_colourShader->UseShader(shaderData);
 		}
 
 		// Draw lines in the current renderLayer
@@ -828,7 +792,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			++l;
 		}
 		
-		// Flush the renderLayeres if we are not rendering more than once
+		// Flush the renderLayers if we are not rendering more than once
 		if (a_flushBuffers)
 		{
 			m_triCount[i] = 0;
@@ -906,6 +870,7 @@ unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord
 	glNewList(displayListId, GL_COMPILE);
 	
 	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
 	
 	// Draw the verts
@@ -1143,6 +1108,8 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			// Alias model data
 			unsigned int numVertices = obj->GetNumVertices();
 			Texture * diffuseTex = obj->GetMaterial()->GetDiffuseTexture();
+			Texture * normalTex = obj->GetMaterial()->GetNormalTexture();
+			Texture * specularTex = obj->GetMaterial()->GetSpecularTexture();
 			Vector * verts = obj->GetVertices();
 			TexCoord * uvs = obj->GetUvs();
 
@@ -1153,7 +1120,18 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 			if (diffuseTex != NULL)
 			{
+				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
+			}
+			if (normalTex != NULL)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, normalTex->GetId());
+			}
+			if (specularTex != NULL)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, specularTex->GetId());
 			}
 			glBegin(GL_TRIANGLES);
 			// Draw vertices in threes

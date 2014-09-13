@@ -18,7 +18,7 @@ public:
 		: m_translationSpeed(sc_defaultCameraSpeed)
 		, m_rotationSpeed(sc_defaultCameraRotSpeed)
 		, m_pos(Vector::Zero())
-		, m_orientation(0.0f)
+		, m_target(0.0f, 10.0f, 0.0f)
 		, m_orientationInput(0.0f)
     {
 		Update();
@@ -31,18 +31,16 @@ public:
 	virtual void Update();
 
 	//\ingroup Accessors
-	inline const Matrix & GetMatrix() const { return m_mat; }
-	inline const Matrix & GetViewMatrix() const { return m_viewMat; }
-	inline Vector GetInversePos() const { return Vector(-m_pos.GetX(), -m_pos.GetY(), -m_pos.GetZ()); }
+	inline const Matrix & GetCameraMatrix() const { return m_mat; }
 	inline Vector GetPosition() const { return m_pos; }
+	inline Vector GetTarget() const { return m_target; }
 	inline float GetRotationSpeed() const { return m_rotationSpeed; }
 	inline float GetTranslationSpeed() const { return m_translationSpeed; }
-	inline Vector2 GetOrientation() const { return m_orientation; }
 	inline Vector2 GetOrientationInput() const { return m_orientationInput; }
 
 	//\ingroup Mutators
-	inline void SetPos(const Vector & a_pos) { m_pos = a_pos; }
-	inline void SetOrientation(const Vector2 & a_orient) { m_orientation = a_orient; }
+	inline void SetPosition(const Vector & a_worldPos) { m_pos = a_worldPos; }
+	inline void SetTarget(const Vector & a_worldPos) { m_target = a_worldPos; }
 	inline void SetOrientationInput(const Vector2 & a_input) { m_orientationInput = a_input; }
 
 protected:
@@ -53,10 +51,9 @@ protected:
 	float m_translationSpeed;		///< Camera translation speed
 	float m_rotationSpeed;			///< Camera rotation speed degrees per second
 	Matrix m_mat;                   ///< The matrix defining the new coordinate system as calculated by the camera
-	Matrix m_viewMat;				///< The matrix defining the direction the camera is looking
 	Vector m_pos;                   ///< Position of the camera in the world
-	Vector2 m_orientation;			///< Angle of the camera around it's view axis
-	Vector2 m_orientationInput;		///< Input to orientation given mouse corrds
+	Vector m_target;				///< Position of where the camera is looking in the world
+	Vector2 m_orientationInput;		///< Input to orientation given mouse coords
 };
 
 class CameraManager : public Singleton<CameraManager>
@@ -77,9 +74,8 @@ public:
 	void Update(float a_dt);
 
 	//\brief Accessors for rendering 
-	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetMatrix(); }
-	inline Matrix GetViewMatrix() const { return m_currentCamera->GetViewMatrix(); }
-	inline Vector GetWorldPos() const { return m_currentCamera->GetInversePos(); }
+	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetCameraMatrix(); }
+	inline Vector GetWorldPos() const { return m_currentCamera->GetPosition(); }
 	float GetVRProjectionCentreOffset();
 	float GetVRAspect();
 	float GetVRFOV();
@@ -89,8 +85,6 @@ public:
 	void SetPosition(const Vector & a_newPos);
 	void SetRotation(const Vector & a_newRot);
 	void SetFOV(const float & a_newFov);
-
-	void GetInverseMat(Matrix & a_mat_OUT);
 
 private:
 

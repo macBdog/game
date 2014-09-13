@@ -201,8 +201,8 @@ void Widget::DrawAlignment()
 	Vector2 pos = m_drawPos;
 	Colour drawColour = sc_colourPurple;
 	Vector2 alignPos = Vector2(pos.GetX() + halfBox, pos.GetY() - halfBox);
-	rMan.AddDebugLine2D(alignPos - Vector2(halfBox, 0.0f), alignPos + Vector2(halfBox, 0.0f), drawColour);
-	rMan.AddDebugLine2D(alignPos - Vector2(0.0f, halfBox), alignPos + Vector2(0.0f, halfBox), drawColour);
+	//rMan.AddDebugLine2D(alignPos - Vector2(halfBox, 0.0f), alignPos + Vector2(halfBox, 0.0f), drawColour);
+	//rMan.AddDebugLine2D(alignPos - Vector2(0.0f, halfBox), alignPos + Vector2(0.0f, halfBox), drawColour);
 
 	// Show nine alignment anchors
 	drawColour.SetA(0.25);

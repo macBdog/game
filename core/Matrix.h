@@ -4,9 +4,10 @@
 
 #include <math.h>
 
+#include "MathUtils.h"
 #include "Vector.h"
 
-//\brief Basic 4x4 matrix
+//\brief Basic 4x4 matrix with row major layout in memory
 class Matrix
 {
 public:
@@ -17,9 +18,9 @@ public:
 			float a_8, float a_9, float a_10, float a_11, 
 			float a_12, float a_13, float a_14, float a_15) 
 			{ 
-				f[0]=a_0; f[1]=a_1; f[2]=a_2; f[3]=a_3; 
-				f[4]=a_4; f[5]=a_5; f[6]=a_6; f[7]=a_7; 
-				f[8]=a_8; f[9]=a_9; f[10]=a_10; f[11]=a_11; 
+				f[0]=a_0;	f[1]=a_1;	f[2]=a_2;	f[3]=a_3; 
+				f[4]=a_4;	f[5]=a_5;	f[6]=a_6;	f[7]=a_7; 
+				f[8]=a_8;	f[9]=a_9;	f[10]=a_10; f[11]=a_11; 
 				f[12]=a_12; f[13]=a_13; f[14]=a_14; f[15]=a_15; 
 			}
 	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
@@ -187,6 +188,67 @@ public:
 							0.0f, 0.0f, 0.0f, 1.0f };
 		return Matrix(vals);
 	}
+	static const Matrix Frustum(float a_left, float a_right, float a_bottom, float a_top, float a_near, float a_far)
+	{
+		
+		float vals[16] = {	2.0f * a_near / (a_right - a_left),		0.0f,								0.0f,										0.0f,
+							0.0f,									2.0f * a_near / (a_top - a_bottom), 0.0f,										0.0f,
+							(a_right + a_left) / (a_right - a_left),(a_top + a_bottom) / (a_top - a_bottom), (a_near + a_far) / (a_near - a_far),	-1.0f,
+							0.0f,									0.0f,								2.0f * a_near * a_far / (a_near - a_far),	0.0f };
+		return Matrix(vals);
+	}
+	static const Matrix Perspective(float a_fovY, float a_aspect, float a_zNear, float a_zFar)
+	{
+		float m[16];
+		float ymax = a_zNear * tan(a_fovY * 0.5f * PI/180.0f);
+		float ymin = -ymax;
+		float xmax = ymax * a_aspect;
+		float xmin = ymin * a_aspect;
+
+		float width = xmax - xmin;
+		float height = ymax - ymin;
+
+		float depth = a_zFar - a_zNear;
+		float q = -(a_zFar + a_zNear) / depth;
+		float qn = -2.0f * (a_zFar * a_zNear) / depth;
+
+		float w = 2.0f * a_zNear / width;
+		w = w / a_aspect;
+		float h = 2.0f * a_zNear / height;
+
+		m[0]  = w;
+		m[1]  = 0;
+		m[2]  = 0;
+		m[3]  = 0;
+
+		m[4]  = 0;
+		m[5]  = h;
+		m[6]  = 0;
+		m[7]  = 0;
+
+		m[8]  = 0;
+		m[9]  = 0;
+		m[10] = q;
+		m[11] = -1;
+
+		m[12] = 0;
+		m[13] = 0;
+		m[14] = qn;
+		m[15] = 0;
+
+	//match the matrix order of the ortho function then get the texture and colour shader multiplication orders to match up
+	//then fixup camera
+
+		return Matrix(m);
+	}
+	static const Matrix Orthographic(float a_left, float a_right, float a_bottom, float a_top, float a_zNear, float a_zFar)
+	{
+		float vals[16] = {	2.0f/(a_right-a_left),	0.0f,					0.0f,					0.0f,
+							0.0f,					2.0f/(a_top-a_bottom),	0.0f,					0.0f,
+							0.0f,					0.0f,					-2.0f/(a_zFar-a_zNear), 0.0f,
+							-((a_right+a_left)/(a_right-a_left)), -((a_top+a_bottom)/(a_top-a_bottom)), -((a_zFar+a_zNear)/(a_zFar/a_zNear)), 1.0f };
+		return Matrix(vals);
+	}
 	inline Matrix Multiply(const Matrix & a_mat) const
 	{
 		Matrix mOut;
@@ -291,6 +353,13 @@ public:
 		look.Normalise();
 		up.Normalise();
 	}
+	inline Matrix GetTranspose() const
+	{
+		return Matrix(	f[0], f[4], f[8], f[12], 
+						f[1], f[5], f[9], f[13], 
+						f[2], f[6], f[10], f[14], 
+						f[3], f[7], f[11], f[15]);
+	}
 
 private:
 	
@@ -303,7 +372,7 @@ private:
 		{
 			Vector		right;	float rightW;	// Vectors need a W component to indicate 
 			Vector		look;	float lookW;	// if they are a point or a vector
-			Vector		up;		float upW;		// 0 is for vectors
+			Vector		up;		float upW;		// 0 is for vectors/directions
 			Vector		pos;	float posW;		// 1 is for points.
 		};
 	};

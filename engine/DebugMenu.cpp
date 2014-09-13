@@ -693,17 +693,12 @@ bool DebugMenu::OnSelect(bool a_active)
 		// Picking point is the mouse cursor transformed to 3D space in cam direction
 		bool selectedObject = false;
 		const float pickDepth = 100.0f;
-		const float persp = 0.47f;
 		RenderManager & renMan = RenderManager::Get();
 		CameraManager & camMan = CameraManager::Get();
 		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
-		Matrix camMat = camMan.GetViewMatrix();
+		Matrix camMat = camMan.GetCameraMatrix();
 		Vector camPos = camMan.GetWorldPos();
-		Vector mouseInput = Vector(	mousePos.GetX() * renMan.GetViewAspect() * pickDepth * persp, 
-									0.0f, 
-									mousePos.GetY() * pickDepth * persp);
-		Vector pickEnd = camPos + camMat.GetLook() * pickDepth;
-		pickEnd += camMat.Transform(mouseInput);
+		Vector pickEnd = camMat.GetUp() * -pickDepth;
 
 		// Do picking with all the game objects in the scene
 		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
@@ -1001,14 +996,14 @@ void DebugMenu::Draw()
 	// Gridlines on the X axis
 	for (unsigned int x = 0; x < gridSize+1; ++x)
 	{
-		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, 0.0f);
+		Vector curLineX = gridStart + Vector(x*gridMeasurement, 0.0f, -1.0f);
 		renMan.AddLine(RenderLayer::Debug3D, curLineX, curLineX + Vector(0.0f, gridMeasurement * (float)(gridSize), 0.0f), sc_colourGreyAlpha);	
 	}
 
 	// Gridlines on the Y axis
 	for (unsigned int y = 0; y < gridSize+1; ++y)
 	{
-		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, 0.0f);
+		Vector curLineY = gridStart + Vector(0.0f, y*gridMeasurement, -1.0f);
 		renMan.AddLine(RenderLayer::Debug3D, curLineY, curLineY + Vector(gridMeasurement * (float)(gridSize), 0.0f, 0.0f), sc_colourGreyAlpha);
 	}
 
@@ -1073,7 +1068,6 @@ void DebugMenu::Draw()
 	// Draw light editing widget
 	if (m_lightToEdit != NULL && m_editType == EditType::Light && m_editMode != EditMode::None)
 	{
-
 		Colour colourVal(0.0f);
 		switch (m_editMode)
 		{

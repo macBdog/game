@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
 		RenderManager::Get().Update(lastFrameTimeSec);
 		
 		// Only swap the buffers at the end of all the rendering passes
-		RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix());
+		RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
 		
 		// Perform and post rendering tasks for subsystems
 		DebugMenu::Get().PostRender();

@@ -621,8 +621,8 @@ int ScriptManager::MoveCamera(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		Vector moveVec((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3));
 		CameraManager & camMan = CameraManager::Get();
-		Matrix viewMat = camMan.GetViewMatrix();
-		Vector camNewPos = viewMat.GetPos() + viewMat.Transform(moveVec);
+		Matrix camMat = camMan.GetCameraMatrix();
+		Vector camNewPos = camMan.GetWorldPos() + camMat.Transform(moveVec);
 		camMan.SetPosition(camNewPos);
 	}
 	else // Wrong number of parms
