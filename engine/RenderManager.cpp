@@ -732,16 +732,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
 		{
 			fontCharMat.SetIdentity();
-			if (!fc->m_2d)
-			{
-				// TODO: Rotate matrix to face camera
-			}
-
-			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), 1.0f));
 			fontCharMat.SetPos(fc->m_pos);
+			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), 1.0f));
 			shaderData.m_objectMatrix = &fontCharMat;
 			pLastShader->UseShader(shaderData);
-
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
 			glCallList(fc->m_displayListId);
 			++fc;
@@ -775,7 +769,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		// Swith to colour shader for lines as they cannot be textured
 		if (m_lineCount[i] > 0)
 		{
-			//glDisable(GL_TEXTURE_2D);
+			glDisable(GL_TEXTURE_2D);
 			shaderData.m_objectMatrix = &identityMatrix;
 			m_colourShader->UseShader(shaderData);
 		}
@@ -886,6 +880,36 @@ unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord
 
 	glTexCoord2f(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
 	glVertex3f(0.0f, -a_size.GetY(), s_renderDepth2D);
+	glEnd();
+
+	glEndList();
+
+	return displayListId;
+}
+
+unsigned int RenderManager::RegisterFontChar3D(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)
+{
+	// Generate and begin compiling a new display list
+	GLuint displayListId = glGenLists(1);
+	glNewList(displayListId, GL_COMPILE);
+	
+	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
+	
+	// Draw the verts
+	glBegin(GL_QUADS);
+	glTexCoord2f(a_texCoord.GetX(), 1.0f - a_texCoord.GetY()); 
+	glVertex3f(0.0f, 0.0f, a_size.GetY());
+
+	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
+	glVertex3f(a_size.GetX(), 0.0f, a_size.GetY());
+
+	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
+	glVertex3f(a_size.GetX(), 0.0f, -a_size.GetY());
+
+	glTexCoord2f(a_texCoord.GetX(),						1.0f - a_texSize.GetY() - a_texCoord.GetY());
+	glVertex3f(0.0f, 0.0f, -a_size.GetY());
 	glEnd();
 
 	glEndList();

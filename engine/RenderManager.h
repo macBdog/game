@@ -128,6 +128,7 @@ public:
 	//\param a_texSize is the size of the character in reference to the font texture
 	//\return The uint equivalent of the GLuint that is returned from glGenLists
 	unsigned int RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture);
+	unsigned int RegisterFontChar3D(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture);
 
 	//\brief Drawing functions for lines
 	//\param a_point1 is the start of the line

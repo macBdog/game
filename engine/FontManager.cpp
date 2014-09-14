@@ -150,8 +150,9 @@ bool FontManager::LoadFont(const char * a_fontName)
 				TexCoord texSize(curChar.m_width/newFont->m_sizeX, curChar.m_height/newFont->m_sizeY);
 				TexCoord texCoord(curChar.m_x/newFont->m_sizeX, curChar.m_y/newFont->m_sizeY);
 
-				// Generate a display list for each character in the font
+				// Generate a display list for each character in the font in 2D
 				newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
+				newFont->m_chars[charId].m_displayListId3D = renMan.RegisterFontChar3D(charSize, texCoord, texSize, newFont->m_texture);
 			}
 
 			// There is more info such as kerning here but we don't support it
@@ -190,7 +191,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 
 bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
-	const bool is2D = a_pos.GetZ() == 0.0f;
+	const bool is2D = a_renderLayer != RenderLayer::Debug3D && a_renderLayer != RenderLayer::World;
 	FontListNode * curFont = m_fonts.GetHead();
 	RenderManager & renderMan = RenderManager::Get();
 	const float viewAspect = renderMan.GetViewAspect();
@@ -228,7 +229,8 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 						}
 						else
 						{
-							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+							zPos = a_pos.GetZ() - (curChar.m_yoffset / font->m_sizeY);
+							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId3D, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
 						}
 					}
 					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());

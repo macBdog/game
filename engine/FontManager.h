@@ -69,7 +69,8 @@ private:
 		float m_xoffset;				///< X position of the glyph insuide it's box
 		float m_yoffset;				///< Y position of the glyph inside it's box
 		float m_xadvance;				///< How much spacing to put in front of the glyph
-		unsigned int m_displayListId;	///< The generated display list ID for drawing each character
+		unsigned int m_displayListId;	///< The generated display list ID for drawing each character in 2D screen space
+		unsigned int m_displayListId3D;	///< The generated display list ID for drawing each character in 3D world space
 	};
 
 	//\brief Info about a font and a group of all the character info
