@@ -698,13 +698,17 @@ bool DebugMenu::OnSelect(bool a_active)
 		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 		Matrix camMat = camMan.GetCameraMatrix();
 		Vector camPos = camMan.GetWorldPos();
-		Vector pickEnd = camMat.GetUp() * -pickDepth;
+
+		// Translate by mouse position for picking
+		Vector mouseOffset3D = camMat.GetInverse().Transform(Vector(mousePos.GetX() * 0.1f, mousePos.GetY() * 0.05f, 0.0f));
+		Vector pickStart = camPos + mouseOffset3D;
+		Vector pickEnd = camMat.GetInverse().Transform(Vector(0.0f, 0.0, -pickDepth)) + (mouseOffset3D * 1000.0f);
 
 		// Do picking with all the game objects in the scene
 		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 		{
 			// Pick an arbitrary object (would have to sort to get the closest)
-			GameObject * foundObject = curScene->GetSceneObject(camPos, pickEnd);
+			GameObject * foundObject = curScene->GetSceneObject(pickStart, pickEnd);
 			if (foundObject != NULL)
 			{
 				m_gameObjectToEdit = foundObject;
@@ -720,7 +724,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 			{
-				Light * foundLight = curScene->GetLight(camPos, pickEnd);
+				Light * foundLight = curScene->GetLight(pickStart, pickEnd);
 				if (foundLight != NULL)
 				{
 					m_lightToEdit = foundLight;

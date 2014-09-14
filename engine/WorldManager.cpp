@@ -344,7 +344,7 @@ Light * Scene::GetLightAtPos(Vector a_worldPos)
 	for (int i = 0; i < m_numLights; ++i)
 	{
 		Light * curLight = &m_lights[i];
-		if (fabs((a_worldPos - curLight->m_pos).Length()) < Light::s_lightDrawSize*2.0f)
+		if (fabs((a_worldPos - curLight->m_pos).Length()) < Light::s_lightDrawSize*10.0f)
 		{
 			return curLight;
 		}
@@ -358,7 +358,7 @@ Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
 	for (int i = 0; i < m_numLights; ++i)
 	{
 		Light * curLight = &m_lights[i];
-		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Light::s_lightDrawSize*2.0f))
+		if (CollisionUtils::IntersectLineSphere(a_lineStart, a_lineEnd, curLight->m_pos, Light::s_lightDrawSize*10.0f))
 		{
 			return curLight;
 		}
