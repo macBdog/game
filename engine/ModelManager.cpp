@@ -6,9 +6,9 @@
 template<> ModelManager * Singleton<ModelManager>::s_instance = NULL;
 
 const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64k for managed model info
-const unsigned int ModelManager::s_loadingVertPoolSize = 65536;		// 64k for temporary loading of model vertices
-const unsigned int ModelManager::s_loadingNormalPoolSize = 65536;	// 64k for temporary loading of model normals
-const unsigned int ModelManager::s_loadingUvPoolSize = 65536;		// 64k for temporary loading texture coords
+const unsigned int ModelManager::s_loadingVertPoolSize = 65536;		// 64k verts for temporary loading of model vertices
+const unsigned int ModelManager::s_loadingNormalPoolSize = 65536;	// 64k normals temporary loading of model normals
+const unsigned int ModelManager::s_loadingUvPoolSize = 65536;		// 64k uv coords temporary loading texture coords
 const unsigned int ModelManager::s_objectPoolSize = 65536;			// 64k for objects
 const unsigned int ModelManager::s_materialPoolSize = 65536;		// 64k for materials
 
@@ -32,9 +32,9 @@ bool ModelManager::Startup(const char * a_modelPath)
 	m_materialPool.Init(s_materialPoolSize);
 
 	// Init temporary loading pools
-	m_loadingVertPool.Init(s_loadingVertPoolSize);
-	m_loadingNormalPool.Init(s_loadingNormalPoolSize);
-	m_loadingUvPool.Init(s_loadingUvPoolSize);
+	m_loadingVertPool.Init(s_loadingVertPoolSize * sizeof(Vector));
+	m_loadingNormalPool.Init(s_loadingNormalPoolSize * sizeof(Vector));
+	m_loadingUvPool.Init(s_loadingUvPoolSize * sizeof(TexCoord));
 
 	// This can be removed in all but DEBUG configuration, but its nice when viewing memory
 	memset(m_modelPool.GetHead(), 0, m_modelPool.GetAllocationSizeBytes());

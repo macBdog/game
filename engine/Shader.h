@@ -170,26 +170,24 @@ public:
 		int lightValCount = 0;
 		for (int i = 0; i < s_maxLights; ++i)
 		{
-			if (a_data.m_lights[i].m_enabled)
-			{
-				// Position first
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetX();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetY();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetZ();
-				// TODO Support for light direction
-				// Ambient
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetR();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetG();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetB();
-				// Diffuse
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetR();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetG();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetB();
-				//Specular
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetR();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetG();
-				s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetB();
-			}
+			// Enabled
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_enabled ? 1.0f : 0.0f;
+			// Position
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetX();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetY();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_pos.GetZ();
+			// Ambient
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetR();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetG();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_ambient.GetB();
+			// Diffuse
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetR();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetG();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_diffuse.GetB();
+			//Specular
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetR();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetG();
+			s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetB();
 		}
 		glUseProgram(m_shader);
 		glActiveTexture(GL_TEXTURE0);
@@ -201,7 +199,7 @@ public:
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
-		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightParameters * s_numFloatsPerParameter, &s_lightingData[0]);
+		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightFloats, &s_lightingData[0]);
 		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_TRUE, a_data.m_objectMatrix->GetValues());
 		glUniformMatrix4fv(m_viewMatrix.m_id, 1, GL_TRUE, a_data.m_viewMatrix->GetValues());
 		glUniformMatrix4fv(m_projectionMatrix.m_id, 1, GL_TRUE, a_data.m_projectionMatrix->GetValues());
@@ -218,9 +216,10 @@ private:
 	// Lighting parameters are written to shader as an array of floats
 	static const int s_numLightParameters = 4;
 	static const int s_numFloatsPerParameter = 3;
+	static const int s_numLightFloats = s_maxLights * ((s_numLightParameters * s_numFloatsPerParameter) + 1);
 
 	//\brief Static data to write light parameter floats into
-	static float s_lightingData[s_maxLights * s_numLightParameters * s_numFloatsPerParameter];
+	static float s_lightingData[s_numLightFloats];
 
 	//\brief Compile the shader given the source code
     unsigned int Compile(GLuint type, const char * a_src);

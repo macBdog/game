@@ -6,7 +6,7 @@
 const float Light::s_lightDrawSize = 0.1f;		
 
 // Light data is written to shader in an array of floats
-float Shader::s_lightingData[Shader::s_maxLights * Shader::s_numLightParameters * Shader::s_numFloatsPerParameter];
+float Shader::s_lightingData[Shader::s_numLightFloats];
 
 unsigned int Shader::Compile(GLuint type, const char * a_src)
 {

@@ -83,6 +83,14 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 				continue;
 			}
 
+			// A nameless object has begun
+			if (currentObject == NULL && (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u'))
+			{
+				currentObject = new Object();
+				currentObject->SetName("UNNAMED_OBJECT");
+				currentObjectOffset = lastReadOffset;
+			}
+
 			if (currentObject != NULL)
 			{
 				while (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u')
@@ -281,7 +289,6 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 						uvIndices = uvIndexPool.GetHead();
 
 						// Now map faces to triangles by linking vertex, uv and normals by index
-						
 						for (unsigned int i = 0; i < numFaces; ++i)
 						{                
 							// Set the face data up
@@ -430,6 +437,13 @@ bool Material::Load(const char * a_materialFileName, const char * a_materialName
 			// Material library declaration
 			else if (strstr(line, "newmtl"))
 			{
+				// If we have already found the target material then this is a another declaration and we can quit out
+				if (foundTargetMaterial)
+				{
+					file.close();
+					return true;
+				}
+
 				// Cache off the material file name for later usage
 				sscanf(line, "newmtl %s", &m_name);
 
@@ -446,11 +460,15 @@ bool Material::Load(const char * a_materialFileName, const char * a_materialName
 				{
 					char tempMatName[StringUtils::s_maxCharsPerLine];
 					memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-					sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
-
+					if (strstr(line, "\\") == NULL)
+					{
+						sscanf(line, "map_Kd %s", &tempMatName);
+					}
+					else
+					{
+						sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+					}
 					m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
-					file.close();
-					return true;
 				}
 				// Ambient colour
 				if (strstr(line, "Ka"))

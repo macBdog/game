@@ -8,7 +8,7 @@ const char * lightingVertexShader =
 "varying vec3 lightVertexNormal; \n"
 "void main(void)  \n"
 "{ \n"
-"	lightVertexPos = gl_Vertex * ObjectMatrix * ViewMatrix; \n"
+"	lightVertexPos = gl_Vertex * ObjectMatrix; \n"
 "	lightVertexNormal = gl_Normal; \n"
 "	gl_FrontColor = gl_Color;  \n"
 "	OutTexCoord = gl_MultiTexCoord0.xy; \n"
