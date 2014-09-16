@@ -76,11 +76,12 @@ public:
 		, m_numVertices(0) 
 		, m_displayListId(0) { m_name[0] = '\0'; }
 
-	void SetName(const char * a_name) { strncpy(m_name, a_name, strlen(a_name) + 1); }
-	void SetNumVertices(unsigned int a_numFaces) { m_numVertices = a_numFaces; }
-	void SetVertices(Vector * a_verts) { m_verts = a_verts; }
-	void SetNormals(Vector * a_normals) { m_normals = a_normals; }
-	void SetUvs(TexCoord * a_uvs) { m_uvs = a_uvs; }
+	inline const char * GetName() { return m_name; }
+	inline void SetName(const char * a_name) { strncpy(m_name, a_name, strlen(a_name) + 1); }
+	inline void SetNumVertices(unsigned int a_numFaces) { m_numVertices = a_numFaces; }
+	inline void SetVertices(Vector * a_verts) { m_verts = a_verts; }
+	inline void SetNormals(Vector * a_normals) { m_normals = a_normals; }
+	inline void SetUvs(TexCoord * a_uvs) { m_uvs = a_uvs; }
 	inline unsigned int GetNumVertices() const { return m_numVertices; }
 	inline Vector * GetVertices() const { return m_verts; }
 	inline Vector * GetNormals() const { return m_normals; }

@@ -87,7 +87,7 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 			if (currentObject == NULL && (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u'))
 			{
 				currentObject = new Object();
-				currentObject->SetName("UNNAMED_OBJECT");
+				currentObject->SetName("");
 				currentObjectOffset = lastReadOffset;
 			}
 
@@ -175,7 +175,12 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 				}
 				file.seekg(currentObjectOffset);
 				file.getline(line, StringUtils::s_maxCharsPerLine);
-				file.getline(line, StringUtils::s_maxCharsPerLine);
+
+				// If using object names, read an extra line to get to the verts
+				if (strlen(currentObject->GetName()) > 0)
+				{
+					file.getline(line, StringUtils::s_maxCharsPerLine);
+				}
 
 				while (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u')
 				{
