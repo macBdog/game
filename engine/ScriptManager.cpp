@@ -20,6 +20,8 @@ const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant nam
 const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetValue", GUIGetValue},
 	{"SetValue", GUISetValue},
+	{"SetColour", GUISetColour},
+	{"SetScissor", GUISetScissor},
 	{"Show", GUIShowWidget},
 	{"Hide", GUIHideWidget},
 	{"Activate", GUIActivateWidget},
@@ -28,6 +30,8 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"SetActiveMenu", GUISetActiveMenu},
 	{"EnableMouse", GUIEnableMouse},
 	{"DisableMouse", GUIDisableMouse},
+	{"GetMouseClipPosition", GUIGetMouseClipPosition},
+	{"GetMouseScreenPosition", GUIGetMouseScreenPosition},
 	{NULL, NULL}
 };
 
@@ -740,6 +744,63 @@ int ScriptManager::GUISetValue(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::GUISetColour(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 6)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		Colour newColour((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetColour(newColour);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetColour", "expects 5 parameters: name of the element then four numbers between 0 and 1 for each colour channel.");
+	}
+
+	LogScriptError(a_luaState, "GUI:SetColour", "could not find the GUI element to set colour on.");
+	return 0;
+}
+
+int ScriptManager::GUISetScissor(lua_State * a_luaState)
+{
+
+	if (lua_gettop(a_luaState) == 4)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		Colour newColour((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetScissorRect(Vector2((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4)));
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetScissor", "expects 3 parameters: name of the element then two numbers between 0 and 1 for each scissor dimension.");
+	}
+
+	LogScriptError(a_luaState, "GUI:SetScissor", "could not find the GUI element to set scissor on.");
+	return 0;
+}
+
 int ScriptManager::GUIShowWidget(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 2)
@@ -884,6 +945,24 @@ int ScriptManager::GUIDisableMouse(lua_State * a_luaState)
 	Gui::Get().DisableMouseCursor();
 	InputManager::Get().DisableMouseInput();
 	return 0;
+}
+
+int ScriptManager::GUIGetMouseClipPosition(lua_State * a_luaState)
+{
+	InputManager & inMan = InputManager::Get();
+	const Vector2 mousePos = inMan.GetMousePosRelative();
+	lua_pushnumber(a_luaState, mousePos.GetX());
+	lua_pushnumber(a_luaState, mousePos.GetY());
+	return 2;
+}
+
+int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
+{
+	InputManager & inMan = InputManager::Get();
+	const Vector2 mousePos = inMan.GetMousePosAbsolute();
+	lua_pushnumber(a_luaState, mousePos.GetX());
+	lua_pushnumber(a_luaState, mousePos.GetY());
+	return 2;
 }
 
 int ScriptManager::DebugPrint(lua_State * a_luaState)

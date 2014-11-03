@@ -24,6 +24,7 @@ const char * Alignment::s_alignYNames[AlignY::Count] =
 	"bottom"
 };
 
+const float Widget::sc_alignmentHandleSize = 0.05f;									///< How big to draw the alignment handles when selecting
 const Colour Widget::sc_rolloverColour = Colour(0.25f, 0.25f, 0.25f, 0.5f);
 const Colour Widget::sc_selectedColour = Colour(0.35f, 0.35f, 0.35f, 0.5f);
 const Colour Widget::sc_editRolloverColour = Colour(0.05f, 0.2f, 0.2f, 0.2f);
@@ -67,11 +68,24 @@ void Widget::Draw()
 		RenderLayer::Enum renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
 		switch (m_selection)
 		{
-			case SelectionFlags::Rollover:		selectColour -= sc_rolloverColour * s_selectedColourValue;	break;
-			case SelectionFlags::Selected:		selectColour -= sc_selectedColour * s_selectedColourValue;	break;
+			case SelectionFlags::Rollover:		if (m_action.IsSet()) { selectColour -= sc_rolloverColour * s_selectedColourValue;	} break;
+			case SelectionFlags::Selected:		if (m_action.IsSet()) { selectColour -= sc_selectedColour * s_selectedColourValue;	} break;
 			
 			// Draw a selection box around a selected widget
-			case SelectionFlags::EditRollover:	
+			case SelectionFlags::EditRollover:
+			{
+				selectColour -= sc_editRolloverColour;
+				const float extraSelectionSize = 0.05f;
+				const Vector2 selectSize = m_size + (m_size * extraSelectionSize);
+				Vector2 startVec = drawPos;
+				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
+				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
+				Vector2 endVec = Vector2(startVec.GetX() + selectSize.GetX(), startVec.GetY());  rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec -= Vector2(selectSize.GetX(), 0.0f);	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);
+				startVec = endVec;	endVec += Vector2(0.0f, selectSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, selectColour);	
+				break;
+			}
 			case SelectionFlags::EditSelected:
 			{
 				selectColour -= sc_editSelectedColour;
@@ -92,7 +106,16 @@ void Widget::Draw()
 		// Draw the quad in various states of activation
 		if (m_texture != NULL)
 		{
-			rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), m_texture, TextureOrientation::Normal, selectColour);
+			if (m_scissorRect.IsEqualZeroEpsilon())
+			{
+				rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), m_texture, TextureOrientation::Normal, selectColour);
+			}
+			else
+			{
+				TexCoord tPos(0.0f, 0.0f);
+				TexCoord tSize(1.0f - m_scissorRect.GetX(), 1.0f - m_scissorRect.GetY());
+				rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector() - m_scissorRect, m_texture, tPos, tSize, TextureOrientation::Normal, selectColour);
+			}
 		}
 
 		// Draw fill colour for debug widgets
@@ -189,33 +212,6 @@ void Widget::Draw()
 		curWidget->GetData()->Draw();
 		curWidget = curWidget->GetNext();
 	}
-}
-
-void Widget::DrawAlignment()
-{
-	const float boxSize = 0.05f;
-	const float halfBox = boxSize * 0.5f;
-	RenderManager & rMan = RenderManager::Get();
-		
-	// Show crosshair of alignment anchor
-	Vector2 pos = m_drawPos;
-	Colour drawColour = sc_colourPurple;
-	Vector2 alignPos = Vector2(pos.GetX() + halfBox, pos.GetY() - halfBox);
-	//rMan.AddDebugLine2D(alignPos - Vector2(halfBox, 0.0f), alignPos + Vector2(halfBox, 0.0f), drawColour);
-	//rMan.AddDebugLine2D(alignPos - Vector2(0.0f, halfBox), alignPos + Vector2(0.0f, halfBox), drawColour);
-
-	// Show nine alignment anchors
-	drawColour.SetA(0.25);
-	Vector2 boxSizeVec(boxSize);
-	Vector2 anchorPos(pos.GetX(), pos.GetY());																	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos = Vector2(pos.GetX(), anchorPos.GetY() - (m_size.GetY() * 0.5f) + (boxSizeVec.GetY() * 0.5f));	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos = Vector2(pos.GetX(), anchorPos.GetY() - (m_size.GetY() * 0.5f) + (boxSizeVec.GetY() * 0.5f));	rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
-	anchorPos.SetX(anchorPos.GetX() + (m_size.GetX() * 0.5f) - (boxSizeVec.GetX() * 0.5f));						rMan.AddDebugQuad2D(anchorPos, boxSizeVec, drawColour);
 }
 
 void Widget::UpdateSelection(WidgetVector a_pos)
@@ -787,3 +783,176 @@ Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
 	
 	return pos;
 }
+
+bool Widget::GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX::Enum & a_xSelected_OUT, AlignY::Enum & a_ySelected_OUT)
+{
+	a_handlePos_OUT = m_drawPos;
+	bool inSelectionX = false;
+	bool inSelectionY = false;
+
+	// Derive and test position of alignment anchor on this widget on horizontal
+	if (a_selectionPos.GetX() >= m_drawPos.GetX() && a_selectionPos.GetX() <= m_drawPos.GetX() + a_handleSize.GetX())
+	{
+		inSelectionX = true;
+		a_xSelected_OUT = AlignX::Left;
+	}
+	else if (a_selectionPos.GetX() >= m_drawPos.GetX() + (m_size.GetX() * 0.5f) - (a_handleSize.GetX()*0.5f) && a_selectionPos.GetX() <= m_drawPos.GetX() + (m_size.GetX() * 0.5f) + (a_handleSize.GetX()*0.5f))
+	{
+		inSelectionX = true;
+		a_handlePos_OUT += Vector2((m_size.GetX() * 0.5f) - (a_handleSize.GetX()*0.5f), 0.0f);
+		a_xSelected_OUT = AlignX::Middle;
+	}
+	else if (a_selectionPos.GetX() >= m_drawPos.GetX() + m_size.GetX() - a_handleSize.GetX() && a_selectionPos.GetX() <= m_drawPos.GetX() + m_size.GetX())
+	{
+		inSelectionX = true;
+		a_handlePos_OUT += Vector2(m_size.GetX() - a_handleSize.GetX(), 0.0f);
+		a_xSelected_OUT = AlignX::Right;
+	}
+
+	// Derive and test position of alignment anchor on this widget on vertical
+	if (a_selectionPos.GetY() <= m_drawPos.GetY() && a_selectionPos.GetY() >= m_drawPos.GetY() - a_handleSize.GetY())
+	{
+		inSelectionY = true;
+		a_ySelected_OUT = AlignY::Top;
+	}
+	else if (a_selectionPos.GetY() <= m_drawPos.GetY() - (m_size.GetY() * 0.5f) + (a_handleSize.GetY()*0.5f) && a_selectionPos.GetY() >= m_drawPos.GetY() - (m_size.GetY() * 0.5f) - (a_handleSize.GetY() * 0.5f))
+	{
+		inSelectionY = true;
+		a_handlePos_OUT -= Vector2(0.0f, (m_size.GetY() * 0.5f) - (a_handleSize.GetY()*0.5f));
+		a_ySelected_OUT = AlignY::Centre;
+	}
+	else if (a_selectionPos.GetY() <= m_drawPos.GetY() - m_size.GetY() + a_handleSize.GetY() && a_selectionPos.GetY() >= m_drawPos.GetY() - m_size.GetY())
+	{
+		inSelectionY = true;
+		a_handlePos_OUT -= Vector2(0.0f, m_size.GetY() - a_handleSize.GetY());
+		a_ySelected_OUT = AlignY::Bottom;
+	}
+	return inSelectionX && inSelectionY;
+}
+
+void Widget::DrawDebugAlignmentHandleSelectionBox(const Vector2 & a_topLeft, const Vector2 & a_handleSize)
+{
+	RenderManager & rMan = RenderManager::Get();
+	Vector2 startVec = a_topLeft;
+	Vector2 endVec = startVec + Vector2(a_handleSize.GetX(), 0.0f);		rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
+	startVec = endVec;	endVec -= Vector2(0.0f, a_handleSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
+	startVec = endVec;	endVec -= Vector2(a_handleSize.GetX(), 0.0f);	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
+	startVec = endVec;	endVec += Vector2(0.0f, a_handleSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
+}
+
+#ifndef _RELEASE
+
+void Widget::DrawDebugAlignment()
+{
+	InputManager & inMan = InputManager::Get();
+	RenderManager & rMan = RenderManager::Get();
+	const Vector2 handleSizeVec(sc_alignmentHandleSize, sc_alignmentHandleSize * rMan.GetViewAspect());
+	const Vector2 halfSize = handleSizeVec * 0.5f;
+	const Vector2 mousePos = inMan.GetMousePosRelative();
+
+	// Detect mouse over handle for anchor and draw a box around it
+	Vector2 selectedHandlePos = m_drawPos;
+	AlignX::Enum selectionX = AlignX::Count;
+	AlignY::Enum selectionY = AlignY::Count;
+	if (GetAlignmentSelection(mousePos, handleSizeVec, selectedHandlePos, selectionX, selectionY))
+	{
+		DrawDebugAlignmentHandleSelectionBox(selectedHandlePos, handleSizeVec);
+	}
+
+	// Detect mouse over handle for parent alignment and draw a box around it
+	Vector2 parentSelectedHandlePos = m_alignTo->m_drawPos;
+	AlignX::Enum parentSelectionX = AlignX::Count;
+	AlignY::Enum parentSelectionY = AlignY::Count;
+	if (m_alignTo->GetAlignmentSelection(mousePos, handleSizeVec, parentSelectedHandlePos, parentSelectionX, parentSelectionY))
+	{
+		DrawDebugAlignmentHandleSelectionBox(parentSelectedHandlePos, handleSizeVec);
+	}
+
+	// Get position of the current anchor
+	Vector2 alignPos = m_drawPos;
+	switch (m_pos.m_alignAnchor.m_x)
+	{
+		case AlignX::Middle:		alignPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);	break;
+		case AlignX::Right:			alignPos += Vector2(m_size.GetX() - handleSizeVec.GetX(), 0.0f);		break;
+		default: break;
+	}
+	switch (m_pos.m_alignAnchor.m_y)
+	{
+		case AlignY::Centre:		alignPos -= Vector2(0.0f, (m_size.GetY() * 0.5f) - halfSize.GetY());	break;
+		case AlignY::Bottom:		alignPos -= Vector2(0.0f, m_size.GetY() - handleSizeVec.GetY());		break;
+		default: break;
+	}
+
+	// Draw a box around the current anchor
+	DrawDebugAlignmentHandleSelectionBox(alignPos, handleSizeVec);
+	
+	/// Get position alignment applies on the parent widget
+	Vector2 parentAlignPos = m_alignTo->m_drawPos;
+	switch(m_pos.m_align.m_x)
+	{
+		case AlignX::Middle:		parentAlignPos += Vector2((m_alignTo->m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);		break;
+		case AlignX::Right:			parentAlignPos += Vector2(m_alignTo->m_size.GetX() - handleSizeVec.GetX(), 0.0f);			break;
+		default: break;
+	}
+	switch (m_pos.m_align.m_y)
+	{
+		case AlignY::Centre:		parentAlignPos -= Vector2(0.0f, (m_alignTo->m_size.GetY() * 0.5f) - halfSize.GetY());		break;
+		case AlignY::Bottom:		parentAlignPos -= Vector2(0.0f, m_alignTo->m_size.GetY() - handleSizeVec.GetY());			break;
+		default: break;
+	}
+
+	// Draw a box around the active parent alignment
+	DrawDebugAlignmentHandleSelectionBox(parentAlignPos, handleSizeVec);
+
+	// Draw an arrow from anchor to parent
+	const Vector2 invHalf = Vector2(halfSize.GetX(), -halfSize.GetY());
+	rMan.AddDebugArrow2D(alignPos + invHalf, parentAlignPos + invHalf, sc_colourPurple);
+	
+	const Colour handleColour = sc_colourPurple - (0.25f, 0.25f, 0.25f, 0.5f);
+	DrawDebugAlignmentHandles(handleSizeVec, handleColour, sc_colourPurple);
+	m_alignTo->DrawDebugAlignmentHandles(handleSizeVec, handleColour, sc_colourPurple);
+}
+
+void Widget::DrawDebugAlignmentHandles(const Vector2 & a_handleSize, const Colour & a_drawColour, const Colour & a_selectedColour)
+{
+	// Show nine alignment anchors on this widget
+	RenderManager & rMan = RenderManager::Get();
+	const Vector2 halfSize = a_handleSize * 0.5f;
+	Vector2 anchorPos = m_drawPos;
+	Colour anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Left && m_pos.m_alignAnchor.m_y == AlignY::Top ? a_selectedColour : a_drawColour;
+	rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+	
+	// Middle Top
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Middle && m_pos.m_alignAnchor.m_y == AlignY::Top ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Right Top
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Right && m_pos.m_alignAnchor.m_y == AlignY::Top ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Left Centre
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Left && m_pos.m_alignAnchor.m_y == AlignY::Centre ? a_selectedColour : a_drawColour;
+	anchorPos = Vector2(m_drawPos.GetX(), m_drawPos.GetY() - (m_size.GetY() * 0.5f) + halfSize.GetY());		rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Middle Centre
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Middle && m_pos.m_alignAnchor.m_y == AlignY::Centre ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Right Centre
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Right && m_pos.m_alignAnchor.m_y == AlignY::Centre ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Left Bottom
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Left && m_pos.m_alignAnchor.m_y == AlignY::Bottom ? a_selectedColour : a_drawColour;
+	anchorPos = Vector2(m_drawPos.GetX(), m_drawPos.GetY() - m_size.GetY() + a_handleSize.GetY());				rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Middle Bottom
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Middle && m_pos.m_alignAnchor.m_y == AlignY::Bottom ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+
+	// Right Bottom
+	anchorColour = m_pos.m_alignAnchor.m_x == AlignX::Right && m_pos.m_alignAnchor.m_y == AlignY::Bottom ? a_selectedColour : a_drawColour;
+	anchorPos += Vector2((m_size.GetX() * 0.5f) - halfSize.GetX(), 0.0f);									rMan.AddDebugQuad2D(anchorPos, a_handleSize, anchorColour);
+}
+
+#endif

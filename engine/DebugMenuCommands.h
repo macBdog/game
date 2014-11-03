@@ -79,6 +79,7 @@ namespace EditMode
 		Template,		///< Create an object from a template
 		SaveTemplate,	///< Set the template name for an object
 		Alignment,		///< Set alignment of a widget
+		AlignmentParent,///< Set the alignment parent of a widget
 		ClipPosition,	///< Origin of the clip volume of a game object
 		ClipSize,		///< Size of the clip volume of the game object
 		Ambient,		///< Change the colour of the ambient component of a light
@@ -215,6 +216,7 @@ private:
 	//\ brief Debug menu command functions
 	DebugCommandReturnData CreateWidget(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetAlignment(Widget * a_widget);
+	DebugCommandReturnData ChangeWidgetAlignmentParent(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetOffset(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetShape(Widget * a_widget);
 	DebugCommandReturnData ChangeWidgetName(Widget * a_widget);

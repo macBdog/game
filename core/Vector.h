@@ -51,7 +51,6 @@ public:
 	void operator += (const Vector & a_val) { x += a_val.x; y += a_val.y; z += a_val.z; }
 	void operator -= (const Vector & a_val) { x -= a_val.x; y -= a_val.y; z -= a_val.z; }
 	
-
 private:
 	float x, y, z;
 };
@@ -76,8 +75,10 @@ public:
 	void Normalise() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; } }
 
 	// Utility functions
-	const float LengthSquared() const { return x*x + y*y; }
-	float Length() const { return sqrt(LengthSquared()); }
+	inline const float LengthSquared() const { return x*x + y*y; }
+	inline float Length() const { return sqrt(LengthSquared()); }
+	inline bool IsEqualZero() { return x == 0.0f && y == 0.0f; }
+	inline bool IsEqualZeroEpsilon(float a_epsilon = 0.0001f) { return fabsf(x) + fabsf(y) < a_epsilon * 2.0f; }
 
 	// Operator overloads
 	Vector2 operator * (const Vector2 & a_val) const { return Vector2(x * a_val.x, y * a_val.y); }

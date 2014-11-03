@@ -94,6 +94,8 @@ private:
 
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
+	static int GUISetColour(lua_State * a_luaState);
+	static int GUISetScissor(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);
 	static int GUIHideWidget(lua_State * a_luaState);
 	static int GUIActivateWidget(lua_State * a_luaState);
@@ -102,6 +104,8 @@ private:
 	static int GUISetActiveMenu(lua_State * a_luaState);
 	static int GUIEnableMouse(lua_State * a_luaState);
 	static int GUIDisableMouse(lua_State * a_luaState);
+	static int GUIGetMouseClipPosition(lua_State * a_luaState);
+	static int GUIGetMouseScreenPosition(lua_State * a_luaState);
 	
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);

@@ -111,7 +111,9 @@ void DebugMenuCommandRegistry::Startup()
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetAlignment);
-	lastCreatedCommand = Create("Offset",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
+	lastCreatedCommand = Create("Align Parent",				m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::Widget);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetAlignmentParent);
+	lastCreatedCommand = Create("Offset",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourSkyBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetOffset);
 	lastCreatedCommand = Create("Shape",					m_btnWidgetRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetShape);
@@ -372,7 +374,8 @@ void DebugMenuCommandRegistry::HideRootCommands()
 
 	DEBUG_COMMANDS_LOOP_BEGIN
 		if (strcmp(debugWidget->GetName(), "Create Widget") == 0 || 
-			strcmp(debugWidget->GetName(), "Create GameObject") == 0) 
+			strcmp(debugWidget->GetName(), "Create GameObject") == 0 ||
+			strcmp(debugWidget->GetName(), "Create Light") == 0) 
 		{
 			debugWidget->SetActive(false);
 		}
@@ -443,6 +446,17 @@ DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetAlignment(Widget * 
 	DebugCommandReturnData retVal;
 	retVal.m_editType = EditType::Widget;
 	retVal.m_editMode = EditMode::Alignment;
+	retVal.m_success = true;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ChangeWidgetAlignmentParent(Widget * a_widget)
+{
+	Hide();
+
+	DebugCommandReturnData retVal;
+	retVal.m_editType = EditType::Widget;
+	retVal.m_editMode = EditMode::AlignmentParent;
 	retVal.m_success = true;
 	return retVal;
 }

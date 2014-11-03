@@ -99,7 +99,7 @@ bool Gui::Update(float a_dt)
 	// Process mouse position for selection of widgets
 	UpdateSelection();
 
-	// Update the pulsing of selected widgets
+	// Update the pulsing of selected widgets that have actions
 	s_widgetPulseTimer += a_dt * 16.0f;
 	Widget::s_selectedColourValue = sin(s_widgetPulseTimer);
 

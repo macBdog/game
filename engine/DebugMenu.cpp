@@ -120,7 +120,7 @@ bool DebugMenu::Startup()
 	m_btnTextInputCancel = DebugMenuCommand::CreateButton("Cancel", m_textInput, sc_colourGrey);
 	m_btnTextInputCancel->SetAction(this, &DebugMenu::OnMenuItemMouseUp);
 
-	// Widgets to be used by script
+	// Widgets to be used by script for debugging to the screen
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
 		curItem.m_selectFlags = SelectionFlags::Rollover;
@@ -588,6 +588,8 @@ bool DebugMenu::OnActivate(bool a_active)
 
 bool DebugMenu::OnSelect(bool a_active)
 {
+	const Vector2 mousePos = InputManager::Get().GetMousePosRelative();
+
 	// Respond to a click and set internal state if it's been handled by a command
 	if (m_commands.IsActive())
 	{
@@ -650,6 +652,43 @@ bool DebugMenu::OnSelect(bool a_active)
 		return false;
 	}
 
+	// Don't play around with widget selection while we are changing alignment
+	if (m_editType == EditType::Widget && m_editMode == EditMode::Alignment)
+	{
+		// Handle change to alignment
+		if (m_widgetToEdit != NULL)
+		{
+			Vector2 handlePos;
+			AlignX::Enum selectionX = AlignX::Count;
+			AlignY::Enum selectionY = AlignY::Count;
+			bool setAlignment = false;
+			if (m_widgetToEdit->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
+			{
+				m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
+				m_widgetToEdit->SetAlignmentAnchor(selectionX, selectionY);
+				m_dirtyFlags.Set(DirtyFlag::GUI);
+				setAlignment = true;
+			}
+			if (m_widgetToEdit->GetAlignTo()->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
+			{
+				m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
+				m_widgetToEdit->SetAlignment(selectionX, selectionY);
+				m_dirtyFlags.Set(DirtyFlag::GUI);
+				setAlignment = true;
+			}
+
+			// Exit from alignment edit mode
+			if (!setAlignment)
+			{
+				m_editType = EditType::None;
+				m_editMode = EditMode::None;
+				m_widgetToEdit->ClearSelection();
+				m_widgetToEdit = NULL;
+			}
+		}
+		return false;
+	}
+
 	// Cancel previous selection
 	if (!IsDebugMenuActive() && m_editMode == EditMode::None)
 	{
@@ -665,6 +704,17 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Find the first widget that is rolled over in edit mode
 	if (Widget * newSelectedWidget = Gui::Get().GetActiveWidget())
 	{
+		// Handle widget selection when changing alignment parent
+		if (m_editType == EditType::Widget && 
+			m_editMode == EditMode::AlignmentParent &&
+			m_widgetToEdit != NULL &&
+			m_widgetToEdit != newSelectedWidget)
+		{
+			m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
+			m_widgetToEdit->SetAlignTo(newSelectedWidget);
+			m_dirtyFlags.Set(DirtyFlag::GUI);
+		}
+
 		// Clear selection of old widget
 		if (m_widgetToEdit != NULL && m_widgetToEdit != newSelectedWidget)
 		{
@@ -695,7 +745,6 @@ bool DebugMenu::OnSelect(bool a_active)
 		const float pickDepth = 100.0f;
 		RenderManager & renMan = RenderManager::Get();
 		CameraManager & camMan = CameraManager::Get();
-		Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 		Matrix camMat = camMan.GetCameraMatrix();
 		Vector camPos = camMan.GetWorldPos();
 
@@ -1046,7 +1095,7 @@ void DebugMenu::Draw()
 	// Draw selected widget alignment
 	if (m_editMode == EditMode::Alignment && m_widgetToEdit != NULL)
 	{
-		m_widgetToEdit->DrawAlignment();
+		m_widgetToEdit->DrawDebugAlignment();
 	}
 
 	// Draw magnitude of size editing

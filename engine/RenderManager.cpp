@@ -636,15 +636,15 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		{
 			glColor4f(t->m_colour.GetR(), t->m_colour.GetG(), t->m_colour.GetB(), t->m_colour.GetA());
 
-			// Draw a quad with a texture
+			// Draw a tri with a texture
 			if (t->m_textureId >= 0)
 			{
 				if (pLastShader != m_textureShader)
 				{
 					glEnable(GL_TEXTURE_2D);
-					m_textureShader->UseShader(shaderData);
 					pLastShader = m_textureShader;
 				}
+				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, t->m_textureId);
 			}
 			else // Flat colour triangles
@@ -652,11 +652,12 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				if (pLastShader != m_colourShader)
 				{
 					glDisable(GL_TEXTURE_2D);
-					m_colourShader->UseShader(shaderData);
 					pLastShader = m_colourShader;
 				}
 			}
 			
+			pLastShader->UseShader(shaderData);
+
 			glBegin(GL_TRIANGLES);
 
 			glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
@@ -686,9 +687,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				if (pLastShader != m_textureShader)
 				{
 					glEnable(GL_TEXTURE_2D);
-					m_textureShader->UseShader(shaderData);
 					pLastShader = m_textureShader;
 				}
+				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, q->m_textureId);
 			}
 			else // Flat colour quads
@@ -696,10 +697,11 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 				if (pLastShader != m_colourShader)
 				{
 					glDisable(GL_TEXTURE_2D);
-					m_colourShader->UseShader(shaderData);
 					pLastShader = m_colourShader;
 				}
 			}
+
+			pLastShader->UseShader(shaderData);
 	
 			glBegin(GL_QUADS);
 

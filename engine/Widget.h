@@ -36,7 +36,25 @@ namespace AlignY
 	};
 }
 
-//\brief Alignment structs contain data and utility functions for delcaring a position in 2D space relative to some other position
+//		 ___________________________________________________________________________________________
+//		|																							|\
+//		| Left Top								Middle Top								  Right Top | \
+//		|																							|  \
+//		|																							|   | 
+//		|																							|   |
+//		|																							|   |
+//		| Left Centre							Middle Centre						Right Centre	|   |
+//		|																							|   |
+//		|																							|   |
+//		|																							|	|
+//		|																							|	|
+//		| Left Bottom							Middle Bottom						Right Bottom	|	|
+//		|___________________________________________________________________________________________|	|
+//		\																							 \  |
+//		 \																							  \ |
+//		  \____________________________________________________________________________________________\|
+
+//\brief Alignment structs contain data and utility functions for delcaring a position in 2D space relative to some other position in 2D space
 struct Alignment
 {
 	Alignment() : m_x(AlignX::Middle), m_y(AlignY::Centre) { }
@@ -148,6 +166,7 @@ public:
 		: m_pos(0.0f, 0.0f)
 		, m_size(0.0f, 0.0f)
 		, m_drawPos(0.0f, 0.0f)
+		, m_scissorRect(0.0f, 0.0f)
 		, m_fontNameHash(0)
 		, m_fontSize(1.0f)
 		, m_selectFlags(0)
@@ -200,7 +219,9 @@ public:
 
 	//\brief Base implementation will tint for selection
 	void Draw();
-	void DrawAlignment();
+
+	//\brief Debug widgets are rendered in a different renderLayer to regular widgets
+	inline bool IsDebugWidget() { return m_debugRender; }
 
 	//\brief Update selection flags for the widget and family based on a position
 	//\param a_pos is the position to update from, usually the mouse pos
@@ -218,9 +239,6 @@ public:
 
 	//\brief Active means rendering, updating selection and responding to events
 	inline bool IsActive() { return m_active; }
-
-	//\brief Debug widgets are rendered in a different renderLayer to regular widgets
-	inline bool IsDebugWidget() { return m_debugRender; }
 
 	//\brief Append a child widget pointer onto this widget creating a hierachy
 	//\param a_child is a pointer to the allocated widget to append
@@ -241,6 +259,7 @@ public:
 	inline void SetTexture(Texture * a_tex) { m_texture = a_tex; }
 	inline void SetOffset(const Vector2 & a_pctOffset) { m_pos = a_pctOffset; }
 	inline void SetDrawPos(const Vector2 & a_pos) { m_drawPos = a_pos; }
+	inline void SetScissorRect(const Vector2 & a_rect) { m_scissorRect = a_rect; }
 	inline void SetPos(const WidgetVector & a_pos) { m_pos = a_pos; }
 	inline void SetAlignment(const Alignment & a_align) { m_pos.SetAlignment(a_align); } 
 	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); }
@@ -306,7 +325,16 @@ public:
 	const char * GetListItem(unsigned int a_itemId);
 	inline const char * GetSelectedListItem() { return GetListItem(m_selectedListItemId); } 
 
-	static float s_selectedColourValue;	///< Value to attenuate a selected widget's colour with, only one selected widget ever
+#ifndef _RELEASE
+	//\brief Show alignment handles and parent alignment
+	void DrawDebugAlignment();
+	void DrawDebugAlignmentHandleSelectionBox(const Vector2 & a_topLeft, const Vector2 & a_handleSize);
+	bool GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX::Enum & a_xSelected_OUT, AlignY::Enum & a_ySelected_OUT);
+	void DrawDebugAlignmentHandles(const Vector2 & a_boxSize, const Colour & a_drawColour, const Colour & a_selectedColour);
+#endif
+
+	static float s_selectedColourValue;				///< Value to attenuate a selected widget's colour with, only one selected widget ever
+	static const float sc_alignmentHandleSize;		///< How big to draw the alignment handles when selecting
 
 private:
 
@@ -324,6 +352,7 @@ private:
 	WidgetVector m_size;				///< How much of the parent container the element takes up
 	WidgetVector m_pos;					///< Where in the parent container the element resides
 	Vector2 m_drawPos;					///< The calculated screen position of this widget based on it's hierachy
+	Vector2 m_scissorRect;				///< If the widget drawing should be clipped by some amount, this vec will be non zero
 	Colour m_colour;					///< What the base colour of the widget is, will tint texture
 	bool m_active;						///< If the widget should be drawn and reactive
 	bool m_showTextCursor;				///< If the cursor should be shown on a text field
