@@ -84,6 +84,7 @@ myGameObject:EnableCollision()
 myGameObject:DisableCollision()
 bool = myGameObject:HasCollisions()
 {} = myGameObject:GetCollisions()
+rayHitX, rayHitY, rayHitZ, rayNormX, rayNormY, rayNormZ, myHitGameObject = GetRayCollision(rayStartX, rayStartY, rayStaryZ, rayEndX, rayEndZ)
 myGameObject:PlayAnimation("AnimationName")
 myGameObject:Destroy()
 ]]

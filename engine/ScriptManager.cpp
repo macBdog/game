@@ -64,6 +64,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"DisableCollision", DisableGameObjectCollision},
 	{"HasCollisions", TestGameObjectCollisions},
 	{"GetCollisions", GetGameObjectCollisions},
+	{"GetRayCollision", RayCollisionTest},
 	{"PlayAnimation", PlayGameObjectAnimation},
 	{"Destroy", DestroyGameObject},
 	{NULL, NULL}
@@ -1490,6 +1491,11 @@ int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 		LogScriptError(a_luaState, "GetCollisions", "expects no parameters.");
 	}
 
+	return 1;
+}
+
+int ScriptManager::RayCollisionTest(lua_State * a_luaState)
+{
 	return 1;
 }
 

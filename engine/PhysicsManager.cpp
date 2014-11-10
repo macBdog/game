@@ -356,6 +356,25 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 	return false;
 }
 
+bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT, GameObject * a_gameObjHit_OUT)
+{
+	// Start and End are vectors
+	const btVector3 start(a_rayStart.GetX(), a_rayStart.GetY(), a_rayStart.GetZ());
+	const btVector3 end(a_rayEnd.GetX(), a_rayEnd.GetY(), a_rayEnd.GetZ());
+	
+	// Perform raycast
+	btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+	m_dynamicsWorld->rayTest(start, end, rayCallback);
+	if (rayCallback.hasHit()) 
+	{
+		a_worldHit_OUT = Vector(rayCallback.m_hitPointWorld.getX(), rayCallback.m_hitPointWorld.getY(), rayCallback.m_hitPointWorld.getZ());
+		a_worldNormal_OUT = Vector(rayCallback.m_hitNormalWorld.getX(), rayCallback.m_hitNormalWorld.getY(), rayCallback.m_hitNormalWorld.getZ());
+		a_gameObjHit_OUT = (GameObject*)rayCallback.m_collisionObject->getUserPointer();
+		return true;
+	}
+	return false;
+}
+
 int PhysicsManager::GetCollisionGroupId(StringHash a_colGroupHash)
 {
 	for (int i = 1; i < s_maxCollisionGroups; ++i)
