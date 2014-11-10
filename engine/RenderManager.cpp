@@ -450,6 +450,14 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		}
 	}
 
+#ifndef _RELEASE
+	// Turn off full scene shaders for editing
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		bUseDefaultShader = true;
+	}
+#endif
+
 	// Otherwise use the default
 	if (bUseDefaultShader)
 	{	

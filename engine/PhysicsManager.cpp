@@ -1,4 +1,5 @@
 #include <btBulletDynamicsCommon.h>
+#include "btBulletWorldImporter.h"
 
 #include "GameObject.h"
 #include "Log.h"
@@ -37,15 +38,21 @@ PhysicsObject::~PhysicsObject()
 	}
 }
 
-bool PhysicsManager::Startup(const GameFile & a_config)
+bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath)
 {
+	// Cache off path to bullet files
+	if (a_meshPath != NULL && a_meshPath[0] != '\0')
+	{
+		strncpy(m_meshPath, a_meshPath, sizeof(char) * strlen(a_meshPath) + 1);
+	}
+
 	// Initialise physics world
 	m_broadphase = new btDbvtBroadphase();
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
 	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 	m_solver = new btSequentialImpulseConstraintSolver;
-	btVector3	worldAabbMin(-1000,-1000,-1000);
-	btVector3	worldAabbMax(1000,1000,1000);
+	btVector3 worldAabbMin(-1000,-1000,-1000);
+	btVector3 worldAabbMax(1000,1000,1000);
 
 	btAxisSweep3*	broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	
@@ -216,7 +223,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	}
 
 	btCollisionShape * collisionShape = NULL;
-	btCollisionObject * collisionObject = NULL;
+	
 	switch (a_gameObj->GetClipType())
 	{
 		case ClipType::Box: 
@@ -231,9 +238,25 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			collisionShape = new btSphereShape(a_gameObj->GetClipSize().GetX());
 			break;
 		}
+		case ClipType::Mesh:
+		{
+			char bulletFilePath[StringUtils::s_maxCharsPerLine];
+			sprintf(bulletFilePath, "%s%s", m_meshPath, a_gameObj->GetPhysicsMeshName());
+			if (btBulletWorldImporter * bulletFileLoader = new btBulletWorldImporter(m_dynamicsWorld))
+			{
+				bulletFileLoader->loadFile(bulletFilePath);
+				if (bulletFileLoader->getNumCollisionShapes() > 0)
+				{
+					collisionShape = bulletFileLoader->getCollisionShapeByIndex(0);
+				}
+				delete bulletFileLoader;
+			}
+			break;
+		}
 		default: return false;
 	}
 
+	btCollisionObject * collisionObject = NULL;
 	collisionShape->setMargin(0.0f);
 	collisionObject = new btCollisionObject();
 

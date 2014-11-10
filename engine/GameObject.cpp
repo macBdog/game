@@ -18,7 +18,8 @@ const char * GameObject::s_clipTypeStrings[ClipType::Count] =
 	"none",
 	"axisbox",
 	"sphere",
-	"box"
+	"box",
+	".bullet",
 };
 
 bool GameObject::Update(float a_dt)
@@ -99,6 +100,12 @@ bool GameObject::Draw()
 				case ClipType::Sphere:
 				{
 					rMan.AddDebugSphere(GetClipPos(), m_clipVolumeSize.GetX(), sc_colourGrey); 
+					break;
+				}
+				case ClipType::Mesh:
+				{
+					// TODO: proper collision mesh drawing
+					rMan.AddDebugSphere(GetClipPos(), 1.0f, sc_colourGreen); 
 					break;
 				}
 				
@@ -268,12 +275,20 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		{
 			if (m_clipType != ClipType::None)
 			{
-				outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[m_clipType]);
-				char vecBuf[StringUtils::s_maxCharsPerName];
-				m_clipVolumeSize.GetString(vecBuf);
-				outputFile->AddProperty(fileObject, "clipSize", vecBuf);
-				m_clipVolumeOffset.GetString(vecBuf);
-				outputFile->AddProperty(fileObject, "clipOffset", vecBuf);
+				// Triangle mesh type clipping
+				if (m_clipType == ClipType::Mesh) 
+				{
+					outputFile->AddProperty(fileObject, "clipType", m_physicsMesh);
+				}
+				else // Primitive type clipping
+				{
+					outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[m_clipType]);
+					char vecBuf[StringUtils::s_maxCharsPerName];
+					m_clipVolumeSize.GetString(vecBuf);
+					outputFile->AddProperty(fileObject, "clipSize", vecBuf);
+					m_clipVolumeOffset.GetString(vecBuf);
+					outputFile->AddProperty(fileObject, "clipOffset", vecBuf);
+				}
 			}
 			if (!m_clipGroup.IsEmpty())
 			{
@@ -314,12 +329,19 @@ void GameObject::SerialiseTemplate()
 	}
 	if (m_clipType != ClipType::None)
 	{
-		templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[m_clipType]);
-		char vecBuf[StringUtils::s_maxCharsPerName];
-		m_clipVolumeSize.GetString(vecBuf);
-		templateFile->AddProperty(templateObj, "clipSize", vecBuf);
-		m_clipVolumeOffset.GetString(vecBuf);
-		templateFile->AddProperty(templateObj, "clipOffset", vecBuf);
+		if (m_clipType == ClipType::Mesh)
+		{
+			templateFile->AddProperty(templateObj, "clipType", m_physicsMesh);
+		}
+		else
+		{
+			templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[m_clipType]);
+			char vecBuf[StringUtils::s_maxCharsPerName];
+			m_clipVolumeSize.GetString(vecBuf);
+			templateFile->AddProperty(templateObj, "clipSize", vecBuf);
+			m_clipVolumeOffset.GetString(vecBuf);
+			templateFile->AddProperty(templateObj, "clipOffset", vecBuf);
+		}
 	}
 	if (!m_clipGroup.IsEmpty())
 	{

@@ -169,6 +169,11 @@ bool Scene::Load(const char * a_scenePath)
 				{
 					newObject->SetClipType(ClipType::Box);
 				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+				{
+					newObject->SetClipType(ClipType::Mesh);
+					newObject->SetPhysicsMesh(clipType->GetString());
+				}
 				else
 				{
 					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), a_scenePath);
@@ -716,6 +721,12 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Box);
 					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+					{
+						hasCollision = true;
+						newGameObject->SetClipType(ClipType::Mesh);
+						newGameObject->SetPhysicsMesh(clipType->GetString());
+					}
 					else
 					{
 						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
@@ -746,9 +757,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 
 				// Add collision
 				PhysicsManager & pMan = PhysicsManager::Get();
-				if (hasCollision && 
-					newGameObject->GetClipType() > ClipType::None &&
-					newGameObject->GetClipSize().LengthSquared() > 0.0f)
+				if (hasCollision && newGameObject->GetClipType() > ClipType::None)
 				{
 					// Set the collision group up first
 					if (GameFile::Property * clipGroup = object->FindProperty("clipGroup"))
@@ -764,7 +773,10 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 					}
 
 					// Add object to collision world
-					pMan.AddCollisionObject(newGameObject);
+					if (newGameObject->GetClipType() == ClipType::Mesh || newGameObject->GetClipSize().LengthSquared() > 0.0f)
+					{
+						pMan.AddCollisionObject(newGameObject);
+					}
 				}
 
 				// Optionally add to physics world

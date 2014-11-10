@@ -66,11 +66,11 @@ public:
 		, m_dispatcher(NULL)
 		, m_solver(NULL)
 		, m_dynamicsWorld(NULL) 
-		, m_collisionWorld(NULL) { }
+		, m_collisionWorld(NULL) { m_meshPath[0] = '\0'; }
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
-	bool Startup(const GameFile & a_config);
+	bool Startup(const GameFile & a_config, const char * a_meshPath);
 	bool Shutdown();
 	void Update(float a_dt);
 
@@ -113,8 +113,11 @@ protected:
 private:
 
 	static const int s_maxCollisionGroups = 16;
+
 	StringHash m_collisionGroups[s_maxCollisionGroups];
 	BitSet m_collisionFilters[s_maxCollisionGroups];
+
+	char m_meshPath[StringUtils::s_maxCharsPerLine];
 
 	btBroadphaseInterface * m_broadphase;
 	btDefaultCollisionConfiguration * m_collisionConfiguration;

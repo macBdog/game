@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);
-	PhysicsManager::Get().Startup(gameConfig);
+	PhysicsManager::Get().Startup(gameConfig, modelPath);
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup(gameConfig.GetBool("render", "vr"));

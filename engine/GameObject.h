@@ -32,15 +32,16 @@ namespace GameObjectState
 	};
 }
 
-//\brief Clipping is for render culling and simple collisions for picking 
+//\brief Clipping is for render culling, simple collisions for picking and specifying physics objects
 namespace ClipType
 {
 	enum Enum
 	{
 		None = 0,	///< Always rendered, can't be picked
-		AxisBox,	//< Box that can't be rotated
+		AxisBox,	///< Box that can't be rotated
 		Sphere,		///< Sphere bounding volume
 		Box,		///< Box with three seperate dimensions
+		Mesh,		///< Triangles defined in a separate collision mesh
 		Count,
 	};
 }
@@ -75,6 +76,7 @@ public:
 		{ 
 			SetName("UNNAMED_GAME_OBJECT");
 			SetTemplate("");
+			m_physicsMesh[0] = '\0';
 		}
 
 	~GameObject() { assert(m_physics == NULL); }
@@ -100,10 +102,12 @@ public:
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
+	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != NULL && a_meshName[0] != '\0') { strcpy(m_physicsMesh, a_meshName); } }
 
 	inline unsigned int GetId() const { return m_id; }
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetTemplate() const { return m_template; }
+	inline const char * GetPhysicsMeshName() const { return m_physicsMesh; }
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
@@ -188,6 +192,7 @@ private:
 	Matrix				  m_finalMat;									///< Aggregate of world and local only used by render
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
+	char				  m_physicsMesh[StringUtils::s_maxCharsPerName];///< If the clip type of mesh is used, this is the name of the mesh to load
 	int					  m_scriptRef;									///< If the object is created and managed by script, the ID on the script side is stored here
 };
 
