@@ -1,5 +1,5 @@
 WHAT IS THE CURRENT SHORT TERM GOAL: DK2 support. Skeletal animations, not just root motion.
-TASK QUEUE: Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
+TASK QUEUE: F5 reload scripts. Profiling. Write a defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
 BUGS: Pretty sure there is a leak somewhere in the event handling, check it out.
 
 What is this project?
@@ -41,7 +41,8 @@ TAB - Switch to in game editor (the rest of the keys only work inside the editor
 Esc - Release the mouse
 Left click - Select GUI element or GameObject
 Right click - Open context sensitive menu (change object, new object etc)
-x,y,z - Hold to reposition object
+w, a, s, d - Move debug camera in worldspace, shift modifier for rotation
+x, y, z - Hold to reposition object, alt modifier rotates
 
 Style:
 
