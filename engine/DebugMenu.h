@@ -51,6 +51,9 @@ public:
 	//\brief Listener function to reload scripts in designer and debug builds
 	bool OnReload(bool a_active);
 
+	//\brief Listener functions to manually manipulate game dt
+	bool OnTimePause(bool a_active);
+
 	//\brief Listener function to select a widget
 	//\param a_active if the menu should be shown or hidden
 	bool OnSelect(bool a_active);
@@ -65,15 +68,18 @@ public:
 	bool OnAlphaKeyUp(bool a_unused);
 
 	//\brief Debug menu enabled means are we in edit mode, has TAB been toggled
-	bool IsDebugMenuEnabled() const { return m_enabled; }
+	inline bool IsDebugMenuEnabled() const { return m_enabled; }
 
 	//\brief Debug menu active means there is a menu or dialog of the debug menu visible
-	bool IsDebugMenuActive() const 
+	inline bool IsDebugMenuActive() const 
 	{ 
 		return	m_commands.IsActive() ||
 				(m_resourceSelect != NULL && m_resourceSelect->IsActive()) ||
 				(m_textInput != NULL && m_textInput->IsActive());
 	}
+
+	//\brief If sim dt and game dt should advance
+	inline bool IsTimePaused() const { return m_timePaused; }
 
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
@@ -114,6 +120,7 @@ private:
 	void HideTextInput();
 
 	bool m_enabled;									///< Is the menu being shown
+	bool m_timePaused;								///< Is the game dt running forward
 	float m_gameTimeScale;							///< How fast the game is running, 1.0 means real time
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames

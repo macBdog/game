@@ -109,6 +109,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
 		lua_register(m_globalLua, "DebugLine", DebugLine);
+		lua_register(m_globalLua, "DebugPoint", DebugPoint);
 
 		// Register C++ functions available on the global GUI
 		lua_newtable(m_globalLua);
@@ -248,7 +249,6 @@ bool ScriptManager::Update(float a_dt)
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
 				}
 
-
 				m_forceReloadScripts = false;
 				scriptsReloaded = true;
 				curScript->m_timeStamp = curTimeStamp;
@@ -266,8 +266,14 @@ bool ScriptManager::Update(float a_dt)
 		}
 	}
 
+	// Don't update scripts if time paused
+	if (DebugMenu::Get().IsTimePaused())
+	{
+		return true;
+	}
+
 	// Don't update scripts while debugging
-	if (DebugMenu::Get().IsDebugMenuEnabled())
+	if (DebugMenu::Get().IsDebugMenuEnabled() && DebugMenu::Get().IsTimePaused())
 	{
 		return true;
 	}
@@ -581,6 +587,12 @@ int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
 
 int ScriptManager::SetCameraPosition(lua_State * a_luaState)
 {
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
 	if (lua_gettop(a_luaState) == 3)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
@@ -598,6 +610,12 @@ int ScriptManager::SetCameraPosition(lua_State * a_luaState)
 
 int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 {
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
 	if (lua_gettop(a_luaState) == 3)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
@@ -615,6 +633,12 @@ int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 
 int ScriptManager::SetCameraFOV(lua_State * a_luaState)
 {
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
 	if (lua_gettop(a_luaState) == 1)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
@@ -629,6 +653,12 @@ int ScriptManager::SetCameraFOV(lua_State * a_luaState)
 
 int ScriptManager::MoveCamera(lua_State * a_luaState)
 {
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
 	if (lua_gettop(a_luaState) == 3)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
@@ -649,6 +679,12 @@ int ScriptManager::MoveCamera(lua_State * a_luaState)
 
 int ScriptManager::RotateCamera(lua_State * a_luaState)
 {
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
 	if (lua_gettop(a_luaState) == 3)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
@@ -1062,6 +1098,23 @@ int ScriptManager::DebugLine(lua_State * a_luaState)
 		Vector p1((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
 		Vector p2((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
 		RenderManager::Get().AddDebugLine(p1, p2);
+	}
+	return 0;
+}
+
+int ScriptManager::DebugPoint(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 6)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		Vector pos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		Colour col((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6), 1.0f);
+		RenderManager::Get().AddDebugSphere(pos, 0.01f, col);
 	}
 	return 0;
 }

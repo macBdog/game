@@ -28,7 +28,8 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 };
 
 DebugMenu::DebugMenu()
-: m_enabled(false) 
+: m_enabled(false)
+, m_timePaused(false)
 , m_gameTimeScale(1.0f)
 , m_dirtyFlags()
 , m_lastMousePosRelative(0.0f)
@@ -139,6 +140,7 @@ bool DebugMenu::Startup()
 	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnReload, SDLK_F5);
+	inMan.RegisterKeyCallback(this, &DebugMenu::OnTimePause, SDLK_p);
 	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyDown, InputType::KeyDown); 
 	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyUp, InputType::KeyUp); 
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, MouseButton::Right);
@@ -596,6 +598,15 @@ bool DebugMenu::OnReload(bool a_active)
 	return true;
 }
 
+bool DebugMenu::OnTimePause(bool a_active)
+{
+#ifndef _RELEASE
+	m_timePaused = !m_timePaused;
+#endif
+
+	return true;
+}
+
 bool DebugMenu::OnSelect(bool a_active)
 {
 	const Vector2 mousePos = InputManager::Get().GetMousePosRelative();
@@ -820,6 +831,10 @@ bool DebugMenu::OnSelect(bool a_active)
 bool DebugMenu::OnEnable(bool a_toggle)
 {
 	m_enabled = !m_enabled;
+	if (m_enabled) 
+	{
+		m_timePaused = true;
+	}
 	return m_enabled;
 }
 
