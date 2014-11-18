@@ -286,7 +286,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	int colGroupId = GetCollisionGroupId(a_gameObj->GetClipGroup());
 	if (colGroupId > 0)
 	{
-		colGroup = (short)(1 << colGroupId);
+		colGroup = (short)(colGroupId);
 		colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
 	}
 	m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
@@ -329,11 +329,17 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	}
 
 	PhysicsObject * phys = a_gameObj->GetPhysics();
+	const Quaternion gRot = a_gameObj->GetRot();
+	const btQuaternion rot(gRot.GetX(), gRot.GetY(), gRot.GetZ(), gRot.GetW());
+	const Vector gPos = a_gameObj->GetPos();
+	const btVector3 trans(gPos.GetX(), gPos.GetY(), gPos.GetZ());
+
 	btTransform newWorldTrans;
 	newWorldTrans.setIdentity();
-	btVector3 trans(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
+	newWorldTrans.setRotation(rot);
 	newWorldTrans.setOrigin(trans);
 	phys->GetCollisionObject()->setWorldTransform(newWorldTrans);
+
 	if (phys->HasRigidBody())
 	{
 		phys->GetRigidBody()->setWorldTransform(newWorldTrans);
@@ -356,7 +362,7 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 	return false;
 }
 
-bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT, GameObject * a_gameObjHit_OUT)
+bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT)
 {
 	// Start and End are vectors
 	const btVector3 start(a_rayStart.GetX(), a_rayStart.GetY(), a_rayStart.GetZ());
@@ -364,12 +370,14 @@ bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd,
 	
 	// Perform raycast
 	btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
-	m_dynamicsWorld->rayTest(start, end, rayCallback);
+	rayCallback.m_collisionFilterGroup = -1;
+	rayCallback.m_collisionFilterMask = -1;
+	m_collisionWorld->rayTest(start, end, rayCallback);
+
 	if (rayCallback.hasHit()) 
 	{
 		a_worldHit_OUT = Vector(rayCallback.m_hitPointWorld.getX(), rayCallback.m_hitPointWorld.getY(), rayCallback.m_hitPointWorld.getZ());
 		a_worldNormal_OUT = Vector(rayCallback.m_hitNormalWorld.getX(), rayCallback.m_hitNormalWorld.getY(), rayCallback.m_hitNormalWorld.getZ());
-		a_gameObjHit_OUT = (GameObject*)rayCallback.m_collisionObject->getUserPointer();
 		return true;
 	}
 	return false;

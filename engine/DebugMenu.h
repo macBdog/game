@@ -48,6 +48,9 @@ public:
 	//\param a_active if the menu should be shown or hidden
 	bool OnActivate(bool a_active);
 
+	//\brief Listener function to reload scripts in designer and debug builds
+	bool OnReload(bool a_active);
+
 	//\brief Listener function to select a widget
 	//\param a_active if the menu should be shown or hidden
 	bool OnSelect(bool a_active);

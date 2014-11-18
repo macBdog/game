@@ -101,6 +101,10 @@ public:
 	inline void ApplyToMatrix(Matrix & a_mat) { a_mat = a_mat.Multiply(GetRotationMatrix()); }
 	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f, %f", x, y, z, w); }
 	inline Vector GetXYZ() const { return Vector(x, y, z); }
+	inline float GetX() const { return x; }
+	inline float GetY() const { return y; }
+	inline float GetZ() const { return z; }
+	inline float GetW() const { return w; }
 	inline bool GetAxisAngle(Vector & a_axis_OUT, float & a_angle_OUT)
 	{
 		const float cos_a = w;

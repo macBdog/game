@@ -102,6 +102,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
 		lua_register(m_globalLua, "MoveCamera", MoveCamera);
 		lua_register(m_globalLua, "RotateCamera", RotateCamera);
+		lua_register(m_globalLua, "GetRayCollision", RayCollisionTest);
 		lua_register(m_globalLua, "NewScene", NewScene);
 		lua_register(m_globalLua, "SetScene", SetScene);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
@@ -238,10 +239,19 @@ bool ScriptManager::Update(float a_dt)
 			FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
 			if (curTimeStamp > curScript->m_timeStamp || m_forceReloadScripts)
 			{
+				if (m_forceReloadScripts)
+				{
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Reloading scripts.");
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
+				}
+
+
 				m_forceReloadScripts = false;
 				scriptsReloaded = true;
 				curScript->m_timeStamp = curTimeStamp;
-				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
 
 				// Clean up any script-owned objects
 				WorldManager::Get().DestroyAllScriptOwnedObjects();
@@ -653,6 +663,41 @@ int ScriptManager::RotateCamera(lua_State * a_luaState)
 	else // Wrong number of parms
 	{
 		LogScriptError(a_luaState, "RotateCamera", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::RayCollisionTest(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 6)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		const Vector rayStart((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		const Vector rayEnd((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
+
+		PhysicsManager & physMan = PhysicsManager::Get();
+		Vector worldHit(0.0f);
+		Vector worldNormal(0.0f);
+		if (physMan.RayCast(rayStart, rayEnd, worldHit, worldNormal))
+		{
+			lua_pushnumber(a_luaState, worldHit.GetX());
+			lua_pushnumber(a_luaState, worldHit.GetY());
+			lua_pushnumber(a_luaState, worldHit.GetZ());
+			lua_pushnumber(a_luaState, worldNormal.GetX());
+			lua_pushnumber(a_luaState, worldNormal.GetX());
+			lua_pushnumber(a_luaState, worldNormal.GetX());
+			return 6;
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "GetRayCollision", "expects 7 parameters: 3 numbers for start XYZ, 3 numbers for end XYZ and a game object.");
 	}
 	return 0;
 }
@@ -1491,11 +1536,6 @@ int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 		LogScriptError(a_luaState, "GetCollisions", "expects no parameters.");
 	}
 
-	return 1;
-}
-
-int ScriptManager::RayCollisionTest(lua_State * a_luaState)
-{
 	return 1;
 }
 

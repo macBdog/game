@@ -89,6 +89,7 @@ private:
 	static int SetCameraFOV(lua_State * a_luaState);
 	static int MoveCamera(lua_State * a_luaState);
 	static int RotateCamera(lua_State * a_luaState);
+	static int RayCollisionTest(lua_State * a_luaState);
 	static int NewScene(lua_State * a_luaState);
 	static int SetScene(lua_State * a_luaState);
 
@@ -132,7 +133,6 @@ private:
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);
 	static int GetGameObjectCollisions(lua_State * a_luaState);
-	static int RayCollisionTest(lua_State * a_luaState);
 	static int PlayGameObjectAnimation(lua_State * a_luaState);
 	static int DestroyGameObject(lua_State * a_luaState);
 

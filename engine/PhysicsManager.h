@@ -100,7 +100,7 @@ public:
 	//\param a_worldNormal_OUT will be written to with the normal of the first hit, if any
 	//\param a_gameObjHit_OUT will a pointer to a game object that the ray collided with, if any
 	//\return true if the ray hit some collision object, false if not
-	bool RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT, GameObject * a_gameObjHit_OUT);
+	bool RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT);
 
 	//\brief Get the group ID matching the name of a collision group
 	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group

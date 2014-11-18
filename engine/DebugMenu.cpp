@@ -138,6 +138,7 @@ bool DebugMenu::Startup()
 
 	// Register global key and mouse listeners. Note these will be processed after the button callbacks
 	inMan.RegisterKeyCallback(this, &DebugMenu::OnEnable, SDLK_TAB);
+	inMan.RegisterKeyCallback(this, &DebugMenu::OnReload, SDLK_F5);
 	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyDown, InputType::KeyDown); 
 	inMan.RegisterAlphaKeyCallback(this, &DebugMenu::OnAlphaKeyUp, InputType::KeyUp); 
 	inMan.RegisterMouseCallback(this, &DebugMenu::OnActivate, MouseButton::Right);
@@ -583,6 +584,15 @@ bool DebugMenu::OnActivate(bool a_active)
 
 	// Let the commands handle what to do
 	m_commands.HandleRightClick(m_widgetToEdit, m_gameObjectToEdit, m_lightToEdit);
+	return true;
+}
+
+bool DebugMenu::OnReload(bool a_active)
+{
+#ifndef _RELEASE
+	ScriptManager::Get().ReloadScripts();
+#endif
+
 	return true;
 }
 
