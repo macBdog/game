@@ -55,10 +55,10 @@
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

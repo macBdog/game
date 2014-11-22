@@ -100,6 +100,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "SetCameraPosition", SetCameraPosition);
 		lua_register(m_globalLua, "SetCameraRotation", SetCameraRotation);
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
+		lua_register(m_globalLua, "SetCameraTarget", SetCameraTarget);
 		lua_register(m_globalLua, "MoveCamera", MoveCamera);
 		lua_register(m_globalLua, "RotateCamera", RotateCamera);
 		lua_register(m_globalLua, "GetRayCollision", RayCollisionTest);
@@ -621,7 +622,7 @@ int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
-		Vector newPos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		const Vector newPos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
 		CameraManager::Get().SetRotation(newPos);	
 	}
 	else // Wrong number of parms
@@ -650,6 +651,30 @@ int ScriptManager::SetCameraFOV(lua_State * a_luaState)
 	}
 	return 0;
 }
+
+int ScriptManager::SetCameraTarget(lua_State * a_luaState)
+{
+	// Don't allow camera mutation in the debug menu
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		return 0;
+	}
+
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		const Vector newTarget((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		CameraManager::Get().SetTarget(newTarget);	
+	}
+	else // Wrong number of parms
+	{
+		LogScriptError(a_luaState, "SetCameraFOV", "expects 1 number parameter.");
+	}
+	return 0;
+}
+
 
 int ScriptManager::MoveCamera(lua_State * a_luaState)
 {

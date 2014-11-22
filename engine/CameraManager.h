@@ -85,6 +85,7 @@ public:
 	void SetPosition(const Vector & a_newPos);
 	void SetRotation(const Vector & a_newRot);
 	void SetFOV(const float & a_newFov);
+	void SetTarget(const Vector & a_newTarget);
 
 private:
 

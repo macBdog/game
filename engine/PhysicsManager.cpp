@@ -354,6 +354,23 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		PhysicsObject * phys = a_gameObj->GetPhysics();
 		if (phys != NULL)
 		{
+			ClearCollisions(a_gameObj);
+			if (phys->GetCollisionObject())
+			{
+				btCollisionObject * collObj = phys->GetCollisionObject();
+				btCollisionShape * collShape = phys->GetCollisionShape();
+				m_collisionWorld->removeCollisionObject(collObj);
+				delete collShape;
+				delete collObj;
+				phys->SetCollisionObject(NULL);
+				phys->SetCollisionShape(NULL);
+			}
+			if (phys->HasRigidBody())
+			{
+				m_dynamicsWorld->removeCollisionObject(phys->GetRigidBody());
+				delete phys->GetRigidBody();
+				phys->SetRigidBody(NULL);
+			}
 			delete phys;
 			a_gameObj->SetPhysics(NULL);
 			return true;

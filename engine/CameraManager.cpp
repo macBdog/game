@@ -26,6 +26,11 @@ void CameraManager::SetFOV(const float & a_newFov)
 	//m_currentCamera->SetFOV(a_newFov)
 }
 
+void CameraManager::SetTarget(const Vector & a_newTarget)
+{
+	m_currentCamera->SetTarget(a_newTarget);
+}
+
 void CameraManager::Startup(bool a_useVrCamera)
 {
 	if (a_useVrCamera)

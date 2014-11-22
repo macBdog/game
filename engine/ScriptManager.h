@@ -87,6 +87,7 @@ private:
 	static int SetCameraPosition(lua_State * a_luaState);
 	static int SetCameraRotation(lua_State * a_luaState);
 	static int SetCameraFOV(lua_State * a_luaState);
+	static int SetCameraTarget(lua_State * a_luaState);
 	static int MoveCamera(lua_State * a_luaState);
 	static int RotateCamera(lua_State * a_luaState);
 	static int RayCollisionTest(lua_State * a_luaState);
