@@ -8,6 +8,7 @@
 #include "Singleton.h"
 #include "StringHash.h"
 
+class btBulletWorldImporter;
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -24,14 +25,14 @@ class GameObject;
 //\ brief Grouping of collision and physics states
 class PhysicsObject
 {
-
 public:
 
 	PhysicsObject() 
 		: m_collisionGroup(-1)
 		, m_collisionShape(NULL)
 		, m_collisionObject(NULL)
-		, m_rigidBody(NULL) { }
+		, m_rigidBody(NULL)
+		, m_fileLoader(NULL) { }
 	~PhysicsObject();
 	inline bool HasCollision() { return m_collisionShape != NULL; }
 	inline bool HasRigidBody() { return m_rigidBody != NULL; }
@@ -40,11 +41,13 @@ public:
 	inline btCollisionShape * GetCollisionShape() { return m_collisionShape; }
 	inline btCollisionObject * GetCollisionObject() { return m_collisionObject; }
 	inline btRigidBody * GetRigidBody() { return m_rigidBody; }
+	inline btBulletWorldImporter * GetFileLoader() { return m_fileLoader; }
 
 	inline void SetCollisionGroup(int a_newGroup) { m_collisionGroup = a_newGroup; }
 	inline void SetCollisionShape(btCollisionShape * a_col) { if (m_collisionShape == NULL) { m_collisionShape = a_col; } }
 	inline void SetCollisionObject(btCollisionObject * a_col) { if (m_collisionObject == NULL) { m_collisionObject = a_col; } }
 	inline void SetRigidBody(btRigidBody * a_phy) { if (m_rigidBody == NULL) { m_rigidBody = a_phy; } }
+	inline void SetFileLoader(btBulletWorldImporter * a_loader) { m_fileLoader = a_loader; }
 	
 private:
 
@@ -52,6 +55,7 @@ private:
 	btRigidBody * m_rigidBody;				///< Rigid body present only if object driven by dynamics
 	btCollisionShape * m_collisionShape;	///< Dimensions and type of volume for collisions and dynamics if present
 	btCollisionObject * m_collisionObject;	///< All objects are represented in the collision world
+	btBulletWorldImporter * m_fileLoader;	///< Loader and memory for objects loaded from a bullet binary file
 };
 
 class PhysicsManager : public Singleton<PhysicsManager>

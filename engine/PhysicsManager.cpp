@@ -31,10 +31,18 @@ PhysicsObject::~PhysicsObject()
 		delete m_collisionObject;
 	}
 
-	// Now shape
-	if (m_collisionShape != NULL)
+	// File loader owns memory for collision shapes
+	if (m_fileLoader != NULL) 
 	{
-		delete m_collisionShape;
+		m_fileLoader->deleteAllData();
+		delete m_fileLoader;
+	}
+	else // Otherwise we own it
+	{
+		if (m_collisionShape != NULL)
+		{
+			delete m_collisionShape;
+		}
 	}
 }
 
@@ -223,6 +231,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	}
 
 	btCollisionShape * collisionShape = NULL;
+	btBulletWorldImporter * fileLoader = NULL;
 	
 	switch (a_gameObj->GetClipType())
 	{
@@ -242,14 +251,23 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		{
 			char bulletFilePath[StringUtils::s_maxCharsPerLine];
 			sprintf(bulletFilePath, "%s%s", m_meshPath, a_gameObj->GetPhysicsMeshName());
-			if (btBulletWorldImporter * bulletFileLoader = new btBulletWorldImporter(m_dynamicsWorld))
+			if (fileLoader = new btBulletWorldImporter(m_dynamicsWorld))
 			{
-				bulletFileLoader->loadFile(bulletFilePath);
-				if (bulletFileLoader->getNumCollisionShapes() > 0)
+				if (fileLoader->loadFile(bulletFilePath))
 				{
-					collisionShape = bulletFileLoader->getCollisionShapeByIndex(0);
+					const int numShapes = fileLoader->getNumCollisionShapes();
+					if (numShapes == 1)
+					{
+						collisionShape = fileLoader->getCollisionShapeByIndex(0);
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Bullet collision mesh file %s has %d collision shapes, only 1 are supported!", bulletFilePath, numShapes);
+						fileLoader->deleteAllData();
+						delete fileLoader;
+						return false;
+					}
 				}
-				delete bulletFileLoader;
 			}
 			break;
 		}
@@ -272,6 +290,11 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			
 			newObj->SetCollisionObject(collisionObject);
 			newObj->SetCollisionShape(collisionShape);
+
+			if (fileLoader != NULL) 
+			{
+				newObj->SetFileLoader(fileLoader);
+			}
 			a_gameObj->SetPhysics(newObj);
 		}
 	}
@@ -355,22 +378,6 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		if (phys != NULL)
 		{
 			ClearCollisions(a_gameObj);
-			if (phys->GetCollisionObject())
-			{
-				btCollisionObject * collObj = phys->GetCollisionObject();
-				btCollisionShape * collShape = phys->GetCollisionShape();
-				m_collisionWorld->removeCollisionObject(collObj);
-				delete collShape;
-				delete collObj;
-				phys->SetCollisionObject(NULL);
-				phys->SetCollisionShape(NULL);
-			}
-			if (phys->HasRigidBody())
-			{
-				m_dynamicsWorld->removeCollisionObject(phys->GetRigidBody());
-				delete phys->GetRigidBody();
-				phys->SetRigidBody(NULL);
-			}
 			delete phys;
 			a_gameObj->SetPhysics(NULL);
 			return true;
