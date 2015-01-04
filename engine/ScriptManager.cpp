@@ -464,7 +464,7 @@ int ScriptManager::IsKeyDown(lua_State * a_luaState)
 	if (lua_gettop(a_luaState) == 1)
 	{
 		int keyCode = (int)lua_tonumber(a_luaState, 1);
-		keyIsDown = InputManager::Get().IsKeyDepressed((SDLKey)keyCode);
+		keyIsDown = InputManager::Get().IsKeyDepressed((SDL_Keycode)keyCode);
 	}
 	else
 	{

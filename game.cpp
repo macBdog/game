@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 
 #include "core/MathUtils.h"
 
@@ -16,6 +17,7 @@
 #include "engine/InputManager.h"
 #include "engine/Log.h"
 #include "engine/ModelManager.h"
+#include "engine/OculusManager.h"
 #include "engine/RenderManager.h"
 #include "engine/ScriptManager.h"
 #include "engine/StringUtils.h"
@@ -92,55 +94,41 @@ int main(int argc, char *argv[])
     // Make sure SDL cleans up before exit
     atexit(SDL_Quit);
 
-    // The flags to pass to SDL_SetVideoMode */
-    int videoFlags  = SDL_OPENGL;         
-    videoFlags |= SDL_GL_DOUBLEBUFFER; 
-    videoFlags |= SDL_HWPALETTE;
-    videoFlags |= SDL_RESIZABLE;
-
-    // This checks to see if surfaces can be stored in memory
-    const SDL_VideoInfo * videoInfo = SDL_GetVideoInfo();
-
-    if ( videoInfo->hw_available )
-    {
-        videoFlags |= SDL_HWSURFACE;
-    }
-    else
-    {
-        videoFlags |= SDL_SWSURFACE;
-    }
-
-    // This checks if hardware blits can be done
-    if ( videoInfo->blit_hw )
-    {
-        videoFlags |= SDL_HWACCEL;
-    }
-
-    // Sets up OpenGL double buffering
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+    // The flags to pass to SDL_CreateWindow
+	int videoFlags = SDL_WINDOW_OPENGL;
 
 	// Set fullscreen from config
 	bool fullScreen = configFile.GetBool("config", "fullscreen");
 	if (fullScreen)
 	{
-		videoFlags |= SDL_FULLSCREEN;
+		videoFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	// Create a new window
 	int width = configFile.GetInt("config", "width");
 	int height = configFile.GetInt("config", "height");
 	int bpp = configFile.GetInt("config", "bpp");
-    SDL_Surface* screen = SDL_SetVideoMode(width, height, bpp, videoFlags);
-    if ( !screen )
+	const char * gameName = configFile.GetString("config", "name");
+	SDL_Window * sdlWindow = SDL_CreateWindow(gameName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
+
+	if (!sdlWindow)
     {
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to set video: %s\n", SDL_GetError());
         return 1;
     }
+
+	// Create an OpenGL context associated with the window.
+	SDL_GLContext glcontext = SDL_GL_CreateContext(sdlWindow);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	
 	// Hide the mouse cursor
-	SDL_ShowCursor(SDL_DISABLE);
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	
+	// Get window info to pass to managers that need the window handle
+	SDL_SysWMinfo windowInfo;
+	SDL_VERSION(&windowInfo.version);
+	SDL_GetWindowWMInfo(sdlWindow, &windowInfo);
 
 	// Process resource paths
 	char gameConfigPath[StringUtils::s_maxCharsPerLine];
@@ -187,7 +175,7 @@ int main(int argc, char *argv[])
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting up subsystems");
 
-	// Subsystem startup
+	// Subsystem creation and startup
 	MathUtils::InitialiseRandomNumberGenerator();
     RenderManager::Get().Startup(sc_colourBlack, shaderPath, gameConfig.GetBool("render", "vr"));
     RenderManager::Get().Resize(width, height, bpp);
@@ -198,7 +186,11 @@ int main(int argc, char *argv[])
 	PhysicsManager::Get().Startup(gameConfig, modelPath);
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
-	CameraManager::Get().Startup(gameConfig.GetBool("render", "vr"));
+	CameraManager::Get().Startup();
+	if (gameConfig.GetBool("render", "vr"))
+	{
+		OculusManager::Get().Startup(windowInfo.info.win.window);
+	}
 	Gui::Get().Startup(guiPath);
 	ScriptManager::Get().Startup(scriptPath);
 	
@@ -267,7 +259,7 @@ int main(int argc, char *argv[])
 		// Perform and post rendering tasks for subsystems
 		DebugMenu::Get().PostRender();
 
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(sdlWindow);
 
 		// Finished a frame, count time and calc FPS
 		lastFrameTime = Time::GetSystemTime() - startFrame;
@@ -287,10 +279,16 @@ int main(int argc, char *argv[])
 	TextureManager::Get().Shutdown();
 	ScriptManager::Get().Shutdown();
 	CameraManager::Get().Shutdown();
+	OculusManager::Get().Shutdown();
 	DebugMenu::Get().Shutdown();
 	Gui::Get().Shutdown();
 	RenderManager::Get().Shutdown();
 	InputManager::Get().Shutdown();
+
+	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.
+	SDL_GL_DeleteContext(glcontext);
+	SDL_DestroyWindow(sdlWindow);
+	SDL_Quit();
 
     return 0;
 }

@@ -65,11 +65,10 @@ public:
 	CameraManager() 
 		: m_currentCamera(&m_gameCamera) 
 		, m_oculusCamera(NULL)
-	{
-	}
+	{ }
 
 	//\brief Stubbed out for loading cameras for each scene
-	void Startup(bool a_useVrCamera);
+	void Startup();
 	void Shutdown();
 	void Update(float a_dt);
 
@@ -86,6 +85,11 @@ public:
 	void SetRotation(const Vector & a_newRot);
 	void SetFOV(const float & a_newFov);
 	void SetTarget(const Vector & a_newTarget);
+
+	//\brief Accessors for VR camera
+	inline bool HasOculusCamera() { return m_oculusCamera != NULL; }
+	inline void SetOculusCamera(OculusCamera * a_oculusCamera) { m_oculusCamera = a_oculusCamera; }
+	inline OculusCamera * GetOculusCamera() { return m_oculusCamera; }
 
 private:
 

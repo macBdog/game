@@ -784,6 +784,8 @@ Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
 	return pos;
 }
 
+#ifndef _RELEASE
+
 bool Widget::GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX::Enum & a_xSelected_OUT, AlignY::Enum & a_ySelected_OUT)
 {
 	a_handlePos_OUT = m_drawPos;
@@ -839,8 +841,6 @@ void Widget::DrawDebugAlignmentHandleSelectionBox(const Vector2 & a_topLeft, con
 	startVec = endVec;	endVec -= Vector2(a_handleSize.GetX(), 0.0f);	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
 	startVec = endVec;	endVec += Vector2(0.0f, a_handleSize.GetY());	rMan.AddLine2D(RenderLayer::Gui, startVec, endVec, sc_colourPurple);
 }
-
-#ifndef _RELEASE
 
 void Widget::DrawDebugAlignment()
 {

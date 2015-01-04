@@ -47,8 +47,8 @@ namespace RenderStage
 {
 	enum Enum
 	{
-		Scene = 0,		//< Shader defined per scene at full size
-		VR,				//< Separate buffer for VR processing also full size
+		Scene = 0,		//< Full scene rendered to source
+		PostFX,			//< Render scene with a different shader
 		Count,
 	};
 }
@@ -69,7 +69,6 @@ public:
 					, m_colourShader(NULL)
 					, m_textureShader(NULL)
 					, m_lightingShader(NULL)
-					, m_vrShader(NULL)
 					, m_frameBuffer(0)
 					, m_colourBuffer(0)
 					, m_depthBuffer(0)
@@ -103,9 +102,8 @@ public:
 	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
 	void DrawToScreen(Matrix & a_viewMatrix);
-	void RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft = true, bool a_flushBuffers = true);
+	void RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers = true);
 	void RenderFramebuffer();
-	void RenderFramebufferEye(float a_viewportX, float a_viewportY, float a_viewportWidth, float a_viewportHeight, bool a_eyeLeft = true);
 	
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set
@@ -303,7 +301,6 @@ private:
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
 	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified
-	Shader * m_vrShader;											///< Shader for vr optics correction
 
 	unsigned int m_viewWidth;										///< Cache of arguments passed to init
 	unsigned int m_viewHeight;										///< Cache of arguments passed to init
@@ -312,7 +309,7 @@ private:
 	Colour m_clearColour;											///< Cache of arguments passed to init
 	RenderMode::Enum m_renderMode;									///< How the scene is to be rendered
 
-	bool m_vr;														///< If the viewport will be doubled and barrel shader applied
+	bool m_vr;														///< If the oculus rendering component will be wedged in between the normal rendering calls
 
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
@@ -324,12 +321,6 @@ private:
 
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
-
-	unsigned int m_lensCenterId;
-	unsigned int m_screenCenterId;
-	unsigned int m_scaleId;
-	unsigned int m_scaleInId;
-	unsigned int m_hmdWarpParamId;
 };
 
 #endif // _ENGINE_RENDER_MANAGER

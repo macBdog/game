@@ -23,6 +23,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -50,21 +51,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL-1.2.15\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.2\include;..\external\glew-1.9.0\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;OVR_OS_WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -86,7 +87,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_RELEASE;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_RELEASE;OVR_OS_WIN32;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -101,7 +102,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;OVR_OS_WIN32;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -127,6 +128,8 @@
     <ClInclude Include="LuaScript.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelManager.h" />
+    <ClInclude Include="OculusManager.h" />
+    <ClInclude Include="OculusRender.h" />
     <ClInclude Include="PhysicsManager.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="ScriptManager.h" />
@@ -158,6 +161,8 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelManager.cpp" />
+    <ClCompile Include="OculusManager.cpp" />
+    <ClCompile Include="OculusRender.cpp" />
     <ClCompile Include="PhysicsManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="ScriptManager.cpp" />

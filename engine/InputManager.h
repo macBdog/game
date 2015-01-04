@@ -56,7 +56,7 @@ public:
 		, m_gamePadCheckTimer(0.0f)
 	{
 		// Init the list of depressed keys
-		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDLKey) * s_maxDepressedKeys);
+		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDL_Keycode) * s_maxDepressedKeys);
 
 		// Init gamepad pointers
 		for (int i = 0; i < s_maxGamepads; ++i)
@@ -90,12 +90,12 @@ public:
 
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional
-	inline SDLKey GetLastKey(bool a_keyPress = true) { return a_keyPress ? m_lastKeyPress : m_lastKeyRelease; }
+	inline SDL_Keycode GetLastKey(bool a_keyPress = true) { return a_keyPress ? m_lastKeyPress : m_lastKeyRelease; }
 
 	//\brief Utility function to find if an arbitrary key is pressed or released
 	//\param a_keyVal the SDL key value of the key to check
 	//\return bool true if the button is currently down
-	bool IsKeyDepressed(SDLKey a_key);
+	bool IsKeyDepressed(SDL_Keycode a_key);
 
 	//\ingroup Gamepad functions
 	//\brief Get the number of connected gamepads
@@ -143,7 +143,7 @@ public:
 	//\param a_type defaults to mouse up but can be changed to to down or motion
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
 	template <typename TObj, typename TMethod>
-	void RegisterKeyCallback(TObj * a_callerObject, TMethod a_callback, SDLKey a_key, InputType::Enum a_type = InputType::KeyDown, bool a_oneShot = false)
+	void RegisterKeyCallback(TObj * a_callerObject, TMethod a_callback, SDL_Keycode a_key, InputType::Enum a_type = InputType::KeyDown, bool a_oneShot = false)
 	{
 		// Add an event to the list of items to be processed
 		InputEventNode * newInputNode = new InputEventNode();
@@ -186,7 +186,7 @@ private:
 	//\brief An input event can come from a number of sources but only one at once hence the union
 	union InputSource
 	{
-		SDLKey m_key;						///< A keyboard button
+		SDL_Keycode m_key;						///< A keyboard button
 		MouseButton::Enum m_mouseButton;	///< A mouse click
 	};
 
@@ -207,8 +207,8 @@ private:
 
 	//\brief Input handling helper functions are split up so there is no one huge
 	//		 switch statement going on. All these just process SDL input
-    bool ProcessKeyDown(SDLKey a_key);
-    bool ProcessKeyUp(SDLKey a_key);
+	bool ProcessKeyDown(SDL_Keycode a_key);
+	bool ProcessKeyUp(SDL_Keycode a_key);
 	bool ProcessMouseDown(MouseButton::Enum a_button);
 	bool ProcessMouseUp(MouseButton::Enum a_button);
     bool ProcessMouseMove();
@@ -245,9 +245,9 @@ private:
 	bool m_mouseEnabled;		///< If the mouse is enabled for input processing
 	float m_gamePadCheckTimer;	///< Timer to check for new plugged in gamepads
 	Vector2 m_mousePos;			///< Cache of mouse coords for convenience
-	SDLKey m_lastKeyPress;		///< Cache off last key for convenience
-	SDLKey m_lastKeyRelease;	///< Cache off last key for convenience
-	SDLKey m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
+	SDL_Keycode m_lastKeyPress;		///< Cache off last key for convenience
+	SDL_Keycode m_lastKeyRelease;	///< Cache off last key for convenience
+	SDL_Keycode m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
 	SDL_Joystick * m_gamepads[s_maxGamepads];		///< Pointers to all open gamepads
 	int m_numGamepads;								///< How many gamepads are connected
 	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];

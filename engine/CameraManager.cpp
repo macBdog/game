@@ -31,25 +31,14 @@ void CameraManager::SetTarget(const Vector & a_newTarget)
 	m_currentCamera->SetTarget(a_newTarget);
 }
 
-void CameraManager::Startup(bool a_useVrCamera)
+void CameraManager::Startup()
 {
-	if (a_useVrCamera)
-	{
-		m_oculusCamera = new OculusCamera();
-		if (m_oculusCamera != NULL && m_oculusCamera->IsInitialised())
-		{
-			m_currentCamera = m_oculusCamera;
-		}
-	}
+
 }
 
 void CameraManager::Shutdown()
 {
-	if (m_oculusCamera != NULL)
-	{
-		m_oculusCamera->Shutdown();
-		delete m_oculusCamera;
-	}
+
 }
 
 void CameraManager::Update(float a_dt)
@@ -57,7 +46,7 @@ void CameraManager::Update(float a_dt)
 	m_currentCamera = &m_gameCamera;
 	
 	// Use VR camera if enabled and initialised correctly
-	if (m_oculusCamera != NULL && m_oculusCamera->IsInitialised())
+	if (m_oculusCamera != NULL)
 	{
 		m_currentCamera = m_oculusCamera;
 	}
@@ -123,22 +112,22 @@ void CameraManager::Update(float a_dt)
 
  float CameraManager::GetVRProjectionCentreOffset()
 {
-	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetProjectionCentreOffset() : 0.0f;
+	return m_oculusCamera != NULL ? m_oculusCamera->GetProjectionCentreOffset() : 0.0f;
 }
 
 float CameraManager::GetVRAspect() {
 
-	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetAspect() : 0.0f; 
+	return m_oculusCamera != NULL ? m_oculusCamera->GetAspect() : 0.0f; 
 }
 
 float CameraManager::GetVRFOV() 
 { 
-	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetFOV() : 0.0f; 
+	return m_oculusCamera != NULL ? m_oculusCamera->GetFOV() : 0.0f; 
 }
 
 float CameraManager::GetVRIPD() 
 { 
-	return m_oculusCamera != NULL && m_oculusCamera->IsInitialised() ? m_oculusCamera->GetIPD() : 0.0f; 
+	return m_oculusCamera != NULL ? m_oculusCamera->GetIPD() : 0.0f; 
 }
 
 void Camera::Update()

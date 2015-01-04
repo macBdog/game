@@ -96,23 +96,49 @@ bool InputManager::EventPump(const SDL_Event & a_event)
             return false;
         }
 		// Lost focus
-		case SDL_ACTIVEEVENT:
+		case SDL_APP_DIDENTERBACKGROUND:
 		{
-			if (a_event.active.gain == 0)
-			{
-				SetFocus(false);
-			}
-			else
-			{
-				SetFocus(true);
-			}
+			SetFocus(false);
 			break;
 		}
-		// Resize
-		case SDL_VIDEORESIZE:
+		// Gained focus
+		case SDL_APP_DIDENTERFOREGROUND:
 		{
-			renderMan.Resize(a_event.resize.w, a_event.resize.h, renderMan.GetViewDepth());
+			SetFocus(true);
 			break;
+		}
+		case SDL_WINDOWEVENT:
+		{
+			switch (a_event.window.event)
+			{
+				// Window closed
+				case SDL_WINDOWEVENT_CLOSE:
+				{
+					return false;
+				}
+				// Resize
+				case SDL_WINDOWEVENT_RESIZED:
+				{
+					renderMan.Resize(a_event.window.data1, a_event.window.data2, renderMan.GetViewDepth());
+					break;
+				}
+				case SDL_WINDOWEVENT_MINIMIZED:
+				{
+					SetFocus(false);
+					break;
+				}
+				case SDL_WINDOWEVENT_MAXIMIZED:
+				{
+					SetFocus(true);
+					break;
+				}
+				case SDL_WINDOWEVENT_RESTORED:
+				{
+					SetFocus(true);
+					break;
+				}
+				default: break;
+			}
 		}
         // Keypresses
         case SDL_KEYDOWN:
@@ -133,8 +159,8 @@ bool InputManager::EventPump(const SDL_Event & a_event)
 		// Mouse events
 		case SDL_MOUSEMOTION:
 		{
-			m_mousePos.SetX(a_event.motion.x);
-			m_mousePos.SetY(a_event.motion.y);
+			m_mousePos.SetX((float) a_event.motion.x);
+			m_mousePos.SetY((float) a_event.motion.y);
 			break;
 		}
 		case SDL_MOUSEBUTTONDOWN:
@@ -182,15 +208,13 @@ void InputManager::SetFocus(bool a_focus)
 	if (a_focus)
 	{
 		m_focus = true;
-		SDL_ShowCursor(SDL_DISABLE);
-		SDL_WM_GrabInput(SDL_GRAB_ON);
+		SDL_SetRelativeMouseMode(SDL_TRUE);
 		RenderManager::Get().SetRenderMode(RenderMode::Full);
 	}
 	else
 	{
 		m_focus = false;
-		SDL_ShowCursor(SDL_ENABLE);
-        SDL_WM_GrabInput(SDL_GRAB_OFF);
+		SDL_SetRelativeMouseMode(SDL_FALSE);
 		RenderManager::Get().SetRenderMode(RenderMode::None);
 	}
 }
@@ -213,7 +237,7 @@ void InputManager::SetMousePosRelative(const Vector2 & a_newPos)
 	m_mousePos = Vector2(absX, absY);
 }
 
-bool InputManager::IsKeyDepressed(SDLKey a_key)
+bool InputManager::IsKeyDepressed(SDL_Keycode a_key)
 {
 	// Check all keys in the list
 	for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
@@ -260,7 +284,7 @@ bool InputManager::ProcessMouseUp(MouseButton::Enum a_button)
 	return foundEvent;
 }
 
-bool InputManager::ProcessKeyUp(SDLKey a_key)
+bool InputManager::ProcessKeyUp(SDL_Keycode a_key)
 {
 	// Set convenience keys
 	m_lastKeyRelease = a_key;
@@ -313,7 +337,7 @@ bool InputManager::ProcessKeyUp(SDLKey a_key)
 	return foundEvent;
 }
 
-bool InputManager::ProcessKeyDown(SDLKey a_key)
+bool InputManager::ProcessKeyDown(SDL_Keycode a_key)
 {
 	// Set convenience keys
 	m_lastKeyPress = a_key;

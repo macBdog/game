@@ -1,3 +1,5 @@
+#include "OVR_CAPI.h"
+
 #include "..\core\MathUtils.h"
 #include "..\core\Quaternion.h"
 
@@ -5,70 +7,36 @@
 
 #include "OculusCamera.h"
 
-void OculusCamera::Startup()
+void OculusCamera::Startup(ovrHmd a_hmd)
 {
-	OVR::System::Init();
-
-	m_manager = *OVR::DeviceManager::Create();
-	m_HMD = *m_manager->EnumerateDevices<OVR::HMDDevice>().CreateDevice();
-	if (m_HMD == NULL)
-	{
-		Log::Get().WriteEngineErrorNoParams("Failed to find Oculus HMD device.");
-		Shutdown();
-		return;
-	}
-
-    // Populate hmdInfo with device name, screen width, height etc
-    OVR::HMDInfo hmdInfo;
-    m_HMD->GetDeviceInfo(&hmdInfo);
-	m_stereoConfig.SetHMDInfo(hmdInfo);
-	m_stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, hmdInfo.HResolution, hmdInfo.VResolution));
-	m_stereoConfig.SetStereoMode(OVR::Util::Render::Stereo_LeftRight_Multipass);
-	
-	m_sensors[0] = *m_HMD->GetSensor();
-	OVR::SensorFusion SFusion;
-    if (m_sensors[0])
-	{
-		m_fusionResults[0] = new OVR::SensorFusion();
-		m_fusionResults[0]->AttachToSensor(m_sensors[0]);
-	}
-	else
-	{
-		Log::Get().WriteEngineErrorNoParams("Could not attach to Oculus HMD sensor.");
-		Shutdown();
-		return;
-	}
-
-	m_initialised = true;
-}
-
-void OculusCamera::Shutdown()
-{
-	for (int i = 0; i < s_numSensors; ++i)
-	{
-		m_sensors[i].Clear();
-	}
-    m_HMD.Clear();
-    m_manager.Clear();
-
-    OVR::System::Destroy();
-
-	m_initialised = false;
+	m_HMD = a_hmd;
 }
 
 void OculusCamera::Update()
-{	
-    // Rotate the matrix about the rotation from the oculus sensor
-	m_mat = Matrix::Identity();
-	m_mat.SetPos(m_pos);
+{
+	if (m_HMD != NULL)
+	{
+		// Query the HMD for the current tracking state.
+		ovrTrackingState trackingState = ovrHmd_GetTrackingState(m_HMD, ovr_GetTimeInSeconds());
+		if (trackingState.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked))
+		{
+			ovrPosef headPose = trackingState.HeadPose.ThePose;
+			ovrQuatf headOrient = headPose.Orientation;
+			ovrVector3f headPos = headPose.Position;
     
-	// Oculus world is Y up and looking down +Z, apply transformation to -Y look Z up
-	Quaternion pitchNeg = Quaternion(Vector(1.0f, 0.0f, 0.0f), MathUtils::Deg2Rad(90));
-	Matrix rotMat = pitchNeg.GetRotationMatrix();
-	m_mat = m_mat.Multiply(rotMat);
+			// Oculus world is Y up and looking down +Z, apply transformation to -Y look Z up
+			m_mat = Matrix::Identity();
+			m_mat.SetPos(m_pos);
+			Quaternion pitchNeg = Quaternion(Vector(1.0f, 0.0f, 0.0f), MathUtils::Deg2Rad(90));
+			Matrix rotMat = pitchNeg.GetRotationMatrix();
+			m_mat = m_mat.Multiply(rotMat);
 
-	// Apply oculus sensor fusion orientation to camera mat
-	OVR::Quatf oculusQuat = m_fusionResults[0]->GetOrientation();
-	Quaternion quat = Quaternion(oculusQuat.x, oculusQuat.y, oculusQuat.z, oculusQuat.w);
-	quat.ApplyToMatrix(m_mat);
+			// Apply oculus sensor fusion orientation to camera mat
+			Quaternion quat = Quaternion(headOrient.x, headOrient.y, headOrient.z, headOrient.w);
+			quat.ApplyToMatrix(m_mat);
+
+			Vector headTrans = m_mat.GetPos() + Vector(headPos.x, headPos.y, headPos.z);
+			m_mat.SetPos(headTrans);
+		}
+	}
 }

@@ -609,6 +609,7 @@ bool DebugMenu::OnTimePause(bool a_active)
 
 bool DebugMenu::OnSelect(bool a_active)
 {
+#ifndef _RELEASE
 	const Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 
 	// Respond to a click and set internal state if it's been handled by a command
@@ -825,6 +826,8 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_commands.Hide();
 	}
 
+#endif
+
 	return false;
 }
 
@@ -849,7 +852,7 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 		newName[0] = '\0';
 		strncpy(newName, m_textInputField->GetText(), sizeof(char) * strlen(m_textInputField->GetText()) + 1);
 
-		SDLKey lastKey = inMan.GetLastKey();
+		SDL_Keycode lastKey = inMan.GetLastKey();
 		if (lastKey == SDLK_BACKSPACE)
 		{
 			// Delete a character off the end of the name
@@ -891,7 +894,7 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 		if (m_enabled)
 		{
 			// Clear the log
-			SDLKey lastKey = inMan.GetLastKey();
+			SDL_Keycode lastKey = inMan.GetLastKey();
 			if (lastKey == SDLK_BACKSPACE)
 			{
 				Log::Get().ClearRendering();
@@ -1049,6 +1052,7 @@ bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_p
 
 void DebugMenu::Draw()
 {
+#ifndef _RELEASE
 	// Draw nothing if the debug menu isn't enabled
 	if (!m_enabled)
 	{
@@ -1172,6 +1176,7 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+#endif
 }
 
 void DebugMenu::PostRender()

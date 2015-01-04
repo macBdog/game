@@ -130,22 +130,8 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
 	}
 
-	// Setup additional uniforms for vr shader support
-	if (a_vr)
-	{
-		m_vr = true;
-		#include "Shaders\vr.vsh.inc"
-		#include "Shaders\vr.fsh.inc"
-		if (m_vrShader = new Shader("vr"))
-		{
-			m_vrShader->Init(vrVertexShader, vrFragmentShader);
-			m_hmdWarpParamId = glGetUniformLocation(m_vrShader->GetShader(), "HmdWarpParam"); 
-			m_lensCenterId = glGetUniformLocation(m_vrShader->GetShader(), "LensCenter");
-			m_screenCenterId = glGetUniformLocation(m_vrShader->GetShader(), "ScreenCenter");
-			m_scaleId = glGetUniformLocation(m_vrShader->GetShader(), "Scale");
-			m_scaleInId = glGetUniformLocation(m_vrShader->GetShader(), "ScaleIn");
-		}
-	}
+	// Set flag to enable the vr rendering to be wedged in
+	m_vr = a_vr;
 
     return renderLayerAlloc && 
 			m_colourShader != NULL && 
@@ -181,10 +167,6 @@ bool RenderManager::Shutdown()
 	if (m_textureShader != NULL)
 	{
 		delete m_textureShader;
-	}
-	if (m_vrShader != NULL)
-	{
-		delete m_vrShader;
 	}
 
 	// Clean up the framebuffer resources
@@ -414,21 +396,13 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
-	
-	// Render scene twice with different render setup for each eye
-	if (m_vr)
-	{
-		RenderScene(a_viewMatrix, true, false);
-		RenderScene(a_viewMatrix, false, true);
-	}
-	else // Render once
-	{
-		RenderScene(a_viewMatrix);
-	}
 
+	RenderScene(a_viewMatrix);
+	
 	// Start rendering to the first render stage
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::VR]);			//<< Render to next stage colour
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::PostFX]);		//<< Render to first stage colour
+
 	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
@@ -476,28 +450,18 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	
 	// Final drawing pass
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::VR]);   
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::PostFX]);
 	
-	// Render once or twice
-	if (m_vr)
-	{	
-		m_vrShader->UseShader(shaderData);
-		const float vpWidth = (float)m_viewWidth * 0.5f;
-		RenderFramebufferEye(0.0f, 0.0f, vpWidth, (float)m_viewHeight, true);
-		RenderFramebufferEye(vpWidth, 0.0f, vpWidth, (float)m_viewHeight, false);
-	}
-	else
-	{
-		m_textureShader->UseShader(shaderData);
-		RenderFramebuffer();
-	}
+	// Render once 
+	m_textureShader->UseShader(shaderData);
+	RenderFramebuffer();
 	
 	// Unbind shader
     glUseProgram(0);
     glEnable(GL_DEPTH_TEST);
 }
 
-void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_flushBuffers)
+void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 {
 	// Setup fresh data to pass to shaders
 	Matrix identityMatrix = Matrix::Identity();
@@ -514,16 +478,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			const Light & light = curScene->GetLight(i);
 			shaderData.m_lights[i] = light;
 		}
-	}
-
-	// Use scissor to disable the inactive viewport for VR
-	const float projectionCenterOffset = CameraManager::Get().GetVRProjectionCentreOffset();
-	const float vrFovAngleY = CameraManager::Get().GetVRFOV();
-	const float vrAspect = CameraManager::Get().GetVRAspect();
-	const float vrIpd = CameraManager::Get().GetVRIPD();
-	if (m_vr)
-	{
-		glEnable(GL_SCISSOR_TEST);
 	}
 
 	// Handle different rendering modes
@@ -549,26 +503,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 		default: break;
 	}
 
-	// Set half size viewports for vr
-	if (m_vr)
-	{
-		GLsizei halfWidth = m_viewWidth/2;
-		if (a_eyeLeft)
-		{
-			glScissor(0, 0, halfWidth, m_viewHeight);
-			glViewport(0, 0, halfWidth, m_viewHeight);
-		}
-		else
-		{
-			glScissor(halfWidth, 0, halfWidth, m_viewHeight);
-			glViewport(halfWidth, 0, halfWidth, m_viewHeight);
-		}
-	}
-	else // Regular screen size viewport
-	{
-		glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
-	}
-
+	// Set viewports to match render target
+	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
+	
 	// Clear the color and depth buffers in preparation for drawing
 	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -584,36 +521,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			case RenderLayer::Debug3D:
 #endif
 			{
-				// Setup projection matrix stack to transform eye space to clip coordinates
-				if (m_vr)
-				{
-					if (a_eyeLeft)
-					{
-						Matrix leftEyeProjectionMatrix = perspectiveMatrix;
-						leftEyeProjectionMatrix.Translate(Vector(projectionCenterOffset, 0.0f, 0.0f));
-						shaderData.m_projectionMatrix = &leftEyeProjectionMatrix;
-
-						Matrix leftEyeViewMatrix = a_viewMatrix;
-						leftEyeViewMatrix.Translate(Vector(vrIpd * 0.5f, 0.0f, 0.0f));
-						shaderData.m_viewMatrix = &leftEyeViewMatrix;
-					}
-					else
-					{
-						Matrix rightEyeProjectionMatrix = perspectiveMatrix;
-						rightEyeProjectionMatrix.Translate(Vector(-projectionCenterOffset, 0.0f, 0.0f));
-						shaderData.m_projectionMatrix = &rightEyeProjectionMatrix;
-
-						Matrix rightEyeViewMatrix = a_viewMatrix;
-						rightEyeViewMatrix.Translate(Vector(-vrIpd * 0.5f, 0.0f, 0.0f));
-						shaderData.m_viewMatrix = &rightEyeViewMatrix;
-					}
-				}
-				else
-				{
-					// Setup projection transformation matrices for the shaders
-					shaderData.m_projectionMatrix = &perspectiveMatrix;
-					shaderData.m_viewMatrix = &a_viewMatrix;
-				}
+				// Setup projection transformation matrices for the shaders
+				shaderData.m_projectionMatrix = &perspectiveMatrix;
+				shaderData.m_viewMatrix = &a_viewMatrix;
 				break;
 			}
 #ifndef _RELEASE
@@ -806,12 +716,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_eyeLeft, bool a_fl
 			m_fontCharCount[i] = 0;
 		}
 	}
-
-	// Turn off scissor
-	if (m_vr)
-	{
-		glDisable(GL_SCISSOR_TEST);
-	}
 }
 
 void RenderManager::RenderFramebuffer()
@@ -824,47 +728,6 @@ void RenderManager::RenderFramebuffer()
 		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
 		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
 	glEnd();
-}
-
-void RenderManager::RenderFramebufferEye(float a_vpX, float a_vpY, float a_vpWidth, float a_vpHeight, bool a_eyeLeft) 
-{
-	float w = a_vpWidth / float(m_viewWidth),
-        h = a_vpHeight / float(m_viewHeight),
-        x = a_vpX / float(m_viewWidth),
-        y = a_vpY / float(m_viewHeight);
-
-	const float distortionXCenterOffset = a_eyeLeft ? 0.15197642f : -0.15197642f;
-	const float distortionCoefficients[4] = {1.0f, 0.22f, 0.239f, 0.0f};
-    const float aspect = float(m_viewWidth * 0.5f) / float(m_viewHeight);
-    const float distortionScale = 1.7146056f;
-	float scaleFactor = 1.0f / distortionScale;
-    	
-	// Set warp pixel shader parameters
-    glUniform2f(m_lensCenterId, x + (w + distortionXCenterOffset * 0.5f)*0.5f, y + h*0.5f);
-    glUniform2f(m_screenCenterId, x + w*0.5f, y + h*0.5f);
-    glUniform2f(m_scaleId, (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * aspect);
-    glUniform2f(m_scaleInId, (2.0f/w), (2.0f/h) / aspect);
-    glUniform4f(m_hmdWarpParamId, distortionCoefficients[0], distortionCoefficients[1], distortionCoefficients[2], distortionCoefficients[3]);
-
-	// Draw whole screen triangle pair for each eye
-    if (a_eyeLeft) 
-	{
-        glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, -1.0f);
-            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
-        glEnd();
-    }
-    else 
-	{	
-		glBegin(GL_TRIANGLE_STRIP);
-            glTexCoord2f(0.5f, 0.0f);   glVertex3f(0.0f, -1.0f, -1.0f);
-            glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, -1.0f);
-            glTexCoord2f(0.5f, 1.0f);   glVertex3f(0.0f, 1.0f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, -1.0f);
-        glEnd();
-    }
 }
 
 unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)

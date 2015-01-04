@@ -4,52 +4,32 @@
 
 #include "CameraManager.h"
 
-#include "OVR.h"
+struct ovrHmdDesc_;
+typedef struct ovrHmdDesc_ ovrHmdDesc;
+typedef const ovrHmdDesc * ovrHmd;
 
 class OculusCamera : public Camera
 {
 public:
 
-	OculusCamera()
-	: m_initialised(false)
-	, m_manager(0)
-	, m_HMD(0)
-	{ 
-		for (int i = 0; i < s_numSensors; ++i)
-		{
-			m_sensors[i] = 0;
-			m_fusionResults[i] = NULL;
-		}
+	OculusCamera() : m_HMD(NULL) { }
 
-		Startup(); 
-	};
-	
-	~OculusCamera()
-	{
-			Shutdown();
-	}
-
-	void Startup();
+	void Startup(ovrHmd a_hmd);
 	void Shutdown();
-	inline bool IsInitialised() { return m_initialised; }
-	inline float GetProjectionCentreOffset() { return m_stereoConfig.GetProjectionCenterOffset(); }
-	inline float GetAspect() { return m_stereoConfig.GetAspect(); }
-	inline float GetFOV() { return m_stereoConfig.GetYFOVDegrees(); }
-	inline float GetIPD() { return m_stereoConfig.GetIPD(); }
+
+	inline float GetProjectionCentreOffset() { return 0.0f; }
+	inline float GetAspect() { return 0.4333f; }
+	inline float GetFOV() { return 100.0f; }
+	inline float GetIPD() { return 2.72f; }
 
 	//\brief Update the camera matrix from the inputs
 	virtual void Update();
 
+	//\breif OculusManager sets the HMD resources on the camera
+	inline void SetHMD(ovrHmd a_hmd) { m_HMD = a_hmd; }
+
 private:
-
-	static const int s_numSensors = 2;
-
-	bool m_initialised;
-	OVR::Ptr<OVR::DeviceManager> m_manager;
-    OVR::Ptr<OVR::HMDDevice> m_HMD;
-    OVR::Ptr<OVR::SensorDevice> m_sensors[s_numSensors];
-	OVR::SensorFusion *	m_fusionResults[s_numSensors];
-	OVR::Util::Render::StereoConfig m_stereoConfig;
+	ovrHmd m_HMD;					// Pointer to the HMD structure owned by the oculus manager
 };
 
 

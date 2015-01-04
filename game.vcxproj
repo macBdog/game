@@ -50,19 +50,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\LibOVR\Lib\Win32\VS2010;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\Debug;$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\external\SDL-1.2.15\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\external\LibOVR\Lib\Win32\VS2010;.\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
-    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL-1.2.15\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\external\SDL-1.2.15\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\LibOVR\Lib\Win32;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\Designer;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\lua-5.2.2\lib;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\external\LibOVR\Lib\Win32\VS2010;.\Designer;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -74,7 +74,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL.lib;SDLmain.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;winmm.lib;libovrd.lib;lua.lib;glew32.lib;SDL2.lib;SDL2main.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>.\external\SDL-1.2.15\lib\x86</AdditionalLibraryDirectories>
@@ -95,7 +95,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL.lib;SDLmain.lib;glu32.lib;opengl32.lib;LinearMath.lib;BulletDynamics.lib;BulletCollision.lib;BulletWorldImporter.lib;BulletFileLoader.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL2.lib;SDL2main.lib;glu32.lib;opengl32.lib;LinearMath.lib;BulletDynamics.lib;BulletCollision.lib;BulletWorldImporter.lib;BulletFileLoader.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -113,7 +113,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL.lib;SDLmain.lib;glu32.lib;opengl32.lib;LinearMath.lib;BulletDynamics.lib;BulletCollision.lib;BulletWorldImporter.lib;BulletFileLoader.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;winmm.lib;libovr.lib;lua.lib;glew32.lib;SDL2.lib;SDL2main.lib;glu32.lib;opengl32.lib;LinearMath.lib;BulletDynamics.lib;BulletCollision.lib;BulletWorldImporter.lib;BulletFileLoader.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
