@@ -834,10 +834,6 @@ bool DebugMenu::OnSelect(bool a_active)
 bool DebugMenu::OnEnable(bool a_toggle)
 {
 	m_enabled = !m_enabled;
-	if (m_enabled) 
-	{
-		m_timePaused = true;
-	}
 	return m_enabled;
 }
 
