@@ -343,19 +343,30 @@ bool InputManager::ProcessKeyDown(SDL_Keycode a_key)
 	m_lastKeyPress = a_key;
 
 	// Set depressed keys
-	bool setDepressedKey = false;
+	bool keyAlreadyDown = false;
 	for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
 	{
-		if (m_depressedKeys[i] == SDLK_UNKNOWN)
+		if (m_depressedKeys[i] == a_key)
 		{
-			m_depressedKeys[i] = a_key;
-			setDepressedKey = true;
-			break;
+			keyAlreadyDown = true;
 		}
 	}
-	if (!setDepressedKey)
+	if (!keyAlreadyDown)
 	{
-		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "InputManager cannot correctly maintain the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+		bool setDepressedKey = false;
+		for (unsigned int i = 0; i < s_maxDepressedKeys; ++i)
+		{
+			if (m_depressedKeys[i] == SDLK_UNKNOWN)
+			{
+				m_depressedKeys[i] = a_key;
+				setDepressedKey = true;
+				break;
+			}
+		}
+		if (!setDepressedKey)
+		{
+			Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "InputManager cannot correctly maintain the list of depressed keys, are there more than %d keys down?", s_maxDepressedKeys);
+		}
 	}
 
 	// Process the global callbacks

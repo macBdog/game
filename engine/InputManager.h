@@ -232,24 +232,24 @@ private:
 	//\return true if at least one event was found
 	bool GetEvents(InputType::Enum a_type, InputSource a_src, InputEventList & a_events_OUT);
 
-	static const int s_maxDepressedKeys = 8;	///< How many keys can be held on the keyboard at once
-	static const int s_maxGamepads = 8;			///< How many gamepads can be connected and playing a game
-	static const int s_maxGamepadButtons = 16;	///< How many buttons are supported on each gamepad
-	static const float s_gamePadCheckTime;		///< Interval for waiting to check for new gamepads
+	static const int s_maxDepressedKeys = 8;								///< How many keys can be held on the keyboard at once
+	static const int s_maxGamepads = 8;										///< How many gamepads can be connected and playing a game
+	static const int s_maxGamepadButtons = 16;								///< How many buttons are supported on each gamepad
+	static const float s_gamePadCheckTime;									///< Interval for waiting to check for new gamepads
 
-	InputEvent m_alphaKeysDown;	///< Special input event to catch all keys being pressed
-	InputEvent m_alphaKeysUp;	///< Special input event to catch all keys being released
-	InputEventList m_events;	///< List of events to match up to actions
-	bool m_focus;				///< If the app currently has OS focus
-	bool m_fullScreen;			///< If the app is fullscreen, input manager needs to handle focus
-	bool m_mouseEnabled;		///< If the mouse is enabled for input processing
-	float m_gamePadCheckTimer;	///< Timer to check for new plugged in gamepads
-	Vector2 m_mousePos;			///< Cache of mouse coords for convenience
-	SDL_Keycode m_lastKeyPress;		///< Cache off last key for convenience
-	SDL_Keycode m_lastKeyRelease;	///< Cache off last key for convenience
-	SDL_Keycode m_depressedKeys[s_maxDepressedKeys];		///< List of all the keys that are depressed 
-	SDL_Joystick * m_gamepads[s_maxGamepads];		///< Pointers to all open gamepads
-	int m_numGamepads;								///< How many gamepads are connected
+	InputEvent m_alphaKeysDown;												///< Special input event to catch all keys being pressed
+	InputEvent m_alphaKeysUp;												///< Special input event to catch all keys being released
+	InputEventList m_events;												///< List of events to match up to actions
+	bool m_focus;															///< If the app currently has OS focus
+	bool m_fullScreen;														///< If the app is fullscreen, input manager needs to handle focus
+	bool m_mouseEnabled;													///< If the mouse is enabled for input processing
+	float m_gamePadCheckTimer;												///< Timer to check for new plugged in gamepads
+	Vector2 m_mousePos;														///< Cache of mouse coords for convenience
+	SDL_Keycode m_lastKeyPress;												///< Cache off last key for convenience
+	SDL_Keycode m_lastKeyRelease;											///< Cache off last key for convenience
+	SDL_Keycode m_depressedKeys[s_maxDepressedKeys];						///< List of all the keys that are depressed 
+	SDL_Joystick * m_gamepads[s_maxGamepads];								///< Pointers to all open gamepads
+	int m_numGamepads;														///< How many gamepads are connected
 	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];
 };
 
