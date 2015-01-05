@@ -7,6 +7,7 @@
 
 #include "../core/MathUtils.h"
 
+#include "CameraManager.h"
 #include "Log.h"
 
 #include "OculusRender.h"
@@ -42,14 +43,14 @@ void OculusRender::Startup(ovrHmd a_hmd, HWND a_window)
 		{
 			ovrEyeType eye = m_HMD->EyeRenderOrder[eyeIndex];
 			m_eyesFov[eye] = m_HMD->DefaultEyeFov[eye];
-			m_eyeTexture[eye].OGL.Header.API = ovrRenderAPI_OpenGL;
-			m_eyeTexture[eye].OGL.Header.TextureSize = ovrHmd_GetFovTextureSize(a_hmd, eye, a_hmd->DefaultEyeFov[eye], 1.0f);;
-			m_eyeTexture[eye].OGL.Header.RenderViewport.Pos.x = 0;
-			m_eyeTexture[eye].OGL.Header.RenderViewport.Pos.y = 0;
+			m_eyeTexture[eye].Header.API = ovrRenderAPI_OpenGL;
+			m_eyeTexture[eye].Header.TextureSize = ovrHmd_GetFovTextureSize(a_hmd, eye, a_hmd->DefaultEyeFov[eye], 1.0f);;
+			m_eyeTexture[eye].Header.RenderViewport.Pos.x = 0;
+			m_eyeTexture[eye].Header.RenderViewport.Pos.y = 0;
 
-			if (SetupFrameBuffer(eye, m_eyeTexture[eye].OGL.Header.TextureSize))
+			if (SetupFrameBuffer(eye, m_eyeTexture[eye].Header.TextureSize))
 			{
-				m_eyeTexture[0].OGL.TexId = m_frameBuffer[eye];
+				((ovrGLTexture &)m_eyeTexture[eye]).OGL.TexId = m_frameBuffer[eye];
 			}
 			else
 			{
@@ -106,8 +107,7 @@ void OculusRender::Shutdown()
 
 }
 
-
-void OculusRender::PreRender()
+void OculusRender::DrawToHMD()
 {
 	static int frameIndex = 0;
 	if (m_HMD)
@@ -116,39 +116,32 @@ void OculusRender::PreRender()
 		ovrHmd_GetEyePoses(m_HMD, frameIndex, m_eyeOffsets, m_eyeRenderPose, nullptr);
 		ovrHmd_BeginFrame(m_HMD, frameIndex);
 		glEnable(GL_DEPTH_TEST);
-	}
-}
-
-void OculusRender::RenderFrameBuffer()
-{
-	if (m_HMD)
-	{
 		for (int eyeIndex = 0; eyeIndex < ovrEye_Count; eyeIndex++)
 		{
 			ovrEyeType eye = m_HMD->EyeRenderOrder[eyeIndex];
-			const ovrRecti & vp = m_eyeTexture[eye].OGL.Header.RenderViewport;
+			const ovrRecti & vp = m_eyeTexture[eye].Header.RenderViewport;
 
 			// Bind the appropriate eye buffer and set up a viewport for that eye
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer[eye]);	
-			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-		
 			ovrQuatf orientation = ovrQuatf(m_eyeRenderPose[eye].Orientation);
 			ovrMatrix4f proj = ovrMatrix4f_Projection(m_eyeRenderDesc[eye].Fov, 0.01f, 10000.0f, true);
-			
+			Matrix viewMatrix = CameraManager::Get().GetCameraMatrix().GetInverse();
+
+			glLoadIdentity();
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer[eye]);
+			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+			glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			RenderManager::Get().RenderScene(viewMatrix);
+
 			// Assign quaternion result directly to view (translation is ignored). 
 			//ovrMatrix4f view = ovrMatrix4f(orientation.Inverted()) * ovrMatrix4f::Translation(-WorldEyePos);
 			//pRender->SetViewport(EyeRenderViewport[eye]); pRender->SetProjection(proj); 
 			//pRoomScene->Render(pRender, ovrMatrix4f::Translation(m_eyeRenderDesc[eye].HmdToEyeViewOffset) * view);
 		}
-	}
-}
 
-void OculusRender::PostRender()
-{
-	if (m_HMD)
-	{
-		ovrHmd_EndFrame(m_HMD, m_eyeRenderPose, &m_eyeTexture[0].Texture);
+		ovrHmd_EndFrame(m_HMD, m_eyeRenderPose, m_eyeTexture);
 	}
 }

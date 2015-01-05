@@ -176,8 +176,9 @@ int main(int argc, char *argv[])
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting up subsystems");
 
 	// Subsystem creation and startup
+	bool useVr = gameConfig.GetBool("render", "vr");
 	MathUtils::InitialiseRandomNumberGenerator();
-    RenderManager::Get().Startup(sc_colourBlack, shaderPath, gameConfig.GetBool("render", "vr"));
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
@@ -187,7 +188,7 @@ int main(int argc, char *argv[])
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
-	if (gameConfig.GetBool("render", "vr"))
+	if (useVr)
 	{
 		OculusManager::Get().Startup(windowInfo.info.win.window);
 	}
@@ -254,7 +255,14 @@ int main(int argc, char *argv[])
 		RenderManager::Get().Update(lastFrameTimeSec);
 		
 		// Only swap the buffers at the end of all the rendering passes
-		RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
+		if (useVr)
+		{
+			OculusManager::Get().DrawToHMD();
+		}
+		else
+		{
+			RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
+		}
 		
 		// Perform and post rendering tasks for subsystems
 		DebugMenu::Get().PostRender();

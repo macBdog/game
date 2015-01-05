@@ -46,6 +46,11 @@ void OculusManager::Startup(HWND a_window)
 	}
 }
 
+void OculusManager::DrawToHMD()
+{
+	m_oculusRender->DrawToHMD();
+}
+
 void OculusManager::Shutdown()
 {
 	if (m_initialised)

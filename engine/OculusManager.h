@@ -25,12 +25,14 @@ public:
 	{ }
 
 	void Startup(HWND a_window);
+	void DrawToHMD();
 	void Shutdown();
 
+	//\brief Convenience functions for the engine to call Oculus code
 	inline bool IsInitialised() { return m_initialised; }
 	inline OculusCamera * GetOculusCamera() { return m_oculusCamera; }
 	inline OculusRender * GetOculusRender() { return m_oculusRender; }
-
+	
 private:
 	bool m_initialised;
 	OculusCamera * m_oculusCamera;
