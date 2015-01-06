@@ -41,9 +41,10 @@ private:
 	ovrVector3f m_eyeOffsets[ovrEye_Count];				///< Where each of the eyes are when rendered
 	ovrMatrix4f m_eyeProjections[ovrEye_Count];			///< Transformation for each eye's projection
 
+	bool m_frameBufferInitialised[ovrEye_Count];
 	unsigned int m_frameBuffer[ovrEye_Count];			///< Identifier for the whole scene framebuffers for each eye
 	unsigned int m_colourBuffer[ovrEye_Count];			///< Identifier for the texture to render to for each eye
-	unsigned int m_depthBuffer[ovrEye_Count];			///< Identifier for the buffers for pixel depth per eye
+	unsigned int m_renderBuffer[ovrEye_Count];			///< Identifier for the buffers for pixel depth per eye
 };
 
 

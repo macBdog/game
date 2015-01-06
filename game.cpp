@@ -94,7 +94,57 @@ int main(int argc, char *argv[])
     // Make sure SDL cleans up before exit
     atexit(SDL_Quit);
 
-    // The flags to pass to SDL_CreateWindow
+	// Process resource paths
+	char gameConfigPath[StringUtils::s_maxCharsPerLine];
+	char texturePath[StringUtils::s_maxCharsPerLine];
+	char fontPath[StringUtils::s_maxCharsPerLine];
+	char guiPath[StringUtils::s_maxCharsPerLine];
+	char modelPath[StringUtils::s_maxCharsPerLine];
+	char templatePath[StringUtils::s_maxCharsPerLine];
+	char scenePath[StringUtils::s_maxCharsPerLine];
+	char scriptPath[StringUtils::s_maxCharsPerLine];
+	char shaderPath[StringUtils::s_maxCharsPerLine];
+
+	strcpy(gameConfigPath, configFile.GetString("config", "gameConfigFile"));
+	strcpy(texturePath, configFile.GetString("config", "texturePath"));
+	strcpy(fontPath, configFile.GetString("config", "fontPath"));
+	strcpy(guiPath, configFile.GetString("config", "guiPath"));
+	strcpy(modelPath, configFile.GetString("config", "modelPath"));
+	strcpy(templatePath, configFile.GetString("config", "templatePath"));
+	strcpy(scenePath, configFile.GetString("config", "scenePath"));
+	strcpy(scriptPath, configFile.GetString("config", "scriptPath"));
+	strcpy(shaderPath, configFile.GetString("config", "shaderPath"));
+
+	// Prefix paths that don't look explicit
+	if (useRelativePaths)
+	{
+		if (strstr(gameConfigPath, ":") == NULL)	{ StringUtils::PrependString(gameConfigPath, gameDataPath); }
+		if (strstr(texturePath, ":") == NULL)		{ StringUtils::PrependString(texturePath, gameDataPath); }
+		if (strstr(fontPath, ":") == NULL)			{ StringUtils::PrependString(fontPath, gameDataPath); }
+		if (strstr(guiPath, ":") == NULL)			{ StringUtils::PrependString(guiPath, gameDataPath); }
+		if (strstr(modelPath, ":") == NULL)			{ StringUtils::PrependString(modelPath, gameDataPath); }
+		if (strstr(templatePath, ":") == NULL)		{ StringUtils::PrependString(templatePath, gameDataPath); }
+		if (strstr(scenePath, ":") == NULL)			{ StringUtils::PrependString(scenePath, gameDataPath); }
+		if (strstr(scriptPath, ":") == NULL)		{ StringUtils::PrependString(scriptPath, gameDataPath); }
+		if (strstr(shaderPath, ":") == NULL)		{ StringUtils::PrependString(shaderPath, gameDataPath); }
+	}
+
+	// Load game specific config
+	GameFile gameConfig(gameConfigPath);
+	if (!gameConfig.IsLoaded())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", configFilePath);
+		return 1;
+	}
+
+	// Oculus Rift init must precede render device context creation
+	bool useVr = gameConfig.GetBool("render", "vr");
+	if (useVr)
+	{
+		OculusManager::Get().Startup();
+	}
+
+	// The flags to pass to SDL_CreateWindow
 	int videoFlags = SDL_WINDOW_OPENGL;
 
 	// Set fullscreen from config
@@ -130,53 +180,9 @@ int main(int argc, char *argv[])
 	SDL_VERSION(&windowInfo.version);
 	SDL_GetWindowWMInfo(sdlWindow, &windowInfo);
 
-	// Process resource paths
-	char gameConfigPath[StringUtils::s_maxCharsPerLine];
-	char texturePath[StringUtils::s_maxCharsPerLine];
-	char fontPath[StringUtils::s_maxCharsPerLine];
-	char guiPath[StringUtils::s_maxCharsPerLine];
-	char modelPath[StringUtils::s_maxCharsPerLine];
-	char templatePath[StringUtils::s_maxCharsPerLine];
-	char scenePath[StringUtils::s_maxCharsPerLine];
-	char scriptPath[StringUtils::s_maxCharsPerLine];
-	char shaderPath[StringUtils::s_maxCharsPerLine];
-
-	strcpy(gameConfigPath,	configFile.GetString("config", "gameConfigFile"));
-	strcpy(texturePath,		configFile.GetString("config", "texturePath"));
-	strcpy(fontPath,		configFile.GetString("config", "fontPath"));
-	strcpy(guiPath,			configFile.GetString("config", "guiPath"));
-	strcpy(modelPath,		configFile.GetString("config", "modelPath"));
-	strcpy(templatePath,	configFile.GetString("config", "templatePath"));
-	strcpy(scenePath,		configFile.GetString("config", "scenePath"));
-	strcpy(scriptPath,		configFile.GetString("config", "scriptPath"));
-	strcpy(shaderPath,		configFile.GetString("config", "shaderPath"));
-
-	// Prefix paths that don't look explicit
-	if (useRelativePaths)
-	{
-		if (strstr(gameConfigPath, ":") == NULL)	{ StringUtils::PrependString(gameConfigPath, gameDataPath); }
-		if (strstr(texturePath, ":") == NULL)		{ StringUtils::PrependString(texturePath, gameDataPath); }
-		if (strstr(fontPath, ":") == NULL)			{ StringUtils::PrependString(fontPath, gameDataPath); }
-		if (strstr(guiPath, ":") == NULL)			{ StringUtils::PrependString(guiPath, gameDataPath); }
-		if (strstr(modelPath, ":") == NULL)			{ StringUtils::PrependString(modelPath, gameDataPath); }
-		if (strstr(templatePath, ":") == NULL)		{ StringUtils::PrependString(templatePath, gameDataPath); }
-		if (strstr(scenePath, ":") == NULL)			{ StringUtils::PrependString(scenePath, gameDataPath); }
-		if (strstr(scriptPath, ":") == NULL)		{ StringUtils::PrependString(scriptPath, gameDataPath); }
-		if (strstr(shaderPath, ":") == NULL)		{ StringUtils::PrependString(shaderPath, gameDataPath); }
-	}
-
-	// Load game specific config
-	GameFile gameConfig(gameConfigPath);
-	if (!gameConfig.IsLoaded())
-	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", configFilePath);
-		return 1;
-	}
-
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting up subsystems");
 
 	// Subsystem creation and startup
-	bool useVr = gameConfig.GetBool("render", "vr");
 	MathUtils::InitialiseRandomNumberGenerator();
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
     RenderManager::Get().Resize(width, height, bpp);
@@ -188,10 +194,13 @@ int main(int argc, char *argv[])
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
+	
+	// Now the rendering device context is created, it can be passed into the Oculus rendering component
 	if (useVr)
 	{
-		OculusManager::Get().Startup(windowInfo.info.win.window);
+		OculusManager::Get().StartupRendering(windowInfo.info.win.window);
 	}
+
 	Gui::Get().Startup(guiPath);
 	ScriptManager::Get().Startup(scriptPath);
 	

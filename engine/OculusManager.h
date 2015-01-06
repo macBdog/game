@@ -24,7 +24,8 @@ public:
 	~OculusManager()
 	{ }
 
-	void Startup(HWND a_window);
+	void Startup(); // Calls ovr_Initialize which must happen before render context initilization in StartupRendering 
+	void StartupRendering(HWND a_window);
 	void DrawToHMD();
 	void Shutdown();
 

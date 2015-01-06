@@ -9,7 +9,7 @@
 
 template<> OculusManager * Singleton<OculusManager>::s_instance = NULL;
 
-void OculusManager::Startup(HWND a_window)
+void OculusManager::Startup()
 {
 	if (m_initialised == false)
 	{
@@ -28,11 +28,12 @@ void OculusManager::Startup(HWND a_window)
 				m_oculusCamera->Startup(m_HMD);
 				CameraManager::Get().SetOculusCamera(m_oculusCamera);
 			}
-			
+
 			// Setup the oculus render
-			if (m_oculusRender = new OculusRender())
+			m_oculusRender = new OculusRender();
+			if (m_oculusRender == NULL)
 			{
-				m_oculusRender->Startup(m_HMD, a_window);
+				//TODO BARF
 			}
 		}
 		else
@@ -43,6 +44,14 @@ void OculusManager::Startup(HWND a_window)
 		}
 
 		m_initialised = true;
+	}
+}
+
+void OculusManager::StartupRendering(HWND a_window)
+{
+	if (m_HMD)
+	{
+		m_oculusRender->Startup(m_HMD, a_window);
 	}
 }
 
