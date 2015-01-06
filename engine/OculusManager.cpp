@@ -58,6 +58,35 @@ void OculusManager::StartupRendering(HWND a_window)
 void OculusManager::DrawToHMD()
 {
 	m_oculusRender->DrawToHMD();
+
+	if (m_HMD)
+	{
+		// Health and Safety Warning display state. 
+		ovrHSWDisplayState hswDisplayState;
+		ovrHmd_GetHSWDisplayState(m_HMD, &hswDisplayState);
+		if (hswDisplayState.Displayed) 
+		{ 
+			// Dismiss the warning if the user pressed the appropriate key or if the user // is tapping the side of the HMD. // If the user has requested to dismiss the warning via keyboard or controller input... 
+			if (false)
+			{
+				ovrHmd_DismissHSWDisplay(m_HMD);
+			} 
+			else 
+			{ 
+				// Detect a moderate tap on the side of the HMD. 
+				ovrTrackingState ts = ovrHmd_GetTrackingState(m_HMD, ovr_GetTimeInSeconds());
+				if (ts.StatusFlags & ovrStatus_OrientationTracked)
+				{
+					// Arbitrary value and representing moderate tap on the side of the DK2 Rift. 
+					Vector hmdAcceleration = Vector(ts.RawSensorData.Accelerometer.x, ts.RawSensorData.Accelerometer.y, ts.RawSensorData.Accelerometer.z);
+					if (hmdAcceleration.LengthSquared() > 250.f)
+					{
+						ovrHmd_DismissHSWDisplay(m_HMD);
+					}
+				}
+			}
+		}
+	}
 }
 
 void OculusManager::Shutdown()

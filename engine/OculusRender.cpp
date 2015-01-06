@@ -52,7 +52,7 @@ void OculusRender::Startup(ovrHmd a_hmd, HWND a_window)
 
 			if (SetupFrameBuffer(eye, m_eyeTexture[eye].Header.TextureSize))
 			{
-				((ovrGLTexture &)m_eyeTexture[eye]).OGL.TexId = m_frameBuffer[eye];
+				((ovrGLTexture &)m_eyeTexture[eye]).OGL.TexId = m_colourBuffer[eye];
 			}
 			else
 			{
