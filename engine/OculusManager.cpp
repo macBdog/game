@@ -1,6 +1,7 @@
 #include "OVR_CAPI.h"
 
 #include "CameraManager.h"
+#include "InputManager.h"
 #include "Log.h"
 #include "OculusCamera.h"
 #include "OculusRender.h"
@@ -33,7 +34,7 @@ void OculusManager::Startup()
 			m_oculusRender = new OculusRender();
 			if (m_oculusRender == NULL)
 			{
-				//TODO BARF
+				Log::Get().WriteEngineErrorNoParams("Cannot create Oculus render component!");
 			}
 		}
 		else
@@ -67,7 +68,7 @@ void OculusManager::DrawToHMD()
 		if (hswDisplayState.Displayed) 
 		{ 
 			// Dismiss the warning if the user pressed the appropriate key or if the user // is tapping the side of the HMD. // If the user has requested to dismiss the warning via keyboard or controller input... 
-			if (false)
+			if (InputManager::Get().GetLastKey() != SDLK_UNKNOWN)
 			{
 				ovrHmd_DismissHSWDisplay(m_HMD);
 			} 
