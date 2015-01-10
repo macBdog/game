@@ -139,20 +139,12 @@ void OculusRender::DrawToHMD()
 			ovrMatrix4f proj = ovrMatrix4f_Projection(m_eyeRenderDesc[eye].Fov, 0.01f, 10000.0f, true);
 			Matrix viewMatrix = CameraManager::Get().GetCameraMatrix().GetInverse();
 
-			glLoadIdentity();
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, 0);
 			glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer[eye]);
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			RenderManager::Get().RenderScene(viewMatrix);
-
-			// Assign quaternion result directly to view (translation is ignored). 
-			//ovrMatrix4f view = ovrMatrix4f(orientation.Inverted()) * ovrMatrix4f::Translation(-WorldEyePos);
-			//pRender->SetViewport(EyeRenderViewport[eye]); pRender->SetProjection(proj); 
-			//pRoomScene->Render(pRender, ovrMatrix4f::Translation(m_eyeRenderDesc[eye].HmdToEyeViewOffset) * view);
 		}
 
 		// Bind the default framebuffer

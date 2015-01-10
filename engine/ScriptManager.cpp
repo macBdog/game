@@ -86,6 +86,9 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		luaL_requiref(m_globalLua, "table", luaopen_table, 1);
 		luaL_requiref(m_globalLua, "string", luaopen_string, 1);
 		luaL_requiref(m_globalLua, "math", luaopen_math, 1);
+		luaL_requiref(m_globalLua, "package", luaopen_package, 1);
+		luaL_requiref(m_globalLua, "os", luaopen_os, 1);
+		luaL_requiref(m_globalLua, "debug", luaopen_debug, 1);
 
 		// Register C++ functions made accessible to LUA
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);

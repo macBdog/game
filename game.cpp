@@ -276,7 +276,11 @@ int main(int argc, char *argv[])
 		// Perform and post rendering tasks for subsystems
 		DebugMenu::Get().PostRender();
 
-		SDL_GL_SwapWindow(sdlWindow);
+		// Don't swap buffers when rendering to the HMD
+		if (!useVr)
+		{
+			SDL_GL_SwapWindow(sdlWindow);
+		}
 
 		// Finished a frame, count time and calc FPS
 		lastFrameTime = Time::GetSystemTime() - startFrame;
