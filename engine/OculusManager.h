@@ -34,6 +34,9 @@ public:
 	inline OculusCamera * GetOculusCamera() { return m_oculusCamera; }
 	inline OculusRender * GetOculusRender() { return m_oculusRender; }
 	
+	static const int s_hmdDefaultResolutionWidth = 1920;	// Constant width to override user set resolution for the regular 2D render target size
+	static const int s_hmdDefaultResolutionHeight = 1080;	// Constant height to override user set resolution for the regular 2D render target size
+
 private:
 	bool m_initialised;
 	OculusCamera * m_oculusCamera;

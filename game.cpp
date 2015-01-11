@@ -147,9 +147,9 @@ int main(int argc, char *argv[])
 	// The flags to pass to SDL_CreateWindow
 	int videoFlags = SDL_WINDOW_OPENGL;
 
-	// Set fullscreen from config
+	// Set fullscreen from config, don't allow fullscreen for HMD as we are supporting DirectToRift
 	bool fullScreen = configFile.GetBool("config", "fullscreen");
-	if (fullScreen)
+	if (fullScreen && !useVr)
 	{
 		videoFlags |= SDL_WINDOW_FULLSCREEN;
 	}
@@ -158,6 +158,14 @@ int main(int argc, char *argv[])
 	int width = configFile.GetInt("config", "width");
 	int height = configFile.GetInt("config", "height");
 	int bpp = configFile.GetInt("config", "bpp");
+
+	// Override display creation for VR mode so the resoultion is correct for the hmd
+	if (useVr)
+	{
+		width = OculusManager::s_hmdDefaultResolutionWidth;
+		height = OculusManager::s_hmdDefaultResolutionHeight;
+	}
+
 	const char * gameName = configFile.GetString("config", "name");
 	SDL_Window * sdlWindow = SDL_CreateWindow(gameName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
 
