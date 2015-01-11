@@ -144,7 +144,7 @@ void OculusRender::DrawToHMD()
 			glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			RenderManager::Get().RenderScene(viewMatrix);
+			RenderManager::Get().RenderScene(viewMatrix, eyeIndex == ovrEye_Count - 1);
 		}
 
 		// Bind the default framebuffer
