@@ -81,13 +81,14 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 	// Open Lua and load the standard libraries
 	if (m_globalLua = luaL_newstate())
 	{
-		luaL_requiref(m_globalLua, "io", luaopen_io, 1);
 		luaL_requiref(m_globalLua, "base", luaopen_base, 1);
+		luaL_requiref(m_globalLua, "coroutine", luaopen_coroutine, 1);
+		luaL_requiref(m_globalLua, "io", luaopen_io, 1);
+		luaL_requiref(m_globalLua, "os", luaopen_os, 1);
 		luaL_requiref(m_globalLua, "table", luaopen_table, 1);
 		luaL_requiref(m_globalLua, "string", luaopen_string, 1);
 		luaL_requiref(m_globalLua, "math", luaopen_math, 1);
 		luaL_requiref(m_globalLua, "package", luaopen_package, 1);
-		luaL_requiref(m_globalLua, "os", luaopen_os, 1);
 		luaL_requiref(m_globalLua, "debug", luaopen_debug, 1);
 
 		// Register C++ functions made accessible to LUA
