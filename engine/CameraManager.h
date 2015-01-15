@@ -30,10 +30,12 @@ public:
 	//\brief Update the camera matrix from the inputs
 	virtual void Update();
 
-	//\ingroup Accessors
-	inline const Matrix & GetCameraMatrix() const { return m_mat; }
-	inline Vector GetPosition() const { return m_pos; }
-	inline Vector GetTarget() const { return m_target; }
+	//\brief The purpose of the camera class is to supply a camera matrix to the render manager
+	virtual const Matrix & GetCameraMatrix() const { return m_mat; }
+	
+	//\ingroup Accessors for components that are used to calculate the camera matrix
+	inline const Vector & GetPosition() const { return m_pos; }
+	inline const Vector & GetTarget() const { return m_target; }
 	inline float GetRotationSpeed() const { return m_rotationSpeed; }
 	inline float GetTranslationSpeed() const { return m_translationSpeed; }
 	inline Vector2 GetOrientationInput() const { return m_orientationInput; }
@@ -68,23 +70,19 @@ public:
 	{ }
 
 	//\brief Stubbed out for loading cameras for each scene
-	void Startup();
-	void Shutdown();
+	void Startup() { ; }
+	void Shutdown() { ; }
 	void Update(float a_dt);
 
 	//\brief Accessors for rendering 
 	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetCameraMatrix(); }
 	inline Vector GetWorldPos() const { return m_currentCamera->GetPosition(); }
-	float GetVRProjectionCentreOffset();
-	float GetVRAspect();
-	float GetVRFOV();
-	float GetVRIPD();
 	
 	///\brief Mutators affecting the currently active camera
-	void SetPosition(const Vector & a_newPos);
-	void SetRotation(const Vector & a_newRot);
-	void SetFOV(const float & a_newFov);
-	void SetTarget(const Vector & a_newTarget);
+	inline void SetPosition(const Vector & a_newPos) { m_currentCamera->SetPosition(a_newPos); }
+	inline void SetRotation(const Vector & a_newRot) { /*m_currentCamera->SetRot(a_newRot);*/ }
+	inline void SetFOV(const float & a_newFov) { /*m_currentCamera->SetFOV(a_newFov);*/ }
+	inline void SetTarget(const Vector & a_newTarget) { m_currentCamera->SetTarget(a_newTarget); }
 
 	//\brief Accessors for VR camera
 	inline bool HasOculusCamera() { return m_oculusCamera != NULL; }

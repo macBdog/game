@@ -14,6 +14,23 @@ void OculusCamera::Startup(ovrHmd a_hmd)
 
 void OculusCamera::Update()
 {
+	// Refresh the normal camera matrix by reconstruction
+	Vector forward = (m_target - m_pos);
+	forward.Normalise();
+	forward = -forward;
+
+	Vector right = forward.Cross(Vector::Up());
+	right.Normalise();
+	right = right;
+
+	Vector up = right.Cross(forward);
+
+	right = -right;
+	m_mat.SetRight(right);
+	m_mat.SetLook(up);
+	m_mat.SetUp(forward);
+	m_mat.SetPos(m_pos);
+
 	if (m_HMD != NULL)
 	{
 		// Query the HMD for the current tracking state.
@@ -23,20 +40,16 @@ void OculusCamera::Update()
 			ovrPosef headPose = trackingState.HeadPose.ThePose;
 			ovrQuatf headOrient = headPose.Orientation;
 			ovrVector3f headPos = headPose.Position;
-    
-			// Oculus world is Y up and looking down +Z, apply transformation to -Y look Z up
-			m_mat = Matrix::Identity();
-			m_mat.SetPos(m_pos);
-			Quaternion pitchNeg = Quaternion(Vector(1.0f, 0.0f, 0.0f), MathUtils::Deg2Rad(90));
-			Matrix rotMat = pitchNeg.GetRotationMatrix();
-			m_mat = m_mat.Multiply(rotMat);
+
+			// Set the modified matrix to be the product of the game's normal camera plus HMD movement and orientation
+			m_modifiedMat = m_mat;
 
 			// Apply oculus sensor fusion orientation to camera mat
-			Quaternion quat = Quaternion(headOrient.x, headOrient.y, headOrient.z, headOrient.w);
-			quat.ApplyToMatrix(m_mat);
+			Quaternion quat = Quaternion(-headOrient.x, headOrient.z, -headOrient.y, headOrient.w);
+			quat.ApplyToMatrix(m_modifiedMat);
 
-			Vector headTrans = m_mat.GetPos() + Vector(headPos.x, headPos.y, headPos.z);
-			m_mat.SetPos(headTrans);
+			m_modifiedMat.SetPos(m_pos + Vector(headPos.x, headPos.y, headPos.z));
 		}
 	}
 }
+

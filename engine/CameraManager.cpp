@@ -11,36 +11,6 @@ const float Camera::sc_defaultCameraRotSpeed = 48.0f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
 
-void CameraManager::SetPosition(const Vector & a_newPos)
-{
-	m_currentCamera->SetPosition(a_newPos);
-}
-
-void CameraManager::SetRotation(const Vector & a_newRot)
-{
-	//m_currentCamera->SetRot(a_newRot);
-}
-
-void CameraManager::SetFOV(const float & a_newFov)
-{
-	//m_currentCamera->SetFOV(a_newFov)
-}
-
-void CameraManager::SetTarget(const Vector & a_newTarget)
-{
-	m_currentCamera->SetTarget(a_newTarget);
-}
-
-void CameraManager::Startup()
-{
-
-}
-
-void CameraManager::Shutdown()
-{
-
-}
-
 void CameraManager::Update(float a_dt)
 {
 	m_currentCamera = &m_gameCamera;
@@ -108,26 +78,6 @@ void CameraManager::Update(float a_dt)
 	}
 
 	m_currentCamera->Update();
-}
-
- float CameraManager::GetVRProjectionCentreOffset()
-{
-	return m_oculusCamera != NULL ? m_oculusCamera->GetProjectionCentreOffset() : 0.0f;
-}
-
-float CameraManager::GetVRAspect() {
-
-	return m_oculusCamera != NULL ? m_oculusCamera->GetAspect() : 0.0f; 
-}
-
-float CameraManager::GetVRFOV() 
-{ 
-	return m_oculusCamera != NULL ? m_oculusCamera->GetFOV() : 0.0f; 
-}
-
-float CameraManager::GetVRIPD() 
-{ 
-	return m_oculusCamera != NULL ? m_oculusCamera->GetIPD() : 0.0f; 
 }
 
 void Camera::Update()
