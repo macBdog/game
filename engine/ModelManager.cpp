@@ -69,7 +69,7 @@ bool ModelManager::Update(float a_dt)
 		m_updateTimer += a_dt;
 		return false;
 	}
-	else // Due for an update, scan all models
+	else // Due for an update, scan all models and their materials
 	{
 		m_updateTimer = 0.0f;
 		bool modelReloaded = false;
@@ -78,24 +78,34 @@ bool ModelManager::Update(float a_dt)
 		ManagedModel * curModel = NULL;
 		while ( m_modelMap.GetNext(curModel) && curModel != NULL)
 		{
-			FileManager::Timestamp curTimestamp;
-			if (FileManager::Get().GetFileTimeStamp(curModel->m_path, curTimestamp))
+			FileManager::Timestamp curModelTimestamp;
+			FileManager::Timestamp curMaterialTimestamp;
+			char materialPath[StringUtils::s_maxCharsPerLine];
+			sprintf(materialPath, "%s%s", m_modelPath, curModel->m_model.GetMaterialFileName());
+			bool modelNeedsReload = FileManager::Get().GetFileTimeStamp(curModel->m_path, curModelTimestamp) && curModelTimestamp > curModel->m_timeStamp;
+			bool materialNeedsReload = FileManager::Get().GetFileTimeStamp(materialPath, curMaterialTimestamp) && curMaterialTimestamp > curModel->m_timeStamp;
+			if (modelNeedsReload || materialNeedsReload)
 			{
-				// Timestamp is new, trigger a reload
-				if (curTimestamp > curModel->m_timeStamp)
+				// Timestamp is new on either model or material, trigger a reload
+				if (modelNeedsReload)
 				{
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path);
-					ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
-					modelReloaded = curModel->m_model.Load(curModel->m_path, mdp);
-					curModel->m_timeStamp = curTimestamp;
-
-					m_loadingVertPool.Reset();
-					m_loadingNormalPool.Reset();
-					m_loadingUvPool.Reset();
+					curModel->m_timeStamp = curModelTimestamp;
 				}
+				else
+				{
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in material %s, reloading.", materialPath);
+					curModel->m_timeStamp = curMaterialTimestamp;
+				}
+
+				ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
+				modelReloaded = curModel->m_model.Load(curModel->m_path, mdp);
+
+				m_loadingVertPool.Reset();
+				m_loadingNormalPool.Reset();
+				m_loadingUvPool.Reset();
 			}
 		}
-		
 		return modelReloaded;
 	}
 }

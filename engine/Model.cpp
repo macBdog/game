@@ -42,11 +42,9 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 	TexCoord * objectUvs = NULL;
 
 	// Storage for material file reading progress
-	char materialFileName[StringUtils::s_maxCharsPerLine];
 	char materialFilePath[StringUtils::s_maxCharsPerLine];
 	strcpy(materialFilePath, a_modelFilePath);
 	StringUtils::TrimFileNameFromPath(materialFilePath);
-	memset(&materialFileName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 
 	// Open the file and parse each line 
 	if (file.is_open())
@@ -65,10 +63,10 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 			else if (strstr(line, "mtllib"))
 			{
 				// Cache off the material file name for later usage
-				sscanf(line, "mtllib %s", &materialFileName);
+				sscanf(line, "mtllib %s", &m_materialFileName);
 
 				// Append the filename onto the file path
-				StringUtils::AppendString(materialFilePath, materialFileName); 
+				StringUtils::AppendString(materialFilePath, m_materialFileName); 
 				continue;
 			}
 			// Object name
@@ -475,8 +473,23 @@ bool Material::Load(const char * a_materialFileName, const char * a_materialName
 					}
 					m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 				}
+				// Spec map name
+				else if (strstr(line, "map_Ks"))
+				{
+					char tempMatName[StringUtils::s_maxCharsPerLine];
+					memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+					if (strstr(line, "\\") == NULL)
+					{
+						sscanf(line, "map_Ks %s", &tempMatName);
+					}
+					else
+					{
+						sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+					}
+					m_specularTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
+				}
 				// Ambient colour
-				if (strstr(line, "Ka"))
+				else if (strstr(line, "Ka"))
 				{
 					sscanf(line, "Ka %f %f %f", &matX, &matY, &matZ);
 					m_ambient.SetR(matX);

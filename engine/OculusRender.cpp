@@ -136,8 +136,6 @@ void OculusRender::DrawToHMD()
 
 			// Bind the appropriate eye buffer and set up a viewport for that eye
 			ovrQuatf orientation = ovrQuatf(m_eyeRenderPose[eye].Orientation);
-			ovrMatrix4f proj = ovrMatrix4f_Projection(m_eyeRenderDesc[eye].Fov, 0.01f, 10000.0f, true);
-			
 			Matrix viewMatrix = CameraManager::Get().GetCameraMatrix().GetInverse();
 			viewMatrix.SetPos(viewMatrix.GetPos() + Vector(m_eyeRenderDesc[eye].HmdToEyeViewOffset.x, m_eyeRenderDesc[eye].HmdToEyeViewOffset.y, m_eyeRenderDesc[eye].HmdToEyeViewOffset.z));
 
@@ -146,6 +144,7 @@ void OculusRender::DrawToHMD()
 			glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			ovrMatrix4f proj = ovrMatrix4f_Projection(m_eyeRenderDesc[eye].Fov, 0.01f, 10000.0f, true);
 			RenderManager::Get().RenderScene(viewMatrix, eyeIndex == ovrEye_Count - 1);
 		}
 

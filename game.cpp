@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
 
 		// Update world last as it clears physics collisions for the frame
 		AnimationManager::Get().Update(lastFrameTimeSec);
+		ModelManager::Get().Update(lastFrameTimeSec);
 		PhysicsManager::Get().Update(lastFrameTimeSec);
 		ScriptManager::Get().Update(lastFrameTimeSec);
 		WorldManager::Get().Update(lastFrameTimeSec);

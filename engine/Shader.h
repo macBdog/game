@@ -192,7 +192,9 @@ public:
 		glUseProgram(m_shader);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(m_diffuseTexture.m_id, 0);
+		glActiveTexture(GL_TEXTURE1);
 		glUniform1i(m_normalTexture.m_id, 1);
+		glActiveTexture(GL_TEXTURE2);
 		glUniform1i(m_specularTexture.m_id, 2);
 		glUniform1f(m_time.m_id, a_data.m_time);
 		glUniform1f(m_lifeTime.m_id, a_data.m_lifeTime);

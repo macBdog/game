@@ -373,6 +373,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[i]);
 
 		// Colour parameters
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_colourBuffers[i]);
  		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -394,12 +395,14 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
 	// Do offscreen rendering pass to first stage framebuffer
 	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
 
 	RenderScene(a_viewMatrix);
 	
 	// Start rendering to the first render stage
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::PostFX]);		//<< Render to first stage colour
 
@@ -1022,12 +1025,12 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			}
 			if (normalTex != NULL)
 			{
-				glActiveTexture(GL_TEXTURE0);
+				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, normalTex->GetId());
 			}
 			if (specularTex != NULL)
 			{
-				glActiveTexture(GL_TEXTURE0);
+				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, specularTex->GetId());
 			}
 			glBegin(GL_TRIANGLES);

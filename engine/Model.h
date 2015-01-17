@@ -139,7 +139,7 @@ class Model
 public:
 
 	// Assigned texture IDs start from 0
-	Model() { m_name[0] = '\0'; }
+	Model() { m_name[0] = '\0'; m_materialFileName[0] = '\0'; }
 	~Model();
 
 	//\brief Load a TGA file into memory and store out the texture ID
@@ -151,9 +151,10 @@ public:
 
 	//\brief Accessors for the model's data
 	inline const char * GetName() const { return m_name; }
+	inline const char * GetMaterialFileName() const { return m_materialFileName;  }
 	inline unsigned int GetNumObjects() const { return m_objects.GetLength(); }
 	inline Object * GetObject(unsigned int a_objectIndex) 
-	{ 
+	{
 		ObjectNode * curObject = m_objects.GetHead();
 		for (unsigned int i = 0; i < a_objectIndex; ++i)
 		{
@@ -168,8 +169,9 @@ private:
 	typedef LinkedList<Object> ObjectList;
 	typedef LinkedListNode<Object> ObjectNode;
 
-	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the model as referenced by the game
-	ObjectList m_objects;							///< List of pointers to the objects that are loaded
+	char m_name[StringUtils::s_maxCharsPerName];				///< Name of the model as referenced by the game
+	char m_materialFileName[StringUtils::s_maxCharsPerName];	///< Name of the material file referenced by the model game
+	ObjectList m_objects;										///< List of pointers to the objects that are loaded
 };
 
 #endif /* _ENGINE_MODEL_H_ */

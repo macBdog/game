@@ -186,8 +186,6 @@
     <None Include="Shaders\lighting.vsh.inc" />
     <None Include="Shaders\texture.fsh.inc" />
     <None Include="Shaders\texture.vsh.inc" />
-    <None Include="Shaders\vr.fsh.inc" />
-    <None Include="Shaders\vr.vsh.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

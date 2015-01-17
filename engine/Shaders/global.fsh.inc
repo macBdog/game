@@ -10,4 +10,5 @@ const char * globalFragmentShader =
 "uniform mat4 ObjectMatrix; \n"
 "uniform mat4 ViewMatrix; \n"
 "uniform mat4 ProjectionMatrix; \n"
+"uniform float Lights[4*((4*3)+1)]; \n"
 "varying vec2 OutTexCoord; \n";
