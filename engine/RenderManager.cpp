@@ -1033,6 +1033,11 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, specularTex->GetId());
 			}
+			else // No spec map, bind the diffuse instead as a default
+			{
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
+			}
 			glBegin(GL_TRIANGLES);
 			// Draw vertices in threes
 			for (unsigned int i = 0; i < numVertices; i += Model::s_vertsPerTri)
