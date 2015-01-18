@@ -57,6 +57,7 @@ public:
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDL_Keycode) * s_maxDepressedKeys);
+		memset(&m_depressedMouseButtons[0], 0, sizeof(bool) * MouseButton::Count);
 
 		// Init gamepad pointers
 		for (int i = 0; i < s_maxGamepads; ++i)
@@ -87,6 +88,7 @@ public:
 	void SetMousePosRelative(const Vector2 & a_newPos);
 	inline void DisableMouseInput() { m_mouseEnabled = false; }
 	inline void EnableMouseInput() { m_mouseEnabled = true; }
+	inline bool IsMouseButtonDepressed(MouseButton::Enum a_button) { return m_depressedMouseButtons[a_button]; }
 
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional
@@ -250,7 +252,8 @@ private:
 	SDL_Keycode m_depressedKeys[s_maxDepressedKeys];						///< List of all the keys that are depressed 
 	SDL_Joystick * m_gamepads[s_maxGamepads];								///< Pointers to all open gamepads
 	int m_numGamepads;														///< How many gamepads are connected
-	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];
+	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];		///< If each of the gamepad buttons are pressed
+	bool m_depressedMouseButtons[MouseButton::Count];						///< If each of the mouse buttons are pressed
 };
 
 #endif // _ENGINE_INPUT_MANAGER_

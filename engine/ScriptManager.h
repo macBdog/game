@@ -84,6 +84,9 @@ private:
 	static int GetGamePadRightStick(lua_State * a_luaState);
 	static int GetGamePadLeftTrigger(lua_State * a_luaState);
 	static int GetGamePadRightTrigger(lua_State * a_luaState);
+	static int IsMouseLeftButtonDown(lua_State * a_luaState);
+	static int IsMouseRightButtonDown(lua_State* a_luaState);
+	static int IsMouseMiddleButtonDown(lua_State* a_luaState);
 	static int SetCameraPosition(lua_State * a_luaState);
 	static int SetCameraRotation(lua_State * a_luaState);
 	static int SetCameraFOV(lua_State * a_luaState);
@@ -93,6 +96,9 @@ private:
 	static int RayCollisionTest(lua_State * a_luaState);
 	static int NewScene(lua_State * a_luaState);
 	static int SetScene(lua_State * a_luaState);
+
+	static int PlaySound(lua_State * a_luaState);
+	static int PlayMusic(lua_State * a_luaState);
 
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);

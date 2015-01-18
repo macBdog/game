@@ -6,6 +6,7 @@
 #include "SoundManager.h"
 
 template<> SoundManager * Singleton<SoundManager>::s_instance = NULL;
+const float SoundManager::s_updateFreq = 1.0f;
 
 bool SoundManager::Startup(const char * a_soundPath)
 {
@@ -27,18 +28,7 @@ bool SoundManager::Startup(const char * a_soundPath)
 
 bool SoundManager::Shutdown()
 {
-	// Clean up music handles
-	SoundNode * next = m_music.GetHead();
-	while (next != NULL)
-	{
-		// Cache off next pointer
-		SoundNode * cur = next;
-		next = cur->GetNext();
-
-		m_music.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
+	StopAllSoundsAndMusic();
 
 	// Shutdown the engine that plays the sound
 	if (m_engine != NULL)
@@ -56,15 +46,36 @@ void SoundManager::Update(float a_dt)
 
 }
 
-bool SoundManager::PlaySound(const char * a_soundName)
+bool SoundManager::PlaySound(const char * a_soundName) const
 {
-	return m_engine->play2D(a_soundName, false) != NULL;
+	// Check if the sound name needs the path added
+	char soundNameBuf[StringUtils::s_maxCharsPerLine];
+	if (!strstr(a_soundName, ":\\"))
+	{
+		sprintf(soundNameBuf, "%s%s", m_soundPath, a_soundName);
+	}
+	else // Already fully qualified
+	{
+		sprintf(soundNameBuf, "%s", a_soundName);
+	}
+	return m_engine->play2D(soundNameBuf, false) != NULL;
 }
 
 bool SoundManager::PlayMusic(const char * a_musicName)
 {
+	// Check if the music name needs the path added
+	char musicNameBuf[StringUtils::s_maxCharsPerLine];
+	if (!strstr(a_musicName, ":\\"))
+	{
+		sprintf(musicNameBuf, "%s%s", m_soundPath, a_musicName);
+	}
+	else // Already fully qualified
+	{
+		sprintf(musicNameBuf, "%s", a_musicName);
+	}
+
 	// Insert the sound into the list of playing sounds so the music can be managed
-	if (irrklang::ISound * newMusic = m_engine->play2D(a_musicName, true))
+	if (irrklang::ISound * newMusic = m_engine->play2D(musicNameBuf, true))
 	{
 		SoundNode * newMusicNode = new SoundNode();
 		newMusicNode->SetData(newMusic);
@@ -72,4 +83,22 @@ bool SoundManager::PlayMusic(const char * a_musicName)
 		return true;
 	}
 	return false;
+}
+
+void SoundManager::StopAllSoundsAndMusic()
+{
+	m_engine->stopAllSounds();
+
+	// Clean up music handles
+	SoundNode * next = m_music.GetHead();
+	while (next != NULL)
+	{
+		// Cache off next pointer
+		SoundNode * cur = next;
+		next = cur->GetNext();
+
+		m_music.Remove(cur);
+		delete cur->GetData();
+		delete cur;
+	}
 }

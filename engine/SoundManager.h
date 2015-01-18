@@ -6,8 +6,11 @@
 #include "GameFile.h"
 #include "Singleton.h"
 
-class irrklang::ISoundEngine;
-class irrklang::ISound;
+namespace irrklang
+{
+	class ISoundEngine;
+	class ISound;
+}
 
 class SoundManager : public Singleton<SoundManager>
 {
@@ -29,9 +32,9 @@ public:
 
 	void Update(float a_dt);
 
-	bool PlaySound(const char * a_soundName);
+	bool PlaySound(const char * a_soundName) const;
 	bool PlayMusic(const char * a_musicName);
-	bool StopMusic();
+	void StopAllSoundsAndMusic();
 	bool FadeOutMusic();
 	bool FadeInMusic();
 

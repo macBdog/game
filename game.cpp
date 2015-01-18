@@ -24,6 +24,7 @@
 #include "engine/TextureManager.h"
 #include "engine/WorldManager.h"
 #include "engine/PhysicsManager.h"
+#include "engine/SoundManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -104,6 +105,7 @@ int main(int argc, char *argv[])
 	char scenePath[StringUtils::s_maxCharsPerLine];
 	char scriptPath[StringUtils::s_maxCharsPerLine];
 	char shaderPath[StringUtils::s_maxCharsPerLine];
+	char soundPath[StringUtils::s_maxCharsPerLine];
 
 	strcpy(gameConfigPath, configFile.GetString("config", "gameConfigFile"));
 	strcpy(texturePath, configFile.GetString("config", "texturePath"));
@@ -114,6 +116,7 @@ int main(int argc, char *argv[])
 	strcpy(scenePath, configFile.GetString("config", "scenePath"));
 	strcpy(scriptPath, configFile.GetString("config", "scriptPath"));
 	strcpy(shaderPath, configFile.GetString("config", "shaderPath"));
+	strcpy(soundPath, configFile.GetString("config", "soundPath"));
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)
@@ -127,6 +130,7 @@ int main(int argc, char *argv[])
 		if (strstr(scenePath, ":") == NULL)			{ StringUtils::PrependString(scenePath, gameDataPath); }
 		if (strstr(scriptPath, ":") == NULL)		{ StringUtils::PrependString(scriptPath, gameDataPath); }
 		if (strstr(shaderPath, ":") == NULL)		{ StringUtils::PrependString(shaderPath, gameDataPath); }
+		if (strstr(soundPath, ":") == NULL)			{ StringUtils::PrependString(soundPath, gameDataPath); }
 	}
 
 	// Load game specific config
@@ -202,6 +206,7 @@ int main(int argc, char *argv[])
 	AnimationManager::Get().Startup(modelPath);
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
+	SoundManager::Get().Startup(soundPath);
 	
 	// Now the rendering device context is created, it can be passed into the Oculus rendering component
 	if (useVr)
@@ -248,6 +253,7 @@ int main(int argc, char *argv[])
 		PhysicsManager::Get().Update(lastFrameTimeSec);
 		ScriptManager::Get().Update(lastFrameTimeSec);
 		WorldManager::Get().Update(lastFrameTimeSec);
+		SoundManager::Get().Update(lastFrameTimeSec);
 		
 		// Draw the Gui
 		Gui::Get().Update(lastFrameTimeSec);
@@ -314,6 +320,7 @@ int main(int argc, char *argv[])
 	Gui::Get().Shutdown();
 	RenderManager::Get().Shutdown();
 	InputManager::Get().Shutdown();
+	SoundManager::Get().Shutdown();
 
 	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.
 	SDL_GL_DeleteContext(glcontext);

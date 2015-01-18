@@ -8,6 +8,7 @@
 #include "InputManager.h"
 #include "LuaScript.h"
 #include "WorldManager.h"
+#include "SoundManager.h"
 
 #include "ScriptManager.h"
 
@@ -101,6 +102,9 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "GetGamePadRightStick", GetGamePadRightStick);
 		lua_register(m_globalLua, "GetGamePadLeftTrigger", GetGamePadLeftTrigger);
 		lua_register(m_globalLua, "GetGamePadRightTrigger", GetGamePadRightTrigger);
+		lua_register(m_globalLua, "IsMouseLeftButtonDown", IsMouseLeftButtonDown);
+		lua_register(m_globalLua, "IsMouseRightButtonDown", IsMouseRightButtonDown);
+		lua_register(m_globalLua, "IsMouseMiddleButtonDown", IsMouseMiddleButtonDown);
 		lua_register(m_globalLua, "SetCameraPosition", SetCameraPosition);
 		lua_register(m_globalLua, "SetCameraRotation", SetCameraRotation);
 		lua_register(m_globalLua, "SetCameraFOV", SetCameraFOV);
@@ -110,6 +114,8 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "GetRayCollision", RayCollisionTest);
 		lua_register(m_globalLua, "NewScene", NewScene);
 		lua_register(m_globalLua, "SetScene", SetScene);
+		lua_register(m_globalLua, "PlaySound", PlaySound);
+		lua_register(m_globalLua, "PlayMusic", PlayMusic);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
@@ -260,6 +266,9 @@ bool ScriptManager::Update(float a_dt)
 
 				// Clean up any script-owned objects
 				WorldManager::Get().DestroyAllScriptOwnedObjects();
+
+				// Stop any music that has been playing
+				SoundManager::Get().StopAllSoundsAndMusic();
 
 				// Kick the script VM in the guts
 				Shutdown();
@@ -590,6 +599,51 @@ int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
 	return 1;
 }
 
+int ScriptManager::IsMouseLeftButtonDown(lua_State * a_luaState)
+{
+	bool buttonDown = false;
+	if (lua_gettop(a_luaState) == 0)
+	{
+		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Left);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsMouseLeftButtonDown", "expects no parameters.");
+	}
+	lua_pushboolean(a_luaState, buttonDown);
+	return 1;
+}
+
+int ScriptManager::IsMouseRightButtonDown(lua_State * a_luaState)
+{
+	bool buttonDown = false;
+	if (lua_gettop(a_luaState) == 0)
+	{
+		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Right);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsMouseRightButtonDown", "expects no parameters.");
+	}
+	lua_pushboolean(a_luaState, buttonDown);
+	return 1;
+}
+
+int ScriptManager::IsMouseMiddleButtonDown(lua_State * a_luaState)
+{
+	bool buttonDown = false;
+	if (lua_gettop(a_luaState) == 0)
+	{
+		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Middle);
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsMouseMiddleButtonDown", "expects no parameters.");
+	}
+	lua_pushboolean(a_luaState, buttonDown);
+	return 1;
+}
+
 int ScriptManager::SetCameraPosition(lua_State * a_luaState)
 {
 	// Don't allow camera mutation in the debug menu
@@ -782,6 +836,44 @@ int ScriptManager::NewScene(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "NewScene", "expects 1 parameter: name of the scene to set.");
+	}
+	return 0;
+}
+
+int ScriptManager::PlaySound(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * soundName = lua_tostring(a_luaState, 1);
+		if (soundName != NULL)
+		{
+			SoundManager::Get().PlaySound(soundName);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "PlaySound", "expects 1 parameter: filename of the sound to play.");
+	}
+	return 0;
+}
+
+int ScriptManager::PlayMusic(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * musicName = lua_tostring(a_luaState, 1);
+		if (musicName != NULL)
+		{
+			SoundManager::Get().PlayMusic(musicName);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "PlayMusic", "expects 1 parameter: filename of the music to play.");
 	}
 	return 0;
 }
