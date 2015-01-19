@@ -565,10 +565,13 @@ int ScriptManager::GetGamePadLeftTrigger(lua_State * a_luaState)
 	if (lua_gettop(a_luaState) == 1)
 	{
 		int padId = (int)lua_tonumber(a_luaState, 1);
-		float rawVal = InputManager::Get().GetGamePadAxis(padId, 2);
-		if (rawVal >= 0.0f) 
+		if (InputManager::Get().IsGamePadConnected(padId))
 		{
-			pos = rawVal;
+			float rawVal = InputManager::Get().GetGamePadAxis(padId, 4);
+			if (rawVal > -1.0f)
+			{
+				pos = (rawVal + 1.0f) * 0.5f;
+			}
 		}
 	}
 	else
@@ -585,10 +588,13 @@ int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
 	if (lua_gettop(a_luaState) == 1)
 	{
 		int padId = (int)lua_tonumber(a_luaState, 1);
-		float rawVal = InputManager::Get().GetGamePadAxis(padId, 2);
-		if (rawVal <= 0.0f) 
+		if (InputManager::Get().IsGamePadConnected(padId))
 		{
-			pos = fabsf(rawVal);
+			float rawVal = InputManager::Get().GetGamePadAxis(padId, 5);
+			if (rawVal > -1.0f)
+			{
+				pos = (rawVal + 1.0f) * 0.5f;
+			}
 		}
 	}
 	else

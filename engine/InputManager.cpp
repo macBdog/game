@@ -13,13 +13,19 @@ bool InputManager::Startup(bool a_fullScreen)
 
 	// Init gamepad pointers
 	SDL_JoystickEventState(SDL_ENABLE);
+	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+	#define	SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS 1
 	m_numGamepads = SDL_NumJoysticks();
-	for (int i = 0; i < m_numGamepads; ++i)
+	for (int i = 0; i < m_numGamepads && i < s_maxGamepads; ++i)
 	{
-		m_gamepads[i] = SDL_JoystickOpen(i);
-		for (int j = 0; j < s_maxGamepadButtons; ++j)
+		// Assign controller
+		if (m_gamepads[i] = SDL_JoystickOpen(i))
 		{
-			m_depressedGamepadButtons[i][j] = false;
+			// Clear all depressed button flags
+			for (int j = 0; j < s_maxGamepadButtons; ++j)
+			{
+				m_depressedGamepadButtons[i][j] = false;
+			}
 		}
 	}
 
@@ -43,9 +49,12 @@ bool InputManager::Shutdown()
 
 	// Close gamepads down
 	int connectedPads = SDL_NumJoysticks();
-	for (int i = 0; i < m_numGamepads; ++i)
+	for (int i = 0; i < s_maxGamepads; ++i)
 	{
-		SDL_JoystickClose(m_gamepads[i]);
+		if (m_gamepads[i])
+		{
+			SDL_JoystickClose(m_gamepads[i]);
+		}
 		m_gamepads[i] = NULL;
 	}
 
@@ -56,22 +65,24 @@ bool InputManager::Update(float a_dt)
 {
 	// Check for new gamepads and enable them
 	m_gamePadCheckTimer += a_dt;
-	if (m_numGamepads == 0 && m_gamePadCheckTimer >= s_gamePadCheckTime)
+	if (m_gamePadCheckTimer >= s_gamePadCheckTime)
 	{
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 		const int numGamePads = SDL_NumJoysticks();
-		if (numGamePads > 0)
+		if (numGamePads > m_numGamepads)
 		{
 			m_numGamepads = numGamePads;
 			for (int i = 0; i < m_numGamepads; ++i)
 			{
 				if (m_gamepads[i] == NULL)
 				{
-					m_gamepads[i] = SDL_JoystickOpen(i);
-					for (int j = 0; j < s_maxGamepadButtons; ++j)
+					if (m_gamepads[i] = SDL_JoystickOpen(i))
 					{
-						m_depressedGamepadButtons[i][j] = false;
+						for (int j = 0; j < s_maxGamepadButtons; ++j)
+						{
+							m_depressedGamepadButtons[i][j] = false;
+						}
 					}
 				}
 			}

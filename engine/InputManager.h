@@ -58,11 +58,12 @@ public:
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDL_Keycode) * s_maxDepressedKeys);
 		memset(&m_depressedMouseButtons[0], 0, sizeof(bool) * MouseButton::Count);
-
+		
 		// Init gamepad pointers
 		for (int i = 0; i < s_maxGamepads; ++i)
 		{
 			m_gamepads[i] = NULL;
+			memset(&m_depressedGamepadButtons[i], 0, sizeof(bool) * s_maxGamepadButtons);
 		}
 	}
 
