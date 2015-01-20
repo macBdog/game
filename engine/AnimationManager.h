@@ -19,7 +19,7 @@ struct KeyFrame
 		: m_time(0)
 		, m_pos(0.0f)
 		, m_rot(0.0f)
-		, m_scale(0.0f)
+		, m_scale(1.0f)
 		, m_transformName() { }
 	int m_time;					///< What relative time the keyframe is applied
 	Vector m_pos;					///< Where the keyframe locates the transform
@@ -56,7 +56,7 @@ private:
 	static const unsigned int s_animPoolSize;					///< How much memory is assigned for all game animations
 	static const float s_updateFreq;							///< How often the animation manager should check for resource updates
 
-	//\brief A KeyChannel is a component of a keyframe used only when loading the animation
+	//\brief A Key Component is a component of a keyframe used only when loading the animation
 	struct KeyComp
 	{
 		KeyComp() : m_value(0.0f), m_time(0) { }

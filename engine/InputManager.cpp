@@ -14,7 +14,7 @@ bool InputManager::Startup(bool a_fullScreen)
 	// Init gamepad pointers
 	SDL_JoystickEventState(SDL_ENABLE);
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-	#define	SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS 1
+	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 	m_numGamepads = SDL_NumJoysticks();
 	for (int i = 0; i < m_numGamepads && i < s_maxGamepads; ++i)
 	{

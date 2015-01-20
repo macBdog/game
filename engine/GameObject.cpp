@@ -24,12 +24,19 @@ const char * GameObject::s_clipTypeStrings[ClipType::Count] =
 
 bool GameObject::Update(float a_dt)
 {
+#ifndef _RELEASE
 	// Don't update game objects while debugging
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
 		return true;
 	}
 
+	// Don't update scripts if time paused
+	if (DebugMenu::Get().IsTimePaused())
+	{
+		return true;
+	}
+#endif
 	// Early out for deactivated objects
 	if (m_state == GameObjectState::Sleep)
 	{

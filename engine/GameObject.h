@@ -111,6 +111,7 @@ public:
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
+	inline Matrix & GetWorldMat() { return m_worldMat; }
 	inline Shader * GetShader() const { return m_shader; }
 	inline Vector GetPos() const { return  m_worldMat.GetPos() + m_localMat.GetPos(); }
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_localMat.GetPos() + m_clipVolumeOffset; }

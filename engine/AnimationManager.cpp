@@ -7,7 +7,7 @@
 
 template<> AnimationManager * Singleton<AnimationManager>::s_instance = NULL;
 
-const unsigned int AnimationManager::s_animPoolSize = 16777216;					///< How much memory is assigned for all game animations
+const unsigned int AnimationManager::s_animPoolSize = 33554432;					///< How much memory is assigned for all game animations
 const float AnimationManager::s_updateFreq = 1.0f;								///< How often the animation manager should check for updates to disk resources
 
 using namespace std;	//< For fstream operations
@@ -90,8 +90,6 @@ bool AnimationManager::Update(float a_dt)
 			FileManager::Get().GetFileTimeStamp(curAnim->m_path, curTimeStamp);
 			if (curTimeStamp > curAnim->m_timeStamp)
 			{
-				// TODO - remove all loaded anims contained in this file
-
 				reloadedAnims += LoadAnimationsFromFile(curAnim->m_path);
 				curAnim->m_timeStamp = curTimeStamp;
 				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in animation file %s, reloading.", curAnim->m_path);
@@ -224,7 +222,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 					}
 					const char * transformName = StringUtils::ExtractField(line, ":", 1);
 
-					// Preamble for each transform manipulattion
+					// Preamble for each transform manipulation
 					for (int chanCount = 0; chanCount < numChannels; ++chanCount)
 					{
 						// Channel: T/R/S
@@ -319,76 +317,62 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 							currentKeyComp[i][j] = inputKeys[i][j]->GetHead();
 						}
 					}
+
+					// Each key can have have a different number of frames. Read and hold on to the last value until a time passes with a new value for each channel
+					int keyProgress[numChannels][numComponents];
+					memset(&keyProgress[0][0], 0, sizeof(int) * numChannels * numComponents);
 					for (int timeCount = 0; timeCount < animLength; ++timeCount)
 					{
-						bool keySet = false;
 						KeyFrame curKey;
-						for (int chanCount = 0; chanCount < numChannels; ++chanCount)
-						{
-							for (int compCount = 0; compCount < numComponents; ++ compCount)
-							{
-								bool compSet = false;
-								KeyComp * curKeyComp = currentKeyComp[chanCount][compCount];
-								if (curKeyComp->m_time <= timeCount)
-								{
-									switch (chanCount)
-									{
-										// Transform
-										case 0:	
-										{
-											if (compCount == 0) { curKey.m_pos.SetX(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 1) { curKey.m_pos.SetY(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 2) { curKey.m_pos.SetZ(curKeyComp->m_value); compSet = true; }
-											break;
-										}
-										// Rotation
-										case 1:
-										{
-											if (compCount == 0) { curKey.m_rot.SetX(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 1) { curKey.m_rot.SetY(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 2) { curKey.m_rot.SetZ(curKeyComp->m_value); compSet = true; }
-											break;
+						KeyComp * tX = inputKeys[0][0]->GetHead() + keyProgress[0][0];
+						KeyComp * tY = inputKeys[0][1]->GetHead() + keyProgress[0][1];
+						KeyComp * tZ = inputKeys[0][2]->GetHead() + keyProgress[0][2];
+						KeyComp * rX = inputKeys[1][0]->GetHead() + keyProgress[1][0];
+						KeyComp * rY = inputKeys[1][1]->GetHead() + keyProgress[1][1];
+						KeyComp * rZ = inputKeys[1][2]->GetHead() + keyProgress[1][2];
+						KeyComp * sX = inputKeys[2][0]->GetHead() + keyProgress[2][0];
+						KeyComp * sY = inputKeys[2][1]->GetHead() + keyProgress[2][1];
+						KeyComp * sZ = inputKeys[2][2]->GetHead() + keyProgress[2][2];
 
-										}
-										// Scale
-										case 2:
-										{
-											if (compCount == 0) { curKey.m_scale.SetX(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 1) { curKey.m_scale.SetY(curKeyComp->m_value); compSet = true; }
-											else if (compCount == 2) { curKey.m_scale.SetZ(curKeyComp->m_value); compSet = true; }
-											break;
-										}
-										default: break;
-									}
-								
-									// Advance component to next frame if a value was set
-									if (compSet) 
-									{
-										currentKeyComp[chanCount][compCount]++;
-										keySet = true;
-									}
+						// Advance component to next frame if there is another frame for the channel component after the time we are at
+						for (int i = 0; i < numChannels; ++i)
+						{
+							for (int j = 0; j < numComponents; ++j)
+							{
+								if (numKeys[i][j] > keyProgress[i][j] && timeCount <= (inputKeys[i][j]->GetHead() + keyProgress[i][j] + 1)->m_time)
+								{
+									keyProgress[i][j]++;
 								}
 							}
 						}
-
+								
 						// Add a new key into the stream
-						if (keySet)
+						curKey.m_pos = Vector(tX->m_value, tY->m_value, tZ->m_value);
+						curKey.m_rot = Vector(rX->m_value, rY->m_value, rZ->m_value);
+						curKey.m_scale = Vector(sX->m_value, sY->m_value, sZ->m_value);
+						curKey.m_time = timeCount;
+
+						KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
+						*newKey = curKey;
+						++totalFrameCount;
+						if (firstFrame == NULL)
 						{
-							curKey.m_time = timeCount;
-							KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
-							*newKey = curKey;
-							++totalFrameCount;
-							if (firstFrame == NULL)
-							{
-								firstFrame = newKey;
-							}
+							firstFrame = newKey;
 						}
 					}
 
 					// Add the new managed animation to the list
 					FileManager::Timestamp curTimeStamp;
 					FileManager::Get().GetFileTimeStamp(a_fbxPath, curTimeStamp);
-					ManagedAnim * manAnim = new ManagedAnim(a_fbxPath, takeName, curTimeStamp);
+
+					// Anim name is the filename missing the extension because Blender's exporter only exports one take per file
+					char animNameBuf[StringUtils::s_maxCharsPerName];
+					strcpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_fbxPath));
+					if (strstr(&animNameBuf[0], ".fbx") != NULL)
+					{
+						animNameBuf[strlen(animNameBuf) - 4] = '\0';
+					}
+					ManagedAnim * manAnim = new ManagedAnim(a_fbxPath, animNameBuf, curTimeStamp);
 					manAnim->m_numKeys = totalFrameCount;
 					manAnim->m_data = firstFrame;
 					manAnim->m_frameRate = fileFrameRate;

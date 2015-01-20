@@ -3,6 +3,7 @@
 
 #include "AnimationManager.h"
 #include "GameObject.h"
+#include "Log.h"
 
 #include "AnimationBlender.h"
 
@@ -31,10 +32,11 @@ bool AnimationBlender::Update(float a_dt)
 	// Construct an aggregate matrix of all the playing animations
 	Vector keyPos(0.0f);
 	Vector keyRot(0.0f);
-	Vector keyScale(0.0f);
+	Vector keyScale(1.0f);
 
 	// Iterate through each channel and increment it's progress
 	bool playedAnim = false;
+	Matrix & local = m_gameObject->GetLocalMat();
 	for (int i = 0; i < s_maxAnimationChannels; ++i)
 	{
 		if (m_channels[i].m_active)
@@ -71,22 +73,20 @@ bool AnimationBlender::Update(float a_dt)
 			{
 				m_channels[i].m_lastFrame += a_dt;
 			}
+			
+			// Apply the aggregate matrix to the object
+			local = Matrix::Identity();
+			Quaternion objectRot(MathUtils::Deg2Rad(keyRot));
+			local = local.Multiply(objectRot.GetRotationMatrix());
+			local.SetScale(keyScale);
+			local.SetPos(keyPos);	
 		}
 
 		// Stop the animation if it's run out of frames
-		if (m_channels[i].m_curFrame >= m_channels[i].m_numFrames)
+		if (m_channels[i].m_curFrame > 0 && m_channels[i].m_curFrame >= m_channels[i].m_numFrames)
 		{
 			m_channels[i].m_active = false;
 		}
 	}
-
-	// Apply the aggregate matrix to the object
-	Matrix & local = m_gameObject->GetLocalMat();
-	local = Matrix::Identity();
-	Quaternion rot(MathUtils::Deg2Rad(keyRot));
-	local = local.Multiply(rot.GetRotationMatrix());
-	local.SetScale(keyScale);
-	local.SetPos(keyPos);
-
 	return playedAnim;
 }
