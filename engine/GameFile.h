@@ -10,8 +10,12 @@
 #include "../core/Vector.h"
 #include "../core/Quaternion.h"
 
+#include "DataPack.h"
+#include "Log.h"
 #include "StringHash.h"
 #include "StringUtils.h"
+
+using namespace std;	//< For fstream operations
 
 //\brief A GameFile is a general purpose configuration and data file that
 //		 is designed to be human readable and lightweight in syntax unlike
@@ -34,6 +38,8 @@
 //		 {
 //			Something: anotherThing;
 //		 }
+
+struct DataPackEntry;
 
 class GameFile
 {
@@ -182,7 +188,33 @@ public:
 	~GameFile() { Unload(); }
 
 	//\brief Load the game file and parse it into data
-    bool Load(const char * a_filePath);
+	bool Load(const char * a_filePath)
+	{
+		ifstream file(a_filePath, ifstream::in);
+		if (LoadData<ifstream>(file))
+		{
+			return true;
+		}
+		else
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game file resource at path %s", a_filePath);
+			return false;
+		}
+	}
+
+	inline bool Load(DataPackEntry * a_packData)
+	{
+		if (LoadData<DataPackEntry>(*a_packData))
+		{
+			return true;
+		}
+		else
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game datapack file resource.");
+			return false;
+		}
+	}
+
 	void Unload();
 	inline bool Reload() { Unload(); return Load(m_filePath); }
 	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
@@ -217,9 +249,135 @@ public:
 
 private:
 
+	//\brief Load function will work with either datapack entry or input stream
+	template <typename TInputData>
+	bool LoadData(TInputData & a_input)
+	{
+		char line[StringUtils::s_maxCharsPerLine];
+		memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+
+		// Open the file
+		if (a_input.is_open())
+		{
+			// Read till the file has more contents or a rule is broken
+			unsigned int lineCount = 0;
+			while (a_input.good())
+			{
+				a_input.getline(line, StringUtils::s_maxCharsPerLine);
+				lineCount++;
+
+				// Parse any comment lines
+				if (strstr(line, "//"))
+				{
+					continue;
+				}
+
+				// Parse any empty lines
+				if (strlen(line) <= 0)
+				{
+					continue;
+				}
+
+				// A line without any symbols means a new object
+				if (IsLineNewObject(line))
+				{
+					int linesRead = ReadObjectAndProperties<TInputData>(line, a_input);
+					if (linesRead == 0)
+					{
+						Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game file resource");
+						return false;
+					}
+					lineCount += linesRead;
+				}
+				else // Bad formatting
+				{
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Bad game file format, expecting an object declaration at line %d.", lineCount);
+				}
+			}
+		}
+		a_input.close();
+		return true;
+	}
+
 	//\brief Recursive function to read an object definition with any child objects
 	//\return the number of lines read
-	unsigned int ReadObjectAndProperties(const char * a_objectName, std::ifstream & a_stream, Object * a_parentObject = NULL);
+	template <typename TInputData>
+	unsigned int ReadObjectAndProperties(const char * a_objectName, TInputData & a_stream, Object * a_parent = NULL)
+	{
+		char line[StringUtils::s_maxCharsPerLine];
+		memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+		unsigned int lineCount = 0;
+
+		// Create a new child and optionally link it to the parent
+		Object * currentObject = AddObject(StringUtils::TrimString(a_objectName), a_parent);
+		a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+		lineCount++;
+
+		// Parse any comment line
+		if (strstr(line, "//"))
+		{
+			a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+			lineCount++;;
+		}
+
+		// Next line should be a brace
+		unsigned int braceCount = 0;
+		if (strstr(line, "{"))
+		{
+			braceCount++;
+			a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+			lineCount++;
+
+			// Parse any comment line
+			if (strstr(line, "//"))
+			{
+				a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+				lineCount++;
+			}
+
+			// Now properties of that object
+			while (!strstr(line, "}"))
+			{
+				// Look for child object
+				if (IsLineNewObject(line))
+				{
+					// Read the child object
+					lineCount += ReadObjectAndProperties(line, a_stream, currentObject);
+					a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+					lineCount++;
+				}
+				else if (strlen(StringUtils::TrimString(line)) > 0) // Checking for normal property
+				{
+					// Break apart the property and parse for type
+					const char * propName = StringUtils::ExtractPropertyName(line, ":");
+					const char * propValue = StringUtils::ExtractValue(line, ":");
+					if (propName && propValue)
+					{
+						AddProperty(currentObject, propName, propValue);
+						a_stream.getline(line, StringUtils::s_maxCharsPerLine);
+						lineCount++;
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Bad game file format, there is a missing property name and/or value for object %s at line %u.", a_objectName, lineCount);
+						return 0;
+					}
+				}
+				else // Whitespace, move on
+				{
+					break;
+				}
+			}
+			braceCount--;
+		}
+		else if (braceCount > 0) // Mismatched number of braces
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Bad game file format, expecting an open brace after declaration for object %s on line %u.", a_objectName, lineCount);
+			return 0;
+		}
+
+		return lineCount;
+	}
 
 	//\brief Helper function to determine if a line of text defines a new object
 	//\param const char * to a line read in from a file

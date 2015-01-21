@@ -116,6 +116,7 @@
     <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="CollisionUtils.h" />
+    <ClInclude Include="DataPack.h" />
     <ClInclude Include="DebugMenu.h" />
     <ClInclude Include="DebugMenuCommands.h" />
     <ClInclude Include="FileManager.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="CameraManager.cpp" />
     <ClCompile Include="CollisionUtils.cpp" />
+    <ClCompile Include="DataPack.cpp" />
     <ClCompile Include="DebugMenu.cpp" />
     <ClCompile Include="DebugMenuCommands.cpp" />
     <ClCompile Include="FileManager.cpp" />
@@ -178,6 +180,8 @@
     <ClCompile Include="WorldManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Font\default.fnt.inc" />
+    <None Include="Font\default.tga.inc" />
     <None Include="Shaders\colour.fsh.inc" />
     <None Include="Shaders\colour.vsh.inc" />
     <None Include="Shaders\global.fsh.inc" />

@@ -12,6 +12,9 @@
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{20899f06-fb2f-45d4-b166-0dc13f050bc0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Font">
+      <UniqueIdentifier>{a24bbd79-a8ed-41a9-bfe5-167df69d9da7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameObject.h">
@@ -110,6 +113,9 @@
     <ClInclude Include="OculusManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DataPack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="InputManager.cpp">
@@ -202,6 +208,9 @@
     <ClCompile Include="OculusManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DataPack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\colour.fsh.inc">
@@ -227,6 +236,12 @@
     </None>
     <None Include="Shaders\lighting.vsh.inc">
       <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Font\default.fnt.inc">
+      <Filter>Source Files\Font</Filter>
+    </None>
+    <None Include="Font\default.tga.inc">
+      <Filter>Source Files\Font</Filter>
     </None>
   </ItemGroup>
 </Project>

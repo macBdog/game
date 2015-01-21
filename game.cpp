@@ -10,6 +10,7 @@
 
 #include "engine/AnimationManager.h"
 #include "engine/CameraManager.h"
+#include "engine/DataPack.h"
 #include "engine/DebugMenu.h"
 #include "engine/FontManager.h"
 #include "engine/GameFile.h"
@@ -44,6 +45,46 @@ int main(int argc, char *argv[])
 		sprintf(configFilePath, "game.cfg");
 	}
 
+	// Make sure SDL cleans up before exit
+	atexit(SDL_Quit);
+
+	// Storage for resource paths
+	char gameConfigPath[StringUtils::s_maxCharsPerLine];
+	char texturePath[StringUtils::s_maxCharsPerLine];
+	char fontPath[StringUtils::s_maxCharsPerLine];
+	char guiPath[StringUtils::s_maxCharsPerLine];
+	char modelPath[StringUtils::s_maxCharsPerLine];
+	char templatePath[StringUtils::s_maxCharsPerLine];
+	char scenePath[StringUtils::s_maxCharsPerLine];
+	char scriptPath[StringUtils::s_maxCharsPerLine];
+	char shaderPath[StringUtils::s_maxCharsPerLine];
+	char soundPath[StringUtils::s_maxCharsPerLine];
+
+	// For a release build, look for the datapack right next to the executable
+#ifdef _RELEASE
+	#define _DATAPACK 1
+#endif
+#ifdef _DATAPACK
+	DataPack dataPack("datapack.dtp");
+	
+	if (!dataPack.IsLoaded())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the datapack.");
+		return 1;
+	}
+
+	GameFile configFile;
+	DataPackEntry * configFileFromPack;
+	if (configFileFromPack = dataPack.GetEntry(configFilePath))
+	{
+		configFile.Load(configFileFromPack);
+	}
+	else
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Datapack misc failure.");
+	}
+#else
+
 	// Read the main config file to setup video etc
 	GameFile configFile(configFilePath);
 	if (!configFile.IsLoaded())
@@ -52,10 +93,15 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	// All files read by the game will be added to the datapack in case we want to make a pack
+	DataPack & dataPack = DataPack::Get();
+	dataPack.AddFile(configFilePath);
+
 	// Setup relative pathing if defined
 	const char * gameDataPathFromFile = configFile.GetString("config", "gameDataPath");
 	if (gameDataPathFromFile != NULL)
 	{
+		dataPack.AddFile(gameDataPathFromFile);
 		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
 
@@ -82,30 +128,9 @@ int main(int argc, char *argv[])
 			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, ".\\") + 1);
 		}
 	}
+#endif
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);
-
-    // Initialize SDL video
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
-    {
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to init SDL");
-        return 1;
-    }
-
-    // Make sure SDL cleans up before exit
-    atexit(SDL_Quit);
-
-	// Process resource paths
-	char gameConfigPath[StringUtils::s_maxCharsPerLine];
-	char texturePath[StringUtils::s_maxCharsPerLine];
-	char fontPath[StringUtils::s_maxCharsPerLine];
-	char guiPath[StringUtils::s_maxCharsPerLine];
-	char modelPath[StringUtils::s_maxCharsPerLine];
-	char templatePath[StringUtils::s_maxCharsPerLine];
-	char scenePath[StringUtils::s_maxCharsPerLine];
-	char scriptPath[StringUtils::s_maxCharsPerLine];
-	char shaderPath[StringUtils::s_maxCharsPerLine];
-	char soundPath[StringUtils::s_maxCharsPerLine];
 
 	strcpy(gameConfigPath, configFile.GetString("config", "gameConfigFile"));
 	strcpy(texturePath, configFile.GetString("config", "texturePath"));
@@ -138,6 +163,18 @@ int main(int argc, char *argv[])
 	if (!gameConfig.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", configFilePath);
+		return 1;
+	}
+
+#ifndef _DATAPACK
+	dataPack.AddFile(gameConfigPath);
+	dataPack.Serialize("datapack.dtp");
+#endif
+
+	// Initialize SDL video
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to init SDL");
 		return 1;
 	}
 
