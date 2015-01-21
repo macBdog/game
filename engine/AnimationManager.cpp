@@ -7,7 +7,7 @@
 
 template<> AnimationManager * Singleton<AnimationManager>::s_instance = NULL;
 
-const unsigned int AnimationManager::s_animPoolSize = 33554432;					///< How much memory is assigned for all game animations
+const unsigned int AnimationManager::s_animPoolSize = 67108864;					///< How much memory is assigned for all game animations
 const float AnimationManager::s_updateFreq = 1.0f;								///< How often the animation manager should check for updates to disk resources
 
 using namespace std;	//< For fstream operations
@@ -321,43 +321,54 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 					// Each key can have have a different number of frames. Read and hold on to the last value until a time passes with a new value for each channel
 					int keyProgress[numChannels][numComponents];
 					memset(&keyProgress[0][0], 0, sizeof(int) * numChannels * numComponents);
+					bool newKeyToSet = true;
 					for (int timeCount = 0; timeCount < animLength; ++timeCount)
 					{
-						KeyFrame curKey;
-						KeyComp * tX = inputKeys[0][0]->GetHead() + keyProgress[0][0];
-						KeyComp * tY = inputKeys[0][1]->GetHead() + keyProgress[0][1];
-						KeyComp * tZ = inputKeys[0][2]->GetHead() + keyProgress[0][2];
-						KeyComp * rX = inputKeys[1][0]->GetHead() + keyProgress[1][0];
-						KeyComp * rY = inputKeys[1][1]->GetHead() + keyProgress[1][1];
-						KeyComp * rZ = inputKeys[1][2]->GetHead() + keyProgress[1][2];
-						KeyComp * sX = inputKeys[2][0]->GetHead() + keyProgress[2][0];
-						KeyComp * sY = inputKeys[2][1]->GetHead() + keyProgress[2][1];
-						KeyComp * sZ = inputKeys[2][2]->GetHead() + keyProgress[2][2];
+						if (newKeyToSet)
+						{
+							KeyFrame curKey;
+							KeyComp * tX = inputKeys[0][0]->GetHead() + keyProgress[0][0];
+							KeyComp * tY = inputKeys[0][1]->GetHead() + keyProgress[0][1];
+							KeyComp * tZ = inputKeys[0][2]->GetHead() + keyProgress[0][2];
+							KeyComp * rX = inputKeys[1][0]->GetHead() + keyProgress[1][0];
+							KeyComp * rY = inputKeys[1][1]->GetHead() + keyProgress[1][1];
+							KeyComp * rZ = inputKeys[1][2]->GetHead() + keyProgress[1][2];
+							KeyComp * sX = inputKeys[2][0]->GetHead() + keyProgress[2][0];
+							KeyComp * sY = inputKeys[2][1]->GetHead() + keyProgress[2][1];
+							KeyComp * sZ = inputKeys[2][2]->GetHead() + keyProgress[2][2];
+								
+							// Add a new key into the stream
+							curKey.m_pos = Vector(tX->m_value, tY->m_value, tZ->m_value);
+							curKey.m_rot = Vector(rX->m_value, rY->m_value, rZ->m_value);
+							curKey.m_scale = Vector(sX->m_value, sY->m_value, sZ->m_value);
+							curKey.m_time = timeCount;
+
+							KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
+							*newKey = curKey;
+							++totalFrameCount;
+							if (firstFrame == NULL)
+							{
+								firstFrame = newKey;
+							}
+						}
 
 						// Advance component to next frame if there is another frame for the channel component after the time we are at
+						newKeyToSet = false;
 						for (int i = 0; i < numChannels; ++i)
 						{
 							for (int j = 0; j < numComponents; ++j)
 							{
-								if (numKeys[i][j] > keyProgress[i][j] && timeCount <= (inputKeys[i][j]->GetHead() + keyProgress[i][j] + 1)->m_time)
+								// If there is another key to read
+								if (numKeys[i][j] > keyProgress[i][j])
 								{
-									keyProgress[i][j]++;
+									// And time has moved past this key
+									if (timeCount >= (inputKeys[i][j]->GetHead() + keyProgress[i][j] + 1)->m_time)
+									{
+										keyProgress[i][j]++;
+										newKeyToSet = true;
+									}
 								}
 							}
-						}
-								
-						// Add a new key into the stream
-						curKey.m_pos = Vector(tX->m_value, tY->m_value, tZ->m_value);
-						curKey.m_rot = Vector(rX->m_value, rY->m_value, rZ->m_value);
-						curKey.m_scale = Vector(sX->m_value, sY->m_value, sZ->m_value);
-						curKey.m_time = timeCount;
-
-						KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
-						*newKey = curKey;
-						++totalFrameCount;
-						if (firstFrame == NULL)
-						{
-							firstFrame = newKey;
 						}
 					}
 
