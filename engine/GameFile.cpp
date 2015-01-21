@@ -10,7 +10,7 @@ bool GameFile::Load(const char * a_filePath)
 {
 	char line[StringUtils::s_maxCharsPerLine];
 	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	ifstream file(a_filePath);
+	ifstream file(a_filePath, std::ifstream::in);
 	
 	// Open the file and parse each line 
 	if (file.is_open())
