@@ -134,13 +134,15 @@ bool DataPack::Serialize(const char * a_path) const
 				outputFile.write((char *)&curEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
 				
 				// Now write the resource
+				size_t writeByteCount = 0;
 				ifstream resourceFile(curEntry->m_path, ios::in | ios::binary);
 				if (resourceFile.is_open())
 				{
-					while (resourceFile.good())
+					while (resourceFile.good() && writeByteCount < curEntry->m_size)
 					{
 						char c = resourceFile.get();
 						outputFile.write(&c, sizeof(char));
+						++writeByteCount;
 					}
 					resourceFile.close();
 				}

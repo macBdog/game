@@ -20,9 +20,44 @@ struct DataPackEntry
 	}
 
 	///\brief Alias of ifstream functions so callers can template datapacks or files
-	inline bool is_open() { m_readOffset = 0; return true; }
-	inline bool good() { return m_size > 0 && m_readOffset >= (int)m_size && m_data != NULL && m_path[0] != '\0'; }
-	inline bool getline(char * a_buffer_OUT, int a_numCharsMax) { /* TODO */ return true; }
+	inline bool is_open()
+	{
+		if (m_readOffset < 0)
+		{
+			m_readOffset = 0;
+			return true;
+		}
+		return false;
+	}
+	inline bool good() 
+	{ 
+		return	m_size > 0 && 
+				m_readOffset < (int)m_size && 
+				m_data != NULL && 
+				m_path[0] != '\0'; 
+	}
+	inline bool getline(char * a_buffer_OUT, int a_numCharsMax) 
+	{
+		char * inBuff = m_data + m_readOffset;
+		char * outBuff = a_buffer_OUT;
+		bool foundEnd = false;
+		while (!foundEnd && inBuff - m_data < a_numCharsMax)
+		{
+			foundEnd = inBuff == '\0' || *inBuff == '\n' || *inBuff == '\r';
+			if (!foundEnd)
+			{
+				*outBuff++ = *inBuff++;
+			}
+		}
+		int termCharLength = 1;
+		if (*inBuff == '\r' && *(inBuff + 1) == '\n')
+		{
+			termCharLength = 2;
+		}
+		m_readOffset += inBuff - m_data + termCharLength;
+		outBuff = '\0';
+		return true; 
+	}
 	inline bool close() { m_readOffset = -1; return true; }
 
 	size_t m_size;									///< How big the entry in the pack is
