@@ -41,12 +41,14 @@ struct DataPackEntry
 		char * inBuff = m_data + m_readOffset;
 		char * outBuff = a_buffer_OUT;
 		bool foundEnd = false;
-		while (!foundEnd && inBuff - m_data < a_numCharsMax)
+		int numBytesRead = 0;
+		while (!foundEnd && numBytesRead < a_numCharsMax)
 		{
 			foundEnd = inBuff == '\0' || *inBuff == '\n' || *inBuff == '\r';
 			if (!foundEnd)
 			{
 				*outBuff++ = *inBuff++;
+				numBytesRead++;
 			}
 		}
 		int termCharLength = 1;
@@ -54,8 +56,8 @@ struct DataPackEntry
 		{
 			termCharLength = 2;
 		}
-		m_readOffset += inBuff - m_data + termCharLength;
-		outBuff = '\0';
+		m_readOffset += numBytesRead + termCharLength;
+		*outBuff = '\0';
 		return true; 
 	}
 	inline bool close() { m_readOffset = -1; return true; }
