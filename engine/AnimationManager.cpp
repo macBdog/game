@@ -359,7 +359,7 @@ int AnimationManager::LoadAnimationsFromFile(const char * a_fbxPath)
 							for (int j = 0; j < numComponents; ++j)
 							{
 								// If there is another key to read
-								if (numKeys[i][j] > keyProgress[i][j])
+								if (keyProgress[i][j] + 1 < numKeys[i][j])
 								{
 									// And time has moved past this key
 									if (timeCount >= (inputKeys[i][j]->GetHead() + keyProgress[i][j] + 1)->m_time)

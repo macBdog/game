@@ -22,6 +22,16 @@ int AnimationBlender::GetChannel()
 	return -1;
 }
 
+void AnimationBlender::ApplyKeyToWorld(const Vector & a_pos, const Vector & a_rot, const Vector & a_scale, Matrix & a_world) const
+{
+	const Vector worldPos = a_world.GetPos() + a_pos;
+	const Vector worldScale = a_world.GetScale() * a_scale;
+	Quaternion keyRotation(MathUtils::Deg2Rad(a_rot));
+	a_world = a_world.Multiply(keyRotation.GetRotationMatrix());
+	a_world.SetPos(worldPos);
+	a_world.SetScale(worldScale);
+}
+
 bool AnimationBlender::Update(float a_dt)
 {
 	if (m_gameObject == NULL)
@@ -30,15 +40,19 @@ bool AnimationBlender::Update(float a_dt)
 	}
 
 	// Construct an aggregate matrix of all the playing animations
-	Vector keyPos(0.0f);
-	Vector keyRot(0.0f);
-	Vector keyScale(1.0f);
+	Vector blendedPos(0.0f);
+	Vector blendedRot(0.0f);
+	Vector blendedScale(1.0f);
 
 	// Iterate through each channel and increment it's progress
 	bool playedAnim = false;
 	Matrix & local = m_gameObject->GetLocalMat();
+	Matrix & world = m_gameObject->GetWorldMat();
 	for (int i = 0; i < s_maxAnimationChannels; ++i)
 	{
+		Vector keyPos(0.0f);
+		Vector keyRot(0.0f);
+		Vector keyScale(1.0f);
 		if (m_channels[i].m_active)
 		{
 			const float fracToNextFrame = MathUtils::GetMin(m_channels[i].m_lastFrame / m_channels[i].m_frameRateRecip, 1.0f);
@@ -73,20 +87,30 @@ bool AnimationBlender::Update(float a_dt)
 			{
 				m_channels[i].m_lastFrame += a_dt;
 			}
-			
-			// Apply the aggregate matrix to the object
-			local = Matrix::Identity();
-			Quaternion objectRot(MathUtils::Deg2Rad(keyRot));
-			local = local.Multiply(objectRot.GetRotationMatrix());
-			local.SetScale(keyScale);
-			local.SetPos(keyPos);	
 		}
 
 		// Stop the animation if it's run out of frames
 		if (m_channels[i].m_curFrame > 0 && m_channels[i].m_curFrame >= m_channels[i].m_numFrames)
 		{
 			m_channels[i].m_active = false;
+
+			// Push the channels last state onto the world matrix of the object so it's persistent
+			ApplyKeyToWorld(keyPos, keyRot, keyScale, world);
+		}
+		else
+		{
+			blendedPos += keyPos;
+			blendedRot += keyRot;
+			blendedScale *= keyScale;
 		}
 	}
+
+	// Set the channels matrix to the key
+	local = Matrix::Identity();
+	Quaternion channelRot(MathUtils::Deg2Rad(blendedRot));
+	local = local.Multiply(channelRot.GetRotationMatrix());
+	local.SetScale(blendedScale);
+	local.SetPos(blendedPos);
+
 	return playedAnim;
 }

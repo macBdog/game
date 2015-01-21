@@ -50,6 +50,7 @@ public:
 	bool operator == (const Vector & a_compare) const { return x == a_compare.x && y == a_compare.y && z == a_compare.z; }
 	void operator += (const Vector & a_val) { x += a_val.x; y += a_val.y; z += a_val.z; }
 	void operator -= (const Vector & a_val) { x -= a_val.x; y -= a_val.y; z -= a_val.z; }
+	void operator *= (const Vector & a_val) { x *= a_val.x; y *= a_val.y; z *= a_val.z; }
 	
 private:
 	float x, y, z;
@@ -90,6 +91,7 @@ public:
 	Vector2 operator *= (const float & a_scale) const { return Vector2(x + x*a_scale, y + y*a_scale); }
 	void  operator += (const Vector2 & a_val) { x += a_val.x; y += a_val.y; }
 	void  operator -= (const Vector2 & a_val) { x -= a_val.x; y -= a_val.y; }
+	void  operator *= (const Vector2 & a_val) { x *= a_val.x; y *= a_val.y; }
 
 protected:
 	float x, y;

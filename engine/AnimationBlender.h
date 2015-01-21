@@ -43,6 +43,8 @@ private:
 
 	static const int s_maxAnimationChannels = 8;			///< Maximum animations that can be playing on one model at a time
 
+	void ApplyKeyToWorld(const Vector & a_pos, const Vector & a_rot, const Vector & a_scale, Matrix & a_world) const;
+
 	//\brief An animation channel is grouping of data to keep track of keyframes to apply
 	struct AnimationChannel
 	{
