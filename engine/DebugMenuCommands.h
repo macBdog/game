@@ -227,6 +227,8 @@ private:
 	DebugCommandReturnData ChangeWidgetTexture(Widget * a_widget);
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 
+	DebugCommandReturnData CreateDataPack(Widget * a_widget);
+
 	DebugCommandReturnData CreateGameObject(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectModel(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectName(GameObject * a_gameObj);

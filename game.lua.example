@@ -1,3 +1,11 @@
+-- This part remaps the require function so it can work from a released DataPack
+local localFileSystemRequire = require
+function require (module)
+  local ok, m = pcall (localFileSystemRequire, module)
+  if ok then return m end
+  DataPackRequire(module)
+end
+
 function Startup()
 	io.write("Game started.\n")
 

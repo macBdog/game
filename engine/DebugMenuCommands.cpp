@@ -1,3 +1,4 @@
+#include "DataPack.h"
 #include "Gui.h"
 #include "InputManager.h"
 #include "FontManager.h"
@@ -107,6 +108,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
 	lastCreatedCommand = Create("Create Light",				m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourYellow, EditType::None);
 	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::CreateLight);
+	lastCreatedCommand = Create("Create DataPack",			m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::None);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateDataPack);
 	
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
@@ -566,6 +569,16 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteWidget(Widget * a_widget)
 	retVal.m_clearSelection = true;
 	retVal.m_dirtyFlag = DirtyFlag::GUI;
 	retVal.m_success = a_widget == NULL;
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::CreateDataPack(Widget * a_widget)
+{
+	DebugCommandReturnData retVal;
+
+	// Write the existing datapack to disk out
+	Hide();
+	retVal.m_success = DataPack::Get().Serialize(DataPack::s_defaultDataPackPath);
 	return retVal;
 }
 

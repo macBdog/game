@@ -1,6 +1,9 @@
+#include <assert.h>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+
+#include "FileManager.h"
 
 #include "DataPack.h"
 
@@ -8,7 +11,7 @@ using namespace std;	//< For fstream operations
 
 template<> DataPack * Singleton<DataPack>::s_instance = NULL;
 
-const char * s_tempFilePath = "dataPackTemp.tmp";			///< When compiling a datapack, the working set minus the manifest is stored on disk instead of memory
+const char * DataPack::s_defaultDataPackPath = "datapack.dtp";	///< Name of the pack to write and read if not specified
 
 void DataPack::Unload()
 {
@@ -34,6 +37,13 @@ bool DataPack::Load(const char * a_path)
 	if (IsLoaded())
 	{
 		Unload();
+	}
+
+	// The relative path needs to exist so the paths the game is looking for can be reconstructed
+	if (m_relativePath[0] == '\0' || strlen(m_relativePath) <= 0)
+	{
+		assert(false);
+		return false;
 	}
 
 	ifstream inputFile(a_path, ios::in | ios::binary);
@@ -78,19 +88,31 @@ bool DataPack::Load(const char * a_path)
 
 bool DataPack::AddFile(const char * a_path)
 {
+	// The relative path needs to exist so it can be stripped before adding to the datapack
+	if (m_relativePath[0] == '\0' || strlen(m_relativePath) <= 0)
+	{
+		assert(false);
+		return false;
+	}
+
 	// First get the size of the file
 	struct stat sizeResult;
 	if (stat(a_path, &sizeResult) == 0)
 	{
 		const size_t sizeBytes = (size_t)sizeResult.st_size;
-		DataPackEntry * newEntry = new DataPackEntry();
-		newEntry->m_size = sizeBytes;
-		strcpy(newEntry->m_path, a_path);
 
-		EntryNode * newNode = new EntryNode();
-		newNode->SetData(newEntry);
+		// First check that the file isn't already in the pack
+		if (!HasFile(a_path))
+		{
+			DataPackEntry * newEntry = new DataPackEntry();
+			newEntry->m_size = sizeBytes;
+			strcpy(newEntry->m_path, a_path);
 
-		m_manifest.Insert(newNode);
+			EntryNode * newNode = new EntryNode();
+			newNode->SetData(newEntry);
+
+			m_manifest.Insert(newNode);
+		}
 		return true;
 	}
 	return false;
@@ -98,7 +120,58 @@ bool DataPack::AddFile(const char * a_path)
 
 bool DataPack::AddFolder(const char * a_path, const char * a_fileExtensions)
 {
-	return false;
+	bool filesAdded = false;
+	const char * delimeter = ",";
+	if (a_fileExtensions && a_fileExtensions[0] != '\0')
+	{
+		// Support a list of extension types
+		if (strstr(a_fileExtensions, ",") != NULL)
+		{
+			char extensionsTokenized[StringUtils::s_maxCharsPerName];
+			strcpy(extensionsTokenized, a_fileExtensions);
+			char * listTok = strtok(&extensionsTokenized[0], delimeter);
+			while(listTok != NULL)
+			{
+				filesAdded = AddAllFilesInFolder(a_path, listTok);
+				listTok = strtok(NULL, delimeter);
+			}
+		}
+		else
+		{
+			filesAdded = AddAllFilesInFolder(a_path, a_fileExtensions);
+		}
+	}
+	return filesAdded;
+}
+
+bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExtension)
+{
+	// Scan all the path for files of the correct extension
+	FileManager & fileMan = FileManager::Get();
+	FileManager::FileList filesToPack;
+	fileMan.FillFileList(a_path, filesToPack, a_fileExtension);
+
+	// Add all files of correct path
+	int numFilesAdded = 0;
+	FileManager::FileListNode * curNode = filesToPack.GetHead();
+	while(curNode != NULL)
+	{
+		// Get a fresh timestamp on the animation file
+		char fullPath[StringUtils::s_maxCharsPerLine];
+		sprintf(fullPath, "%s%s", a_path, curNode->GetData()->m_name);
+
+		if (curNode->GetData()->m_isDir)
+		{
+			numFilesAdded += AddAllFilesInFolder(fullPath, a_fileExtension);
+		}
+		else
+		{
+			AddFile(fullPath);
+			++numFilesAdded;
+		}
+		curNode = curNode->GetNext();
+	}
+	return numFilesAdded > 0;
 }
 
 bool DataPack::Serialize(const char * a_path) const
@@ -168,4 +241,23 @@ DataPackEntry * DataPack::GetEntry(const char * a_path)
 		cur = cur->GetNext();
 	}
 	return NULL;
+}
+
+bool DataPack::HasFile(const char * a_path) const
+{
+	EntryNode * cur = m_manifest.GetHead();
+	while (cur != NULL)
+	{
+		const DataPackEntry * curEntry = cur->GetData();
+		if (strcmp(curEntry->m_path, a_path) == 0)
+		{
+			return true;
+		}
+	}
+	return true;
+}
+
+void DataPack::SetRelativePath(const char * a_relativePath)
+{ 
+	strcpy(m_relativePath, a_relativePath); 
 }

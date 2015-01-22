@@ -65,7 +65,9 @@ int main(int argc, char *argv[])
 	#define _DATAPACK 1
 #endif
 #ifdef _DATAPACK
-	DataPack dataPack("datapack.dtp");
+	DataPack dataPack = DataPack::Get();
+	dataPack.SetRelativePath(argv[0]);
+	dataPack.Load(DataPack::s_defaultDataPackPath);
 	
 	if (!dataPack.IsLoaded())
 	{
@@ -95,6 +97,7 @@ int main(int argc, char *argv[])
 
 	// All files read by the game will be added to the datapack in case we want to make a pack
 	DataPack & dataPack = DataPack::Get();
+	dataPack.SetRelativePath(argv[0]);
 	dataPack.AddFile(configFilePath);
 
 	// Setup relative pathing if defined
@@ -166,10 +169,17 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-#ifndef _DATAPACK
+	// Add all resources to the datapack so all files are written if the user hits the create datapack debug menu button
 	dataPack.AddFile(gameConfigPath);
-	dataPack.Serialize("datapack.dtp");
-#endif
+	dataPack.AddFolder(texturePath, ".tga");
+	dataPack.AddFolder(fontPath, ".tga,.fnt");
+	dataPack.AddFolder(guiPath, ".cfg,.mnu");
+	dataPack.AddFolder(modelPath, ".obj,.mtl,.fbx");
+	dataPack.AddFolder(templatePath, ".tmp");
+	dataPack.AddFolder(scenePath, ".scn");
+	dataPack.AddFolder(scriptPath, ".lua");
+	dataPack.AddFolder(shaderPath, ".fsh,.vsh");
+	dataPack.AddFolder(soundPath, ".wav,.mp3");
 
 	// Initialize SDL video
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)

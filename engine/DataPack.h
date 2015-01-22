@@ -74,8 +74,8 @@ class DataPack : public Singleton<DataPack>
 public:
 
 	//\ No work done in the constructor, the idea is the datapack object is created then pumped full of data and written to disk
-	DataPack() {}
-	DataPack(const char * a_pathToLoad) { Load(a_pathToLoad); }
+	DataPack() { m_relativePath[0] = '\0'; }
+	DataPack(const char * a_pathToLoad) { m_relativePath[0] = '\0'; Load(a_pathToLoad); }
 	~DataPack() { Unload(); }
 	
 	//\brief Read a pre built data pack from disk and parse it's header so resources can be read from it
@@ -104,19 +104,31 @@ public:
 	//\brief Status accessors for the user of the datapack
 	inline bool IsLoaded() const { return m_manifest.GetLength() > 0; }
 
-	//\brief Extrct an entry from the manifest, usually for reading the resource data from
+	//\brief Extract an entry from the manifest, usually for reading the resource data from
 	//\return NULL if not found
 	DataPackEntry * GetEntry(const char * a_path);
 
+	//\brief Check a file exists in the pack already, just like GetEntry save for return type
+	bool HasFile(const char * a_path) const;
+
+	//\brief The relative path is used for packing files without absolute path info and also for
+	// retrieving files from an absolute path when only the relative is requested. The pack will not work correctly without this
+	//\param a_relativePath where the executable is being run from
+	void SetRelativePath(const char * a_relativePath);
+
+	static const char * s_defaultDataPackPath;				///< Name of the pack to write and read if not specified
+
 private:
 
-	typedef LinkedListNode<DataPackEntry> EntryNode;	///< Shorthand for a node pointing to a datapack entry
-	typedef LinkedList<DataPackEntry> EntryList;		///< Shorthand for a list of datapack entries maintained by the datapack
+	typedef LinkedListNode<DataPackEntry> EntryNode;		///< Shorthand for a node pointing to a datapack entry
+	typedef LinkedList<DataPackEntry> EntryList;			///< Shorthand for a list of datapack entries maintained by the datapack
 
-	static const char * s_tempFilePath;					///< When compiling a datapack, the working set minus the manifest is stored on disk instead of memory
+	//\brief Add files of one extension to the data pack, recursively through any sub folders
+	bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExtension);
 
-	EntryList m_manifest;								///< The list of all entries
-	LinearAllocator<char> m_resourceData;				///< When a datapack is loaded, the resource data lives here
+	EntryList m_manifest;									///< The list of all entries
+	LinearAllocator<char> m_resourceData;					///< When a datapack is loaded, the resource data lives here
+	char m_relativePath[StringUtils::s_maxCharsPerLine];	///< Relative path when the datapack was made so the pack is always relative
 };
 
 #endif // _ENGINE_DATA_PACK_

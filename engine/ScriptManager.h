@@ -115,6 +115,8 @@ private:
 	static int GUIGetMouseClipPosition(lua_State * a_luaState);
 	static int GUIGetMouseScreenPosition(lua_State * a_luaState);
 	
+	static int DataPackRequire(lua_State * a_luaState);
+
 	static int DebugPrint(lua_State * a_luaState);
 	static int DebugLog(lua_State * a_luaState);
 	static int DebugLine(lua_State * a_luaState);

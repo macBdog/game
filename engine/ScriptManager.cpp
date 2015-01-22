@@ -4,6 +4,7 @@
 
 #include "AnimationManager.h"
 #include "CameraManager.h"
+#include "DataPack.h"
 #include "DebugMenu.h"
 #include "InputManager.h"
 #include "LuaScript.h"
@@ -1172,6 +1173,36 @@ int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
 	lua_pushnumber(a_luaState, mousePos.GetX());
 	lua_pushnumber(a_luaState, mousePos.GetY());
 	return 2;
+}
+
+int ScriptManager::DataPackRequire(lua_State * a_luaState)
+{
+	// This is only a valid call when running from datapack
+#ifdef _DATAPACK
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * scriptPath = lua_tostring(a_luaState, 1);
+		if (scriptPath != NULL && scriptPath[0] != '\0')
+		{
+			if (DataPackEntry * luaResource = DataPack::Get().GetEntry(scriptPath))
+			{
+				lua_pushstring(a_luaState, luaResource->m_data);
+			}
+			else
+			{
+				Log::Get().Write(LogCategory::Game, LogCategory::Error, "DataPackRequire cannot find a lua file called %s in the pack.", scriptPath);
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "DataPackRequire", "at least one parameter of the lua file that is required.");
+	}
+#else
+	Log::Get().WriteGameErrorNoParams("DataPackRequire called when the game is not running from a DataPack! Probably a bad path to require().");
+#endif
+	return 1;
 }
 
 int ScriptManager::DebugPrint(lua_State * a_luaState)
