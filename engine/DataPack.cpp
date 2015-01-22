@@ -253,8 +253,9 @@ bool DataPack::HasFile(const char * a_path) const
 		{
 			return true;
 		}
+		cur = cur->GetNext();
 	}
-	return true;
+	return false;
 }
 
 void DataPack::SetRelativePath(const char * a_relativePath)
