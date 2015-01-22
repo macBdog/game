@@ -19,7 +19,7 @@ static const char tgaHeader[] = {
 static const GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
 static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
-bool Texture::Load(const char *a_tgaFilePath, bool a_useLinearFilter)
+bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 {
     int x, y, bpp;
     GLubyte *textureData;
@@ -88,6 +88,11 @@ bool Texture::Load(const char *a_tgaFilePath, bool a_useLinearFilter)
     free(textureData);
 
     return true;
+}
+
+bool Texture::LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter)
+{
+	return true;
 }
 
 GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp)

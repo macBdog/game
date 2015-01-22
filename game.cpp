@@ -254,17 +254,17 @@ int main(int argc, char *argv[])
 	MathUtils::InitialiseRandomNumberGenerator();
 
 #ifdef _DATAPACK
-	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr); // TODO: Convert to read datapacks
     RenderManager::Get().Resize(width, height, bpp);
-	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
+	TextureManager::Get().Startup(&dataPack, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(&dataPack);
 	InputManager::Get().Startup(fullScreen);
-	ModelManager::Get().Startup(modelPath);
-	PhysicsManager::Get().Startup(gameConfig, modelPath);
-	AnimationManager::Get().Startup(modelPath);
-	WorldManager::Get().Startup(templatePath, scenePath);
+	ModelManager::Get().Startup(modelPath);	// TODO: Convert to read datapacks
+	PhysicsManager::Get().Startup(gameConfig, modelPath); // TODO: Convert to read datapacks
+	AnimationManager::Get().Startup(modelPath); // TODO: Convert to read datapacks
+	WorldManager::Get().Startup(templatePath, scenePath); // TODO: Convert to read datapacks
 	CameraManager::Get().Startup();
-	SoundManager::Get().Startup(soundPath);
+	SoundManager::Get().Startup(soundPath); // TODO: Convert to read datapacks
 #else
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
 	RenderManager::Get().Resize(width, height, bpp);

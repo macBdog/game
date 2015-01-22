@@ -4,6 +4,7 @@
 #include "../core/HashMap.h"
 #include "../core/LinearAllocator.h"
 
+#include "DataPack.h"
 #include "FileManager.h"
 #include "Singleton.h"
 #include "StringHash.h"
@@ -50,6 +51,8 @@ public:
 
 	//brief Initialise memory pools on startup, cleanup textures on shutdown
 	bool Startup(const char * a_texturePath, bool a_useLinearTextureFilter = true);
+	bool Startup(DataPack * a_dataPack, bool a_useLinearTextureFilter = true);
+
 	bool Shutdown();
 
 	//\brief Update will poll for texture changes and reload any textures that have a newer version than on disk
@@ -92,7 +95,9 @@ private:
 		char m_path[StringUtils::s_maxCharsPerLine];						///< The full path for reloading
 	};
 
-	typedef HashMap<int, ManagedTexture *> TextureMap;				///< Alias for a hash map of managed textures
+	typedef HashMap<int, ManagedTexture *> TextureMap;						///< Alias for a hash map of managed textures
+
+	bool Init(bool a_useLinearTextureFilter);								///< Perform the work required when starting up
 
 	static const unsigned int s_texurePoolSize[TextureCategory::Count];		///< How much memory is assigned for each category
 	static const float s_updateFreq;										///< How often the texture manager should check for updates
@@ -100,6 +105,7 @@ private:
 	LinearAllocator<ManagedTexture> m_texturePool[TextureCategory::Count];	///< Memory pool for each texture category
 	TextureMap m_textureMap[TextureCategory::Count];						///< List of textures for each category
 	char m_texturePath[StringUtils::s_maxCharsPerLine];						///< Cache off texture path 
+	DataPack * m_dataPack;													///< Cache off the data pack to load from
 	float m_updateFreq;														///< How often the texture manager should check for changes
 	float m_updateTimer;													///< If we are due for a scan and update of textures
 	TextureFilter::Enum m_filterMode;										///< Filtering rule to apply, can make exceptions on a per texture basis

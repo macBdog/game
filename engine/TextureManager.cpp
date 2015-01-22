@@ -19,6 +19,7 @@ const float TextureManager::s_updateFreq = 1.0f;
 TextureManager::TextureManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
+	, m_dataPack(NULL)
 {
 	m_texturePath[0] = '\0';
 	m_filterMode = TextureFilter::Invalid;
@@ -26,8 +27,25 @@ TextureManager::TextureManager(float a_updateFreq)
 
 bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTextureFilter)
 {
+	// Cache off the texture path for non qualified loading of textures
+	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
+	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
+	
+	return Init(a_useLinearTextureFilter);
+}
+
+bool TextureManager::Startup(DataPack * a_dataPack, bool a_useLinearTextureFilter)
+{
+	// Cache off the datapack path for loading textures from pack
+	m_dataPack = a_dataPack;
+
+	return Init(a_useLinearTextureFilter);
+}
+
+bool TextureManager::Init(bool a_useLinearTextureFilter)
+{
 	// Reset update timer in case we have been shutdown the re started
-	 m_updateTimer = 0;
+	m_updateTimer = 0;
 
 	// Init a pool of memory for each category
 	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
@@ -43,10 +61,6 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 			return false;
 		}
 	}
-
-	// Cache off the texture path for non qualified loading of textures
-	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
 
 	// Set filtering rule
 	m_filterMode = a_useLinearTextureFilter ? TextureFilter::Linear : TextureFilter::Nearest;
@@ -94,7 +108,7 @@ bool TextureManager::Update(float a_dt)
 					if (curTimeStamp > curTex->m_timeStamp)
 					{
 						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path);
-						textureReloaded = curTex->m_texture.Load(curTex->m_path);
+						textureReloaded = curTex->m_texture.LoadFromFile(curTex->m_path);
 						curTex->m_timeStamp = curTimeStamp;
 					}
 				}
@@ -104,7 +118,7 @@ bool TextureManager::Update(float a_dt)
 	}
 }
 
-Texture * TextureManager::GetTexture(const char *a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
+Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
@@ -147,18 +161,40 @@ Texture * TextureManager::GetTexture(const char *a_tgaPath, TextureCategory::Enu
 			a_currentFilter = m_filterMode;
 		}
 
-		// Insert the newly allocated texture
-		if (newTex->m_texture.Load(fileNameBuf, a_currentFilter == TextureFilter::Linear))
+		// If loading from a datapack
+		if (m_dataPack != NULL && m_dataPack->IsLoaded())
 		{
-			FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
-			sprintf(newTex->m_path, "%s", fileNameBuf);
-			m_textureMap[a_cat].Insert(texId, newTex);
-			return &newTex->m_texture;
+			// Insert the newly allocated texture
+			if (DataPackEntry * packedTexture = m_dataPack->GetEntry(fileNameBuf))
+			{
+				if (newTex->m_texture.LoadFromMemory((void *)packedTexture->m_data, packedTexture->m_size, a_currentFilter == TextureFilter::Linear))
+				{
+					sprintf(newTex->m_path, "%s", fileNameBuf);
+					m_textureMap[a_cat].Insert(texId, newTex);
+					return &newTex->m_texture;
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileNameBuf);
+					return NULL;
+				}
+			}
 		}
 		else
 		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load failed for %s", fileNameBuf);
-			return NULL;
+			// Insert the newly allocated texture
+			if (newTex->m_texture.LoadFromFile(fileNameBuf, a_currentFilter == TextureFilter::Linear))
+			{
+				FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
+				sprintf(newTex->m_path, "%s", fileNameBuf);
+				m_textureMap[a_cat].Insert(texId, newTex);
+				return &newTex->m_texture;
+			}
+			else
+			{
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileNameBuf);
+				return NULL;
+			}
 		}
 	}
 	else // Report the error

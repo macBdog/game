@@ -28,6 +28,8 @@ bool FontManager::Startup(const char * a_fontPath)
 	FileManager::FileListNode * curNode = fontFiles.GetHead();
 	
 	// Cache off the font path as textures are relative to fonts
+	char fontFilePath[StringUtils::s_maxCharsPerLine];
+	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
 
@@ -36,7 +38,8 @@ bool FontManager::Startup(const char * a_fontPath)
 	while(curNode != NULL)
 	{
 		// File stream for font config file
-		ifstream inputFile(curNode->GetData()->m_name);
+		sprintf(fontFilePath, "%s%s", m_fontPath, curNode->GetData()->m_name);
+		ifstream inputFile(fontFilePath, ifstream::in);
 		loadSuccess &= LoadFont<ifstream>(inputFile);
 		curNode = curNode->GetNext();
 	}
