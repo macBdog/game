@@ -162,6 +162,14 @@ int main(int argc, char *argv[])
 	}
 
 	// Load game specific config
+#ifdef _DATAPACK
+	GameFile gameConfig(dataPack.GetEntry(configFilePath));
+	if (!gameConfig.IsLoaded())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration from the data pack.");
+		return 1;
+	}
+#else
 	GameFile gameConfig(gameConfigPath);
 	if (!gameConfig.IsLoaded())
 	{
@@ -180,6 +188,7 @@ int main(int argc, char *argv[])
 	dataPack.AddFolder(scriptPath, ".lua");
 	dataPack.AddFolder(shaderPath, ".fsh,.vsh");
 	dataPack.AddFolder(soundPath, ".wav,.mp3");
+#endif
 
 	// Initialize SDL video
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
@@ -243,8 +252,22 @@ int main(int argc, char *argv[])
 
 	// Subsystem creation and startup
 	MathUtils::InitialiseRandomNumberGenerator();
+
+#ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
     RenderManager::Get().Resize(width, height, bpp);
+	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
+	FontManager::Get().Startup(&dataPack);
+	InputManager::Get().Startup(fullScreen);
+	ModelManager::Get().Startup(modelPath);
+	PhysicsManager::Get().Startup(gameConfig, modelPath);
+	AnimationManager::Get().Startup(modelPath);
+	WorldManager::Get().Startup(templatePath, scenePath);
+	CameraManager::Get().Startup();
+	SoundManager::Get().Startup(soundPath);
+#else
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
+	RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
@@ -254,6 +277,7 @@ int main(int argc, char *argv[])
 	WorldManager::Get().Startup(templatePath, scenePath);
 	CameraManager::Get().Startup();
 	SoundManager::Get().Startup(soundPath);
+#endif
 	
 	// Now the rendering device context is created, it can be passed into the Oculus rendering component
 	if (useVr)

@@ -227,7 +227,7 @@ bool DataPack::Serialize(const char * a_path) const
 	return false;
 }
 
-DataPackEntry * DataPack::GetEntry(const char * a_path)
+DataPackEntry * DataPack::GetEntry(const char * a_path) const
 {
 	// Write each file in the manifest
 	EntryNode * cur = m_manifest.GetHead();
@@ -241,6 +241,42 @@ DataPackEntry * DataPack::GetEntry(const char * a_path)
 		cur = cur->GetNext();
 	}
 	return NULL;
+}
+
+void DataPack::GetAllEntries(const char * a_fileExtensions, EntryList & a_entries_OUT) const
+{
+	// Support a list of extension types
+	const char * delimeter = ",";
+	if (strstr(a_fileExtensions, ",") != NULL)
+	{
+		char extensionsTokenized[StringUtils::s_maxCharsPerName];
+		strcpy(extensionsTokenized, a_fileExtensions);
+		char * listTok = strtok(&extensionsTokenized[0], delimeter);
+		while (listTok != NULL)
+		{
+			AddEntriesToExternalList(listTok, a_entries_OUT);
+			listTok = strtok(NULL, delimeter);
+		}
+	}
+	else
+	{
+		AddEntriesToExternalList(a_fileExtensions, a_entries_OUT);
+	}
+}
+
+void DataPack::CleanupEntryList(EntryList & a_entries_OUT) const
+{
+	// Delete the nodes, all data is owned by the datapack
+	EntryNode * next = a_entries_OUT.GetHead();
+	while (next != NULL)
+	{
+		// Cache off next pointer
+		EntryNode * cur = next;
+		next = cur->GetNext();
+
+		a_entries_OUT.Remove(cur);
+		delete cur;
+	}
 }
 
 bool DataPack::HasFile(const char * a_path) const
@@ -261,4 +297,39 @@ bool DataPack::HasFile(const char * a_path) const
 void DataPack::SetRelativePath(const char * a_relativePath)
 { 
 	strcpy(m_relativePath, a_relativePath); 
+}
+
+void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const
+{
+	EntryNode * cur = m_manifest.GetHead();
+	while (cur != NULL)
+	{
+		DataPackEntry * curEntry = cur->GetData();
+		if (strstr(curEntry->m_path, a_fileExtension) != 0)
+		{
+			// Data is owned by the datapack
+			EntryNode * newNode = new EntryNode();
+			newNode->SetData(curEntry);
+			a_entries_OUT.Insert(newNode);
+		}
+		cur = cur->GetNext();
+	}
+}
+
+void DataPack::AddEntryToExternalList(const char * a_filePath, EntryList & a_entries_OUT) const
+{
+	EntryNode * cur = m_manifest.GetHead();
+	while (cur != NULL)
+	{
+		DataPackEntry * curEntry = cur->GetData();
+		if (strcmp(curEntry->m_path, a_filePath) == 0)
+		{
+			// Data is owned by the datapack
+			EntryNode * newNode = new EntryNode();
+			newNode->SetData(curEntry);
+			a_entries_OUT.Insert(newNode);
+			return;
+		}
+		cur = cur->GetNext();
+	}
 }

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "Log.h"
+#include "DataPack.h"
 #include "RenderManager.h"
 #include "TextureManager.h"
 
@@ -35,12 +35,41 @@ bool FontManager::Startup(const char * a_fontPath)
 	bool loadSuccess = true;
 	while(curNode != NULL)
 	{
-		loadSuccess &= LoadFont(curNode->GetData()->m_name);
+		// File stream for font config file
+		ifstream inputFile(curNode->GetData()->m_name);
+		loadSuccess &= LoadFont<ifstream>(inputFile);
 		curNode = curNode->GetNext();
 	}
 
 	// Clean up the list of fonts
 	FileManager::Get().CleanupFileList(fontFiles);
+
+	return loadSuccess;
+}
+
+bool FontManager::Startup(const DataPack * a_dataPack)
+{
+	// Sanity check on input arg
+	if (a_dataPack == NULL)
+	{
+		return false;
+	}
+
+	// Populate a list of font configuration files
+	DataPack::EntryList fontEntries;
+	a_dataPack->GetAllEntries(".fnt", fontEntries);
+	DataPack::EntryNode * curNode = fontEntries.GetHead();
+
+	// Load each font in the pack
+	bool loadSuccess = true;
+	while (curNode != NULL)
+	{
+		loadSuccess &= LoadFont<DataPackEntry>(*curNode->GetData());
+		curNode = curNode->GetNext();
+	}
+
+	// Clean up the list of fonts
+	DataPack::Get().CleanupEntryList(fontEntries);
 
 	return loadSuccess;
 }
@@ -60,122 +89,6 @@ bool FontManager::Shutdown()
 	}
 
 	return true;
-}
-
-bool FontManager::LoadFont(const char * a_fontName)
-{
-	// Cstrings for reading filename
-	char line[StringUtils::s_maxCharsPerLine];
-	char fontFilePath[StringUtils::s_maxCharsPerLine];
-	char textureName[StringUtils::s_maxCharsPerLine];
-	char texturePath[StringUtils::s_maxCharsPerLine];
-	memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&textureName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&texturePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	sprintf(fontFilePath, "%s%s", m_fontPath, a_fontName);
-
-	// File stream for font config file
-	ifstream file(fontFilePath);
-	
-	// Create a new font to be managed
-	RenderManager & renMan = RenderManager::Get();
-	FontListNode * newFontNode = new FontListNode();
-	newFontNode->SetData(new Font());
-	Font * newFont = newFontNode->GetData();
-	
-	// Open the file and parse each line 
-	if (file.is_open())
-	{
-		// Font metadata
-		unsigned int numChars = 0;
-		unsigned int sizeW = 0;
-		unsigned int sizeH = 0;
-		unsigned int lineHeight, base, pages;
-
-		// Read till the file has more contents or a rule is broken
-		while (file.good())
-		{
-			// Get the number of chars to parse
-			file.getline(line, StringUtils::s_maxCharsPerLine);			// info face="fontname" etc
-			char shortFontName[StringUtils::s_maxCharsPerLine];
-			sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true));
-			newFont->m_fontName.SetCString(shortFontName);
-			file.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33			
-			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
-								   &lineHeight,  &base,  &sizeW,   &sizeH,	 &pages);
-
-			// As we try to render all fonts the same size, fail to load fonts greater than a meg
-			if (sizeW > s_maxFontTexSize || sizeH > s_maxFontTexSize)
-			{
-				Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than 1 meg in resolution.", shortFontName);
-				file.close();
-				return false;
-			}
-
-			file.getline(line, StringUtils::s_maxCharsPerLine);			// page id=0 file="arial.tga"
-			sprintf(textureName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "=", 2), true));
-
-			file.getline(line, StringUtils::s_maxCharsPerLine);			// chars count=x
-			sscanf_s(line, "chars count=%d", &numChars);
-			
-			// Load texture for font
-			sprintf(texturePath, "%s%s", m_fontPath, textureName);
-			newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureCategory::Gui, TextureFilter::Linear);
-			newFont->m_numChars = numChars;
-			newFont->m_sizeX = sizeW;
-			newFont->m_sizeY = sizeH;
-
-			// Go through each char in the file loading metadata
-			for (unsigned int i = 0; i < numChars; ++i)
-			{
-				file.getline(line, StringUtils::s_maxCharsPerLine);
-				int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
-				sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d", 
-								&charId,	 &x,	 &y,	 &width,	  &height,		&xoffset,	   &yoffset,	 &xadvance,		 &page,   &chnl);
-				FontChar & curChar = newFont->m_chars[charId];
-				curChar.m_x = (float)x;
-				curChar.m_y = (float)y;
-				curChar.m_width = (float)width;
-				curChar.m_height = (float)height;
-				curChar.m_xoffset = (float)xoffset;
-				curChar.m_yoffset = (float)yoffset;
-				curChar.m_xadvance = (float)xadvance;
-
-				// This is the glyph size as a ratio of the texture size
-				Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
-				Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
-
-				// Used to generate the position of the character within the texture
-				TexCoord texSize(curChar.m_width/newFont->m_sizeX, curChar.m_height/newFont->m_sizeY);
-				TexCoord texCoord(curChar.m_x/newFont->m_sizeX, curChar.m_y/newFont->m_sizeY);
-
-				// Generate a display list for each character in the font in 2D
-				newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
-				newFont->m_chars[charId].m_displayListId3D = renMan.RegisterFontChar3D(charSize, texCoord, texSize, newFont->m_texture);
-			}
-
-			// There is more info such as kerning here but we don't support it
-			break;
-		}
-
-		file.close();
-
-		m_fonts.Insert(newFontNode);
-		return true;
-	}
-	else
-	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not find font file %s ", fontFilePath);
-
-		// Clean up the font that was allocated
-		delete newFontNode->GetData();
-		delete newFontNode;
-
-		return false;
-	}
-	
-	return false;
 }
 
 bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)

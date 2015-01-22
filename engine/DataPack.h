@@ -78,6 +78,9 @@ public:
 	DataPack(const char * a_pathToLoad) { m_relativePath[0] = '\0'; Load(a_pathToLoad); }
 	~DataPack() { Unload(); }
 	
+	typedef LinkedListNode<DataPackEntry> EntryNode;		///< Shorthand for a node pointing to a datapack entry
+	typedef LinkedList<DataPackEntry> EntryList;			///< Shorthand for a list of datapack entries maintained by the datapack
+
 	//\brief Read a pre built data pack from disk and parse it's header so resources can be read from it
 	//\param a_path the path to the data pack to read
 	//\return true if the object's internal structures were filled with the pack from disk
@@ -106,7 +109,9 @@ public:
 
 	//\brief Extract an entry from the manifest, usually for reading the resource data from
 	//\return NULL if not found
-	DataPackEntry * GetEntry(const char * a_path);
+	DataPackEntry * GetEntry(const char * a_path) const;
+	void GetAllEntries(const char * a_fileExtensions, EntryList & a_entries_OUT) const;
+	void CleanupEntryList(EntryList & a_entries_OUT) const;
 
 	//\brief Check a file exists in the pack already, just like GetEntry save for return type
 	bool HasFile(const char * a_path) const;
@@ -120,11 +125,13 @@ public:
 
 private:
 
-	typedef LinkedListNode<DataPackEntry> EntryNode;		///< Shorthand for a node pointing to a datapack entry
-	typedef LinkedList<DataPackEntry> EntryList;			///< Shorthand for a list of datapack entries maintained by the datapack
-
 	//\brief Add files of one extension to the data pack, recursively through any sub folders
-	bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExtension);
+	bool AddAllFilesInFolder(const char * a_path, const char * a_fileExtension);
+
+	//\brief Operations used in filling lists of files for game systems
+	void AddEntryToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
+	void AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
+
 
 	EntryList m_manifest;									///< The list of all entries
 	LinearAllocator<char> m_resourceData;					///< When a datapack is loaded, the resource data lives here

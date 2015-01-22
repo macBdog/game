@@ -185,6 +185,7 @@ public:
 	//\ No work done in the constructor, only Init
 	GameFile() {};
 	GameFile(const char * a_filePath) { Load(a_filePath); }
+	GameFile(DataPackEntry * a_packData) { Load(a_packData); }
 	~GameFile() { Unload(); }
 
 	//\brief Load the game file and parse it into data
