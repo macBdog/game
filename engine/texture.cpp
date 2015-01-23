@@ -164,11 +164,11 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
         printf("Malloc failed in texture read\n");
         return (NULL);
     }
-	/*
+	
     // Determine TGA version (new or old)
-    filePos = ftell(input);
-    fseek(input, -18, SEEK_END);
-    fread(vendorString, 1, 16, input);
+    filePos = input - (char *)a_texture;
+	input = ((char *)a_texture + a_textureSize) - 18;	// fseek(input, -18, SEEK_END);
+    memcpy(vendorString, input, 1 * 16);					// fread(vendorString, 1, 16, input);
     vendorString[16] = 0;
     if (strcmp(vendorString, "TRUEVISION-XFILE") == 0) 
 	{
@@ -178,32 +178,32 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
 	{
         tgaVersion = TGAVersion::Old;
 	}
-    fseek(input, filePos, SEEK_SET); 
-
+	input = (char *)a_texture + filePos;			// fseek(input, filePos, SEEK_SET); 
+    
     // Read in pixel data
     if (isRLE) {
         offset = 0;
         xpos = (a_y)*(a_x)*bypp;
         while (offset < xpos) {
-            count = fgetc(input);
+            count = *input++;
             if (count & 0x80) { // repitition packet
                 count &= 0x7F;
                 ++count;
-                fread(pix, 1, bypp, input); // read 1 pixel
+                memcpy(pix, input, 1 * bypp);		//fread(pix, 1, bypp, input); // read 1 pixel
                 for (loop = 0; loop < count; ++loop) {// output count pixels
                     memcpy(output+offset, pix, bypp);
                     offset += bypp;
                 }
             } else {    // raw packet
                 ++count;
-                fread(output+offset, 1, bypp*count, input);
+                memcpy(output+offset, input, 1 * (bypp*count)); //fread(output+offset, 1, bypp*count, input);
                 offset += bypp*count;
             }
         } // while loop
     } else {
         offset = ((a_y)-1) * (a_x)*bypp;
         for (xloop = 0; xloop < (a_y); ++xloop) {
-            fread(output+offset, 1, (a_x)*bypp, input);
+            memcpy(output+offset, input, 1 * ((a_x)*bypp));	//fread(output+offset, 1, (a_x)*bypp, input);
             offset -= (a_x)*bypp;
         }
     }
@@ -267,8 +267,6 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
         }
         free(scanLine);
     }
-
-	*/
     return output;
 }
 

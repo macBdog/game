@@ -121,8 +121,9 @@ bool TextureManager::Update(float a_dt)
 Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
+	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
-	if (!strstr(a_tgaPath, ":\\"))
+	if (!strstr(a_tgaPath, ":\\") && !readFromDataPack)
 	{
 		// Strip out any leading slashes
 		const char * filenameOnly = strstr(a_tgaPath, "\\");
@@ -162,7 +163,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 		}
 
 		// If loading from a datapack
-		if (m_dataPack != NULL && m_dataPack->IsLoaded())
+		if (readFromDataPack)
 		{
 			// Insert the newly allocated texture
 			if (DataPackEntry * packedTexture = m_dataPack->GetEntry(fileNameBuf))

@@ -50,13 +50,19 @@ bool FontManager::Startup(const char * a_fontPath)
 	return loadSuccess;
 }
 
-bool FontManager::Startup(const DataPack * a_dataPack)
+bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 {
 	// Sanity check on input arg
 	if (a_dataPack == NULL)
 	{
 		return false;
 	}
+
+	// Cache off the font path as textures are relative to fonts
+	char fontFilePath[StringUtils::s_maxCharsPerLine];
+	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
+	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
 
 	// Populate a list of font configuration files
 	DataPack::EntryList fontEntries;

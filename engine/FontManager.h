@@ -29,7 +29,7 @@ public:
 	//\brief Load all fonts in the supplied argument into memory ready for drawing
 	//\param a_fontPath pointer to cstring of the path to enumerate font files
 	bool Startup(const char * a_fontPath);
-	bool Startup(const DataPack * a_dataPack);
+	bool Startup(const char * a_fontPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Draw a string using the orthogonal gui render renderLayer

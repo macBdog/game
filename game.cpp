@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr); // TODO: Convert to read datapacks
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(&dataPack, gameConfig.GetBool("render", "textureFilter"));
-	FontManager::Get().Startup(&dataPack);
+	FontManager::Get().Startup(fontPath, &dataPack);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath);	// TODO: Convert to read datapacks
 	PhysicsManager::Get().Startup(gameConfig, modelPath); // TODO: Convert to read datapacks

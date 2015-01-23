@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "FileManager.h"
+#include "Log.h"
 
 #include "DataPack.h"
 
@@ -215,9 +216,11 @@ bool DataPack::Serialize(const char * a_path) const
 				outputFile.write((char *)&curEntry->m_size, sizeof(size_t));
 				outputFile.write((char *)&curEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
 				
-				// Now write the resource
+				// Now write the resource by opening and reading it from the disk
+				char diskPath[StringUtils::s_maxCharsPerLine];
+				sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
 				size_t writeByteCount = 0;
-				ifstream resourceFile(curEntry->m_path, ios::in | ios::binary);
+				ifstream resourceFile(diskPath, ios::in | ios::binary);
 				if (resourceFile.is_open())
 				{
 					while (resourceFile.good() && writeByteCount < curEntry->m_size)
@@ -227,6 +230,10 @@ bool DataPack::Serialize(const char * a_path) const
 						++writeByteCount;
 					}
 					resourceFile.close();
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open file %s for writing to the datapack, this will corrupt the datapack.", diskPath);
 				}
 				cur = cur->GetNext();
 			}
