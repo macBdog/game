@@ -49,6 +49,8 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"GetId", GetGameObjectId},
 	{"GetName", GetGameObjectName},
 	{"SetName", SetGameObjectName},
+	{"SetModel", SetGameObjectModel},
+	{"SetShaderData", SetGameObjectShaderData},
 	{"GetPosition", GetGameObjectPosition},
 	{"SetPosition", SetGameObjectPosition},
 	{"GetRotation", GetGameObjectRotation},
@@ -144,6 +146,18 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		
 		// Cache off path and look for the main game lua file
 		strncpy(m_scriptPath, a_scriptPath, sizeof(char) * strlen(a_scriptPath) + 1);
+
+		// Register the game's script folder in the lua package path so requires work correctly
+		lua_getglobal(m_globalLua, "package");
+		lua_getfield(m_globalLua, -1, "path"); 
+
+		char newLuaPath[StringUtils::s_maxCharsPerLine * 2];
+		const char * currentPackagePath = lua_tostring(m_globalLua, -1);
+		sprintf(newLuaPath, "%s;%s\?.lua", currentPackagePath, m_scriptPath);
+		lua_pop(m_globalLua, 1);
+		lua_pushstring(m_globalLua, &newLuaPath[0]);
+		lua_setfield(m_globalLua, -2, "path");
+		lua_pop(m_globalLua, 1);
 
 		// Construct a string for the main script file 
 		char gameScriptPath[StringUtils::s_maxCharsPerLine];
@@ -1340,6 +1354,50 @@ int ScriptManager::SetGameObjectName(lua_State * a_luaState)
 	 
 	LogScriptError(a_luaState, "SetName", "expects 1 string parameter.");
 
+	return 0;
+}
+
+int ScriptManager::SetGameObjectModel(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TSTRING);
+			const char * modelName = lua_tostring(a_luaState, 2);
+			if (Model * model = ModelManager::Get().GetModel(modelName))
+			{
+				gameObj->SetModel(model);
+			}
+			else
+			{
+				LogScriptError(a_luaState, "SetModel", "cannot find the mode referred to.");
+			}
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetModel", "cannot find the game object referred to.");
+		}
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectShaderData(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			gameObj->SetShaderData(Vector((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4)));
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetShaderData", "cannot find the game object referred to.");
+	}
 	return 0;
 }
 

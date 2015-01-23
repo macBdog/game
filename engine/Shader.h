@@ -80,6 +80,7 @@ public:
 						float a_frameTime, 
 						float a_viewWidth,
 						float a_viewHeight,
+						Vector m_shaderData,
 						Matrix * a_objectMatrix,
 						Matrix * a_viewMatrix,
 						Matrix * a_projectionMatrix)
@@ -98,6 +99,7 @@ public:
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
+		Vector m_shaderData;			///< 3 generic floats to pass to the shader
 		Matrix * m_objectMatrix;		///< Pointer to matrix containing game object position
 		Matrix * m_viewMatrix;			///< Pointer to matrix containing game object position
 		Matrix * m_projectionMatrix;
@@ -144,9 +146,11 @@ public:
 			m_specularTexture.Init(m_shader, "SpecularTexture");
 			m_time.Init(m_shader, "Time");
 			m_lifeTime.Init(m_shader, "LifeTime");
+			m_shaderData.Init(m_shader, "ShaderData");
 			m_frameTime.Init(m_shader, "FrameTime");
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");
+			m_shaderData.Init(m_shader, "ShaderData");
 			m_objectMatrix.Init(m_shader, "ObjectMatrix");
 			m_viewMatrix.Init(m_shader, "ViewMatrix");
 			m_projectionMatrix.Init(m_shader, "ProjectionMatrix");
@@ -201,6 +205,7 @@ public:
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
+		glUniform3f(m_shaderData.m_id, a_data.m_shaderData.GetX(), a_data.m_shaderData.GetY(), a_data.m_shaderData.GetZ());
 		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightFloats, &s_lightingData[0]);
 		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_TRUE, a_data.m_objectMatrix->GetValues());
 		glUniformMatrix4fv(m_viewMatrix.m_id, 1, GL_TRUE, a_data.m_viewMatrix->GetValues());
@@ -239,6 +244,7 @@ private:
 	Uniform<float> m_frameTime;
 	Uniform<float> m_viewWidth;
 	Uniform<float> m_viewHeight;
+	Uniform<Vector> m_shaderData;
 	Uniform<Matrix> m_objectMatrix;
 	Uniform<Matrix> m_viewMatrix;
 	Uniform<Matrix> m_projectionMatrix;

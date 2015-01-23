@@ -416,7 +416,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	// Now render with full scene shader if specified
 	Matrix identityMat = Matrix::Identity();
 	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identityMat, &identityMat, &orthoMat);
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -470,7 +470,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 	Matrix identityMatrix = Matrix::Identity();
 	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
 	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.3334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
-	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, &identityMatrix, &a_viewMatrix, &perspectiveMatrix);
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMatrix, &a_viewMatrix, &perspectiveMatrix);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -678,6 +678,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 				shaderData.m_viewMatrix = &a_viewMatrix;
 				shaderData.m_objectMatrix = rm->m_mat;
 				shaderData.m_lifeTime = rm->m_lifeTime;
+				shaderData.m_shaderData = rm->m_shaderData;
 				pLastModelShader->UseShader(shaderData);
 				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, obj->GetMaterial()->m_ambient.GetValues());
 				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, obj->GetMaterial()->m_diffuse.GetValues());
@@ -990,7 +991,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	t->m_coords[2] = a_txc3;
 }
 
-void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, float a_lifeTime)
+void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime)
 {
 	// Don't add more models than have been allocated for
 	if (m_modelCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
@@ -1033,7 +1034,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, specularTex->GetId());
 			}
-			else // No spec map, bind the diffuse instead as a default
+			else if (diffuseTex != NULL) // No spec map, bind the diffuse instead as a default
 			{
 				glActiveTexture(GL_TEXTURE2);
 				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
@@ -1064,6 +1065,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	r->m_mat = a_mat;
 	r->m_shader = a_shader;
 	r->m_lifeTime = a_lifeTime;
+	r->m_shaderData = a_shaderData;
 
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())

@@ -7,6 +7,7 @@ const char * globalFragmentShader =
 "uniform float FrameTime; \n"
 "uniform float ViewWidth; \n"
 "uniform float ViewHeight; \n"
+"uniform vec3 ShaderData; \n"
 "uniform mat4 ObjectMatrix; \n"
 "uniform mat4 ViewMatrix; \n"
 "uniform mat4 ProjectionMatrix; \n"

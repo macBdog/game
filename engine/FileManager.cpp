@@ -45,19 +45,12 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	TCHAR szDir[MAX_PATH];
 	StringCchCopy(szDir, MAX_PATH, workingPath);
 	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
-	hFind = FindFirstFile(szDir, &findFileData);
+	hFind = FindFirstFileA(szDir, &findFileData);
 
-	// Check path actually exists
+	// Check path can be traversed
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index invalid path %s", a_path);
-		return false;
-	} 
-
-	// Could be an invalid path
-	if (hFind == INVALID_HANDLE_VALUE) 
-	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot find a file in path %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s with error %d", a_path, GetLastError());
 		return false;
 	} 
 	

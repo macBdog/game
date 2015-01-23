@@ -126,6 +126,8 @@ private:
 	static int GetGameObjectId(lua_State * a_luaState);
 	static int GetGameObjectName(lua_State * a_luaState);
 	static int SetGameObjectName(lua_State * a_luaState);
+	static int SetGameObjectModel(lua_State * a_luaState);
+	static int SetGameObjectShaderData(lua_State * a_luaState);
 	static int GetGameObjectPosition(lua_State * a_luaState);
 	static int SetGameObjectPosition(lua_State * a_luaState);
 	static int GetGameObjectRotation(lua_State * a_luaState);

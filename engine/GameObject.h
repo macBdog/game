@@ -55,8 +55,8 @@ class GameObject
 public:
 
 	//\brief Creation and destruction
-	GameObject() 
-		: m_id(0) 
+	GameObject()
+		: m_id(0)
 		, m_child(NULL)
 		, m_next(NULL)
 		, m_model(NULL)
@@ -65,6 +65,7 @@ public:
 		, m_blender(NULL)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
+		, m_shaderData(0.0f)
 		, m_clipType(ClipType::AxisBox)
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
@@ -94,6 +95,7 @@ public:
 	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
 	inline void SetLifeTime(float a_newTime) { m_lifeTime = a_newTime; }
+	inline void SetShaderData(const Vector & a_shaderData) { m_shaderData = a_shaderData; }
 	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
@@ -110,6 +112,7 @@ public:
 	inline const char * GetPhysicsMeshName() const { return m_physicsMesh; }
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
+	inline Vector GetShaderData() const { return m_shaderData; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
 	inline Matrix & GetWorldMat() { return m_worldMat; }
 	inline Shader * GetShader() const { return m_shader; }
@@ -183,6 +186,7 @@ private:
 	AnimationBlender *	  m_blender;									///< Pointer to an animation blender if present
 	GameObjectState::Enum m_state;										///< What state the object is in
 	float				  m_lifeTime;									///< How long this guy has been active
+	Vector				  m_shaderData;									///< 3 floats to transmit to the shader
 	ClipType::Enum		  m_clipType;									///< What kind of shape represents the bounds of the object
 	Vector				  m_clipVolumeSize;								///< Dimensions of the clipping volume for culling and picking
 	Vector				  m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
