@@ -67,9 +67,15 @@ private:
 	bool GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilter, GLubyte * a_textureData);
 
 	//\brief Return a pointer to texture data in memory
-	GLubyte * loadTGA(const char *a_tgaFilePath, int & a_x, int & a_y, int & a_bpp, GLubyte * a_textureData);
+	//\param a_tgaPath file to read from
+	//\param a_x_OUT ref to int to populate with texture x dimension
+	//\param a_y_OUT ref to int to populate with texture y dimension
+	//\param a_bpp_OUT ref to int to populate with texture bits per pixel
+	//\param a_textureData pointer which will be assigned to the memory containing the texture data binary
+	GLubyte * loadTGAFromFile(const char * a_tgaFilePath, int & a_x, int & a_y, int & a_bpp, GLubyte * a_textureData);
+	GLubyte * loadTGAFromMemory(void * a_texture, size_t a_textureSize, int & a_x_OUT, int & a_y_OUT, int & a_bpp_OUT, GLubyte * a_textureData_OUT);
 
-	int m_textureId;			///< Texture ID as stored off by the load operation
+	int m_textureId;									///< Texture ID as stored off by the load operation
 	char m_filePath[StringUtils::s_maxCharsPerLine];	///< File path stored off during load, fully qualified
 
 };

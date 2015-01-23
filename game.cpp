@@ -48,6 +48,13 @@ int main(int argc, char *argv[])
 	// Make sure SDL cleans up before exit
 	atexit(SDL_Quit);
 
+	// Figure out where the exe is being run from to relative paths to the exe can be used
+	const char * executableName = "game.exe";
+	const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
+	char partialPath[StringUtils::s_maxCharsPerLine];
+	strncpy(partialPath, argv[0], partialLength);
+	partialPath[partialLength] = '\0';
+
 	// Storage for resource paths
 	char gameConfigPath[StringUtils::s_maxCharsPerLine];
 	char texturePath[StringUtils::s_maxCharsPerLine];
@@ -61,12 +68,13 @@ int main(int argc, char *argv[])
 	char soundPath[StringUtils::s_maxCharsPerLine];
 
 	// For a release build, look for the datapack right next to the executable
+	DataPack & dataPack = DataPack::Get();
+	dataPack.SetRelativePath(partialPath);
+
 #ifdef _RELEASE
 	#define _DATAPACK 1
 #endif
 #ifdef _DATAPACK
-	DataPack dataPack = DataPack::Get();
-	dataPack.SetRelativePath(argv[0]);
 	dataPack.Load(DataPack::s_defaultDataPackPath);
 	
 	if (!dataPack.IsLoaded())
@@ -95,28 +103,16 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// All files read by the game will be added to the datapack in case we want to make a pack
-	DataPack & dataPack = DataPack::Get();
-	dataPack.SetRelativePath(argv[0]);
-	dataPack.AddFile(configFilePath);
-
 	// Setup relative pathing if defined
 	const char * gameDataPathFromFile = configFile.GetString("config", "gameDataPath");
 	if (gameDataPathFromFile != NULL)
 	{
-		dataPack.AddFile(gameDataPathFromFile);
 		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
 
 		// Check to see if the dot operators are being used
-		const char * executableName = "game.exe";
-		const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
 		if (strstr(gameDataPathFromFile, "..\\") != NULL)
 		{
-			char partialPath[StringUtils::s_maxCharsPerLine];
-			partialPath[0] = '\0';
-			strncpy(partialPath, argv[0], partialLength);
-			partialPath[partialLength] = '\0';
 			const char * lastSlash = strrchr(partialPath, '\\');
 			const int pathLength = strlen(argv[0]) - strlen(executableName) - strlen(lastSlash);
 			strncpy(gameDataPath, argv[0], pathLength);
@@ -131,6 +127,10 @@ int main(int argc, char *argv[])
 			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, ".\\") + 1);
 		}
 	}
+
+	// All files read by the game will be added to the datapack in case we want to make a pack
+	dataPack.SetRelativePath(gameDataPath);
+	dataPack.AddFile(configFilePath);
 #endif
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);

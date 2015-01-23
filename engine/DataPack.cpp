@@ -104,9 +104,18 @@ bool DataPack::AddFile(const char * a_path)
 		// First check that the file isn't already in the pack
 		if (!HasFile(a_path))
 		{
+			// Strip out the absolute part of the file path
+			char relPath[StringUtils::s_maxCharsPerLine];
+			strcpy(relPath, a_path);
+			const char * relSub = strstr(a_path, m_relativePath);
+			if (relSub)
+			{
+				strcpy(relPath, relSub + strlen(m_relativePath));
+			}
+
 			DataPackEntry * newEntry = new DataPackEntry();
 			newEntry->m_size = sizeBytes;
-			strcpy(newEntry->m_path, a_path);
+			strcpy(newEntry->m_path, relPath);
 
 			EntryNode * newNode = new EntryNode();
 			newNode->SetData(newEntry);
