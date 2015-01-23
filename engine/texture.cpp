@@ -21,11 +21,6 @@ static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
 bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 {
-    int x, y, bpp;
-    GLubyte *textureData;
-    GLuint textureID;
-    GLenum texFormat, intTexFormat;
-
 	// Early out for no file case
 	if (a_tgaFilePath == NULL)
 	{
@@ -36,13 +31,22 @@ bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 	memcpy(m_filePath, a_tgaFilePath, sizeof(char) * strlen(a_tgaFilePath));
 
 	// Load texture data into memory and check if successful
-    textureData = loadTGA(a_tgaFilePath, x, y, bpp);
+	int x, y, bpp;
+	GLubyte * textureData = NULL;
+    textureData = loadTGA(a_tgaFilePath, x, y, bpp, textureData);
     if (textureData == NULL) 
 	{ 
         return false;
     }
 
-    switch (bpp) 
+	return GenerateTexture(x, y, bpp, a_useLinearFilter, textureData);
+}
+
+bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilter, GLubyte * textureData)
+{
+	GLuint textureID;
+	GLenum texFormat, intTexFormat;
+    switch (a_bpp) 
 	{
         case 24:
 		{
@@ -81,7 +85,7 @@ bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
     
-    glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, x, y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
+    glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, a_x, a_y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
 
 	m_textureId = textureID;
 
@@ -95,7 +99,7 @@ bool Texture::LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useL
 	return true;
 }
 
-GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp)
+GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp, GLubyte * textureData)
 {
     FILE *input;
     GLubyte *output;
@@ -105,7 +109,7 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
     unsigned char tmpd[4];
     char *scanLine;
     int idLength;
-    int isRLE = 0, xpos, count; /* RLE variables */
+    int isRLE = 0, xpos, count; // RLE variables
     char pix[4];
 
     fopen_s(&input, a_tgaFilePath, "rb");
@@ -203,7 +207,7 @@ GLubyte * Texture::loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a
         output[loop+2] = tmp1;
     }
 
-    // If we need to flip it horizintally then do so
+    // If we need to flip it horizontally then do so
     if (imgDesc & 0x10) {
         for (loop = 0; loop < (a_y); ++loop) {
             for (xloop = 0; xloop < (a_x)/2; ++xloop) {

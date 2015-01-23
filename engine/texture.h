@@ -63,8 +63,11 @@ private:
 		GLuint		Bpp;
 	} TGA;
 
+	// Create the graphics resources used when rendering this texture
+	bool GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilter, GLubyte * a_textureData);
+
 	//\brief Return a pointer to texture data in memory
-	GLubyte *loadTGA(const char *a_tgaFilePath, int &a_x, int &a_y, int &a_bpp);
+	GLubyte * loadTGA(const char *a_tgaFilePath, int & a_x, int & a_y, int & a_bpp, GLubyte * a_textureData);
 
 	int m_textureId;			///< Texture ID as stored off by the load operation
 	char m_filePath[StringUtils::s_maxCharsPerLine];	///< File path stored off during load, fully qualified
