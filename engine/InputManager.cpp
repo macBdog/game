@@ -159,12 +159,18 @@ bool InputManager::EventPump(const SDL_Event & a_event)
             {
 				SetFocus(false);
             }
-			ProcessKeyDown(a_event.key.keysym.sym);
+			if (a_event.key.keysym.sym > 0)
+			{
+				ProcessKeyDown(a_event.key.keysym.sym);
+			}
             break;
         }
 		case SDL_KEYUP:
         {
-			ProcessKeyUp(a_event.key.keysym.sym);
+			if (a_event.key.keysym.sym > 0)
+			{
+				ProcessKeyUp(a_event.key.keysym.sym);
+			}
             break;
         }
 		// Mouse events

@@ -81,13 +81,36 @@ bool SoundManager::PlayMusic(const char * a_musicName)
 		}
 
 		// Insert the sound into the list of playing sounds so the music can be managed
-		if (irrklang::ISound * newMusic = m_engine->play2D(musicNameBuf, true))
+		irrklang::ISound * soundHandle = m_engine->play2D(musicNameBuf, true, false, true);
+		PlayingSoundInfo * newInfo = new PlayingSoundInfo();
+		strcpy(newInfo->m_name, a_musicName);
+		newInfo->m_handle = soundHandle;
+		SoundNode * newInfoNode = new SoundNode();
+		newInfoNode->SetData(newInfo);
+		m_music.Insert(newInfoNode);
+		return true;
+		
+	}
+	return false;
+}
+
+bool SoundManager::SetMusicVolume(const char * a_musicName, float a_newVolume)
+{
+	// Look through all playing music and try to set the volume
+	SoundNode * cur = m_music.GetHead();
+	while (cur != NULL)
+	{
+		// Found our sound
+		PlayingSoundInfo * curInfo = cur->GetData();
+		if (strcmp(curInfo->m_name, a_musicName) == 0)
 		{
-			SoundNode * newMusicNode = new SoundNode();
-			newMusicNode->SetData(newMusic);
-			m_music.Insert(newMusicNode);
-			return true;
+			if (irrklang::ISound * soundHandle = curInfo->m_handle)
+			{
+				soundHandle->setVolume(a_newVolume);
+			}
 		}
+		
+		cur = cur->GetNext();
 	}
 	return false;
 }
@@ -105,6 +128,12 @@ void SoundManager::StopAllSoundsAndMusic()
 			// Cache off next pointer
 			SoundNode * cur = next;
 			next = cur->GetNext();
+
+			// Clean up the memory for the sound
+			if (irrklang::ISound * soundHandle = cur->GetData()->m_handle)
+			{
+				soundHandle->drop();
+			}
 
 			m_music.Remove(cur);
 			delete cur->GetData();

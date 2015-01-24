@@ -34,16 +34,29 @@ public:
 
 	bool PlaySound(const char * a_soundName) const;
 	bool PlayMusic(const char * a_musicName);
+	bool SetMusicVolume(const char * a_musicName, float a_newVolume);
 	void StopAllSoundsAndMusic();
 	bool FadeOutMusic();
 	bool FadeInMusic();
 
 private:
 
+	//\brief Storage for a pointer to a sound interface and a name so the sound can be changed later
+	struct PlayingSoundInfo
+	{
+		PlayingSoundInfo() : m_handle(NULL)
+		{
+			m_name[0] = '\0';
+		}
+
+		irrklang::ISound * m_handle;
+		char m_name[StringUtils::s_maxCharsPerName];
+	};
+
 	static const float s_updateFreq;							///< How often the script manager should check for script updates
 
-	typedef LinkedListNode<irrklang::ISound> SoundNode;			///< Alias for a linked list node with a sound pointer
-	typedef LinkedList<irrklang::ISound> SoundList;				///< Linked list full of sounds
+	typedef LinkedListNode<PlayingSoundInfo> SoundNode;			///< Alias for a linked list node with a sound pointer
+	typedef LinkedList<PlayingSoundInfo> SoundList;				///< Linked list full of sounds
 
 	SoundList m_music;											///< Any music that has been played
 	char m_soundPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to sounds 

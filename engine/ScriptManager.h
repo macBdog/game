@@ -99,10 +99,13 @@ private:
 
 	static int PlaySound(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);
+	static int SetMusicVolume(lua_State * a_luaState);
+	static int StopAllSoundsAndMusic(lua_State * a_luaState);
 
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
 	static int GUISetColour(lua_State * a_luaState);
+	static int GUISetSize(lua_State * a_luaState);
 	static int GUISetScissor(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);
 	static int GUIHideWidget(lua_State * a_luaState);

@@ -23,6 +23,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetValue", GUIGetValue},
 	{"SetValue", GUISetValue},
 	{"SetColour", GUISetColour},
+	{"SetSize", GUISetSize},
 	{"SetScissor", GUISetScissor},
 	{"Show", GUIShowWidget},
 	{"Hide", GUIHideWidget},
@@ -119,6 +120,8 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "SetScene", SetScene);
 		lua_register(m_globalLua, "PlaySound", PlaySound);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
+		lua_register(m_globalLua, "SetMusicVolume", SetMusicVolume);
+		lua_register(m_globalLua, "StopAllSoundsAndMusic", StopAllSoundsAndMusic);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
 		lua_register(m_globalLua, "DebugLog", DebugLog);
@@ -899,6 +902,33 @@ int ScriptManager::PlayMusic(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::SetMusicVolume(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		const char * musicName = lua_tostring(a_luaState, 1);
+		float newVolume = (float)lua_tonumber(a_luaState, 2);
+		if (musicName != NULL)
+		{
+			SoundManager::Get().SetMusicVolume(musicName, newVolume);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetMusicVolume", "expects 2 parameter: filename of the music that's playing then the volume of the music between 0 and 1.");
+	}
+	return 0;
+}
+
+int ScriptManager::StopAllSoundsAndMusic(lua_State * a_luaState)
+{
+	SoundManager::Get().StopAllSoundsAndMusic();
+	return 0;
+}
+
 int ScriptManager::SetScene(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -997,6 +1027,33 @@ int ScriptManager::GUISetColour(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::GUISetSize(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		Vector2 newSize((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+		if (guiName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetSize(newSize);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetSize", "expects 3 parameters: name of the element then 2 dimensions for X and Y.");
+	}
+
+	LogScriptError(a_luaState, "GUI:SetSize", "could not find the GUI element to set size on.");
+	return 0;
+}
+
 int ScriptManager::GUISetScissor(lua_State * a_luaState)
 {
 
@@ -1006,7 +1063,6 @@ int ScriptManager::GUISetScissor(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		Colour newColour((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
 		if (guiName != NULL)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
