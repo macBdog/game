@@ -80,7 +80,7 @@ public:
 						float a_frameTime, 
 						float a_viewWidth,
 						float a_viewHeight,
-						Vector m_shaderData,
+						Vector a_shaderData,
 						Matrix * a_objectMatrix,
 						Matrix * a_viewMatrix,
 						Matrix * a_projectionMatrix)
@@ -89,6 +89,7 @@ public:
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight) 
+						, m_shaderData(a_shaderData)
 						, m_objectMatrix(a_objectMatrix)
 						, m_viewMatrix(a_viewMatrix)
 						, m_projectionMatrix(a_projectionMatrix)
@@ -146,7 +147,6 @@ public:
 			m_specularTexture.Init(m_shader, "SpecularTexture");
 			m_time.Init(m_shader, "Time");
 			m_lifeTime.Init(m_shader, "LifeTime");
-			m_shaderData.Init(m_shader, "ShaderData");
 			m_frameTime.Init(m_shader, "FrameTime");
 			m_viewWidth.Init(m_shader, "ViewWidth");
 			m_viewHeight.Init(m_shader, "ViewHeight");

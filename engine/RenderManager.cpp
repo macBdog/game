@@ -469,7 +469,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 	// Setup fresh data to pass to shaders
 	Matrix identityMatrix = Matrix::Identity();
 	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.3334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
+	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.333334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
 	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMatrix, &a_viewMatrix, &perspectiveMatrix);
 	
 	// Set the lights in the scene for the shader

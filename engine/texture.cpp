@@ -116,6 +116,7 @@ bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilte
 
 GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int & a_x, int & a_y, int & a_bpp, GLubyte * a_textureData_OUT)
 {
+	int numBytesRead = 0;
 	char * input = (char *)a_texture;
     GLubyte *output;
     int loop, size, tmp1, xloop, offset, tgaVersion, bypp, imgDesc;
@@ -127,11 +128,11 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
     int isRLE = 0, xpos, count; // RLE variables
     char pix[4];
 
-    idLength = *input++;
-    input++;
+	idLength = *input++;	numBytesRead++;
+	input++;				numBytesRead++;
         
     // Check this is a TGA
-    loop = *input++;
+	loop = *input++;		numBytesRead++;
     switch (loop) {
         case 0x02:
             break;
@@ -145,15 +146,15 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
     // Get X and Y
     for (loop = 0; loop < 9; ++loop)
 	{
-        input++;
+		input++;			numBytesRead++;
 	}
 
-    a_x = *input++;
-    a_x += *input++ << 8;
-    a_y = *input++;
-    a_y += *input++ << 8;
-    a_bpp = *input++;
-    imgDesc = *input++;
+	a_x = *input++;			numBytesRead++;
+	a_x += *input++ << 8;	numBytesRead++;
+	a_y = *input++;			numBytesRead++;
+	a_y += *input++ << 8;	numBytesRead++;
+	a_bpp = *input++;		numBytesRead++;
+	imgDesc = *input++;		numBytesRead++;
 
     bypp = ((a_bpp)>>3);
     size = (a_x)*(a_y)*bypp;

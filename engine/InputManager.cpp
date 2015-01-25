@@ -95,6 +95,11 @@ bool InputManager::Update(float a_dt)
 
 bool InputManager::EventPump(const SDL_Event & a_event)
 {
+	if (m_quit)
+	{
+		return false;
+	}
+
 	// Cache off rendermanager as it gets used plenty here
 	RenderManager & renderMan = RenderManager::Get();
 

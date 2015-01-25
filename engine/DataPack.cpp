@@ -218,9 +218,18 @@ bool DataPack::Serialize(const char * a_path) const
 				
 				// Now write the resource by opening and reading it from the disk
 				char diskPath[StringUtils::s_maxCharsPerLine];
-				sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
+
+				// Special case for game.cfg as it lives outside the data folder
+				if (strstr(curEntry->m_path, "game.cfg") != 0)
+				{ 
+					sprintf(diskPath, "%s", curEntry->m_path);
+				}
+				else
+				{
+					sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
+				}
 				size_t writeByteCount = 0;
-				ifstream resourceFile(diskPath, ios::in | ios::binary);
+				ifstream resourceFile(diskPath, ifstream::in | ifstream::binary);
 				if (resourceFile.is_open())
 				{
 					while (resourceFile.good() && writeByteCount < curEntry->m_size)

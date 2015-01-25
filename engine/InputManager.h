@@ -45,7 +45,7 @@ class InputManager : public Singleton<InputManager>
 
 public:
 
-	InputManager() 
+	InputManager()
 		: m_focus(true)
 		, m_fullScreen(false)
 		, m_mousePos(0.0f)
@@ -54,6 +54,7 @@ public:
 		, m_numGamepads(0)
 		, m_mouseEnabled(true)
 		, m_gamePadCheckTimer(0.0f)
+		, m_quit(false)
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDL_Keycode) * s_maxDepressedKeys);
@@ -99,6 +100,8 @@ public:
 	//\param a_keyVal the SDL key value of the key to check
 	//\return bool true if the button is currently down
 	bool IsKeyDepressed(SDL_Keycode a_key);
+
+	inline void Quit() { m_quit = true; }
 
 	//\ingroup Gamepad functions
 	//\brief Get the number of connected gamepads
@@ -243,6 +246,7 @@ private:
 	InputEvent m_alphaKeysDown;												///< Special input event to catch all keys being pressed
 	InputEvent m_alphaKeysUp;												///< Special input event to catch all keys being released
 	InputEventList m_events;												///< List of events to match up to actions
+	bool m_quit;															///< Set if we want to shutdown
 	bool m_focus;															///< If the app currently has OS focus
 	bool m_fullScreen;														///< If the app is fullscreen, input manager needs to handle focus
 	bool m_mouseEnabled;													///< If the mouse is enabled for input processing

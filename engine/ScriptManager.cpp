@@ -10,6 +10,7 @@
 #include "LuaScript.h"
 #include "WorldManager.h"
 #include "SoundManager.h"
+#include "TextureManager.h"
 
 #include "ScriptManager.h"
 
@@ -25,6 +26,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"SetColour", GUISetColour},
 	{"SetSize", GUISetSize},
 	{"SetScissor", GUISetScissor},
+	{"SetTexture", GUISetTexture},
 	{"Show", GUIShowWidget},
 	{"Hide", GUIHideWidget},
 	{"Activate", GUIActivateWidget},
@@ -97,6 +99,7 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		luaL_requiref(m_globalLua, "debug", luaopen_debug, 1);
 
 		// Register C++ functions made accessible to LUA
+		lua_register(m_globalLua, "Quit", Quit);
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
@@ -118,6 +121,11 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 		lua_register(m_globalLua, "GetRayCollision", RayCollisionTest);
 		lua_register(m_globalLua, "NewScene", NewScene);
 		lua_register(m_globalLua, "SetScene", SetScene);
+		lua_register(m_globalLua, "SetLightAmbient", SetLightAmbient);
+		lua_register(m_globalLua, "SetLightDiffuse", SetLightDiffuse);
+		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
+		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
+
 		lua_register(m_globalLua, "PlaySound", PlaySound);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
 		lua_register(m_globalLua, "SetMusicVolume", SetMusicVolume);
@@ -350,6 +358,12 @@ bool ScriptManager::OnWidgetAction(Widget * a_widget)
 int ScriptManager::YieldLuaEnvironment(lua_State * a_luaState)
 {
 	 return lua_yield(a_luaState, 0);
+}
+
+int ScriptManager::Quit(lua_State * a_luaState)
+{
+	InputManager::Get().Quit();
+	return 1;
 }
 
 int ScriptManager::GetFrameDelta(lua_State * a_luaState)
@@ -948,6 +962,139 @@ int ScriptManager::SetScene(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::SetLightAmbient(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 5)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		int lightId = (int)lua_tonumber(a_luaState, 1);
+		float r = (float)lua_tonumber(a_luaState, 2);
+		float g = (float)lua_tonumber(a_luaState, 3);
+		float b = (float)lua_tonumber(a_luaState, 4);
+		float a = (float)lua_tonumber(a_luaState, 5);
+		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+		{
+			if (lightId-1 >= 0 && lightId-1 < curScene->GetNumLights())
+			{
+				Light & curLight = curScene->GetLight(lightId-1);
+				curLight.m_ambient.SetR(r);
+				curLight.m_ambient.SetG(g);
+				curLight.m_ambient.SetB(b);
+				curLight.m_ambient.SetA(a);
+			}
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetLightAmbient", "expects 5 parameter: the light ID then r, g, b, a.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetLightDiffuse(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 5)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		int lightId = (int)lua_tonumber(a_luaState, 1);
+		float r = (float)lua_tonumber(a_luaState, 2);
+		float g = (float)lua_tonumber(a_luaState, 3);
+		float b = (float)lua_tonumber(a_luaState, 4);
+		float a = (float)lua_tonumber(a_luaState, 5);
+		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+		{
+			if (lightId - 1 >= 0 && lightId - 1 < curScene->GetNumLights())
+			{
+				Light & curLight = curScene->GetLight(lightId - 1);
+				curLight.m_diffuse.SetR(r);
+				curLight.m_diffuse.SetG(g);
+				curLight.m_diffuse.SetB(b);
+				curLight.m_diffuse.SetA(a);
+			}
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetLightDiffuse", "expects 5 parameter: the light ID then r, g, b, a.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetLightSpecular(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 5)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		int lightId = (int)lua_tonumber(a_luaState, 1);
+		float r = (float)lua_tonumber(a_luaState, 2);
+		float g = (float)lua_tonumber(a_luaState, 3);
+		float b = (float)lua_tonumber(a_luaState, 4);
+		float a = (float)lua_tonumber(a_luaState, 5);
+		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+		{
+			if (lightId - 1 >= 0 && lightId - 1 < curScene->GetNumLights())
+			{
+				Light & curLight = curScene->GetLight(lightId - 1);
+				curLight.m_specular.SetR(r);
+				curLight.m_specular.SetG(g);
+				curLight.m_specular.SetB(b);
+				curLight.m_specular.SetA(a);
+			}
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetLightSpecular", "expects 5 parameter: the light ID then r, g, b, a.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetLightPosition(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		int lightId = (int)lua_tonumber(a_luaState, 1);
+		float x = (float)lua_tonumber(a_luaState, 2);
+		float y = (float)lua_tonumber(a_luaState, 3);
+		float z = (float)lua_tonumber(a_luaState, 4);
+		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
+		{
+			if (lightId - 1 >= 0 && lightId - 1 < curScene->GetNumLights())
+			{
+				Light & curLight = curScene->GetLight(lightId - 1);
+				curLight.m_pos.SetX(x);
+				curLight.m_pos.SetY(y);
+				curLight.m_pos.SetZ(z);
+			}
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetLightPosition", "expects 4 parameter: the light ID then x, y, z.");
+	}
+	return 0;
+}
+
 int ScriptManager::GUIGetValue(lua_State * a_luaState)
 {
 	char strValue[StringUtils::s_maxCharsPerName];
@@ -1078,6 +1225,35 @@ int ScriptManager::GUISetScissor(lua_State * a_luaState)
 	}
 
 	LogScriptError(a_luaState, "GUI:SetScissor", "could not find the GUI element to set scissor on.");
+	return 0;
+}
+
+int ScriptManager::GUISetTexture(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TSTRING);		
+		const char * guiName = lua_tostring(a_luaState, 2);
+		const char * textureName = lua_tostring(a_luaState, 3);
+		if (guiName != NULL && textureName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				if (Texture * newGuiTex = TextureManager::Get().GetTexture(textureName, TextureCategory::Gui))
+				{
+					foundElem->SetTexture(newGuiTex);
+					return 0;
+				}
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:GUISetTexture", "expects 2 parameters: name of the element then the name of the texture file.");
+	}
+
+	LogScriptError(a_luaState, "GUI:GUISetTexture", "could not find the GUI element to set texture on.");
 	return 0;
 }
 

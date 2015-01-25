@@ -59,7 +59,7 @@ public:
 	//\return false if there are already the maximum number of lights in the scene
 	bool AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular);
 	bool RemoveLight(const char * a_name);
-	inline const Light & GetLight(int a_lightId) const { return m_lights[a_lightId]; }
+	inline Light & GetLight(int a_lightId) { return m_lights[a_lightId]; }
 	inline int GetNumLights() const { return m_numLights; }
 	inline bool HasLights() const { return m_numLights > 0; }
 

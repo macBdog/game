@@ -74,6 +74,7 @@ private:
 	static int RegisterGameObject(lua_State * a_luaState);
 
 	//\brief LUA versions of game functions made avaiable from C++
+	static int Quit(lua_State * a_luaState);
 	static int GetFrameDelta(lua_State * a_luaState);
 	static int CreateGameObject(lua_State * a_luaState);
 	static int GetGameObject(lua_State * a_luaState);
@@ -96,6 +97,10 @@ private:
 	static int RayCollisionTest(lua_State * a_luaState);
 	static int NewScene(lua_State * a_luaState);
 	static int SetScene(lua_State * a_luaState);
+	static int SetLightAmbient(lua_State * a_luaState);
+	static int SetLightDiffuse(lua_State * a_luaState);
+	static int SetLightSpecular(lua_State * a_luaState);
+	static int SetLightPosition(lua_State * a_luaState);
 
 	static int PlaySound(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);
@@ -107,6 +112,7 @@ private:
 	static int GUISetColour(lua_State * a_luaState);
 	static int GUISetSize(lua_State * a_luaState);
 	static int GUISetScissor(lua_State * a_luaState);
+	static int GUISetTexture(lua_State * a_luaState);
 	static int GUIShowWidget(lua_State * a_luaState);
 	static int GUIHideWidget(lua_State * a_luaState);
 	static int GUIActivateWidget(lua_State * a_luaState);
