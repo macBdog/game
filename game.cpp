@@ -71,6 +71,9 @@ int main(int argc, char *argv[])
 	DataPack & dataPack = DataPack::Get();
 	dataPack.SetRelativePath(partialPath);
 
+#ifdef _RELEASE
+	#define _DATAPACK 1
+#endif
 #ifdef _DATAPACK
 	dataPack.Load(DataPack::s_defaultDataPackPath);
 	
