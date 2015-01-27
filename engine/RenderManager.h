@@ -13,6 +13,7 @@
 #include "../core/Matrix.h"
 #include "../core/Vector.h"
 
+class DataPack;
 class GameObject;
 class Scene;
 
@@ -90,7 +91,7 @@ public:
 	~RenderManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Startup(Colour a_clearColour, const char * a_shaderPath, bool a_vr = false);
+	bool Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr = false);
 	bool Shutdown();
 
 	//\brief Update managed texture

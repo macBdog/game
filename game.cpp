@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 	MathUtils::InitialiseRandomNumberGenerator();
 
 #ifdef _DATAPACK
-	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr); // TODO: Convert to read datapacks
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);
     RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(&dataPack, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath, &dataPack);
@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
 	CameraManager::Get().Startup();
 	SoundManager::Get().Startup(soundPath); // TODO: Convert to read datapacks
 #else
-	RenderManager::Get().Startup(sc_colourBlack, shaderPath, useVr);
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, NULL, useVr);
 	RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);

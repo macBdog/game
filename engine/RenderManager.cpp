@@ -11,6 +11,7 @@
 #include "../core/MathUtils.h"
 
 #include "CameraManager.h"
+#include "DataPack.h"
 #include "DebugMenu.h"
 #include "Log.h"
 #include "Texture.h"
@@ -27,7 +28,7 @@ const float RenderManager::s_nearClipPlane = 0.1f;
 const float RenderManager::s_farClipPlane = 1000.0f;
 const float RenderManager::s_fovAngleY = 55.0f;
 
-bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, bool a_vr)
+bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
     // Set the clear colour
     m_clearColour = a_clearColour;
@@ -128,6 +129,12 @@ bool RenderManager::Startup(Colour a_clearColour, const char * a_shaderPath, boo
 	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
 	{
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
+	}
+
+	// Cache off datapack to read from
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	{
+		// Load all shaders from pack here
 	}
 
 	// Set flag to enable the vr rendering to be wedged in
