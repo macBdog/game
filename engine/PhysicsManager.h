@@ -74,7 +74,7 @@ public:
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
-	bool Startup(const GameFile & a_config, const char * a_meshPath);
+	bool Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack);
 	bool Shutdown();
 	void Update(float a_dt);
 

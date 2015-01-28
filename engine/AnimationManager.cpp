@@ -1,3 +1,4 @@
+#include "DataPack.h"
 #include "DebugMenu.h"
 #include "WorldManager.h"
 
@@ -12,7 +13,7 @@ const float AnimationManager::s_updateFreq = 1.0f;								///< How often the ani
 
 using namespace std;	//< For fstream operations
 
-bool AnimationManager::Startup(const char * a_animPath)
+bool AnimationManager::Startup(const char * a_animPath, const DataPack * a_dataPack)
 {
 	// Initialise the anim memory pool
 	m_data.Init(s_animPoolSize);
@@ -20,28 +21,49 @@ bool AnimationManager::Startup(const char * a_animPath)
 	// Cache off path and look for the main game lua file
 	strncpy(m_animPath, a_animPath, sizeof(char) * strlen(a_animPath) + 1);
 
-	// Scan all the animation files in the dir for changes to trigger a reload
-	FileManager & fileMan = FileManager::Get();
-	FileManager::FileList animFiles;
-	fileMan.FillFileList(m_animPath, animFiles, ".fbx");
-
-	// Add all the animations for each file in the directory
-	FileManager::FileListNode * curNode = animFiles.GetHead();
-	while(curNode != NULL)
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
 	{
-		// Get a fresh timestamp on the animation file
-		char fullPath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullPath, "%s%s", m_animPath, curNode->GetData()->m_name);
-		FileManager::Timestamp curTimeStamp;
-		FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
+		// Populate a list of animations
+		DataPack::EntryList animEntries;
+		a_dataPack->GetAllEntries(".fbx", animEntries);
+		DataPack::EntryNode * curNode = animEntries.GetHead();
 
-		LoadAnimationsFromFile(fullPath);
-		
-		curNode = curNode->GetNext();
+		// Load each font in the pack
+		bool loadSuccess = true;
+		while (curNode != NULL)
+		{
+			// TODO
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of animations
+		a_dataPack->CleanupEntryList(animEntries);
 	}
+	else
+	{
+		// Scan all the animation files in the dir for changes to trigger a reload
+		FileManager & fileMan = FileManager::Get();
+		FileManager::FileList animFiles;
+		fileMan.FillFileList(m_animPath, animFiles, ".fbx");
 
-	// Clean up the list of anims
-	fileMan.CleanupFileList(animFiles);
+		// Add all the animations for each file in the directory
+		FileManager::FileListNode * curNode = animFiles.GetHead();
+		while(curNode != NULL)
+		{
+			// Get a fresh timestamp on the animation file
+			char fullPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullPath, "%s%s", m_animPath, curNode->GetData()->m_name);
+			FileManager::Timestamp curTimeStamp;
+			FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
+
+			LoadAnimationsFromFile(fullPath);
+		
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of anims
+		fileMan.CleanupFileList(animFiles);
+	}
 
 	return true;
 }

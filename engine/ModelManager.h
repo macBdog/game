@@ -10,6 +10,8 @@
 #include "StringUtils.h"
 #include "Model.h"
 
+class DataPack;
+
 //\brief ModelManager keeps track of all models in the game and the memory
 //		 required for them. It handles hot loading of all model resources
 //		 and will only load a unique model by path once.
@@ -22,7 +24,7 @@ public:
 	~ModelManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup models on shutdown
-	bool Startup(const char * a_modelPath);
+	bool Startup(const char * a_modelPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update will poll for model changes and reload any models that have a newer version than on disk

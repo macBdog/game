@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "DataPack.h"
 #include "Log.h"
 #include "InputManager.h"
 #include "FileManager.h"
@@ -18,7 +19,7 @@ float Gui::s_cursorBlinkTimer = 0.0f;
 const float Gui::s_cursorBlinkTime = 0.55f;
 float Gui::s_widgetPulseTimer = 0.0f;
 
-bool Gui::Startup(const char * a_guiPath)
+bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 {
 	// Cache off the gui path for later use when loading menus
 	strncpy(m_guiPath, a_guiPath, strlen(a_guiPath) + 1);
@@ -26,8 +27,19 @@ bool Gui::Startup(const char * a_guiPath)
 	// Load in the gui config file
 	char fileName[StringUtils::s_maxCharsPerLine];
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
-	m_configFile.Load(fileName);
 
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	{
+		if (DataPackEntry * guiConfig = a_dataPack->GetEntry(fileName))
+		{
+			m_configFile.Load(guiConfig);
+		}
+	}
+	else
+	{
+		m_configFile.Load(fileName);
+	}
+	
 	// Setup the debug menu root element
 	m_debugRoot.SetName("DebugMenu");
 	m_debugRoot.SetActive(false);

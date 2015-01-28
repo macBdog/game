@@ -7,6 +7,7 @@
 #include "../core/LinkedList.h"
 #include "../core/PageAllocator.h"
 
+#include "GameFile.h"
 #include "GameObject.h"
 #include "Log.h"
 #include "ModelManager.h"
@@ -16,6 +17,7 @@
 #include "StringUtils.h"
 
 struct Light;
+class DataPack;
 class Shader;
 
 //\brief SceneState keeps track of which scenes are loaded
@@ -45,9 +47,24 @@ public:
 	~Scene();
 	
 	//\brief Read scene details from a file into a scene object
-	//\param a_scenePath is a string containing the filename of a scene file
+	//\param a_scenePath is a pointer to a scene file to load
 	//\param a_sceneToLoad_OUT is a pointer to a scene object to modify with data from the scene path
-	bool Load(const char * a_scenePath);
+	inline bool Load(const char * a_sceneConfigFilePath) 
+	{ 
+		if (m_sourceFile.Load(a_sceneConfigFilePath))
+		{
+			return InitFromConfig();
+		}
+		return false;
+	}
+	bool Load(DataPackEntry * a_sceneConfigData)
+	{
+		if (a_sceneConfigData != NULL && a_sceneConfigData->m_size > 0 && m_sourceFile.Load(a_sceneConfigData))
+		{
+			return InitFromConfig();
+		}
+		return false;
+	}
 
 	//\brief Adding and removing objects from the scene
 	GameObject * AddObject(unsigned int a_objectId);
@@ -101,7 +118,7 @@ public:
 	bool Update(float a_dt);
 
 	//\brief Called when the game writes to disk and triggers a reload, no reason to reload again
-	void ResetFileDateStamp();
+	inline void ResetFileDateStamp() { FileManager::Get().GetFileTimeStamp(m_filePath, m_timeStamp); }
 
 	//\brief Get the number of objects in the scene
 	//\return uint of the number of objects
@@ -120,6 +137,9 @@ public:
 	 
 private:
 
+	//\brief Load the scene's internal state from the config file
+	bool InitFromConfig();
+
 	//\brief Draw will cause active objects in the scene to submit resources to the render manager
 	//\return true if resources were submitted without issue
 	bool Draw();
@@ -127,6 +147,7 @@ private:
 	static const int s_numObjects = 16000;							///< Each GameObject is about 500 bytes, should be less than 16M
 	static const float s_updateFreq;								///< How often the scene should check it's config on disk for updates
 
+	GameFile m_sourceFile;											///< Configuration of the scene
 	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
 	unsigned int m_numObjects;										///< How many objects are in the scene
 	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
@@ -158,7 +179,7 @@ public:
 	//\param a_templatePath is the path to templates for game object creation
 	//\param a_scenePath is the path to scene files for partitioning groups of game objects
 	//\return bool true if the world and scenes were started without error
-	bool Startup(const char * a_templatePath, const char * a_scenePath);
+	bool Startup(const char * a_templatePath, const char * a_scenePath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update will propogate through all objects in the active scene

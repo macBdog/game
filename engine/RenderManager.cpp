@@ -131,10 +131,42 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
 	}
 
-	// Cache off datapack to read from
+	// Load all shaders from the datapack if specifiied
 	if (a_dataPack != NULL && a_dataPack->IsLoaded())
 	{
-		// Load all shaders from pack here
+		// Construct paths for both shader file names
+		char shaderNameBuf[StringUtils::s_maxCharsPerName];
+		char fragShaderNameBuf[StringUtils::s_maxCharsPerName];
+
+		// Start by getting all the vertex shaders from the data pack
+		DataPack::EntryList shaderEntries;
+		a_dataPack->GetAllEntries(".vsh", shaderEntries);
+		DataPack::EntryNode * curNode = shaderEntries.GetHead();
+		while (curNode != NULL)
+		{
+			DataPackEntry * curEntry = curNode->GetData();
+			sprintf(shaderNameBuf, "%s", StringUtils::ExtractFileNameFromPath(curEntry->m_path));
+			if (Shader * pNewShader = new Shader(shaderNameBuf))
+			{
+				// Now look for the fragment shader matching the vertex
+				sprintf(fragShaderNameBuf, "%s.fsh", shaderNameBuf);
+				if (DataPackEntry * fragmentNode = a_dataPack->GetEntry(shaderNameBuf))
+				{
+					if (RenderManager::InitShaderFromMemory(curEntry->m_data, fragmentNode->m_data, *pNewShader))
+					{
+						LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+						shaderNode->SetData(pNewShader);
+						m_shaders.Insert(shaderNode);
+					}
+					else // Compile error will be reported in the log
+					{
+						delete pNewShader;
+					}
+				}
+			}
+			curNode = curNode->GetNext();
+		}
+		a_dataPack->CleanupEntryList(shaderEntries);
 	}
 
 	// Set flag to enable the vr rendering to be wedged in
@@ -1341,25 +1373,17 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	char fullShaderPath[StringUtils::s_maxCharsPerLine];
 	char fileLine[StringUtils::s_maxCharsPerLine];
 	
-	// All scene shaders include the global inputs and outputs
-	#include "Shaders\global.fsh.inc"
-	#include "Shaders\global.vsh.inc"
-
 	// Open file to allocate the correct size string
 	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
 	if (stat(&fullShaderPath[0], &fileInfo) == 0)
 	{
-		size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
-		if (vertexSource = (char *)malloc(globalVertexSize + fileInfo.st_size))
+		if (vertexSource = (char *)malloc(fileInfo.st_size))
 		{
-			// Include preamble then open the vertex shader file and parse each line into a string
-			numChars = globalVertexSize;
-			strncpy(vertexSource, globalVertexShader, globalVertexSize);
-			vertexSource[numChars++] = '\n';
+			// Open the file and read till the file has more contents
+			int numChars = 0;
 			ifstream vertexShaderFile(fullShaderPath);
 			if (vertexShaderFile.is_open())
 			{
-				// Read till the file has more contents
 				while (vertexShaderFile.good())
 				{
 					vertexShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
@@ -1367,7 +1391,7 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
 					numChars += lineSize;
 				}
-				vertexSource[numChars] = '\0';
+				vertexSource[++numChars] = '\0';
 			}
 			vertexShaderFile.close();
 		}
@@ -1377,17 +1401,13 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
 	if (stat(&fullShaderPath[0], &fileInfo) == 0)
 	{
-		size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
-		if (fragmentSource = (char *)malloc(globalFragmentSize + fileInfo.st_size))
+		if (fragmentSource = (char *)malloc(fileInfo.st_size))
 		{
-			// Include preamble and follow with contents of file
-			strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
-			numChars = globalFragmentSize;
-			fragmentSource[numChars++] = '\n';
+			// Open the file and read till the file has more contents
+			int numChars = 0;
 			ifstream fragmentShaderFile(fullShaderPath);
 			if (fragmentShaderFile.is_open())
 			{
-				// Read till the file has more contents
 				while (fragmentShaderFile.good())
 				{
 					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
@@ -1395,19 +1415,14 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
 					numChars += lineSize;
 				}
-				fragmentSource[numChars] = '\0';
+				fragmentSource[++numChars] = '\0';
 			}
 			fragmentShaderFile.close();
 		}
 	}
 
-	// Initialise the shader
-	if (vertexSource != NULL && fragmentSource != NULL)
-	{
-		a_shader_OUT.Init(vertexSource, fragmentSource);
-	}
-	
-	// Free the memory for shader sources
+	// Init then free the memory for shader sources
+	bool shadersCompiled = InitShaderFromMemory(vertexSource, fragmentSource, a_shader_OUT);
 	if (vertexSource != NULL)
 	{
 		free(vertexSource);
@@ -1416,6 +1431,60 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	{
 		free(fragmentSource);
 	}
+
+	return shadersCompiled;
+}
+
+bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragShaderSrc, Shader & a_shader_OUT)
+{
+	const int vertShaderSize = strlen(a_vertShaderSrc);
+	const int fragShaderSize = strlen(a_fragShaderSrc);
+	if (a_vertShaderSrc == NULL || a_fragShaderSrc == NULL || vertShaderSize <= 0 || fragShaderSize <= 0)
+	{
+		return false;
+	}
+
+	// All scene shaders include the global inputs and outputs
+	#include "Shaders\global.fsh.inc"
+	#include "Shaders\global.vsh.inc"
+
+	char * vertexSource = NULL;
+	char * fragmentSource = NULL;
+	size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
+	size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
+	
+	if (vertexSource = (char *)malloc(globalVertexSize + vertShaderSize))
+	{
+		// Write a copy of the global vertex shader and insert a newline
+		int numChars = globalVertexSize;
+		strncpy(vertexSource, globalVertexShader, globalVertexSize);
+		vertexSource[numChars++] = '\n';
+
+		// Now write the shader source
+		strncpy(&vertexSource[numChars], a_vertShaderSrc, vertShaderSize);
+		numChars += vertShaderSize;
+		vertexSource[numChars] = '\0';
+	}
+
+	if (fragmentSource = (char *)malloc(globalFragmentSize + fragShaderSize))
+	{
+		// Write a copy of the global fragment shader and insert a newline
+		int numChars = globalFragmentSize;
+		strncpy(fragmentSource, globalVertexShader, globalFragmentSize);
+		fragmentSource[numChars++] = '\n';
+
+		// Now write the shader source
+		strncpy(&fragmentSource[numChars], a_fragShaderSrc, fragShaderSize);
+		numChars += fragShaderSize;
+		fragmentSource[numChars] = '\0';
+	}
+
+	if (vertexSource != NULL && fragmentSource != NULL)
+	{
+		Log::Get().WriteEngineErrorNoParams("Memory allocation failed in loading shaders!");
+		return false;
+	}
+	a_shader_OUT.Init(a_vertShaderSrc, a_fragShaderSrc);
 	return a_shader_OUT.IsCompiled();
 }
 

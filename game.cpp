@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	// For a release build, look for the datapack right next to the executable
 	DataPack & dataPack = DataPack::Get();
 	dataPack.SetRelativePath(partialPath);
-
+#define _DATAPACK 1
 #ifdef _RELEASE
 	#define _DATAPACK 1
 #endif
@@ -259,24 +259,28 @@ int main(int argc, char *argv[])
 	TextureManager::Get().Startup(&dataPack, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath, &dataPack);
 	InputManager::Get().Startup(fullScreen);
-	ModelManager::Get().Startup(modelPath);	// TODO: Convert to read datapacks
-	PhysicsManager::Get().Startup(gameConfig, modelPath); // TODO: Convert to read datapacks
-	AnimationManager::Get().Startup(modelPath); // TODO: Convert to read datapacks
-	WorldManager::Get().Startup(templatePath, scenePath); // TODO: Convert to read datapacks
+	ModelManager::Get().Startup(modelPath, &dataPack);
+	PhysicsManager::Get().Startup(gameConfig, modelPath, &dataPack);
+	AnimationManager::Get().Startup(modelPath, &dataPack);
+	WorldManager::Get().Startup(templatePath, scenePath, &dataPack);
 	CameraManager::Get().Startup();
-	SoundManager::Get().Startup(soundPath); // TODO: Convert to read datapacks
+	SoundManager::Get().Startup(soundPath, &dataPack);
+	Gui::Get().Startup(guiPath, &dataPack);
+	ScriptManager::Get().Startup(scriptPath, &dataPack);
 #else
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, NULL, useVr);
 	RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
-	ModelManager::Get().Startup(modelPath);
-	PhysicsManager::Get().Startup(gameConfig, modelPath);
-	AnimationManager::Get().Startup(modelPath);
-	WorldManager::Get().Startup(templatePath, scenePath);
+	ModelManager::Get().Startup(modelPath, NULL);
+	PhysicsManager::Get().Startup(gameConfig, modelPath, NULL);
+	AnimationManager::Get().Startup(modelPath, NULL);
+	WorldManager::Get().Startup(templatePath, scenePath, NULL);
 	CameraManager::Get().Startup();
-	SoundManager::Get().Startup(soundPath);
+	SoundManager::Get().Startup(soundPath, NULL);
+	Gui::Get().Startup(guiPath, NULL);
+	ScriptManager::Get().Startup(scriptPath, NULL);
 #endif
 	
 	// Now the rendering device context is created, it can be passed into the Oculus rendering component
@@ -285,8 +289,6 @@ int main(int argc, char *argv[])
 		OculusManager::Get().StartupRendering(windowInfo.info.win.window);
 	}
 
-	Gui::Get().Startup(guiPath);
-	ScriptManager::Get().Startup(scriptPath);
 	
     // Game main loop
 	unsigned int lastFrameTime = 0;

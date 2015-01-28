@@ -7,6 +7,7 @@
 #include "FileManager.h"
 #include "Singleton.h"
 
+class DataPack;
 class GameObject;
 class Widget;
 struct lua_State;
@@ -29,7 +30,7 @@ public:
 	~ScriptManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Startup(const char * a_scriptPath);
+    bool Startup(const char * a_scriptPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update managed texture

@@ -77,7 +77,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{NULL, NULL}
 };
 
-bool ScriptManager::Startup(const char * a_scriptPath)
+bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPack)
 {
 	// As this method is called when scripts reload, make sure the global state is dead
 	if (m_globalLua != NULL || m_managedScripts.GetLength() > 0)
@@ -184,34 +184,41 @@ bool ScriptManager::Startup(const char * a_scriptPath)
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
 		}
 
-		// Scan all the scripts in the dir for changes to trigger a reload
-		FileManager & fileMan = FileManager::Get();
-		FileManager::FileList scriptFiles;
-		fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua");
-
-		// Add each script in the directory
-		FileManager::FileListNode * curNode = scriptFiles.GetHead();
-		while(curNode != NULL)
+		if (a_dataPack != NULL && a_dataPack->IsLoaded())
 		{
-			// Get a fresh timestamp on the new script
-			char fullPath[StringUtils::s_maxCharsPerLine];
-			sprintf(fullPath, "%s%s", m_scriptPath, curNode->GetData()->m_name);
-			FileManager::Timestamp curTimeStamp;
-			FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
-
-			// Add managed script to the list
-			ManagedScript * manScript = new ManagedScript(fullPath, curTimeStamp);
-			ManagedScriptNode * manScriptNode = new ManagedScriptNode();
-			if (manScript != NULL && manScriptNode != NULL)
-			{
-				manScriptNode->SetData(manScript);
-				m_managedScripts.Insert(manScriptNode);
-			}
-			curNode = curNode->GetNext();
+			// TODO
 		}
+		else
+		{
+			// Scan all the scripts in the dir for changes to trigger a reload
+			FileManager & fileMan = FileManager::Get();
+			FileManager::FileList scriptFiles;
+			fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua");
 
-		// Clean up the list of fonts
-		fileMan.CleanupFileList(scriptFiles);
+			// Add each script in the directory
+			FileManager::FileListNode * curNode = scriptFiles.GetHead();
+			while(curNode != NULL)
+			{
+				// Get a fresh timestamp on the new script
+				char fullPath[StringUtils::s_maxCharsPerLine];
+				sprintf(fullPath, "%s%s", m_scriptPath, curNode->GetData()->m_name);
+				FileManager::Timestamp curTimeStamp;
+				FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
+
+				// Add managed script to the list
+				ManagedScript * manScript = new ManagedScript(fullPath, curTimeStamp);
+				ManagedScriptNode * manScriptNode = new ManagedScriptNode();
+				if (manScript != NULL && manScriptNode != NULL)
+				{
+					manScriptNode->SetData(manScript);
+					m_managedScripts.Insert(manScriptNode);
+				}
+				curNode = curNode->GetNext();
+			}
+
+			// Clean up the list of fonts
+			fileMan.CleanupFileList(scriptFiles);
+		}
 	}
 
 	return m_globalLua != NULL;
@@ -298,7 +305,7 @@ bool ScriptManager::Update(float a_dt)
 
 				// Kick the script VM in the guts
 				Shutdown();
-				Startup(m_scriptPath);
+				Startup(m_scriptPath, NULL);
 				return true;
 			}
 

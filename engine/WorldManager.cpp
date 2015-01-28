@@ -2,7 +2,6 @@
 
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
-#include "GameFile.h"
 #include "ModelManager.h"
 #include "RenderManager.h"
 
@@ -47,24 +46,19 @@ Scene::~Scene()
 	}
 }
 
-bool Scene::Load(const char * a_scenePath)
+bool Scene::InitFromConfig()
 {
-	GameFile * sceneFile = new GameFile();
-	sceneFile->Load(a_scenePath);
-	FileManager::Get().GetFileTimeStamp(a_scenePath, m_timeStamp);
-
 	// Create a new widget and copy properties from file
-	if (GameFile::Object * sceneObject = sceneFile->FindObject("scene"))
+	if (GameFile::Object * sceneObject = m_sourceFile.FindObject("scene"))
 	{
 		// Set various properties of a scene
 		bool propsOk = true;
-		if (GameFile::Object * sceneObj = sceneFile->FindObject("scene"))
+		if (GameFile::Object * sceneObj = m_sourceFile.FindObject("scene"))
 		{
 			GameFile::Property * nameProp = sceneObj->FindProperty("name");
 			GameFile::Property * beginLoadedProp = sceneObj->FindProperty("beginLoaded");
 			if (nameProp && beginLoadedProp)
 			{
-				SetFilePath(a_scenePath);
 				SetName(nameProp->GetString());
 				SetBeginLoaded(beginLoadedProp->GetBool());
 
@@ -85,7 +79,7 @@ bool Scene::Load(const char * a_scenePath)
 					// Check there aren't more lights than we support
 					if (numLights >= Shader::s_maxLights)
 					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", a_scenePath, Shader::s_maxLights);
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", GetName(), Shader::s_maxLights);
 						propsOk = false;
 						break;
 					}
@@ -108,7 +102,7 @@ bool Scene::Load(const char * a_scenePath)
 					}
 					else
 					{
-						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.");
+						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.", GetName());
 						propsOk = false;
 					}
 					nextLight = nextLight->GetNext();
@@ -124,7 +118,7 @@ bool Scene::Load(const char * a_scenePath)
 		LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
 		while (childGameObject != NULL)
 		{
-			// Chidlren of the scene file can be lighting or game objects, make sure we only create game objects
+			// Children of the scene file can be lighting or game objects, make sure we only create game objects
 			if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
 			{
 				childGameObject = childGameObject->GetNext();
@@ -176,7 +170,7 @@ bool Scene::Load(const char * a_scenePath)
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), a_scenePath);
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), GetName());
 				}
 			}
 			if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
@@ -207,13 +201,13 @@ bool Scene::Load(const char * a_scenePath)
 		// No properties present
 		if (!propsOk) 
 		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, scene does not have required properties.", a_scenePath);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene %s, scene does not have required properties.", GetName());
 			return false;
 		}
 	}
 	else // Unexpected file format, no root element
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene file %s, no valid scene parent element.", a_scenePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene %s, no valid scene parent element.", GetName());
 		return false;
 	}
 	
@@ -407,7 +401,7 @@ void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 	m_objects.Reset();
 
 	// Load scene front scratch so we are back with just scene objects and no script objects
-	Load(m_filePath);
+	InitFromConfig();
 }
 
 bool Scene::Update(float a_dt)
@@ -445,11 +439,6 @@ bool Scene::Update(float a_dt)
 #endif
 
 	return updateSuccess && drawSuccess;
-}
-
-void Scene::ResetFileDateStamp()
-{
-	FileManager::Get().GetFileTimeStamp(m_filePath, m_timeStamp);
 }
 
 void Scene::Serialise()
@@ -534,7 +523,7 @@ bool Scene::Draw()
 	return drawSuccess;
 }
 
-bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath)
+bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath, const DataPack * a_dataPack)
 {
 	// Cache off the template path for non qualified loading of game object
 	memset(&m_templatePath, 0 , StringUtils::s_maxCharsPerLine);
@@ -546,46 +535,100 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	// Generate list to iterate through all scenes in the scenepath and load them
 	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_scenePath, a_scenePath, sizeof(char) * strlen(a_scenePath) + 1);
-	FileManager::FileList sceneFiles;
-	FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".scn");
-
-	// Load each scene in the directory
-	FileManager::FileListNode * curNode = sceneFiles.GetHead();
-	while(curNode != NULL)
+	
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
 	{
-		char fullPath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullPath, "%s%s", a_scenePath, curNode->GetData()->m_name);
-		
-		// Add to the loaded scenes if begin loaded
-		// TODO Implement memory management
-		Scene * newScene = new Scene();
-		assert(newScene != NULL);
-		if (newScene->Load(fullPath))
-		{
-			// Insert into list
-			SceneNode * newSceneNode = new SceneNode();
-			newSceneNode->SetData(newScene);
-			m_scenes.Insert(newSceneNode);
+		// Populate a list of scene files
+		DataPack::EntryList sceneEntries;
+		a_dataPack->GetAllEntries(".scn", sceneEntries);
+		DataPack::EntryNode * curNode = sceneEntries.GetHead();
 
-			if (newScene->IsBeginLoaded())
+		// Load each scene in the data pack
+		bool loadSuccess = true;
+		while (curNode != NULL)
+		{
+			GameFile sceneFile;
+			if (sceneFile.Load(curNode->GetData()))
 			{
-				// Set current scene to the first loaded scene
-				if (m_currentScene == NULL)
+				if (Scene * newScene = new Scene())
 				{
-					m_currentScene = newScene;
+					if (newScene->Load(curNode->GetData()))
+					{
+						// Insert into list
+						SceneNode * newSceneNode = new SceneNode();
+						newSceneNode->SetData(newScene);
+						m_scenes.Insert(newSceneNode);
+
+						if (newScene->IsBeginLoaded())
+						{
+							// Set current scene to the first loaded scene
+							if (m_currentScene == NULL)
+							{
+								m_currentScene = newScene;
+							}
+						}
+					}
+					else
+					{
+						// Load failed, abort this one
+						delete newScene;
+					}
 				}
 			}
+			curNode = curNode->GetNext();
 		}
-		else
-		{
-			// Clean up the scene, the load will report the error
-			delete newScene;
-		}
-		curNode = curNode->GetNext();
-	}
 
-	// Clean up the list of fonts
-	FileManager::Get().CleanupFileList(sceneFiles);
+		// Clean up the list of scenes
+		a_dataPack->CleanupEntryList(sceneEntries);
+	}
+	else
+	{
+		// Populate a list of scenes on the disk
+		FileManager::FileList sceneFiles;
+		FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".scn");
+
+		// Load each scene in the directory
+		FileManager::FileListNode * curNode = sceneFiles.GetHead();
+		while(curNode != NULL)
+		{
+			char fullPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullPath, "%s%s", a_scenePath, curNode->GetData()->m_name);
+		
+			// Add to the loaded scenes if begin loaded
+			if (Scene * newScene = new Scene())
+			{
+				if (newScene->Load(fullPath))
+				{
+					// Set file up so it can reload itself
+					newScene->SetFilePath(a_scenePath);
+					newScene->ResetFileDateStamp();
+
+					// Insert into list
+					SceneNode * newSceneNode = new SceneNode();
+					newSceneNode->SetData(newScene);
+					m_scenes.Insert(newSceneNode);
+
+					if (newScene->IsBeginLoaded())
+					{
+						// Set current scene to the first loaded scene
+						if (m_currentScene == NULL)
+						{
+							m_currentScene = newScene;
+						}
+					}
+				}
+				else
+				{
+					// Clean up the scene, the load will report the error
+					delete newScene;
+				}
+			}
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of scenes
+		FileManager::Get().CleanupFileList(sceneFiles);
+	}
 
 	// If no scenes, setup the default scene
 	if (m_scenes.GetLength() == 0)

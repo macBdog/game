@@ -1,5 +1,6 @@
 #include <irrKlang.h>
 
+#include "DataPack.h"
 #include "GameObject.h"
 #include "Log.h"
 
@@ -8,7 +9,7 @@
 template<> SoundManager * Singleton<SoundManager>::s_instance = NULL;
 const float SoundManager::s_updateFreq = 1.0f;
 
-bool SoundManager::Startup(const char * a_soundPath)
+bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack)
 {
 	// start the sound engine with default parameters
     if (m_engine = irrklang::createIrrKlangDevice())
@@ -16,6 +17,24 @@ bool SoundManager::Startup(const char * a_soundPath)
 		// Cache off path and look for sounds to load
 		strncpy(m_soundPath, a_soundPath, sizeof(char) * strlen(a_soundPath) + 1);
 
+		if (a_dataPack != NULL && a_dataPack->IsLoaded())
+		{
+			// Populate a list of sounds
+			DataPack::EntryList soundEntries;
+			a_dataPack->GetAllEntries(".flac,.mp3,.wav", soundEntries);
+			DataPack::EntryNode * curNode = soundEntries.GetHead();
+
+			// Load each font in the pack
+			bool loadSuccess = true;
+			while (curNode != NULL)
+			{
+				// TODO
+				curNode = curNode->GetNext();
+			}
+
+			// Clean up the list of sounds
+			a_dataPack->CleanupEntryList(soundEntries);
+		}
 		return true;
 	}
 	else

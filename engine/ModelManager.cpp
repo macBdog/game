@@ -1,3 +1,4 @@
+#include "DataPack.h"
 #include "FileManager.h"
 #include "Log.h"
 
@@ -21,7 +22,7 @@ ModelManager::ModelManager(float a_updateFreq)
 	m_modelPath[0] = '\0';
 }
 
-bool ModelManager::Startup(const char * a_modelPath)
+bool ModelManager::Startup(const char * a_modelPath, const DataPack * a_dataPack)
 {
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
@@ -36,11 +37,30 @@ bool ModelManager::Startup(const char * a_modelPath)
 	m_loadingNormalPool.Init(s_loadingNormalPoolSize * sizeof(Vector));
 	m_loadingUvPool.Init(s_loadingUvPoolSize * sizeof(TexCoord));
 
-	// This can be removed in all but DEBUG configuration, but its nice when viewing memory
+	// This can be removed in release configuration, but its nice when viewing memory
 	memset(m_modelPool.GetHead(), 0, m_modelPool.GetAllocationSizeBytes());
 
 	// Cache off the model path for non qualified addressing of models
 	strncpy(m_modelPath, a_modelPath, sizeof(char) * strlen(a_modelPath) + 1);
+
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	{
+		// Populate a list of objects
+		DataPack::EntryList objEntries;
+		a_dataPack->GetAllEntries(".obj", objEntries);
+		DataPack::EntryNode * curNode = objEntries.GetHead();
+
+		// Load each font in the pack
+		bool loadSuccess = true;
+		while (curNode != NULL)
+		{
+			// TODO
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of objects
+		a_dataPack->CleanupEntryList(objEntries);
+	}
 
 	return true;
 }

@@ -203,6 +203,13 @@ public:
 	//\return true if the shader was compiled and allocated successfully
 	static bool InitShaderFromFile(Shader & a_shader_OUT);
 
+	//\brief Helper function to setup a new shader based on the contents of an in memory buffer
+	//\param a_vertShaderSrc is a pointer to a cstring containing the vertex shader source
+	//\param a_fragShaderSrc is a pointer to a cstring containing the fragment shader source
+	//\param a_shader_OUT is pointer to a shader that will be allocated
+	//\return true if the shader was compiled and allocated successfully
+	static bool InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragShaderSrc, Shader & a_shader_OUT);
+
 private:
 
 	//\brief Fixed size structure for queing line primitives

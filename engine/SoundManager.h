@@ -6,6 +6,7 @@
 #include "GameFile.h"
 #include "Singleton.h"
 
+class DataPack;
 namespace irrklang
 {
 	class ISoundEngine;
@@ -27,7 +28,7 @@ public:
 	~SoundManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
-	bool Startup(const char * a_soundPath);
+	bool Startup(const char * a_soundPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	void Update(float a_dt);

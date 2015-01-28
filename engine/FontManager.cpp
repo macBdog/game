@@ -78,7 +78,7 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 	}
 
 	// Clean up the list of fonts
-	DataPack::Get().CleanupEntryList(fontEntries);
+	a_dataPack->CleanupEntryList(fontEntries);
 
 	return loadSuccess;
 }

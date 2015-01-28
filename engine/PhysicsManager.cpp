@@ -46,7 +46,7 @@ PhysicsObject::~PhysicsObject()
 	}
 }
 
-bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath)
+bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack)
 {
 	// Cache off path to bullet files
 	if (a_meshPath != NULL && a_meshPath[0] != '\0')

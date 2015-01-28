@@ -8,6 +8,8 @@
 #include "Singleton.h"
 #include "Widget.h"
 
+class DataPack;
+
 //\brief Gui handles creation and drawing of 2D interactive elements to form
 //		 a menu system for the game. It's rudimentary compared to some examples
 //		 out there but it's still possible to create a very charming UI easily
@@ -26,7 +28,7 @@ public:
 	~Gui() { Shutdown(); }
 
 	//\brief Load up resources from the gui config file
-	bool Startup(const char * a_guiPath);
+	bool Startup(const char * a_guiPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Draw all visible widgets

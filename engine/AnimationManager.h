@@ -10,6 +10,7 @@
 #include "Singleton.h"
 #include "StringHash.h"
 
+class DataPack;
 class GameObject;
 
 //\brief A KeyFrame stores data to apply to a model at a certain time
@@ -42,7 +43,7 @@ public:
 	~AnimationManager() { Shutdown(); }
 
 	//\brief Set clear colour buffer and depth buffer setup 
-    bool Startup(const char * a_animPath);
+    bool Startup(const char * a_animPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update and reload animation data
