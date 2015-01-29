@@ -1391,7 +1391,7 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
 					numChars += lineSize;
 				}
-				vertexSource[++numChars] = '\0';
+				vertexSource[numChars++] = '\0';
 			}
 			vertexShaderFile.close();
 		}
@@ -1415,7 +1415,7 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
 					numChars += lineSize;
 				}
-				fragmentSource[++numChars] = '\0';
+				fragmentSource[numChars++] = '\0';
 			}
 			fragmentShaderFile.close();
 		}
@@ -1479,12 +1479,12 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 		fragmentSource[numChars] = '\0';
 	}
 
-	if (vertexSource != NULL && fragmentSource != NULL)
+	if (vertexSource == NULL || fragmentSource == NULL)
 	{
 		Log::Get().WriteEngineErrorNoParams("Memory allocation failed in loading shaders!");
 		return false;
 	}
-	a_shader_OUT.Init(a_vertShaderSrc, a_fragShaderSrc);
+	a_shader_OUT.Init(vertexSource, fragmentSource);
 	return a_shader_OUT.IsCompiled();
 }
 

@@ -68,13 +68,8 @@ bool DataPack::Load(const char * a_path)
 			char * resourceHead = m_resourceData.Allocate(newEntry->m_size);
 			newEntry->m_data = resourceHead;
 			const int resourceSize = (int)newEntry->m_size;
-			for (int j = 0; j < resourceSize; ++j)
-			{
-				char c = 0;
-				inputFile.read(&c, sizeof(char));
-				*resourceHead = c;
-				++resourceHead;
-			}
+			inputFile.read(resourceHead, resourceSize);
+			resourceHead += resourceSize;
 
 			// Add to manifest
 			EntryNode * newNode = new EntryNode();

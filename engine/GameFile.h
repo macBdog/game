@@ -217,7 +217,6 @@ public:
 	}
 
 	void Unload();
-	inline bool Reload() { Unload(); return Load(m_filePath); }
 	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
 
 	//\brief Write data from memory to file preserving inheritance
@@ -397,7 +396,6 @@ private:
 	}
 
 	LinkedList<Object> m_objects;							///< All the objects in this file
-	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Cache off the filepath so the file can be reloaded
 };
 
 #endif // _ENGINE_GAME_FILE
