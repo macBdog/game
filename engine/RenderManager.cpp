@@ -136,7 +136,7 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	{
 		// Construct paths for both shader file names
 		char shaderNameBuf[StringUtils::s_maxCharsPerName];
-		char fragShaderNameBuf[StringUtils::s_maxCharsPerName];
+		char fragShaderPathBuf[StringUtils::s_maxCharsPerLine];
 
 		// Start by getting all the vertex shaders from the data pack
 		DataPack::EntryList shaderEntries;
@@ -146,22 +146,49 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		{
 			DataPackEntry * curEntry = curNode->GetData();
 			sprintf(shaderNameBuf, "%s", StringUtils::ExtractFileNameFromPath(curEntry->m_path));
+			const char * shaderNameEnd = strstr(shaderNameBuf, ".");
+			if (shaderNameEnd != NULL)
+			{
+				const int shaderNameLen = strlen(shaderNameBuf) - strlen(shaderNameEnd);
+				shaderNameBuf[shaderNameLen] = '\0';
+			}
 			if (Shader * pNewShader = new Shader(shaderNameBuf))
 			{
+				bool shaderLoadSuccess = false;
+
 				// Now look for the fragment shader matching the vertex
-				sprintf(fragShaderNameBuf, "%s.fsh", shaderNameBuf);
-				if (DataPackEntry * fragmentNode = a_dataPack->GetEntry(shaderNameBuf))
+				strncpy(fragShaderPathBuf, curEntry->m_path, strlen(curEntry->m_path) + 1);
+				char * extension = strstr(fragShaderPathBuf, ".vsh");
+				if (extension != NULL)
 				{
-					if (RenderManager::InitShaderFromMemory(curEntry->m_data, fragmentNode->m_data, *pNewShader))
+					const int extensionPos = strlen(fragShaderPathBuf) - strlen(extension);
+					fragShaderPathBuf[extensionPos + 1] = 'f';
+				}
+				if (DataPackEntry * fragmentNode = a_dataPack->GetEntry(fragShaderPathBuf))
+				{
+					char * vertexSource = (char *)malloc((curEntry->m_size + 1) * sizeof(char));
+					char * fragmentSource = (char *)malloc((fragmentNode->m_size + 1) * sizeof(char));
+					if (vertexSource != NULL && fragmentSource != NULL)
 					{
-						LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
-						shaderNode->SetData(pNewShader);
-						m_shaders.Insert(shaderNode);
+						memcpy(vertexSource, curEntry->m_data, curEntry->m_size);
+						memcpy(fragmentSource, fragmentNode->m_data, fragmentNode->m_size);
+						vertexSource[curEntry->m_size] = '\0';
+						fragmentSource[fragmentNode->m_size] = '\0';
+						shaderLoadSuccess = RenderManager::InitShaderFromMemory(vertexSource, fragmentSource, *pNewShader);
 					}
-					else // Compile error will be reported in the log
-					{
-						delete pNewShader;
-					}
+					free(vertexSource);
+					free(fragmentSource);
+				}
+
+				if (shaderLoadSuccess)
+				{
+					LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+					shaderNode->SetData(pNewShader);
+					m_shaders.Insert(shaderNode);
+				}
+				else // Compile error will be reported in the log
+				{
+					delete pNewShader;
 				}
 			}
 			curNode = curNode->GetNext();
@@ -1452,8 +1479,7 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 	char * fragmentSource = NULL;
 	size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
 	size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
-	
-	if (vertexSource = (char *)malloc(globalVertexSize + vertShaderSize))
+	if (vertexSource = (char *)malloc((globalVertexSize + vertShaderSize + 2) * sizeof(char)))
 	{
 		// Write a copy of the global vertex shader and insert a newline
 		int numChars = globalVertexSize;
@@ -1466,11 +1492,11 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 		vertexSource[numChars] = '\0';
 	}
 
-	if (fragmentSource = (char *)malloc(globalFragmentSize + fragShaderSize))
+	if (fragmentSource = (char *)malloc((globalFragmentSize + fragShaderSize + 2) * sizeof(char)))
 	{
 		// Write a copy of the global fragment shader and insert a newline
 		int numChars = globalFragmentSize;
-		strncpy(fragmentSource, globalVertexShader, globalFragmentSize);
+		strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
 		fragmentSource[numChars++] = '\n';
 
 		// Now write the shader source
@@ -1485,6 +1511,8 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 		return false;
 	}
 	a_shader_OUT.Init(vertexSource, fragmentSource);
+	free(vertexSource);
+	free(fragmentSource);
 	return a_shader_OUT.IsCompiled();
 }
 
