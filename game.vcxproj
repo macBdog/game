@@ -50,7 +50,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
+    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;.\external\remotery\lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\LibOVR\Lib\Win32\VS2010;.\external\lua-5.2.3;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\external\zlib-1.2.8\lib;.\Debug;$(LibraryPath)</LibraryPath>
@@ -118,6 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="external\remotery\lib\Remotery.c" />
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
