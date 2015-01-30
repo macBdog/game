@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <iostream>
 #include <fstream>
+#include <stdio.h>
 #include <sys/stat.h>
+
+#include "zlib.h"
 
 #include "FileManager.h"
 #include "Log.h"
@@ -12,7 +15,7 @@ using namespace std;	//< For fstream operations
 
 template<> DataPack * Singleton<DataPack>::s_instance = NULL;
 
-const char * DataPack::s_defaultDataPackPath = "datapack.dtp";	///< Name of the pack to write and read if not specified
+const char * DataPack::s_defaultDataPackPath = "datapack.dtz";	///< Name of the pack to write and read if not specified
 
 void DataPack::Unload()
 {
@@ -47,28 +50,29 @@ bool DataPack::Load(const char * a_path)
 		return false;
 	}
 
-	ifstream inputFile(a_path, ios::in | ios::binary);
+	// Decompress and read file
+	gzFile inputFile = gzopen(a_path, "rb");
 
 	// Open the file and parse the datapack
-	if (inputFile.is_open())
+	if (inputFile)
 	{
 		// First is the number of entries in the manifest and the resource data size
 		int numEntries = 0;
 		size_t packSize = 0;
-		inputFile.read((char *)&numEntries, sizeof(int));
-		inputFile.read((char *)&packSize, sizeof(size_t));
+		gzread(inputFile, (char *)&numEntries, sizeof(int));
+		gzread(inputFile, (char *)&packSize, sizeof(size_t));
 		m_resourceData.Init(packSize);
 
 		// Read each entry
 		for (int i = 0; i < numEntries; ++i)
 		{
 			DataPackEntry * newEntry = new DataPackEntry();
-			inputFile.read((char *)&newEntry->m_size, sizeof(size_t));
-			inputFile.read((char *)&newEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
+			gzread(inputFile, (char *)&newEntry->m_size, sizeof(size_t));
+			gzread(inputFile, (char *)&newEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
 			char * resourceHead = m_resourceData.Allocate(newEntry->m_size);
 			newEntry->m_data = resourceHead;
 			const int resourceSize = (int)newEntry->m_size;
-			inputFile.read(resourceHead, resourceSize);
+			gzread(inputFile, resourceHead, resourceSize);
 			resourceHead += resourceSize;
 
 			// Add to manifest
@@ -76,7 +80,7 @@ bool DataPack::Load(const char * a_path)
 			newNode->SetData(newEntry);
 			m_manifest.Insert(newNode);
 		}
-		inputFile.close();
+		gzclose(inputFile);
 		return true;
 	}
 	return false;
@@ -241,8 +245,22 @@ bool DataPack::Serialize(const char * a_path) const
 				}
 				cur = cur->GetNext();
 			}
-			return true;
 		}
+		outputFile.close();
+
+		// Now compress the file
+		FILE * inputFile = fopen(a_path, "rb");
+		gzFile outfile = gzopen(s_defaultDataPackPath, "wb");
+		char readBuffer[128];
+		int bytesRead = 0;
+		while ((bytesRead = fread(readBuffer, 1, sizeof(readBuffer), inputFile)) > 0)
+		{
+			gzwrite(outfile, readBuffer, bytesRead);
+		}
+		fclose(inputFile);
+		gzclose(outfile);
+
+		return true;
 	}
 	return false;
 }
