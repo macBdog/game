@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	// For a release build, look for the datapack right next to the executable
 	DataPack & dataPack = DataPack::Get();
 	dataPack.SetRelativePath(partialPath);
-#define _DATAPACK 1
+
 #ifdef _RELEASE
 	#define _DATAPACK 1
 #endif
