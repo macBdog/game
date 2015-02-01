@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	// For a release build, look for the datapack right next to the executable
 	DataPack & dataPack = DataPack::Get();
 	dataPack.SetRelativePath(partialPath);
-
+#define _DATAPACK 1
 #ifdef _RELEASE
 	#define _DATAPACK 1
 #endif
@@ -293,12 +293,32 @@ int main(int argc, char *argv[])
 		OculusManager::Get().StartupRendering(windowInfo.info.win.window);
 	}
 
-#ifndef _RELEASE
-	// Start up profiling
-	Remotery * remoteProfile;
-	rmt_CreateGlobalInstance(&remoteProfile);
-	rmt_BindOpenGL();
+	// Profiling macros do nothing in release builds
+#ifdef _RELEASE									
+#define PROFILE_STARTUP
+#define PROFILE_SHUTDOWN
+#define PROFILE_BEGIN
+#define UPDATE_AND_PROFILE(System) System::Get().Update(lastFrameTimeSec);
+#else
+#define PROFILE_STARTUP									\
+	Remotery * remoteProfile;							\
+	rmt_CreateGlobalInstance(&remoteProfile);			\
+	rmt_BindOpenGL();									\
+
+#define PROFILE_SHUTDOWN								\
+	rmt_UnbindOpenGL();									\
+	rmt_DestroyGlobalInstance(remoteProfile);			
+
+#define PROFILE_BEGIN									\
+	rmt_ScopedCPUSample(GameLoop); 
+
+#define UPDATE_AND_PROFILE(System)						\
+	rmt_BeginCPUSample(System);							\
+	System::Get().Update(lastFrameTimeSec);				\
+	rmt_EndCPUSample();
 #endif
+
+	PROFILE_STARTUP;
 
     // Game main loop
 	unsigned int lastFrameTime = 0;
@@ -314,13 +334,11 @@ int main(int argc, char *argv[])
     while (active)
     {
 		// Start counting time
-		rmt_ScopedCPUSample(GameLoop); 
+		PROFILE_BEGIN;
 		unsigned int startFrame = Time::GetSystemTime();
 		
         // Message processing loop
-		rmt_BeginCPUSample(InputManager);
-		InputManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(InputManager);
 
         SDL_Event event;
         while (active && SDL_PollEvent(&event))
@@ -332,49 +350,27 @@ int main(int argc, char *argv[])
 		lastFrameTimeSec *= DebugMenu::Get().GetGameTimeScale();
 
 		// Update the camera first
-		rmt_BeginCPUSample(CameraManager);
-		CameraManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(CameraManager);
 
 		// Update world last as it clears physics collisions for the frame
-		rmt_BeginCPUSample(AnimationManager);
-		AnimationManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
-		rmt_BeginCPUSample(ModelManager);
-		ModelManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
-		rmt_BeginCPUSample(PhysicsManager);
-		PhysicsManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
-		rmt_BeginCPUSample(ScriptManager);
-		ScriptManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
-		rmt_BeginCPUSample(WorldManager);
-		WorldManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
-		rmt_BeginCPUSample(SoundManager);
-		SoundManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(AnimationManager);
+		UPDATE_AND_PROFILE(ModelManager);
+		UPDATE_AND_PROFILE(PhysicsManager);
+		UPDATE_AND_PROFILE(ScriptManager);
+		UPDATE_AND_PROFILE(WorldManager);
+		UPDATE_AND_PROFILE(SoundManager);
 		
 		// Draw the Gui
-		rmt_BeginCPUSample(Gui);
-		Gui::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(Gui);
 		
 		// Draw the debug menu
-		rmt_BeginCPUSample(DebugMenu);
-		DebugMenu::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(DebugMenu);
 
 		// Update the texture manager so it can do it's auto refresh of textures
-		rmt_BeginCPUSample(TextureManager);
-		TextureManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(TextureManager);
 
 		// Draw log entries on top of the gui
-		rmt_BeginCPUSample(Log);
-		Log::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(Log);
 
 		// Draw FPS on top of everything
 		if (DebugMenu::Get().IsDebugMenuEnabled())
@@ -385,29 +381,28 @@ int main(int argc, char *argv[])
 		}
 
 		// Drawing the scene will flush the renderLayers
-		rmt_BeginCPUSample(RenderManagerUpdate);
-		RenderManager::Get().Update(lastFrameTimeSec);
-		rmt_EndCPUSample();
+		UPDATE_AND_PROFILE(RenderManager);
 		
+#ifndef _RELEASE
 		rmt_ScopedOpenGLSample(OpenGL);
+		rmt_BeginCPUSample(Draw);
+		rmt_BeginOpenGLSample(DrawToScreen);
+#endif
+
 		// Only swap the buffers at the end of all the rendering passes
 		if (useVr)
 		{
-
-			rmt_BeginCPUSample(OculusDraw);
-			rmt_BeginOpenGLSample(DrawToHMD);
 			OculusManager::Get().DrawToHMD();
-			rmt_EndOpenGLSample();
-			rmt_EndCPUSample();
 		}
 		else
 		{
-			rmt_BeginCPUSample(Draw);
-			rmt_BeginOpenGLSample(DrawToScreen);
 			RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
-			rmt_EndOpenGLSample();
-			rmt_EndCPUSample();
 		}
+
+#ifndef _RELEASE
+		rmt_EndOpenGLSample();
+		rmt_EndCPUSample();
+#endif
 
 		// Perform and post rendering tasks for subsystems
 		DebugMenu::Get().PostRender();
@@ -424,11 +419,7 @@ int main(int argc, char *argv[])
 		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
 
-#ifndef _RELEASE
-	// Destroy the main instance of remote profiling
-	rmt_UnbindOpenGL();
-	rmt_DestroyGlobalInstance(remoteProfile);
-#endif
+	PROFILE_SHUTDOWN
 
 	// Singletons are shutdown by their destructors
     Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Exited cleanly");
@@ -456,4 +447,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
