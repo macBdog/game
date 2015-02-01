@@ -204,7 +204,7 @@ public:
 		glUniform1f(m_lifeTime.m_id, a_data.m_lifeTime);
 		glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 		glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
-		glUniform1f(m_viewWidth.m_id, a_data.m_viewHeight);
+		glUniform1f(m_viewHeight.m_id, a_data.m_viewHeight);
 		glUniform3f(m_shaderData.m_id, a_data.m_shaderData.GetX(), a_data.m_shaderData.GetY(), a_data.m_shaderData.GetZ());
 		glUniform1fv(m_lights.m_id, s_maxLights * s_numLightFloats, &s_lightingData[0]);
 		glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_TRUE, a_data.m_objectMatrix->GetValues());
