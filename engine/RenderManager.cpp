@@ -24,8 +24,8 @@ using namespace std;	//< For fstream operations
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_updateFreq = 1.0f;
 const float RenderManager::s_renderDepth2D = -1.0f;
-const float RenderManager::s_nearClipPlane = 0.1f;
-const float RenderManager::s_farClipPlane = 1000.0f;
+const float RenderManager::s_nearClipPlane = 0.01f;
+const float RenderManager::s_farClipPlane = 10000.0f;
 const float RenderManager::s_fovAngleY = 55.0f;
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
@@ -532,11 +532,16 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 {
+	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.33334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
+	RenderScene(a_viewMatrix, perspectiveMatrix, a_flushBuffers);
+}
+
+void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat, bool a_flushBuffers)
+{
 	// Setup fresh data to pass to shaders
 	Matrix identityMatrix = Matrix::Identity();
 	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.333334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
-	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMatrix, &a_viewMatrix, &perspectiveMatrix);
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMatrix, &a_viewMatrix, &a_perspectiveMat);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -591,7 +596,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 #endif
 			{
 				// Setup projection transformation matrices for the shaders
-				shaderData.m_projectionMatrix = &perspectiveMatrix;
+				shaderData.m_projectionMatrix = &a_perspectiveMat;
 				shaderData.m_viewMatrix = &a_viewMatrix;
 				break;
 			}
@@ -740,7 +745,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 			{
 				Object * obj = rm->m_model->GetObject(k);
 				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-				shaderData.m_projectionMatrix = &perspectiveMatrix;
+				shaderData.m_projectionMatrix = &a_perspectiveMat;
 				shaderData.m_viewMatrix = &a_viewMatrix;
 				shaderData.m_objectMatrix = rm->m_mat;
 				shaderData.m_lifeTime = rm->m_lifeTime;

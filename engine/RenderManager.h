@@ -104,6 +104,7 @@ public:
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
 	void DrawToScreen(Matrix & a_viewMatrix);
 	void RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers = true);
+	void RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat, bool a_flushBuffers);
 	void RenderFramebuffer();
 	
 	//\brief Change the render mode

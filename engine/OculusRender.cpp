@@ -144,8 +144,13 @@ void OculusRender::DrawToHMD()
 			glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			const bool shouldClearRenderBuffers = eyeIndex == ovrEye_Count - 1;
 			ovrMatrix4f proj = ovrMatrix4f_Projection(m_eyeRenderDesc[eye].Fov, 0.01f, 10000.0f, true);
-			RenderManager::Get().RenderScene(viewMatrix, eyeIndex == ovrEye_Count - 1);
+			Matrix perspective(	proj.M[0][0], proj.M[1][0], proj.M[2][0], proj.M[3][0],
+								proj.M[0][1], proj.M[1][1], proj.M[2][1], proj.M[3][1],
+								proj.M[0][2], proj.M[1][2], proj.M[2][2], proj.M[3][2],
+								proj.M[0][3], proj.M[1][3], proj.M[2][3], proj.M[3][3]);
+			RenderManager::Get().RenderScene(viewMatrix, perspective, shouldClearRenderBuffers);
 		}
 
 		// Bind the default framebuffer
