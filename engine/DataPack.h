@@ -2,6 +2,8 @@
 #define _ENGINE_DATA_PACK_
 #pragma once
 
+#include <ios>
+
 #include "../core/LinearAllocator.h"
 #include "../core/LinkedList.h"
 
@@ -61,6 +63,39 @@ struct DataPackEntry
 		return true; 
 	}
 	inline bool close() { m_readOffset = -1; return true; }
+	inline unsigned int tellg() const { return m_readOffset; }
+	inline void clear() { close(); }
+	inline void seekg(unsigned int a_offset, std::streamoff a_startPos) 
+	{ 
+		switch (a_startPos)
+		{
+			case std::ios::beg:
+			{
+				if (a_offset < m_size)
+				{
+					m_readOffset = a_offset;
+				}
+				break;
+			}
+			case std::ios::cur:
+			{
+				if (a_offset + m_readOffset < m_size)
+				{
+					m_readOffset += a_offset;
+				}
+				break;
+			}
+			case std::ios::end:
+			{
+				if (m_size - a_offset >= 0)
+				{
+					m_readOffset = m_size - a_offset;
+				}
+				break;
+			}
+			default: break;
+		}
+	}
 
 	size_t m_size;									///< How big the entry in the pack is
 	char * m_data;									///< Pointer to the resource data 

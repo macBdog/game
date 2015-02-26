@@ -18,11 +18,12 @@ const float ModelManager::s_updateFreq = 1.0f;
 ModelManager::ModelManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
+	, m_dataPack(NULL)
 {
 	m_modelPath[0] = '\0';
 }
 
-bool ModelManager::Startup(const char * a_modelPath, const DataPack * a_dataPack)
+bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
 {
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
@@ -45,16 +46,20 @@ bool ModelManager::Startup(const char * a_modelPath, const DataPack * a_dataPack
 
 	if (a_dataPack != NULL && a_dataPack->IsLoaded())
 	{
+		// Cache off the datapack path for loading models from pack
+		m_dataPack = a_dataPack;
+
+
 		// Populate a list of objects
 		DataPack::EntryList objEntries;
 		a_dataPack->GetAllEntries(".obj", objEntries);
 		DataPack::EntryNode * curNode = objEntries.GetHead();
 
-		// Load each font in the pack
+		// Load each model in the pack
 		bool loadSuccess = true;
 		while (curNode != NULL)
 		{
-			// TODO
+			loadSuccess &= GetModel(curNode->GetData()->m_path) != NULL;
 			curNode = curNode->GetNext();
 		}
 
@@ -133,8 +138,9 @@ bool ModelManager::Update(float a_dt)
 Model * ModelManager::GetModel(const char * a_modelPath)
 {
 	// Model paths are either fully qualified or relative to the config model dir
+	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
-	if (!strstr(a_modelPath, ":\\"))
+	if (!strstr(a_modelPath, ":\\") && !readFromDataPack)
 	{
 		sprintf(fileNameBuf, "%s%s", m_modelPath, a_modelPath);
 	} 
@@ -158,9 +164,31 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	else if (ManagedModel * newModel = m_modelPool.Allocate(sizeof(ManagedModel)))
 	{
 		// Insert the newly allocated model
+		bool modelLoaded = false;
 		ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
-		if (newModel->m_model.Load(fileNameBuf, mdp))
+		if (readFromDataPack)
 		{
+			if (DataPackEntry * packedModel = m_dataPack->GetEntry(fileNameBuf))
+			{
+				if (newModel->m_model.Load(packedModel, mdp, m_dataPack))
+				{
+					modelLoaded = true;
+					sprintf(newModel->m_path, "%s", fileNameBuf);
+					m_modelMap.Insert(modelId, newModel);
+
+					// Reset the temporary loading pools ready for the next load
+					m_loadingVertPool.Reset();
+					m_loadingNormalPool.Reset();
+					m_loadingUvPool.Reset();
+
+					// Return the pointer to the actual model
+					return &newModel->m_model;
+				}
+			}
+		}
+		else if (newModel->m_model.Load(fileNameBuf, mdp))
+		{
+			modelLoaded = true;
 			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
 			sprintf(newModel->m_path, "%s", fileNameBuf);
 			m_modelMap.Insert(modelId, newModel);
@@ -173,7 +201,9 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 			// Return the pointer to the actual model
 			return &newModel->m_model;
 		}
-		else
+
+		// Clean up a bad model load
+		if (!modelLoaded)
 		{
 			//delete newModel;
 			m_modelPool.DeAllocate(sizeof(ManagedModel));

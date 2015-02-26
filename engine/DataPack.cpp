@@ -198,7 +198,9 @@ bool DataPack::Serialize(const char * a_path) const
 		}
 
 		const int numEntries = m_manifest.GetLength();
-		ofstream outputFile(a_path, ios::out | ios::binary);
+		char tempFilePath[StringUtils::s_maxCharsPerLine];
+		sprintf(tempFilePath, "%s.tmp", a_path);
+		ofstream outputFile(tempFilePath, ios::out | ios::binary);
 		if (outputFile.is_open())
 		{
 			// First write the number of entries in the manifest and the total resource size
@@ -231,6 +233,7 @@ bool DataPack::Serialize(const char * a_path) const
 				ifstream resourceFile(diskPath, ifstream::in | ifstream::binary);
 				if (resourceFile.is_open())
 				{
+					// TODO read the resource file in one pass for faster data pack writes
 					while (resourceFile.good() && writeByteCount < curEntry->m_size)
 					{
 						char c = resourceFile.get();
@@ -249,7 +252,7 @@ bool DataPack::Serialize(const char * a_path) const
 		outputFile.close();
 
 		// Now compress the file
-		FILE * inputFile = fopen(a_path, "rb");
+		FILE * inputFile = fopen(tempFilePath, "rb");
 		gzFile outfile = gzopen(s_defaultDataPackPath, "wb");
 		char readBuffer[128];
 		int bytesRead = 0;

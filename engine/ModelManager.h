@@ -24,7 +24,7 @@ public:
 	~ModelManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup models on shutdown
-	bool Startup(const char * a_modelPath, const DataPack * a_dataPack);
+	bool Startup(const char * a_modelPath, DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update will poll for model changes and reload any models that have a newer version than on disk
@@ -90,6 +90,7 @@ private:
 	LinearAllocator<Material> m_materialPool;					///< Pool for material storage
 
 	ModelMap m_modelMap;										///< List of models for each category
+	DataPack * m_dataPack;										///< Pointer to a datapack to load from, if any
 	char m_modelPath[StringUtils::s_maxCharsPerLine];			///< Cache off model path 
 	float m_updateFreq;											///< How often the model manager should check for changes
 	float m_updateTimer;										///< If we are due for a scan and update of models
