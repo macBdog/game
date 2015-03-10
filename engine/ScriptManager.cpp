@@ -158,9 +158,14 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		// Cache off path and look for the main game lua file
 		strncpy(m_scriptPath, a_scriptPath, sizeof(char) * strlen(a_scriptPath) + 1);
 
+		// Construct a string for the main script file 
+		char gameScriptPath[StringUtils::s_maxCharsPerLine];
+		gameScriptPath[0] = '\0';
+		sprintf(gameScriptPath, "%s%s", m_scriptPath, s_mainScriptName);
+
 		// Register the game's script folder in the lua package path so requires work correctly
 		lua_getglobal(m_globalLua, "package");
-		lua_getfield(m_globalLua, -1, "path"); 
+		lua_getfield(m_globalLua, -1, "path");
 
 		char newLuaPath[StringUtils::s_maxCharsPerLine * 2];
 		const char * currentPackagePath = lua_tostring(m_globalLua, -1);
@@ -170,23 +175,31 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_setfield(m_globalLua, -2, "path");
 		lua_pop(m_globalLua, 1);
 
-		// Construct a string for the main script file 
-		char gameScriptPath[StringUtils::s_maxCharsPerLine];
-		gameScriptPath[0] = '\0';
-		sprintf(gameScriptPath, "%s%s", m_scriptPath, s_mainScriptName);
-		
-		// And kick it off and wait for a yield
+		// Load the main script from disk or the data pack
 		m_gameLua = lua_newthread(m_globalLua);
-		luaL_loadfile(m_gameLua, gameScriptPath);
+		const bool readFromDataPack = a_dataPack != NULL && a_dataPack->IsLoaded();
+		if (readFromDataPack)
+		{
+			if (DataPackEntry * mainScriptEntry = a_dataPack->GetEntry(gameScriptPath))
+			{
+				luaL_loadbuffer(m_gameLua, mainScriptEntry->m_data, mainScriptEntry->m_size, gameScriptPath);
+			}
+		}
+		else
+		{
+			luaL_loadfile(m_gameLua, gameScriptPath);
+		}
+
+		// Kick it off and wait for a yield
 		int yieldResult = lua_resume(m_gameLua, NULL, 0);
 		if (yieldResult != LUA_YIELD)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
 		}
 
-		if (a_dataPack != NULL && a_dataPack->IsLoaded())
+		if (readFromDataPack)
 		{
-			// TODO
+			// Add all scripts in the pack?
 		}
 		else
 		{
