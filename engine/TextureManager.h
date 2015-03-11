@@ -51,7 +51,7 @@ public:
 
 	//brief Initialise memory pools on startup, cleanup textures on shutdown
 	bool Startup(const char * a_texturePath, bool a_useLinearTextureFilter = true);
-	bool Startup(DataPack * a_dataPack, bool a_useLinearTextureFilter = true);
+	bool Startup(const char * a_texturePath, DataPack * a_dataPack, bool a_useLinearTextureFilter = true);
 
 	bool Shutdown();
 

@@ -34,10 +34,12 @@ bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTexture
 	return Init(a_useLinearTextureFilter);
 }
 
-bool TextureManager::Startup(DataPack * a_dataPack, bool a_useLinearTextureFilter)
+bool TextureManager::Startup(const char * a_texturePath,  DataPack * a_dataPack, bool a_useLinearTextureFilter)
 {
 	// Cache off the datapack path for loading textures from pack
 	m_dataPack = a_dataPack;
+	memset(&m_texturePath, 0, StringUtils::s_maxCharsPerLine);
+	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
 
 	return Init(a_useLinearTextureFilter);
 }
@@ -123,7 +125,8 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 	// Texture paths are either fully qualified or relative to the config texture dir
 	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
-	if (!strstr(a_tgaPath, ":\\") && !readFromDataPack)
+	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
+	if (!strstr(a_tgaPath, pathQualifier))
 	{
 		// Strip out any leading slashes
 		const char * filenameOnly = strstr(a_tgaPath, "\\");
@@ -176,9 +179,14 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileNameBuf);
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
 					return NULL;
 				}
+			}
+			else
+			{
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
+				return NULL;
 			}
 		}
 		else

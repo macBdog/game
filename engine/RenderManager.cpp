@@ -1078,10 +1078,11 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		if (!obj->IsDisplayListGenerated())
 		{
 			// Alias model data
+			Material * modelMat = obj->GetMaterial();
 			unsigned int numVertices = obj->GetNumVertices();
-			Texture * diffuseTex = obj->GetMaterial()->GetDiffuseTexture();
-			Texture * normalTex = obj->GetMaterial()->GetNormalTexture();
-			Texture * specularTex = obj->GetMaterial()->GetSpecularTexture();
+			Texture * diffuseTex = modelMat->GetDiffuseTexture();
+			Texture * normalTex = modelMat->GetNormalTexture();
+			Texture * specularTex = modelMat->GetSpecularTexture();
 			Vector * verts = obj->GetVertices();
 			TexCoord * uvs = obj->GetUvs();
 

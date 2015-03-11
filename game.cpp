@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
 #ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);
     RenderManager::Get().Resize(width, height, bpp);
-	TextureManager::Get().Startup(&dataPack, gameConfig.GetBool("render", "textureFilter"));
+	TextureManager::Get().Startup(texturePath, &dataPack, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath, &dataPack);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath, &dataPack);
