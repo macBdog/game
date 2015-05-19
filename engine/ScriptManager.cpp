@@ -99,6 +99,10 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		luaL_requiref(m_globalLua, "debug", luaopen_debug, 1);
 
 		// Register C++ functions made accessible to LUA
+		if (a_dataPack != NULL)
+		{
+			lua_register(m_globalLua, "require", DataPackRequire);
+		}
 		lua_register(m_globalLua, "Quit", Quit);
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
@@ -1444,20 +1448,22 @@ int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
 int ScriptManager::DataPackRequire(lua_State * a_luaState)
 {
 	// This is only a valid call when running from datapack
-#ifdef _DATAPACK
 	if (lua_gettop(a_luaState) == 1)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * scriptPath = lua_tostring(a_luaState, 1);
 		if (scriptPath != NULL && scriptPath[0] != '\0')
 		{
-			if (DataPackEntry * luaResource = DataPack::Get().GetEntry(scriptPath))
+			char scriptName[StringUtils::s_maxCharsPerLine];
+			ScriptManager & scriptMan = ScriptManager::Get();
+			sprintf(scriptName, "%s%s.lua", scriptMan.m_scriptPath, scriptPath);
+			if (DataPackEntry * luaResource = DataPack::Get().GetEntry(scriptName))
 			{
-				lua_pushstring(a_luaState, luaResource->m_data);
+				luaL_loadbuffer(scriptMan.m_gameLua, luaResource->m_data, luaResource->m_size, scriptName);
 			}
 			else
 			{
-				Log::Get().Write(LogCategory::Game, LogCategory::Error, "DataPackRequire cannot find a lua file called %s in the pack.", scriptPath);
+				Log::Get().Write(LogLevel::Error, LogCategory::Game, "DataPackRequire cannot find a lua file called %s in the pack.", scriptPath);
 			}
 		}
 	}
@@ -1465,9 +1471,6 @@ int ScriptManager::DataPackRequire(lua_State * a_luaState)
 	{
 		LogScriptError(a_luaState, "DataPackRequire", "at least one parameter of the lua file that is required.");
 	}
-#else
-	Log::Get().WriteGameErrorNoParams("DataPackRequire called when the game is not running from a DataPack! Probably a bad path to require().");
-#endif
 	return 1;
 }
 

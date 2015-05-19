@@ -150,7 +150,9 @@ void OculusRender::DrawToHMD()
 								proj.M[0][1], proj.M[1][1], proj.M[2][1], proj.M[3][1],
 								proj.M[0][2], proj.M[1][2], proj.M[2][2], proj.M[3][2],
 								proj.M[0][3], proj.M[1][3], proj.M[2][3], proj.M[3][3]);
-			RenderManager::Get().RenderScene(viewMatrix, perspective, shouldClearRenderBuffers);
+			RenderManager & renMan = RenderManager::Get();
+			renMan.SetRenderTargetSize(vp.Size.w, vp.Size.h);
+			renMan.RenderScene(viewMatrix, perspective, shouldClearRenderBuffers);
 		}
 
 		// Bind the default framebuffer

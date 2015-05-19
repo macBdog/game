@@ -99,6 +99,7 @@ public:
 
 	//\brief Setup the viewport
     bool Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen = false);
+	inline void SetRenderTargetSize(unsigned int a_viewWidth, unsigned int a_viewHeight) { m_viewWidth = a_viewWidth; m_viewHeight = a_viewHeight; }
 
 	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
