@@ -281,6 +281,12 @@ bool RenderManager::Update(float a_dt)
 	return true;
 #endif
 
+	DataPack & dataPack = DataPack::Get();
+	if (dataPack.IsLoaded())
+	{
+		return true;
+	}
+
 	if (m_updateTimer < m_updateFreq)
 	{
 		m_updateTimer += a_dt;
@@ -1534,12 +1540,18 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 			return;
 		}
 
-		// Now add the object to the list of managed items
-		char fullShaderPath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
-		FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_vertexTimeStamp);
-		sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
-		FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_fragmentTimeStamp);
+		DataPack & dataPack = DataPack::Get();
+		if (!dataPack.IsLoaded())
+		{
+			// Now add the object to the list of managed items by time stamp
+			char fullShaderPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_vertexTimeStamp);
+			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+			FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_fragmentTimeStamp);
+		}
+
+		// Add to the list of shaders
 		if (ManagedShaderNode * pManShaderNode = new ManagedShaderNode())
 		{
 			pManShaderNode->SetData(a_newManShader);

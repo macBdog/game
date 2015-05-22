@@ -167,7 +167,6 @@ private:
 	void AddEntryToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
 	void AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
 
-
 	EntryList m_manifest;									///< The list of all entries
 	LinearAllocator<char> m_resourceData;					///< When a datapack is loaded, the resource data lives here
 	char m_relativePath[StringUtils::s_maxCharsPerLine];	///< Relative path when the datapack was made so the pack is always relative

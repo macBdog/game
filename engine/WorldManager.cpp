@@ -419,6 +419,12 @@ bool Scene::Update(float a_dt)
 	// Now state and position have been updated, submit resources to be rendered
 	bool drawSuccess = Draw();
 
+	DataPack & dataPack = DataPack::Get();
+	if (dataPack.IsLoaded())
+	{
+		return true;
+	}
+
 #ifndef _RELEASE
 	// Check if the scene needs to be reloaded
 	if (m_updateTimer < m_updateFreq)
@@ -709,26 +715,50 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	ModelManager & modelMan = ModelManager::Get();
 	if (a_templatePath)
 	{
-		char fileNameBuf[StringUtils::s_maxCharsPerLine];
-		if (!strstr(a_templatePath, ":\\"))
+		GameFile templateFile;
+		DataPack & dataPack = DataPack::Get();
+		if (dataPack.IsLoaded())
 		{
-			sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
-
-			// Add on file extension if not present
-			if (!strstr(fileNameBuf, ".tmp"))
+			char templatePath[StringUtils::s_maxCharsPerLine];
+			sprintf(templatePath, "%s%s", m_templatePath, a_templatePath);
+			if (DataPackEntry * templateEntry = dataPack.GetEntry(templatePath))
 			{
-				const char * fileExt = ".tmp\0";
-				unsigned char lastChar = strlen(fileNameBuf);
-				strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt)+1);
+				if (!templateFile.Load(templateEntry))
+				{
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s from datapack", a_templatePath);
+					return NULL;
+				}
 			}
-		} 
-		else // Already fully qualified
+		}
+		else
 		{
-			sprintf(fileNameBuf, "%s", a_templatePath);
+			char fileNameBuf[StringUtils::s_maxCharsPerLine];
+			if (!strstr(a_templatePath, ":\\"))
+			{
+				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
+
+				// Add on file extension if not present
+				if (!strstr(fileNameBuf, ".tmp"))
+				{
+					const char * fileExt = ".tmp\0";
+					unsigned char lastChar = strlen(fileNameBuf);
+					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt) + 1);
+				}
+			}
+			else // Already fully qualified
+			{
+				sprintf(fileNameBuf, "%s", a_templatePath);
+			}
+
+			// Open the template file
+			if (!templateFile.Load(fileNameBuf))
+			{
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
+				return NULL;
+			}
 		}
 
-		// Open the template file
-		GameFile templateFile(fileNameBuf);
+		// Process the properties of the template file
 		if (templateFile.IsLoaded())
 		{
 			// Create from template properties
@@ -840,13 +870,8 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				return NULL;
 			}
 		}
-		else // Load failed
-		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
-			return NULL;
-		}
 	}
-	else // Set properties for default object
+	else // Set properties for a default object
 	{
 		newGameObject->SetState(GameObjectState::Active);
 		newGameObject->SetName("NEW_GAME_OBJECT");

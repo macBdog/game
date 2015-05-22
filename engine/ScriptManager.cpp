@@ -1460,6 +1460,7 @@ int ScriptManager::DataPackRequire(lua_State * a_luaState)
 			if (DataPackEntry * luaResource = DataPack::Get().GetEntry(scriptName))
 			{
 				luaL_loadbuffer(scriptMan.m_gameLua, luaResource->m_data, luaResource->m_size, scriptName);
+				lua_pcall(scriptMan.m_gameLua, 0, 0, 0);
 			}
 			else
 			{

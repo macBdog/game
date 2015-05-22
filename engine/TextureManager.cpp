@@ -87,6 +87,12 @@ bool TextureManager::Update(float a_dt)
 	return true;
 #endif
 
+	DataPack & dataPack = DataPack::Get();
+	if (dataPack.IsLoaded())
+	{
+		return true;
+	}
+
 	if (m_updateTimer < m_updateFreq)
 	{
 		m_updateTimer += a_dt;
