@@ -35,18 +35,18 @@ int main(int argc, char *argv[])
 {
 	// Single parameter to the executable is the main config file
 	bool useRelativePaths = false;
-	char configFilePath[StringUtils::s_maxCharsPerLine];
+	char titleConfigFilePath[StringUtils::s_maxCharsPerLine];
 	char gameDataPath[StringUtils::s_maxCharsPerLine];
-	configFilePath[0] = '\0';
+	titleConfigFilePath[0] = '\0';
 	gameDataPath[0] = '\0';
 	if (argc > 1)
 	{
-		memcpy(&configFilePath, argv, strlen(argv[1]));
-		configFilePath[strlen(argv[1])] = '\0';
+		memcpy(&titleConfigFilePath, argv, strlen(argv[1]));
+		titleConfigFilePath[strlen(argv[1])] = '\0';
 	}
 	else // No argument specified, use a fallback
 	{
-		sprintf(configFilePath, "game.cfg");
+		sprintf(titleConfigFilePath, "game.cfg");
 	}
 
 	// Make sure SDL cleans up before exit
@@ -87,11 +87,11 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	GameFile configFile;
-	DataPackEntry * configFileFromPack;
-	if (configFileFromPack = dataPack.GetEntry(configFilePath))
+	GameFile titleConfigFile;
+	DataPackEntry * titleConfigFileFromPack;
+	if (titleConfigFileFromPack = dataPack.GetEntry(titleConfigFilePath))
 	{
-		configFile.Load(configFileFromPack);
+		titleConfigFile.Load(titleConfigFileFromPack);
 	}
 	else
 	{
@@ -100,15 +100,15 @@ int main(int argc, char *argv[])
 #else
 
 	// Read the main config file to setup video etc
-	GameFile configFile(configFilePath);
-	if (!configFile.IsLoaded())
+	GameFile titleConfigFile(titleConfigFilePath);
+	if (!titleConfigFile.IsLoaded())
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", configFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath);
 		return 1;
 	}
 
 	// Setup relative pathing if defined
-	const char * gameDataPathFromFile = configFile.GetString("config", "gameDataPath");
+	const char * gameDataPathFromFile = titleConfigFile.GetString("config", "gameDataPath");
 	if (gameDataPathFromFile != NULL)
 	{
 		sprintf(gameDataPath, "%s", gameDataPathFromFile);
@@ -134,21 +134,21 @@ int main(int argc, char *argv[])
 
 	// All files read by the game will be added to the datapack in case we want to make a pack
 	dataPack.SetRelativePath(gameDataPath);
-	dataPack.AddFile(configFilePath);
+	dataPack.AddFile(titleConfigFilePath);
 #endif
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);
 
-	strcpy(gameConfigPath, configFile.GetString("config", "gameConfigFile"));
-	strcpy(texturePath, configFile.GetString("config", "texturePath"));
-	strcpy(fontPath, configFile.GetString("config", "fontPath"));
-	strcpy(guiPath, configFile.GetString("config", "guiPath"));
-	strcpy(modelPath, configFile.GetString("config", "modelPath"));
-	strcpy(templatePath, configFile.GetString("config", "templatePath"));
-	strcpy(scenePath, configFile.GetString("config", "scenePath"));
-	strcpy(scriptPath, configFile.GetString("config", "scriptPath"));
-	strcpy(shaderPath, configFile.GetString("config", "shaderPath"));
-	strcpy(soundPath, configFile.GetString("config", "soundPath"));
+	strcpy(gameConfigPath, titleConfigFile.GetString("config", "gameConfigFile"));
+	strcpy(texturePath, titleConfigFile.GetString("config", "texturePath"));
+	strcpy(fontPath, titleConfigFile.GetString("config", "fontPath"));
+	strcpy(guiPath, titleConfigFile.GetString("config", "guiPath"));
+	strcpy(modelPath, titleConfigFile.GetString("config", "modelPath"));
+	strcpy(templatePath, titleConfigFile.GetString("config", "templatePath"));
+	strcpy(scenePath, titleConfigFile.GetString("config", "scenePath"));
+	strcpy(scriptPath, titleConfigFile.GetString("config", "scriptPath"));
+	strcpy(shaderPath, titleConfigFile.GetString("config", "shaderPath"));
+	strcpy(soundPath, titleConfigFile.GetString("config", "soundPath"));
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
 	// Load game specific config
 #ifdef _DATAPACK
-	GameFile gameConfig(dataPack.GetEntry(configFilePath));
+	GameFile gameConfig(dataPack.GetEntry(gameConfigPath));
 	if (!gameConfig.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration from the data pack.");
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	GameFile gameConfig(gameConfigPath);
 	if (!gameConfig.IsLoaded())
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", configFilePath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", gameConfigPath);
 		return 1;
 	}
 
@@ -212,16 +212,16 @@ int main(int argc, char *argv[])
 	int videoFlags = SDL_WINDOW_OPENGL;
 
 	// Set fullscreen from config, don't allow fullscreen for HMD as we are supporting DirectToRift
-	bool fullScreen = configFile.GetBool("config", "fullscreen");
+	bool fullScreen = titleConfigFile.GetBool("config", "fullscreen");
 	if (fullScreen && !useVr)
 	{
 		videoFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	// Create a new window
-	int width = configFile.GetInt("config", "width");
-	int height = configFile.GetInt("config", "height");
-	int bpp = configFile.GetInt("config", "bpp");
+	int width = titleConfigFile.GetInt("config", "width");
+	int height = titleConfigFile.GetInt("config", "height");
+	int bpp = titleConfigFile.GetInt("config", "bpp");
 
 	// Override display creation for VR mode so the resoultion is correct for the hmd
 	if (useVr)
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 		height = OculusManager::s_hmdDefaultResolutionHeight;
 	}
 
-	const char * gameName = configFile.GetString("config", "name");
+	const char * gameName = titleConfigFile.GetString("config", "name");
 	SDL_Window * sdlWindow = SDL_CreateWindow(gameName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
 
 	if (!sdlWindow)

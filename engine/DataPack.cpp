@@ -34,6 +34,8 @@ void DataPack::Unload()
 
 	// Unload resource data
 	m_resourceData.Done();
+
+	m_loaded = false;
 }
 
 bool DataPack::Load(const char * a_path)
@@ -81,6 +83,7 @@ bool DataPack::Load(const char * a_path)
 			m_manifest.Insert(newNode);
 		}
 		gzclose(inputFile);
+		m_loaded = true;
 		return true;
 	}
 	return false;

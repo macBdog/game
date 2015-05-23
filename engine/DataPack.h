@@ -109,7 +109,7 @@ class DataPack : public Singleton<DataPack>
 public:
 
 	//\ No work done in the constructor, the idea is the datapack object is created then pumped full of data and written to disk
-	DataPack() { m_relativePath[0] = '\0'; }
+	DataPack() : m_loaded(false) { m_relativePath[0] = '\0'; }
 	DataPack(const char * a_pathToLoad) { m_relativePath[0] = '\0'; Load(a_pathToLoad); }
 	~DataPack() { Unload(); }
 	
@@ -140,7 +140,8 @@ public:
 	bool Serialize(const char * a_path) const;
 
 	//\brief Status accessors for the user of the datapack
-	inline bool IsLoaded() const { return m_manifest.GetLength() > 0; }
+	inline bool IsLoaded() const { return m_loaded; }
+	inline bool HasFilesToWrite() const { return m_manifest.GetLength() > 0; }
 
 	//\brief Extract an entry from the manifest, usually for reading the resource data from
 	//\return NULL if not found
@@ -170,6 +171,7 @@ private:
 	EntryList m_manifest;									///< The list of all entries
 	LinearAllocator<char> m_resourceData;					///< When a datapack is loaded, the resource data lives here
 	char m_relativePath[StringUtils::s_maxCharsPerLine];	///< Relative path when the datapack was made so the pack is always relative
+	bool m_loaded;											///< If load has been called on the data pack
 };
 
 #endif // _ENGINE_DATA_PACK_
