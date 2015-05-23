@@ -75,8 +75,8 @@ private:
 	//\brief Load and unload gui menus and child widgets from permanent storage
 	//\param a_menuFile is a pointer to the c string of the path of the menu file to load
 	//\return bool true if the load or load operation completed without failure
-	bool LoadMenu(const char * a_menuFile);
-	bool LoadMenus(const char * a_guiPath);
+	bool LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack);
+	bool LoadMenus(const char * a_guiPath, const DataPack * a_dataPack);
 	bool UnloadMenus();
 
 	//\brief Helper function to update selection status of all widgets based on mouse pos

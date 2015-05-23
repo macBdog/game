@@ -217,7 +217,7 @@ public:
 	}
 
 	void Unload();
-	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
+	inline bool IsLoaded() const { return m_objects.GetLength() > 0; }
 
 	//\brief Write data from memory to file preserving inheritance
 	bool Write(const char * a_filePath);

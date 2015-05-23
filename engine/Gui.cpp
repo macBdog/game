@@ -46,7 +46,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 	m_debugRoot.SetDebugWidget();
 
 	// Load menus from data
-	LoadMenus(a_guiPath);
+	LoadMenus(a_guiPath, a_dataPack);
 
 	// There are no menus loaded
 	if (m_menus.GetLength() == 0)
@@ -415,21 +415,25 @@ Widget * Gui::GetActiveWidget()
 	return selected;
 }
 
-bool Gui::LoadMenu(const char * a_menuFile)
+bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 {
 	// Load the menu file
 	Widget * createdMenu = NULL;
-	GameFile * menuFile = new GameFile();
-	if (menuFile->Load(a_menuFile))
+	if (a_menuFile.IsLoaded())
 	{
 		// Create a new widget and copy properties from file
-		if (GameFile::Object * menuObject = menuFile->FindObject("menu"))
+		if (GameFile::Object * menuObject = a_menuFile.FindObject("menu"))
 		{
 			if (GameFile::Property * nameProp = menuObject->FindProperty("name"))
 			{
 				createdMenu = new Widget();
-				createdMenu->SetName(menuFile->GetString("menu", "name"));
-				createdMenu->SetFilePath(a_menuFile);
+				createdMenu->SetName(a_menuFile.GetString("menu", "name"));
+				if (a_dataPack == NULL || !a_dataPack->IsLoaded())
+				{
+					char menuFilePath[StringUtils::s_maxCharsPerLine];
+					sprintf(menuFilePath, "%s%s.mnu", m_guiPath, createdMenu->GetName());
+					createdMenu->SetFilePath(menuFilePath);
+				}
 				createdMenu->SetActive(false);
 
 				// TODO Support for non fullscreen menus
@@ -474,32 +478,51 @@ bool Gui::LoadMenu(const char * a_menuFile)
 
 		return true;
 	}
-
-	// Cleanup and return
-	delete menuFile;
 	return false;
 }
 
-bool Gui::LoadMenus(const char * a_guiPath)
+bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 {
-	// Get a list of menu files in the gui directory
-	FileManager & fileMan = FileManager::Get();
-	FileManager::FileList menuFiles;
-	fileMan.FillFileList(a_guiPath, menuFiles, ".mnu");
-
-	// Load each menu in the directory
 	bool loadSuccess = true;
-	FileManager::FileListNode * curNode = menuFiles.GetHead();
-	while(curNode != NULL)
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
 	{
-		char fullPath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullPath, "%s%s", a_guiPath, curNode->GetData()->m_name);
-		loadSuccess &= LoadMenu(fullPath);
-		curNode = curNode->GetNext();
-	}
+		DataPack::EntryList menuEntries;
+		a_dataPack->GetAllEntries(".mnu", menuEntries);
+		DataPack::EntryNode * curNode = menuEntries.GetHead();
 
-	// Clean up the list of fonts
-	fileMan.CleanupFileList(menuFiles);
+		// Load each menu in the list
+		bool loadSuccess = true;
+		while (curNode != NULL)
+		{
+			GameFile menuFile(curNode->GetData());
+			loadSuccess &= LoadMenu(menuFile, a_dataPack);
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of menu data pack entries
+		a_dataPack->CleanupEntryList(menuEntries);
+	}
+	else
+	{
+		// Get a list of menu files in the gui directory
+		FileManager & fileMan = FileManager::Get();
+		FileManager::FileList menuFiles;
+		fileMan.FillFileList(a_guiPath, menuFiles, ".mnu");
+
+		// Load each menu in the directory
+		FileManager::FileListNode * curNode = menuFiles.GetHead();
+		while (curNode != NULL)
+		{
+			char fullPath[StringUtils::s_maxCharsPerLine];
+			sprintf(fullPath, "%s%s", a_guiPath, curNode->GetData()->m_name);
+			GameFile menuFile(fullPath);
+			loadSuccess &= LoadMenu(menuFile, a_dataPack);
+			curNode = curNode->GetNext();
+		}
+
+		// Clean up the list of fonts
+		fileMan.CleanupFileList(menuFiles);
+	}
 
 	return loadSuccess;
 }
