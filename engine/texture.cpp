@@ -166,15 +166,24 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
 	a_bpp = *input++;
 	imgDesc = *input++;
 
+	a_x = a_x < 0 ? -a_x : a_x;
+	a_y = a_y < 0 ? -a_y : a_y;
     bypp = ((a_bpp)>>3);
     size = (a_x)*(a_y)*bypp;
+
+	// Early out before any allocation for non power of two texture
+	if (!((a_x != 0) && !(a_x & (a_x - 1))) || !((a_y != 0) && !(a_y & (a_y - 1))))
+	{
+		printf("Can't load non power of two dimension texture\n");
+		return NULL;
+	}
 
     output = (GLubyte *)malloc(size);
     
 	if (output == NULL) 
 	{
         printf("Malloc failed in texture read\n");
-        return (NULL);
+        return NULL;
     }
 	
     // Determine TGA version (new or old)
