@@ -104,7 +104,7 @@ public:
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
-	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != NULL && a_meshName[0] != '\0') { strcpy(m_physicsMesh, a_meshName); } }
+	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != NULL && a_meshName[0] != '\0') { strncpy(m_physicsMesh, a_meshName, StringUtils::s_maxCharsPerName); } }
 
 	inline unsigned int GetId() const { return m_id; }
 	inline const char * GetName() const { return m_name; }
@@ -133,8 +133,8 @@ public:
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
 	inline void SetState(GameObjectState::Enum a_newState) { m_state = a_newState; }
-	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
-	inline void SetTemplate(const char * a_templateName) { sprintf(m_template, "%s", a_templateName); }
+	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
+	inline void SetTemplate(const char * a_templateName) { strncpy(m_template, a_templateName, StringUtils::s_maxCharsPerName); }
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
 	inline void RemoveScale() { m_worldMat.RemoveScale(); }

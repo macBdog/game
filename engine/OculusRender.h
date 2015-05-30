@@ -13,7 +13,13 @@ public:
 	OculusRender() 
 		: m_HMD(NULL)
 	{
-		//TODO memset all members
+		for (int i = 0; i < ovrEye_Count; ++i)
+		{
+			m_frameBufferInitialised[i] = false;
+			m_frameBuffer[i] = false;
+			m_colourBuffer[i] = false;
+			m_renderBuffer[i] = false;
+		}
 	}
 
 	void Startup(ovrHmd a_hmd, HWND a_window);

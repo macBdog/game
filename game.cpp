@@ -139,16 +139,16 @@ int main(int argc, char *argv[])
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);
 
-	strcpy(gameConfigPath, titleConfigFile.GetString("config", "gameConfigFile"));
-	strcpy(texturePath, titleConfigFile.GetString("config", "texturePath"));
-	strcpy(fontPath, titleConfigFile.GetString("config", "fontPath"));
-	strcpy(guiPath, titleConfigFile.GetString("config", "guiPath"));
-	strcpy(modelPath, titleConfigFile.GetString("config", "modelPath"));
-	strcpy(templatePath, titleConfigFile.GetString("config", "templatePath"));
-	strcpy(scenePath, titleConfigFile.GetString("config", "scenePath"));
-	strcpy(scriptPath, titleConfigFile.GetString("config", "scriptPath"));
-	strcpy(shaderPath, titleConfigFile.GetString("config", "shaderPath"));
-	strcpy(soundPath, titleConfigFile.GetString("config", "soundPath"));
+	strncpy(gameConfigPath, titleConfigFile.GetString("config", "gameConfigFile"), StringUtils::s_maxCharsPerLine);
+	strncpy(texturePath, titleConfigFile.GetString("config", "texturePath"), StringUtils::s_maxCharsPerLine);
+	strncpy(fontPath, titleConfigFile.GetString("config", "fontPath"), StringUtils::s_maxCharsPerLine);
+	strncpy(guiPath, titleConfigFile.GetString("config", "guiPath"), StringUtils::s_maxCharsPerLine);
+	strncpy(modelPath, titleConfigFile.GetString("config", "modelPath"), StringUtils::s_maxCharsPerLine);
+	strncpy(templatePath, titleConfigFile.GetString("config", "templatePath"), StringUtils::s_maxCharsPerLine);
+	strncpy(scenePath, titleConfigFile.GetString("config", "scenePath"), StringUtils::s_maxCharsPerLine);
+	strncpy(scriptPath, titleConfigFile.GetString("config", "scriptPath"), StringUtils::s_maxCharsPerLine);
+	strncpy(shaderPath, titleConfigFile.GetString("config", "shaderPath"), StringUtils::s_maxCharsPerLine);
+	strncpy(soundPath, titleConfigFile.GetString("config", "soundPath"), StringUtils::s_maxCharsPerLine);
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)

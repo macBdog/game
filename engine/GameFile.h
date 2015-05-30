@@ -106,7 +106,7 @@ public:
 				sscanf(StringUtils::TrimString(quatString), "%f,%f,%f,%f", &f1, &f2, &f3, &f4);
 				return Quaternion(f1, f2, f3, f4);
 			}
-			return Vector::Zero();
+			return Quaternion();
 		}
 
 		inline Vector2 GetVector2() const

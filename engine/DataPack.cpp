@@ -109,16 +109,16 @@ bool DataPack::AddFile(const char * a_path)
 		{
 			// Strip out the absolute part of the file path
 			char relPath[StringUtils::s_maxCharsPerLine];
-			strcpy(relPath, a_path);
+			strncpy(relPath, a_path, StringUtils::s_maxCharsPerLine);
 			const char * relSub = strstr(a_path, m_relativePath);
 			if (relSub)
 			{
-				strcpy(relPath, relSub + strlen(m_relativePath));
+				strncpy(relPath, relSub + strlen(m_relativePath), StringUtils::s_maxCharsPerLine);
 			}
 
 			DataPackEntry * newEntry = new DataPackEntry();
 			newEntry->m_size = sizeBytes;
-			strcpy(newEntry->m_path, relPath);
+			strncpy(newEntry->m_path, relPath, StringUtils::s_maxCharsPerLine);
 
 			EntryNode * newNode = new EntryNode();
 			newNode->SetData(newEntry);
@@ -140,7 +140,7 @@ bool DataPack::AddFolder(const char * a_path, const char * a_fileExtensions)
 		if (strstr(a_fileExtensions, ",") != NULL)
 		{
 			char extensionsTokenized[StringUtils::s_maxCharsPerName];
-			strcpy(extensionsTokenized, a_fileExtensions);
+			strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
 			char * listTok = strtok(&extensionsTokenized[0], delimeter);
 			while(listTok != NULL)
 			{
@@ -294,7 +294,7 @@ void DataPack::GetAllEntries(const char * a_fileExtensions, EntryList & a_entrie
 	if (strstr(a_fileExtensions, ",") != NULL)
 	{
 		char extensionsTokenized[StringUtils::s_maxCharsPerName];
-		strcpy(extensionsTokenized, a_fileExtensions);
+		strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
 		char * listTok = strtok(&extensionsTokenized[0], delimeter);
 		while (listTok != NULL)
 		{
@@ -340,7 +340,7 @@ bool DataPack::HasFile(const char * a_path) const
 
 void DataPack::SetRelativePath(const char * a_relativePath)
 { 
-	strcpy(m_relativePath, a_relativePath); 
+	strncpy(m_relativePath, a_relativePath, StringUtils::s_maxCharsPerLine); 
 }
 
 void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const

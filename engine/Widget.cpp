@@ -521,12 +521,12 @@ bool Widget::RemoveFromChildren(Widget * a_child)
 void Widget::SetAlignTo(Widget * a_alignWidget)
 {
 	m_alignTo = a_alignWidget;
-	strcpy(m_alignToName, a_alignWidget->GetName());
+	strncpy(m_alignToName, a_alignWidget->GetName(), StringUtils::s_maxCharsPerName);
 }
 
 void Widget::SetAlignTo(const char * a_alignWidgetName)
 {
-	strcpy(m_alignToName, a_alignWidgetName);
+	strncpy(m_alignToName, a_alignWidgetName, StringUtils::s_maxCharsPerName);
 	UpdateAlignTo();
 }
 

@@ -176,7 +176,7 @@ int AnimationManager::LoadAnimations(const char * a_fbxPath)
 
 	// Anim name is the filename missing the extension because Blender's exporter only exports one take per file
 	char animNameBuf[StringUtils::s_maxCharsPerName];
-	strcpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_fbxPath));
+	strncpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_fbxPath), StringUtils::s_maxCharsPerName);
 	if (strstr(&animNameBuf[0], ".fbx") != NULL)
 	{
 		animNameBuf[strlen(animNameBuf) - 4] = '\0';
@@ -196,7 +196,7 @@ int AnimationManager::LoadAnimations(DataPackEntry * a_packedModel)
 
 	// Anim name is the data pack path missing the extension because Blender's exporter only exports one take per file
 	char animNameBuf[StringUtils::s_maxCharsPerName];
-	strcpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_packedModel->m_path));
+	strncpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_packedModel->m_path), StringUtils::s_maxCharsPerName);
 	if (strstr(&animNameBuf[0], ".fbx") != NULL)
 	{
 		animNameBuf[strlen(animNameBuf) - 4] = '\0';

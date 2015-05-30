@@ -38,12 +38,15 @@ bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 	size_t textureSize = (size_t)textureFile.tellg();
 	textureFile.seekg(0, std::ios::beg);
 	char * fileBuffer = (char *)malloc(textureSize);
+	
 	// Read the whole file into a buffer
+	bool loadSuccess = false;
 	if (textureFile.read(fileBuffer, textureSize))
 	{
-		return LoadFromMemory(fileBuffer,textureSize, a_useLinearFilter);
+		loadSuccess = LoadFromMemory(fileBuffer, textureSize, a_useLinearFilter);
 	}
-	return false;
+	free(fileBuffer);
+	return loadSuccess;
 }
 
 bool Texture::LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter)

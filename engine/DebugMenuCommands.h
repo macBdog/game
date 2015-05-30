@@ -173,6 +173,7 @@ public:
 		: m_btnCreateRoot(NULL)
 		, m_btnWidgetRoot(NULL)
 		, m_btnGameObjectRoot(NULL)	
+		, m_btnLightRoot(NULL)
 	{ 
 		m_textEditString[0] = '\0';
 		m_resourceSelectPath[0] = '\0';

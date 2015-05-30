@@ -83,7 +83,7 @@ private:
 			, m_name(a_animName)
 			, m_data(NULL)
 		{ 
-			strcpy(&m_path[0], a_animPath); 
+			strncpy(&m_path[0], a_animPath, StringUtils::s_maxCharsPerLine);
 		}
 		FileManager::Timestamp m_timeStamp;						///< When the anim file was last edited
 		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the anim resides for reloading
@@ -355,17 +355,24 @@ private:
 							FileManager::Get().GetFileTimeStamp(animPath, curTimeStamp);
 							manAnim = new ManagedAnim(animPath, a_animName, curTimeStamp);
 						}
-						manAnim->m_numKeys = totalFrameCount;
-						manAnim->m_data = firstFrame;
-						manAnim->m_frameRate = fileFrameRate;
-						ManagedAnimNode * manAnimNode = new ManagedAnimNode();
-						if (manAnim != NULL && manAnimNode != NULL)
+						if (manAnim != NULL)
 						{
-							manAnimNode->SetData(manAnim);
-							m_anims.Insert(manAnimNode);
+							manAnim->m_numKeys = totalFrameCount;
+							manAnim->m_data = firstFrame;
+							manAnim->m_frameRate = fileFrameRate;
+							ManagedAnimNode * manAnimNode = new ManagedAnimNode();
+							if (manAnim != NULL && manAnimNode != NULL)
+							{
+								manAnimNode->SetData(manAnim);
+								m_anims.Insert(manAnimNode);
 
-							// Add to list for appending framerate
-							addedAnims.Insert(manAnimNode);
+								// Add to list for appending framerate
+								addedAnims.Insert(manAnimNode);
+							}
+						}
+						else
+						{
+							Log::Get().WriteEngineErrorNoParams("Memory allocation failure in animation manager.");
 						}
 
 						finishedWithTakes = true;

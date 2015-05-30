@@ -162,7 +162,10 @@ private:
 	struct ManagedScript
 	{
 		ManagedScript(const char * a_scriptPath, const FileManager::Timestamp & a_timeStamp)
-			: m_timeStamp(a_timeStamp)	{ strcpy(&m_path[0], a_scriptPath);	}
+			: m_timeStamp(a_timeStamp)	
+		{ 
+			strncpy(&m_path[0], a_scriptPath, StringUtils::s_maxCharsPerLine);
+		}
 		FileManager::Timestamp m_timeStamp;						///< When the script file was last edited
 		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the script resides for reloading
 	};

@@ -153,7 +153,9 @@ private:
 		FileEvent() 
 			: m_src(ModificationType::Change)
 			, m_delegate()
-			{ sprintf(m_fileName, ""); }
+		{
+			m_fileName[0] = '\0';
+		}
 
 		ModificationType::Enum m_src;						///< What event happened
 		char m_fileName[StringUtils::s_maxCharsPerName];	///< The file that was affected

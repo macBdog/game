@@ -12,7 +12,7 @@ class Matrix
 {
 public:
 	Matrix() {};
-	Matrix(float a_f[16]) { for (int i = 0; i < 16; ++i) { f[i] = a_f[i]; } }
+	explicit Matrix(float a_f[16]) { for (int i = 0; i < 16; ++i) { f[i] = a_f[i]; } }
 	Matrix(	float a_0, float a_1, float a_2, float a_3, 
 			float a_4, float a_5, float a_6, float a_7, 
 			float a_8, float a_9, float a_10, float a_11, 
@@ -161,7 +161,7 @@ public:
 		det = f[0] * inv[0] + f[1] * inv[4] + f[2] * inv[8] + f[3] * inv[12];
 		if (det == 0.0f)
 		{
-			return Matrix::Identity();
+			return Identity();
 		}
 
 		Matrix out;

@@ -125,8 +125,8 @@ public:
 	inline unsigned int GetNumObjects() const { return m_numObjects; }
 	
 	//\brief Resource mutators and accessors
-	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
-	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
+	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
+	inline void SetFilePath(const char * a_path) { strncpy(m_filePath, a_path, StringUtils::s_maxCharsPerLine); }
 	inline void SetBeginLoaded(bool a_begin) { m_beginLoaded = a_begin; }
 	inline bool IsBeginLoaded() { return m_beginLoaded; }
 	inline Shader * GetShader() { return m_shader; }

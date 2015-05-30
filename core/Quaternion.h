@@ -24,9 +24,9 @@ public:
 							x = a_axis.GetX() * sinf(a_angle*0.5f);
 							y = a_axis.GetY() * sinf(a_angle*0.5f);
 							z = a_axis.GetZ() * sinf(a_angle*0.5f);  }
-	Quaternion(const Vector & a_eulerAngles) { *this = FromEulerAngles(a_eulerAngles); }
+	explicit Quaternion(const Vector & a_eulerAngles) { *this = FromEulerAngles(a_eulerAngles); }
 	Quaternion(const Vector & a_vec1, const Vector & a_vec2) { *this = FromAngles(a_vec1, a_vec2); }
-	Quaternion(const Matrix & a_mat)
+	explicit Quaternion(const Matrix & a_mat)
 	{
 		const float m0 = a_mat.GetValue(0);
 		const float m11 = a_mat.GetValue(5);
@@ -87,7 +87,7 @@ public:
 	}
 	Quaternion FromEulerAngles(const Vector & a_eulerAngles)
 	{
-		return Quaternion::FromEulerAngles(a_eulerAngles.GetX(), a_eulerAngles.GetY(), a_eulerAngles.GetZ());
+		return FromEulerAngles(a_eulerAngles.GetX(), a_eulerAngles.GetY(), a_eulerAngles.GetZ());
 	}
 	Quaternion FromAngles(const Vector & a_u, const Vector & a_v)
 	{

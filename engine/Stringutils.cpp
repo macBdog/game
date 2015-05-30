@@ -254,7 +254,7 @@ extern bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefi
 	char tempString[s_maxCharsPerLine];
 	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
 	{
-		strcpy(tempString, a_buffer_OUT);
+		strncpy(tempString, a_buffer_OUT, s_maxCharsPerLine);
 		sprintf(a_buffer_OUT, "%s%s", a_prefix, tempString);
 		return true;
 	}
@@ -267,7 +267,7 @@ extern bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix
 	char tempString[s_maxCharsPerLine];
 	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
 	{
-		strcpy(tempString, a_buffer_OUT);
+		strncpy(tempString, a_buffer_OUT, s_maxCharsPerLine);
 		sprintf(a_buffer_OUT, "%s%s", tempString, a_suffix);
 		return true;
 	}

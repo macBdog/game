@@ -20,7 +20,7 @@ bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 	// Set name and pass path into load so the material is loaded adjacent to the model
 	sprintf(m_name, "%s", StringUtils::ExtractFileNameFromPath(a_modelFilePath));
 	char modelPath[StringUtils::s_maxCharsPerLine];
-	strcpy(modelPath, a_modelFilePath);
+	strncpy(modelPath, a_modelFilePath, StringUtils::s_maxCharsPerLine);
 	StringUtils::TrimFileNameFromPath(modelPath);
 
 	ifstream file(a_modelFilePath, ios::binary);
@@ -32,7 +32,7 @@ bool Model::Load(DataPackEntry * a_packedModel, ModelDataPool & a_modelDataPool,
 	// Set name from pack entry
 	sprintf(m_name, "%s", StringUtils::ExtractFileNameFromPath(a_packedModel->m_path));
 	char modelPath[StringUtils::s_maxCharsPerLine];
-	strcpy(modelPath, a_packedModel->m_path);
+	strncpy(modelPath, a_packedModel->m_path, StringUtils::s_maxCharsPerLine);
 	StringUtils::TrimFileNameFromPath(modelPath);
 
 	return LoadData<DataPackEntry>(*a_packedModel, a_modelDataPool, modelPath, a_dataPack);

@@ -61,7 +61,7 @@ class RenderManager : public Singleton<RenderManager>
 public:
 
 	//\brief No work done in the constructor, only Init
-	RenderManager(float a_updateFreq = s_updateFreq) 
+	explicit RenderManager(float a_updateFreq = s_updateFreq) 
 					: m_renderTime(0.0f)
 					, m_lastRenderTime(0.0f)
 					, m_clearColour(sc_colourBlack)
@@ -81,6 +81,21 @@ public:
 					, m_updateTimer(0.0f) 
 	{ 
 		m_shaderPath[0] = '\0'; 
+
+		for (int i = 0; i < RenderLayer::Count; ++i)
+		{
+			m_tris[i] = NULL;
+			m_quads[i] = NULL;
+			m_lines[i] = NULL;
+			m_models[i] = NULL;
+			m_fontChars[i] = NULL;
+			m_triCount[i] = 0;
+			m_quadCount[i] = 0;
+			m_lineCount[i] = 0;
+			m_modelCount[i] = 0;
+			m_fontCharCount[i] = 0;
+		}
+
 		for (int i = 0; i < RenderStage::Count; ++i)
 		{
 			m_frameBuffers[i] = 0;

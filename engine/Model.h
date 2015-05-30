@@ -312,7 +312,7 @@ private:
 
 		// Storage for material file reading progress
 		char materialFilePath[StringUtils::s_maxCharsPerLine];
-		strcpy(materialFilePath, a_modelFilePath);
+		strncpy(materialFilePath, a_modelFilePath, StringUtils::s_maxCharsPerLine);
 		StringUtils::TrimFileNameFromPath(materialFilePath);
 
 		// Read one object at a time

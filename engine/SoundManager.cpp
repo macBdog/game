@@ -79,7 +79,12 @@ bool SoundManager::PlaySound(const char * a_soundName) const
 		{
 			sprintf(soundNameBuf, "%s", a_soundName);
 		}
-		return m_engine->play2D(soundNameBuf, false) != NULL;
+		if (irrklang::ISound * soundHandle = m_engine->play2D(soundNameBuf, false))
+		{
+			// Not holding on to the reference for any reason so destruct it right away
+			soundHandle->drop();
+			return true;
+		}
 	}
 	return false;
 }
@@ -100,14 +105,20 @@ bool SoundManager::PlayMusic(const char * a_musicName)
 		}
 
 		// Insert the sound into the list of playing sounds so the music can be managed
-		irrklang::ISound * soundHandle = m_engine->play2D(musicNameBuf, true, false, true);
-		PlayingSoundInfo * newInfo = new PlayingSoundInfo();
-		strcpy(newInfo->m_name, a_musicName);
-		newInfo->m_handle = soundHandle;
-		SoundNode * newInfoNode = new SoundNode();
-		newInfoNode->SetData(newInfo);
-		m_music.Insert(newInfoNode);
-		return true;
+		if (irrklang::ISound * soundHandle = m_engine->play2D(musicNameBuf, true, false, true))
+		{
+			PlayingSoundInfo * newInfo = new PlayingSoundInfo();
+			strncpy(newInfo->m_name, a_musicName, StringUtils::s_maxCharsPerName);
+			newInfo->m_handle = soundHandle;
+			SoundNode * newInfoNode = new SoundNode();
+			newInfoNode->SetData(newInfo);
+			m_music.Insert(newInfoNode);
+			return true;
+		}
+		else
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Could not play music named %s.", musicNameBuf);
+		}
 		
 	}
 	return false;
@@ -126,6 +137,7 @@ bool SoundManager::SetMusicVolume(const char * a_musicName, float a_newVolume)
 			if (irrklang::ISound * soundHandle = curInfo->m_handle)
 			{
 				soundHandle->setVolume(a_newVolume);
+				return true;
 			}
 		}
 		
@@ -152,6 +164,7 @@ void SoundManager::StopAllSoundsAndMusic()
 			if (irrklang::ISound * soundHandle = cur->GetData()->m_handle)
 			{
 				soundHandle->drop();
+				cur->GetData()->m_handle = NULL;
 			}
 
 			m_music.Remove(cur);

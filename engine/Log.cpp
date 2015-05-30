@@ -67,6 +67,9 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
 	else // Something is horribly wrong
 	{
 		printf("FATAL ERROR! Memory allocation failed in Log::Write.");
+		free(formatString);
+		free(finalString);
+		va_end(formatArgs);
 		return;
 	}
 	va_end(formatArgs);

@@ -434,7 +434,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	}
 	else // Just copy chars over from LUA string
 	{
-		strcpy(templatePath, templateName);
+		strncpy(templatePath, templateName, StringUtils::s_maxCharsPerName);
 	}
 
 	// Get the scene to add to if specified
@@ -948,10 +948,17 @@ int ScriptManager::SetMusicVolume(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
 		const char * musicName = lua_tostring(a_luaState, 1);
 		float newVolume = (float)lua_tonumber(a_luaState, 2);
-		if (musicName != NULL)
+		if (newVolume >= 0.0f && newVolume <= 1.0f)
 		{
-			SoundManager::Get().SetMusicVolume(musicName, newVolume);
-			return 0;
+			if (musicName != NULL)
+			{
+				SoundManager::Get().SetMusicVolume(musicName, newVolume);
+				return 0;
+			}
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetMusicVolume", "cannot set volume to a value less than 0 or greater than 1.");
 		}
 	}
 	else

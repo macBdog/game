@@ -270,14 +270,38 @@ public:
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
 	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
 	inline void SetFontSize(float a_newSize) { m_fontSize = a_newSize; }
-	inline void SetName(const char * a_name) { sprintf(m_name, "%s", a_name); }
-	inline void SetText(const char * a_text) { sprintf(m_text, "%s", a_text); }
-	inline void SetFilePath(const char * a_path) { sprintf(m_filePath, "%s", a_path); }
+	inline void SetName(const char * a_name) 
+	{ 
+		if (a_name) 
+		{ 
+			strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); 
+		} 
+	}
+	inline void SetText(const char * a_text)
+	{
+		if (a_text)
+		{
+			strncpy(m_text, a_text, StringUtils::s_maxCharsPerLine);
+		}
+	}
+	inline void SetFilePath(const char * a_path)
+	{
+		if (a_path)
+		{
+			strncpy(m_filePath, a_path, StringUtils::s_maxCharsPerLine);
+		}
+	}
+	inline void SetScriptFuncName(const char * a_scriptName)
+	{
+		if (a_scriptName)
+		{
+			strncpy(m_scriptFuncName, a_scriptName, StringUtils::s_maxCharsPerName);
+		}
+	}
 	inline void SetSelectFlags(SelectionFlags::Enum a_flags) { m_selectFlags = a_flags; }
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
-	inline void SetScriptFuncName(const char * a_scriptName) { strncpy(m_scriptFuncName, a_scriptName, strlen(a_scriptName) + 1); }
 	void SetAlignTo(Widget * a_alignWidget);
 	void SetAlignTo(const char * a_alignWidgetName);
 	void ClearAlignTo();

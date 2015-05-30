@@ -1519,6 +1519,8 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 
 	if (vertexSource == NULL || fragmentSource == NULL)
 	{
+		free(vertexSource);
+		free(fragmentSource);
 		Log::Get().WriteEngineErrorNoParams("Memory allocation failed in loading shaders!");
 		return false;
 	}
