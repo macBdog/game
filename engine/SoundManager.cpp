@@ -12,7 +12,7 @@ const float SoundManager::s_updateFreq = 1.0f;
 bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack)
 {
 	// start the sound engine with default parameters
-    if (m_engine = irrklang::createIrrKlangDevice())
+	if (m_engine = irrklang::createIrrKlangDevice(irrklang::ESOD_AUTO_DETECT))
     {
 		// Cache off path and look for sounds to load
 		strncpy(m_soundPath, a_soundPath, sizeof(char) * strlen(a_soundPath) + 1);
@@ -21,7 +21,7 @@ bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack
 		{
 			// Populate a list of sounds
 			DataPack::EntryList soundEntries;
-			a_dataPack->GetAllEntries(".flac,.mp3,.wav", soundEntries);
+			a_dataPack->GetAllEntries(".ogg,.wav", soundEntries);
 			DataPack::EntryNode * curNode = soundEntries.GetHead();
 
 			// Load each font in the pack
@@ -105,7 +105,7 @@ bool SoundManager::PlayMusic(const char * a_musicName)
 		}
 
 		// Insert the sound into the list of playing sounds so the music can be managed
-		if (irrklang::ISound * soundHandle = m_engine->play2D(musicNameBuf, true, false, true))
+		if (irrklang::ISound * soundHandle = m_engine->play2D(musicNameBuf, true, false, true, irrklang::ESM_AUTO_DETECT, true))
 		{
 			PlayingSoundInfo * newInfo = new PlayingSoundInfo();
 			strncpy(newInfo->m_name, a_musicName, StringUtils::s_maxCharsPerName);
