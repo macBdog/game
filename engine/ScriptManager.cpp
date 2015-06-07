@@ -8,6 +8,7 @@
 #include "DebugMenu.h"
 #include "InputManager.h"
 #include "LuaScript.h"
+#include "OculusManager.h"
 #include "WorldManager.h"
 #include "SoundManager.h"
 #include "TextureManager.h"
@@ -37,6 +38,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"DisableMouse", GUIDisableMouse},
 	{"GetMouseClipPosition", GUIGetMouseClipPosition},
 	{"GetMouseScreenPosition", GUIGetMouseScreenPosition},
+	{"GetMouseDirection", GUIGetMouseDirection},
 	{NULL, NULL}
 };
 
@@ -106,6 +108,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "Quit", Quit);
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
+		lua_register(m_globalLua, "IsVR", IsVR);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "IsGamePadConnected", IsGamePadConnected);
 		lua_register(m_globalLua, "IsGamePadButtonDown", IsGamePadButtonDown);
@@ -525,6 +528,22 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 		lua_pushnil(a_luaState);
 		return 1;
 	}
+}
+
+int ScriptManager::IsVR(lua_State * a_luaState)
+{
+	bool keyIsDown = false;
+	if (lua_gettop(a_luaState) == 0)
+	{
+		return OculusManager::Get().IsInitialised();
+	}
+	else
+	{
+		LogScriptError(a_luaState, "IsVR", "expects no parameters.");
+	}
+
+	lua_pushboolean(a_luaState, keyIsDown);
+	return 1; // One bool returned
 }
 
 int ScriptManager::IsKeyDown(lua_State * a_luaState)
@@ -1449,6 +1468,15 @@ int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
 	const Vector2 mousePos = inMan.GetMousePosAbsolute();
 	lua_pushnumber(a_luaState, mousePos.GetX());
 	lua_pushnumber(a_luaState, mousePos.GetY());
+	return 2;
+}
+
+int ScriptManager::GUIGetMouseDirection(lua_State * a_luaState)
+{
+	InputManager & inMan = InputManager::Get();
+	const Vector2 mouseDir = inMan.GetMouseDirection();
+	lua_pushnumber(a_luaState, mouseDir.GetX());
+	lua_pushnumber(a_luaState, mouseDir.GetY());
 	return 2;
 }
 

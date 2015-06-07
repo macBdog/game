@@ -28,7 +28,8 @@ bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack
 			bool loadSuccess = true;
 			while (curNode != NULL)
 			{
-				// TODO
+				DataPackEntry * curData = curNode->GetData();
+				m_engine->addSoundSourceFromMemory(curData->m_data, curData->m_size, curData->m_path, false);
 				curNode = curNode->GetNext();
 			}
 

@@ -43,8 +43,9 @@ MoveCamera(x, y, z)
 RotateCamera(x, y, z)
 NewScene("newSceneName")
 SetScene("existingSceneName")
+bool = IsVR()
 bool = IsKeyDown(keyCodes.character)
-bool = IsGamePadConnected(padId)
+bool = IsGamePadConnected(padId) -- First gamepad ID is 0
 bool = IsGamePadButtonDown(padId, buttonId)
 bool = IsMouseLeftButtonDown()
 bool = IsMouseRightButtonDown()
@@ -75,6 +76,7 @@ GUI:EnableMouse()
 GUI:DisableMouse()
 mousePosClipSpaceX, mousePosClipSpaceY = GUI:GetMouseClipPosition()
 mousePosPixelsX, mousePosPixelsY = GUI:GetMouseScreenPosition()
+mouseDirX, mouseDirY = GUI:GetMouseDirection()
 
 GameObject Functions
 --------------------

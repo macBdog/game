@@ -63,6 +63,10 @@ bool InputManager::Shutdown()
 
 bool InputManager::Update(float a_dt)
 {
+	// Reset the mouse direction every frame
+	m_mouseDir.SetX(0.0f);
+	m_mouseDir.SetY(0.0f);
+
 	// Check for new gamepads and enable them
 	m_gamePadCheckTimer += a_dt;
 	if (m_gamePadCheckTimer >= s_gamePadCheckTime)
@@ -181,6 +185,8 @@ bool InputManager::EventPump(const SDL_Event & a_event)
 		// Mouse events
 		case SDL_MOUSEMOTION:
 		{
+			m_mouseDir.SetX((float)a_event.motion.xrel);
+			m_mouseDir.SetY((float)a_event.motion.yrel);
 			m_mousePos.SetX((float) a_event.motion.x);
 			m_mousePos.SetY((float) a_event.motion.y);
 			break;
@@ -252,7 +258,7 @@ void InputManager::SetFocus(bool a_focus)
 	}
 }
 
-Vector2 InputManager::GetMousePosRelative()
+Vector2 InputManager::GetMousePosRelative() const
 {
 	// Convert from screen space to container space
 	RenderManager & renderMan = RenderManager::Get();

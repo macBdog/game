@@ -49,6 +49,7 @@ public:
 		: m_focus(true)
 		, m_fullScreen(false)
 		, m_mousePos(0.0f)
+		, m_mouseDir(0.0f)
 		, m_lastKeyPress(SDLK_CLEAR)
 		, m_lastKeyRelease(SDLK_CLEAR)
 		, m_numGamepads(0)
@@ -86,7 +87,8 @@ public:
 	//\brief Access for the mouse coords for any part in the engine
 	inline Vector2 GetMousePosAbsolute() const { return m_mousePos; }
 	inline void SetMousePosAbsolute(const Vector2 & a_newPos) { m_mousePos = a_newPos; }
-	Vector2 GetMousePosRelative();
+	Vector2 GetMousePosRelative() const;
+	inline Vector2 GetMouseDirection() const { return m_mouseDir; }
 	void SetMousePosRelative(const Vector2 & a_newPos);
 	inline void DisableMouseInput() { m_mouseEnabled = false; }
 	inline void EnableMouseInput() { m_mouseEnabled = true; }
@@ -252,6 +254,7 @@ private:
 	bool m_mouseEnabled;													///< If the mouse is enabled for input processing
 	float m_gamePadCheckTimer;												///< Timer to check for new plugged in gamepads
 	Vector2 m_mousePos;														///< Cache of mouse coords for convenience
+	Vector2 m_mouseDir;														///< Cache of mouse motion relative input
 	SDL_Keycode m_lastKeyPress;												///< Cache off last key for convenience
 	SDL_Keycode m_lastKeyRelease;											///< Cache off last key for convenience
 	SDL_Keycode m_depressedKeys[s_maxDepressedKeys];						///< List of all the keys that are depressed 
