@@ -101,4 +101,12 @@ bool = myGameObject:HasCollisions()
 {} = myGameObject:GetCollisions()
 myGameObject:PlayAnimation("AnimationName")
 myGameObject:Destroy()
+
+Render Functions
+----------------
+Render:SetShader("ShaderName")
+Render:SetShaderData(r, g, b, a)
+Render:Quad(topLeft, topRight, bottomRight, bottomLeft, "textureName")
+Render:Tri(point)
+
 ]]

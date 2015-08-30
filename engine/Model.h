@@ -567,7 +567,7 @@ private:
 							}
 							else
 							{
-								Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Model file %s contains faces that have not been unwrapped!", a_modelFilePath);
+								Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Model file %s contains faces that have not been unwrapped!", a_modelFilePath);
 							}
 						}
 						lastReadOffset = a_input.tellg();

@@ -79,6 +79,15 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{NULL, NULL}
 };
 
+// Registration of render functions
+const luaL_Reg ScriptManager::s_renderFuncs[] = {
+	{ "SetShader", RenderSetShader },
+	{ "SetShaderData", RenderSetShaderData },
+	{ "Quad", RenderQuad },
+	{ "Tri", RenderTri },
+	{ NULL, NULL }
+};
+
 bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPack)
 {
 	// As this method is called when scripts reload, make sure the global state is dead
@@ -153,6 +162,11 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		luaL_setfuncs(m_globalLua, s_gameObjectFuncs, 0);
 		lua_setglobal(m_globalLua, "GameObject");
 
+		// Register C++ functions available on the global Render table
+		lua_newtable(m_globalLua);
+		luaL_setfuncs(m_globalLua, s_renderFuncs, 0);
+		lua_setglobal(m_globalLua, "Render");
+		
 		// Register metatable for user data in registry
 		luaL_newmetatable(m_globalLua, "GameObject.Registry");
 		lua_pushstring(m_globalLua, "__index");
@@ -2141,5 +2155,37 @@ int ScriptManager::DestroyGameObject(lua_State * a_luaState)
 	{
 		LogScriptError(a_luaState, "Destroy", "expects no parameters.");
 	}
+	return 0;
+}
+
+int ScriptManager::RenderSetShader(lua_State * a_luaState)
+{
+	return 0;
+}
+
+int ScriptManager::RenderSetShaderData(lua_State * a_luaState)
+{
+	return 0;
+}
+
+int ScriptManager::RenderQuad(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 6)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		Vector p1((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3));
+		Vector p2((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
+		RenderManager::Get().AddDebugLine(p1, p2);
+	}
+	return 0;
+}
+
+int ScriptManager::RenderTri(lua_State * a_luaState)
+{
 	return 0;
 }

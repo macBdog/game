@@ -51,9 +51,10 @@ private:
 
 	static const float s_updateFreq;							///< How often the script manager should check for script updates
 	static const char * s_mainScriptName;						///< Constant name of the main game script file
-	static const luaL_Reg s_guiFuncs[];							///< Constant array of functions registered for for the GUI global
-	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global
+	static const luaL_Reg s_guiFuncs[];							///< Constant array of functions registered for for the GUI global table
+	static const luaL_Reg s_gameObjectFuncs[];					///< Constant array of functions registered for for the GameObject global table
 	static const luaL_Reg s_gameObjectMethods[];				///< Constant array of functions registered for game object members
+	static const luaL_Reg s_renderFuncs[];						///< Constant array of functions registered for for the Render global table
 
 	//\brief Print out an error for the script user with line number and file name
 	//\param a_luaState the LUA state that created the error
@@ -159,6 +160,12 @@ private:
 	static int GetGameObjectCollisions(lua_State * a_luaState);
 	static int PlayGameObjectAnimation(lua_State * a_luaState);
 	static int DestroyGameObject(lua_State * a_luaState);
+
+	//brief LUA versions of render manager functions
+	static int RenderSetShader(lua_State * a_luaState);
+	static int RenderSetShaderData(lua_State * a_luaState);
+	static int RenderQuad(lua_State * a_luaState);
+	static int RenderTri(lua_State * a_luaState);
 
 	//\brief A managed script stores info critical to the hot reloading of scripts
 	struct ManagedScript
