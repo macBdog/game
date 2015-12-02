@@ -117,6 +117,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 	FontListNode * curFont = m_fonts.GetHead();
 	RenderManager & renderMan = RenderManager::Get();
 	const float viewAspect = renderMan.GetViewAspect();
+	const char newLine = 10;
 	while(curFont != NULL)
 	{
 		if (curFont->GetData()->m_fontName == a_fontNameHash)
@@ -133,33 +134,43 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 			unsigned int textLength = strlen(a_string);
 			for (unsigned int j = 0; j < textLength; ++j)
 			{
-				// Safety check for unexported characters
-				const FontChar & curChar = font->m_chars[(int)a_string[j]];
-				if (curChar.m_width > 0 || curChar.m_height > 0)
-				{ 
-					// Do not add a quad for a space
-					if (a_string[j] != ' ') 
-					{
-						float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX());
-						float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
-						float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
-
-						// Align font chars 2D vs 3D
-						if (is2D)
-						{
-							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, yPos, 0.0f), a_colour);
-						}
-						else
-						{
-							zPos = a_pos.GetZ() - (curChar.m_yoffset / font->m_sizeY);
-							renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId3D, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
-						}
-					}
-					xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
+				// Handle newline first
+				if (a_string[j] == newLine)
+				{
+					xAdvance = 0.0f;
+					const FontChar & defaultChar = font->m_chars[64];
+					a_pos.SetY(a_pos.GetY() - (defaultChar.m_height / font->m_sizeY) * sizeWithAspect.GetY());
 				}
 				else
 				{
-					Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Unexported font glyph for character.");
+					// Safety check for unexported characters
+					const FontChar & curChar = font->m_chars[(int)a_string[j]];
+					if (curChar.m_width > 0 || curChar.m_height > 0)
+					{ 
+						// Do not add a quad for a space
+						if (a_string[j] != ' ') 
+						{
+							float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX());
+							float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
+							float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
+
+							// Align font chars 2D vs 3D
+							if (is2D)
+							{
+								renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, yPos, 0.0f), a_colour);
+							}
+							else
+							{
+								zPos = a_pos.GetZ() - (curChar.m_yoffset / font->m_sizeY);
+								renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId3D, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+							}
+						}
+						xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
+					}
+					else
+					{
+						Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Unexported font glyph for character.");
+					}
 				}
 			}
 			return true;

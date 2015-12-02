@@ -49,7 +49,6 @@ bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
 		// Cache off the datapack path for loading models from pack
 		m_dataPack = a_dataPack;
 
-
 		// Populate a list of objects
 		DataPack::EntryList objEntries;
 		a_dataPack->GetAllEntries(".obj", objEntries);
