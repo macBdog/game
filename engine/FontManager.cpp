@@ -182,6 +182,63 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 	return false;
 }
 
+bool FontManager::MeasureString2D(const char * a_string, unsigned int a_fontNameHash, float a_size, float & a_width, float & a_height)
+{
+	a_width = 0;
+	a_height = 0;
+
+	FontListNode * curFont = m_fonts.GetHead();
+	RenderManager & renderMan = RenderManager::Get();
+	const float viewAspect = renderMan.GetViewAspect();
+	const char newLine = 10;
+	while(curFont != NULL)
+	{
+		if (curFont->GetData()->m_fontName == a_fontNameHash)
+		{
+			// Draw each character in the string
+			Font * font = curFont->GetData();
+			a_size *= (float)font->m_sizeX / (float)s_maxFontTexSize;
+			const Vector2 sizeWithAspect = Vector2(a_size, a_size);
+			float xAdvance = 0.0f;
+			
+			// Calculate a scaling ratio for the font to match the requested pixel size, font size limit is 1 meg
+			const Vector2 sizeRatio(sizeWithAspect.GetX() / font->m_sizeX / viewAspect, a_size / font->m_sizeY);
+
+			const FontChar & defaultChar = font->m_chars[64];
+			const float lineHeight = (defaultChar.m_height / font->m_sizeY) * sizeWithAspect.GetY();
+			a_height = lineHeight + defaultChar.m_height * sizeRatio.GetY();
+
+			unsigned int textLength = strlen(a_string);
+			for (unsigned int j = 0; j < textLength; ++j)
+			{
+				// Handle newline first
+				if (a_string[j] == newLine)
+				{
+					xAdvance = 0.0f;
+					a_height += lineHeight;
+				}
+				else
+				{
+					// Safety check for unexported characters
+					const FontChar & curChar = font->m_chars[(int)a_string[j]];
+					if (curChar.m_width > 0 || curChar.m_height > 0)
+					{ 
+						xAdvance += curChar.m_xadvance * sizeRatio.GetX();
+						if (xAdvance > a_width)
+						{
+							a_width = xAdvance + (curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX();
+						}
+					}
+				}
+			}
+			return true;
+		}
+		curFont = curFont->GetNext();
+	}
+
+	// Could not find the font to measure with
+	return false;
+}
 
 bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {

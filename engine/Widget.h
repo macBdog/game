@@ -181,6 +181,8 @@ public:
 		, m_alwaysRender(false)
 		, m_selectedListItemId(-1)
 		, m_rolloverListItemId(-1)
+		, m_textWidth(-1.0f)
+		, m_textHeight(-1.0f)
 	{
 		m_name[0] = '\0';
 		m_alignToName[0] = '\0';
@@ -268,8 +270,8 @@ public:
 	inline void SetSize(Vector2 a_size) { m_size = a_size; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
-	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; }
-	inline void SetFontSize(float a_newSize) { m_fontSize = a_newSize; }
+	inline void SetFontName(unsigned int a_fontNameHash) { m_fontNameHash = a_fontNameHash; m_textWidth = -1.0f; m_textHeight = -1.0f; }
+	inline void SetFontSize(float a_newSize) { m_fontSize = a_newSize; m_textWidth = -1.0f; m_textHeight = -1.0f; }
 	inline void SetName(const char * a_name) 
 	{ 
 		if (a_name) 
@@ -282,6 +284,8 @@ public:
 		if (a_text)
 		{
 			strncpy(m_text, a_text, StringUtils::s_maxCharsPerLine);
+			m_textWidth = -1.0f;
+			m_textHeight = -1.0f;
 		}
 	}
 	inline void SetFilePath(const char * a_path)
@@ -312,6 +316,8 @@ public:
 	inline WidgetVector GetSize() const { return m_size; }
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetText() const { return m_text; }
+	inline float GetTextWidth() { if (m_textWidth < 0.0) { MeasureText(); } return m_textWidth; }
+	inline float GetTextHeight() { if (m_textHeight < 0.0) { MeasureText(); } return m_textHeight; }
 	inline const char * GetFilePath() const { return m_filePath; }
 	inline float GetFontSize() const { return m_fontSize; }
 	inline Colour GetColour() const { return m_colour; }
@@ -372,6 +378,9 @@ private:
 	//\param a_alignParent the widget to align the position to
 	//\return A vector2 with the coordinate in relative sapce (-1 to +1)
 	Vector2 GetPositionRelative(Widget * a_alignParent);
+	
+	///\brief Refresh the internal text width and height values, called only when text properties change
+	inline void MeasureText() { FontManager::Get().MeasureString2D(m_text, m_fontNameHash, m_fontSize, m_textWidth, m_textHeight); }
 
 	WidgetVector m_size;				///< How much of the parent container the element takes up
 	WidgetVector m_pos;					///< Where in the parent container the element resides
@@ -394,6 +403,8 @@ private:
 	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
 	char m_scriptFuncName[StringUtils::s_maxCharsPerName];	///< The name of the global LUA script to call on activation
 	char m_text[StringUtils::s_maxCharsPerLine];			///< Text for drawing labels and buttons
+	float m_textWidth;										///< How wide the text in the current font is
+	float m_textHeight;										///< How high the text in the current font is
 	char m_filePath[StringUtils::s_maxCharsPerLine];		///< Path for loading and saving, only menus should have this property
 	LinkedList<StringHash> m_listItems;						///< Any string items that belong to this widget for lists and combo boxes
 	int m_rolloverListItemId;								///< Which item is currently being rolled over, negative for none

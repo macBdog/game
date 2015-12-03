@@ -1036,8 +1036,11 @@ bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_p
 		if (m_scriptDebugWidgets[i] != NULL && !m_scriptDebugWidgets[i]->IsActive())
 		{
 			m_scriptDebugWidgets[i]->SetText(a_text);
-			m_scriptDebugWidgets[i]->SetOffset(WidgetVector(a_posX, a_posY - (i*0.5f*m_scriptDebugWidgets[i]->GetSize().GetY())));
 			m_scriptDebugWidgets[i]->SetActive(true);
+			const WidgetVector boxSize = WidgetVector(m_scriptDebugWidgets[i]->GetTextWidth(), m_scriptDebugWidgets[i]->GetTextHeight());
+			const WidgetVector boxPos = WidgetVector(a_posX, a_posY - (i*0.5f*m_scriptDebugWidgets[i]->GetSize().GetY()));
+			m_scriptDebugWidgets[i]->SetOffset(boxPos);
+			m_scriptDebugWidgets[i]->SetSize(boxSize);
 			return true;
 		}
 	}
