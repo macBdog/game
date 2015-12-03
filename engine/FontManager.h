@@ -85,6 +85,12 @@ private:
 	//\brief Info about a font and a group of all the character info
 	struct Font
 	{
+		Font() 
+			: m_texture(NULL)
+			, m_numChars(0)
+			, m_sizeX(0)
+			, m_sizeY(0)
+		{}
 		StringHash	m_fontName;
 		FontChar	m_chars[s_maxCharsPerFont];
 		Texture *	m_texture;
@@ -96,6 +102,9 @@ private:
 	//\brief Alias to store a list of fonts for drawing
 	typedef LinkedListNode<Font> FontListNode;
 	typedef LinkedList<Font> FontList;
+
+	//\brief Load the font as an include file so the engine is not dependant on external files to draw messages to the screen
+	bool LoadDefaultFont(const char * a_fontDefinition);
 
 	//\brief Load a font for use in drawing to the screen. Assumes a texture adjacent to config file.
 	//\param a_fontConfigFilePath path to the config file specifying glyph numbers and widths
@@ -213,6 +222,7 @@ private:
 	
 	char m_fontPath[StringUtils::s_maxCharsPerLine];	///< Cache off path to fonts
 	FontList m_fonts;									///< Storage for all fonts that are available for drawing
+	Texture m_defaultFontTexture;						///< Pointer to a texture in memory loaded from an inc file
 };
 
 

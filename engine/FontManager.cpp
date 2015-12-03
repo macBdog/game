@@ -7,6 +7,9 @@
 
 #include "FontManager.h"
 
+#include "Font\default.fnt.inc"
+#include "Font\default.tga.inc"
+
 using namespace std;	//< For fstream operations
 
 template<> FontManager * Singleton<FontManager>::s_instance = NULL;
@@ -21,6 +24,9 @@ bool FontManager::Startup(const char * a_fontPath)
 	{
 		return false;
 	}
+
+	// First font loaded should be the default from include files
+	LoadDefaultFont(defaultFontDefinition);
 
 	// Populate a list of font configuration files
 	FileManager::FileList fontFiles;
@@ -57,6 +63,9 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 	{
 		return false;
 	}
+
+	// First font loaded should be the default from include files
+	LoadDefaultFont(defaultFontDefinition);
 
 	// Cache off the font path as textures are relative to fonts
 	char fontFilePath[StringUtils::s_maxCharsPerLine];
@@ -327,5 +336,103 @@ StringHash * FontManager::GetDebugFontName()
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot find a debug font to draw with! Only hope now is reading stdout!");
 		return NULL;
 	}
-	
+}
+
+bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
+{
+	// Create a new font to be managed
+	RenderManager & renMan = RenderManager::Get();
+	FontListNode * newFontNode = new FontListNode();
+	newFontNode->SetData(new Font());
+	Font * newFont = newFontNode->GetData();
+
+	// Assign preloaded texture and add as the first in the list
+	if (m_defaultFontTexture.LoadFromMemory((void*)&defaultFontTextureBuffer, defaultFontTextureBufferLength, true))
+	{
+		newFont->m_texture = &m_defaultFontTexture;
+	}
+	else
+	{
+		return false;
+	}
+
+	// Font metadata
+	unsigned int numChars = 0;
+	unsigned int sizeW = 0;
+	unsigned int sizeH = 0;
+	unsigned int lineHeight, base, pages;
+
+	// Get the number of chars to parse
+	const char * delimeter = "\n";
+	const int fontStringSize = strlen(a_fontDefinition);
+	char * mutableFont = (char *)malloc(sizeof(char) * fontStringSize + 1);
+	if (mutableFont != NULL)
+	{
+		memcpy(mutableFont, a_fontDefinition, sizeof(char) * fontStringSize);
+		char * line = strtok(mutableFont, delimeter);
+		int lineCount = 0;
+		while (line != NULL)
+		{
+			if (lineCount == 0)	// info face="fontname" etc
+			{
+				char shortFontName[StringUtils::s_maxCharsPerLine];
+				sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "'", 1), true));
+				newFont->m_fontName.SetCString(shortFontName);
+			}
+			else if (lineCount == 1) // common lineHeight=x base=33	
+			{
+				sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
+				&lineHeight, &base, &sizeW, &sizeH, &pages);
+				newFont->m_sizeX = sizeW;
+				newFont->m_sizeY = sizeH;
+			}
+			else if (lineCount == 2)
+			{
+			}
+			else if (lineCount == 3) // chars count=x
+			{
+				sscanf_s(line, "chars count=%d", &numChars);
+				newFont->m_numChars = numChars;
+			}
+			else
+			{
+				// Go through each char in the file loading metadata
+				for (unsigned int i = 0; i < numChars; ++i)
+				{
+					int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
+					sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d",
+						&charId, &x, &y, &width, &height, &xoffset, &yoffset, &xadvance, &page, &chnl);
+					FontChar & curChar = newFont->m_chars[charId];
+					curChar.m_x = (float)x;
+					curChar.m_y = (float)y;
+					curChar.m_width = (float)width;
+					curChar.m_height = (float)height;
+					curChar.m_xoffset = (float)xoffset;
+					curChar.m_yoffset = (float)yoffset;
+					curChar.m_xadvance = (float)xadvance;
+
+					// This is the glyph size as a ratio of the texture size
+					Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
+					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
+
+					// Used to generate the position of the character within the texture
+					TexCoord texSize(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
+					TexCoord texCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
+
+					// Generate a display list for each character in the font in 2D
+					newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
+					newFont->m_chars[charId].m_displayListId3D = renMan.RegisterFontChar3D(charSize, texCoord, texSize, newFont->m_texture);
+					line = strtok(NULL, delimeter);
+				}
+				break;
+			}
+			line = strtok(NULL, delimeter);
+			++lineCount;
+		}	
+
+		// Clean up and add font to DB
+		free(mutableFont);
+		m_fonts.Insert(newFontNode);
+	}
+	return false;
 }

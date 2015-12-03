@@ -64,6 +64,8 @@ GUI Functions
 -------------
 GUI:SetValue("widgetName", "value")
 string = GUI:GetValue("widgetName")
+GUI:SetFont("fontNameFromFntFile")
+GUI:SetFontSize(1.5)
 GUI:SetColour("widgetName", 1.0, 1.0, 1.0, 1.0)
 GUI:Show("widgetName")
 GUI:Hide("widgetName")

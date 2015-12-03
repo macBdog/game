@@ -66,6 +66,7 @@ bool DebugMenu::Startup()
 
 	Gui & gui = Gui::Get();
 	InputManager & inMan = InputManager::Get();
+	FontManager & fontMan = FontManager::Get();
 
 	// Create the debug menu functionality
 	m_commands.Startup();
@@ -128,11 +129,11 @@ bool DebugMenu::Startup()
 		curItem.m_colour = sc_colourWhite;
 		curItem.m_name = "ScriptDebugWidget";
 		curItem.m_fontSize = 2.0f;
+		curItem.m_fontNameHash = fontMan.GetDebugFontName()->GetHash();
 		if (m_scriptDebugWidgets[i] = gui.CreateWidget(curItem, gui.GetDebugRoot(), false))
 		{
 			m_scriptDebugWidgets[i]->SetDebugWidget();
 			m_scriptDebugWidgets[i]->SetActive(false);
-			m_scriptDebugWidgets[i]->SetDebugWidget();
 			m_scriptDebugWidgets[i]->SetAlwaysDraw();
 		}
 	}

@@ -112,6 +112,8 @@ private:
 
 	static int GUIGetValue(lua_State * a_luaState);
 	static int GUISetValue(lua_State * a_luaState);
+	static int GUISetFont(lua_State * a_luaState);
+	static int GUISetFontSize(lua_State * a_luaState);
 	static int GUISetColour(lua_State * a_luaState);
 	static int GUISetSize(lua_State * a_luaState);
 	static int GUISetScissor(lua_State * a_luaState);

@@ -24,6 +24,8 @@ const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant nam
 const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetValue", GUIGetValue},
 	{"SetValue", GUISetValue},
+	{"SetFont", GUISetFont},
+	{"SetFontSize", GUISetFontSize},
 	{"SetColour", GUISetColour},
 	{"SetSize", GUISetSize},
 	{"SetScissor", GUISetScissor},
@@ -1206,6 +1208,58 @@ int ScriptManager::GUISetValue(lua_State * a_luaState)
 	}
 
 	LogScriptError(a_luaState, "GUI:SetValue", "could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::GUISetFont(lua_State* a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TSTRING);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		const char * newFontName = lua_tostring(a_luaState, 3);
+		if (guiName != NULL && newFontName != NULL)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetFontName(StringHash(newFontName).GetHash());
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetFont", "expects 2 parameters: name of the element to set and the name of the font to set.");
+	}
+
+	LogScriptError(a_luaState, "GUI:SetFont", "could not find the GUI element to set a value on.");
+	return 0;
+}
+
+int ScriptManager::GUISetFontSize(lua_State* a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		const char * guiName = lua_tostring(a_luaState, 2);
+		const float newFontSize = (float)lua_tonumber(a_luaState, 3);
+		if (guiName != NULL && newFontSize > 0.0f)
+		{
+			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
+			{
+				foundElem->SetFontSize(newFontSize);
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GUI:SetFontSize", "expects 2 parameters: name of the element to set and a number for how big.");
+	}
+
+	LogScriptError(a_luaState, "GUI:SetFontSize", "could not find the GUI element to set a value on.");
 	return 0;
 }
 
