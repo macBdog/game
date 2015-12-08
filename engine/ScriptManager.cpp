@@ -218,6 +218,8 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		if (yieldResult != LUA_YIELD)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
+			Shutdown();
+			return false;
 		}
 
 		if (readFromDataPack)
@@ -312,40 +314,48 @@ bool ScriptManager::Update(float a_dt)
 
 		// Test all scripts for modification
 		ManagedScriptNode * next = m_managedScripts.GetHead();
-		while (next != NULL)
+		if (m_managedScripts.GetLength() == 0)
 		{
-			// Get a fresh timestampt and test it against the stored timestamp
-			FileManager::Timestamp curTimeStamp;
-			ManagedScript * curScript = next->GetData();
-			FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
-			if (curTimeStamp > curScript->m_timeStamp || m_forceReloadScripts)
+			// There are no scripts to manage, we must have bailed out while starting up, try again
+			Startup(m_scriptPath, NULL);
+		}
+		else
+		{
+			while (next != NULL)
 			{
-				if (m_forceReloadScripts)
+				// Get a fresh timestamp and test it against the stored timestamp
+				FileManager::Timestamp curTimeStamp;
+				ManagedScript * curScript = next->GetData();
+				FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
+				if (curTimeStamp > curScript->m_timeStamp || m_forceReloadScripts)
 				{
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Reloading scripts.");
+					if (m_forceReloadScripts)
+					{
+						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Reloading scripts.");
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
+					}
+
+					m_forceReloadScripts = false;
+					scriptsReloaded = true;
+					curScript->m_timeStamp = curTimeStamp;
+
+					// Clean up any script-owned objects
+					WorldManager::Get().DestroyAllScriptOwnedObjects();
+
+					// Stop any music that has been playing
+					SoundManager::Get().StopAllSoundsAndMusic();
+
+					// Kick the script VM in the guts
+					Shutdown();
+					Startup(m_scriptPath, NULL);
+					return true;
 				}
-				else
-				{
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
-				}
 
-				m_forceReloadScripts = false;
-				scriptsReloaded = true;
-				curScript->m_timeStamp = curTimeStamp;
-
-				// Clean up any script-owned objects
-				WorldManager::Get().DestroyAllScriptOwnedObjects();
-
-				// Stop any music that has been playing
-				SoundManager::Get().StopAllSoundsAndMusic();
-
-				// Kick the script VM in the guts
-				Shutdown();
-				Startup(m_scriptPath, NULL);
-				return true;
+				next = next->GetNext();
 			}
-
-			next = next->GetNext();
 		}
 	}
 
