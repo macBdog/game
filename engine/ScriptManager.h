@@ -156,6 +156,9 @@ private:
 	static int SetGameObjectActive(lua_State * a_luaState);
 	static int GetGameObjectSleeping(lua_State * a_luaState);
 	static int GetGameObjectActive(lua_State * a_luaState);
+	static int SetGameObjectDiffuseTexture(lua_State * a_luaState);
+	static int SetGameObjectNormalTexture(lua_State * a_luaState);
+	static int SetGameObjectSpecularTexture(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int TestGameObjectCollisions(lua_State * a_luaState);

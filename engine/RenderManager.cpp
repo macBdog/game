@@ -749,7 +749,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			// Draw each object of each model with it's own material
 			for (unsigned int k = 0; k < rm->m_model->GetNumObjects(); ++k)
 			{
-				Object * obj = rm->m_model->GetObject(k);
+				Object * obj = rm->m_model->GetObjectAtIndex(k);
 				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
 				shaderData.m_projectionMatrix = &a_perspectiveMat;
 				shaderData.m_viewMatrix = &a_viewMatrix;
@@ -1080,7 +1080,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	// If we have not generated buffers for this model
 	for (unsigned int i = 0; i < a_model->GetNumObjects(); ++i)
 	{
-		Object * obj = a_model->GetObject(i);
+		Object * obj = a_model->GetObjectAtIndex(i);
 		if (!obj->IsDisplayListGenerated())
 		{
 			// Alias model data

@@ -71,6 +71,9 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetActive", SetGameObjectActive},
 	{"IsSleeping", GetGameObjectSleeping},
 	{"IsActive", GetGameObjectActive},
+	{"SetDiffuseTexture", SetGameObjectDiffuseTexture},
+	{"SetNormalTexture", SetGameObjectNormalTexture},
+	{"SetSpecularTexture", SetGameObjectSpecularTexture},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"HasCollisions", TestGameObjectCollisions},
@@ -2064,6 +2067,147 @@ int ScriptManager::GetGameObjectActive(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, isActive);
 	return 1;
+}
+
+int ScriptManager::SetGameObjectDiffuseTexture(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			if (Model * model = gameObj->GetModel())
+			{
+				luaL_checktype(a_luaState, 2, LUA_TSTRING);
+				if (Texture * diffuseTex = TextureManager::Get().GetTexture(lua_tostring(a_luaState, 2), TextureCategory::Model))
+				{
+					const int objectCount = model->GetNumObjects();
+					for (int i = 0; i < objectCount; ++i)
+					{
+						if (Object * object = model->GetObjectAtIndex(i))
+						{
+							if (Material * mat = object->GetMaterial())
+							{
+								mat->SetDiffuseTexture(diffuseTex);
+							}
+						}
+					}
+				}
+				else // No texture
+				{
+					LogScriptError(a_luaState, "SetDiffuseTexture", "could not find the specified texture.");
+				}
+			}
+			else // No model
+			{
+				LogScriptError(a_luaState, "SetDiffuseTexture", "game object does not have a model.");
+			}
+			
+			gameObj->SetLifeTime((float)lua_tonumber(a_luaState, 2));
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetDiffuseTexture", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetDiffuseTexture", "expects 1 string parameter of the texture to set.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectNormalTexture(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			if (Model * model = gameObj->GetModel())
+			{
+				luaL_checktype(a_luaState, 2, LUA_TSTRING);
+				if (Texture * normalTex = TextureManager::Get().GetTexture(lua_tostring(a_luaState, 2), TextureCategory::Model))
+				{
+					const int objectCount = model->GetNumObjects();
+					for (int i = 0; i < objectCount; ++i)
+					{
+						if (Object * object = model->GetObjectAtIndex(i))
+						{
+							if (Material * mat = object->GetMaterial())
+							{
+								mat->SetNormalTexture(normalTex);
+							}
+						}
+					}
+				}
+				else // No texture
+				{
+					LogScriptError(a_luaState, "SetNormalTexture", "could not find the specified texture.");
+				}
+			}
+			else // No model
+			{
+				LogScriptError(a_luaState, "SetNormalTexture", "game object does not have a model.");
+			}
+
+			gameObj->SetLifeTime((float)lua_tonumber(a_luaState, 2));
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetNormalTexture", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetNormalTexture", "expects 1 string parameter of the texture to set.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectSpecularTexture(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			if (Model * model = gameObj->GetModel())
+			{
+				luaL_checktype(a_luaState, 2, LUA_TSTRING);
+				if (Texture * specTex = TextureManager::Get().GetTexture(lua_tostring(a_luaState, 2), TextureCategory::Model))
+				{
+					const int objectCount = model->GetNumObjects();
+					for (int i = 0; i < objectCount; ++i)
+					{
+						if (Object * object = model->GetObjectAtIndex(i))
+						{
+							if (Material * mat = object->GetMaterial())
+							{
+								mat->SetSpecularTexture(specTex);
+							}
+						}
+					}
+				}
+				else // No texture
+				{
+					LogScriptError(a_luaState, "SetSpecularTexture", "could not find the specified texture.");
+				}
+			}
+			else // No model
+			{
+				LogScriptError(a_luaState, "SetSpecularTexture", "game object does not have a model.");
+			}
+
+			gameObj->SetLifeTime((float)lua_tonumber(a_luaState, 2));
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetSpecularTexture", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetSpecularTexture", "expects 1 string parameter of the texture to set.");
+	}
+	return 0;
 }
 
 int ScriptManager::EnableGameObjectCollision(lua_State * a_luaState)

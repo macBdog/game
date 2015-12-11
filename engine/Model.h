@@ -286,7 +286,7 @@ public:
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetMaterialFileName() const { return m_materialFileName;  }
 	inline unsigned int GetNumObjects() const { return m_objects.GetLength(); }
-	inline Object * GetObject(unsigned int a_objectIndex) 
+	inline Object * GetObjectAtIndex(unsigned int a_objectIndex) 
 	{
 		ObjectNode * curObject = m_objects.GetHead();
 		for (unsigned int i = 0; i < a_objectIndex; ++i)
