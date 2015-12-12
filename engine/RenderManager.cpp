@@ -1081,6 +1081,14 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	for (unsigned int i = 0; i < a_model->GetNumObjects(); ++i)
 	{
 		Object * obj = a_model->GetObjectAtIndex(i);
+
+		// Check to see if the list has already been generated but needs to be torn down
+		if (obj->GetDisplayListId() > 0 && !obj->IsDisplayListGenerated())
+		{
+			glDeleteLists(obj->GetDisplayListId(), 1);
+		}
+
+		// Now regenerate the list
 		if (!obj->IsDisplayListGenerated())
 		{
 			// Alias model data

@@ -34,6 +34,13 @@ bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 
 	// Load texture data into memory and check if successful
 	ifstream textureFile(a_tgaFilePath, std::ios::binary);
+
+	// Make sure there was actually a file there
+	if (!textureFile.good())
+	{
+		return false;
+	}
+
 	textureFile.seekg(0, std::ios::end);
 	size_t textureSize = (size_t)textureFile.tellg();
 	textureFile.seekg(0, std::ios::beg);

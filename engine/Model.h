@@ -220,6 +220,7 @@ public:
 	inline bool IsDisplayListGenerated() const { return m_displayListGenerated; }
 	inline unsigned int GetDisplayListId() const { return m_displayListId; }
 	inline void SetDisplayListId(unsigned int a_displayListId) { m_displayListId = a_displayListId; m_displayListGenerated = true; }
+	inline void RegenerateDisplayList() { m_displayListGenerated = false; }
 	
 	//\brief Accessors for material data
 	inline void SetMaterial(Material * a_material) { m_material = a_material; }

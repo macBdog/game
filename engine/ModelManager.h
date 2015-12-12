@@ -74,7 +74,8 @@ private:
 	struct ManagedModel
 	{
 		Model  m_model;											///< The actual model
-		FileManager::Timestamp m_timeStamp;						///< Datestamp for checking a newer version
+		FileManager::Timestamp m_modelTimeStamp;				///< Datestamp for checking a newer version of the model
+		FileManager::Timestamp m_materialTimeStamp;				///< Datestamp for checking a newer version of the material
 		char m_path[StringUtils::s_maxCharsPerLine];			///< The full path for reloading
 	};
 

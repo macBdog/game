@@ -2089,6 +2089,7 @@ int ScriptManager::SetGameObjectDiffuseTexture(lua_State * a_luaState)
 							{
 								mat->SetDiffuseTexture(diffuseTex);
 							}
+							object->RegenerateDisplayList();
 						}
 					}
 				}
@@ -2136,6 +2137,7 @@ int ScriptManager::SetGameObjectNormalTexture(lua_State * a_luaState)
 							{
 								mat->SetNormalTexture(normalTex);
 							}
+							object->RegenerateDisplayList();
 						}
 					}
 				}
@@ -2183,6 +2185,7 @@ int ScriptManager::SetGameObjectSpecularTexture(lua_State * a_luaState)
 							{
 								mat->SetSpecularTexture(specTex);
 							}
+							object->RegenerateDisplayList();
 						}
 					}
 				}

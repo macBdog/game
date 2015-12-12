@@ -106,26 +106,26 @@ bool ModelManager::Update(float a_dt)
 
 		// Each model in the pool gets tested
 		ManagedModel * curModel = NULL;
-		while ( m_modelMap.GetNext(curModel) && curModel != NULL)
+		while (m_modelMap.GetNext(curModel) && curModel != NULL)
 		{
 			FileManager::Timestamp curModelTimestamp;
 			FileManager::Timestamp curMaterialTimestamp;
 			char materialPath[StringUtils::s_maxCharsPerLine];
 			sprintf(materialPath, "%s%s", m_modelPath, curModel->m_model.GetMaterialFileName());
-			bool modelNeedsReload = FileManager::Get().GetFileTimeStamp(curModel->m_path, curModelTimestamp) && curModelTimestamp > curModel->m_timeStamp;
-			bool materialNeedsReload = FileManager::Get().GetFileTimeStamp(materialPath, curMaterialTimestamp) && curMaterialTimestamp > curModel->m_timeStamp;
+			bool modelNeedsReload = FileManager::Get().GetFileTimeStamp(curModel->m_path, curModelTimestamp) && curModelTimestamp > curModel->m_modelTimeStamp;
+			bool materialNeedsReload = FileManager::Get().GetFileTimeStamp(materialPath, curMaterialTimestamp) && curMaterialTimestamp > curModel->m_materialTimeStamp;
 			if (modelNeedsReload || materialNeedsReload)
 			{
 				// Timestamp is new on either model or material, trigger a reload
 				if (modelNeedsReload)
 				{
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path);
-					curModel->m_timeStamp = curModelTimestamp;
+					curModel->m_modelTimeStamp = curModelTimestamp;
 				}
 				else
 				{
 					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in material %s, reloading.", materialPath);
-					curModel->m_timeStamp = curMaterialTimestamp;
+					curModel->m_materialTimeStamp = curMaterialTimestamp;
 				}
 
 				ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
@@ -194,8 +194,15 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 		}
 		else if (newModel->m_model.Load(fileNameBuf, mdp))
 		{
+			FileManager & fileMan = FileManager::Get();
 			modelLoaded = true;
-			FileManager::Get().GetFileTimeStamp(fileNameBuf, newModel->m_timeStamp);
+			fileMan.GetFileTimeStamp(fileNameBuf, newModel->m_modelTimeStamp);
+
+			// Also set the timestamp on the associated material. This is the only way to load materials so this is safe.
+			char materialFileNameBuf[StringUtils::s_maxCharsPerLine];
+			sprintf(materialFileNameBuf, "%s%s", m_modelPath, newModel->m_model.GetMaterialFileName());
+			fileMan.GetFileTimeStamp(materialFileNameBuf, newModel->m_materialTimeStamp);
+			
 			sprintf(newModel->m_path, "%s", fileNameBuf);
 			m_modelMap.Insert(modelId, newModel);
 
