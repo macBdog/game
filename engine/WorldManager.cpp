@@ -852,13 +852,10 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 					}
 				}
 
-				// Optionally add to physics world
-				if (GameFile::Property * physics = object->FindProperty("physics"))
+				// Support physics properties
+				if (GameFile::Property * massProp = object->FindProperty("physicsMass"))
 				{
-					if (physics->GetBool())
-					{
-						pMan.AddPhysicsObject(newGameObject);
-					}
+					newGameObject->SetPhysicsMass(massProp->GetFloat());
 				}
 
 				// All loading operations have completed

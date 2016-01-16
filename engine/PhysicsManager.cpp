@@ -331,9 +331,14 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 	btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
 	btQuaternion bodyRotation(0, 0, 0, 1);
 
-	// TODO activate physical properties like mass and intertia
+	// Activate physical properties mass and intertia
+	btVector3 startingInertia = btVector3(0, 0, 0);
 	btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
-	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collisionShape, btVector3(0,0,0));
+	
+	const float objectMass = a_gameObj->GetPhysicsMass();
+	collisionShape->calculateLocalInertia(objectMass, startingInertia);
+
+	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
 	btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
 	rigidBody->setUserPointer(a_gameObj);
 	phys->SetRigidBody(rigidBody);
@@ -351,21 +356,39 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 		return;
 	}
 
+	// Set the position of the game object and collision from the rigid body physics
 	PhysicsObject * phys = a_gameObj->GetPhysics();
-	const Quaternion gRot = a_gameObj->GetRot();
-	const btQuaternion rot(gRot.GetX(), gRot.GetY(), gRot.GetZ(), gRot.GetW());
-	const Vector gPos = a_gameObj->GetPos();
-	const btVector3 trans(gPos.GetX(), gPos.GetY(), gPos.GetZ());
-
-	btTransform newWorldTrans;
-	newWorldTrans.setIdentity();
-	newWorldTrans.setRotation(rot);
-	newWorldTrans.setOrigin(trans);
-	phys->GetCollisionObject()->setWorldTransform(newWorldTrans);
-
 	if (phys->HasRigidBody())
 	{
-		phys->GetRigidBody()->setWorldTransform(newWorldTrans);
+		// Get the origin and rotational information from the physics world
+		btTransform rbTrans = phys->GetRigidBody()->getWorldTransform();
+		btQuaternion rbRot = rbTrans.getRotation();
+		btVector3 rbRotAxis = rbRot.getAxis();
+		float rbRotAngle = rbRot.getAngle();
+		Quaternion gameObjRot(Vector(rbRotAxis.getX(), rbRotAxis.getY(), rbRotAxis.getZ()), rbRotAngle);
+
+		// Apply physics world transform to game object and collision state
+		Matrix gameObjMat = a_gameObj->GetWorldMat();
+		gameObjRot.ApplyToMatrix(gameObjMat);
+		gameObjMat.SetPos(Vector(rbTrans.getOrigin().getX(), rbTrans.getOrigin().getY(), rbTrans.getOrigin().getZ()));
+		a_gameObj->SetWorldMat(gameObjMat);
+		phys->GetCollisionObject()->setWorldTransform(rbTrans);
+	}
+	else // Or the other way around if this object is collision only
+	{
+		const Vector gPos = a_gameObj->GetPos();
+		const Quaternion gRot = a_gameObj->GetRot();
+		const btQuaternion rot(gRot.GetX(), gRot.GetY(), gRot.GetZ(), gRot.GetW());
+		const btVector3 trans(gPos.GetX(), gPos.GetY(), gPos.GetZ());
+
+		// Create a bullet transform that matches the game object's matrix
+		btTransform newWorldTrans;
+		newWorldTrans.setIdentity();
+		newWorldTrans.setRotation(rot);
+		newWorldTrans.setOrigin(trans);
+
+		// Set it on the physics and collision
+		phys->GetCollisionObject()->setWorldTransform(newWorldTrans);
 	}
 	ClearCollisions(a_gameObj);
 }

@@ -43,6 +43,10 @@ MoveCamera(x, y, z)
 RotateCamera(x, y, z)
 NewScene("newSceneName")
 SetScene("existingSceneName")
+SetLightAmbient(indexOfLightToModify, r, g, b, a)
+SetLightDiffuse(indexOfLightToModify, r, g, b, a)
+SetLightSpecular(indexOfLightToModify, r, g, b, a)
+SetLightPosition(indexOfLightToModify, x, y, z)
 bool = IsVR()
 bool = IsKeyDown(keyCodes.character)
 bool = IsGamePadConnected(padId) -- First gamepad ID is 0
@@ -54,11 +58,18 @@ x,y = GetGamePadRightStick(padId)
 f = GetGamePadLeftTrigger(padId)
 f = GetGamePadRightTrigger(padId)
 rayHitX, rayHitY, rayHitZ, rayNormX, rayNormY, rayNormZ, hitGameObj = GetRayCollision(rayStartX, rayStartY, rayStaryZ, rayEndX, rayEndZ, rayEndZ)
+PlaySound("fileNameInSoundFolder.wav")
+PlayMusic("loopingFileNameInSoundFolder.wav")
+SetMusicVolume("fileNameOfMusicThatsPlayer", 0.5)
+StopAllSoundsAndMusic()
+
+Debugging
+---------
 DebugPrint("A string to be displayed in a box on screen for one frame")
 DebugLog("A string to be printed into the log")
 DebugLine(x1, y1, z1, x2, y2, z2)
 DebugPoint(x, y, z, r, g, b)
-obj = GameObject:Create("templateName")
+
 
 GUI Functions
 -------------
@@ -82,6 +93,7 @@ mouseDirX, mouseDirY = GUI:GetMouseDirection()
 
 GameObject Functions
 --------------------
+obj = GameObject:Create("templateName")
 i = myGameObject:GetId()
 string = myGameObject:GetName()
 myGameObject:SetName("New Name")
@@ -102,6 +114,7 @@ myGameObject:SetNormalTexture("fileInTexDir.tga")
 myGameObject:SetSpecularTexture("fileInTexDir.tga")
 myGameObject:EnableCollision()
 myGameObject:DisableCollision()
+myGameObject:AddToPhysicsWorld()
 bool = myGameObject:HasCollisions()
 {} = myGameObject:GetCollisions()
 myGameObject:PlayAnimation("AnimationName")
@@ -113,5 +126,13 @@ Render:SetShader("ShaderName")
 Render:SetShaderData(r, g, b, a)
 Render:Quad(topLeft, topRight, bottomRight, bottomLeft, "textureName")
 Render:Tri(point)
+
+Other Notes
+-----------
+Blender export settings: Apply modifiers, Include edges, Write normals, Include UVs, Write Materials, Triangulate Faces, Objects as OBJ, Objects as OBJ Groups, Y Forward, Z Up
+Python script to export bullet collision (must run while Blender Game is running and while Blender has write access as administrator):
+
+import PhysicsConstraints;
+PhysicsConstraints.exportBulletFile("c:/block_terrain1.bullet")
 
 ]]

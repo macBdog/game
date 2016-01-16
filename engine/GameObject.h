@@ -65,6 +65,7 @@ public:
 		, m_blender(NULL)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
+		, m_physicsMass(0.0f)
 		, m_shaderData(0.0f)
 		, m_clipType(ClipType::AxisBox)
 		, m_clipVolumeSize(1.0f)
@@ -95,6 +96,7 @@ public:
 	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
 	inline void SetLifeTime(float a_newTime) { m_lifeTime = a_newTime; }
+	inline void SetPhysicsMass(float a_newMass) { m_physicsMass = a_newMass;  }
 	inline void SetShaderData(const Vector & a_shaderData) { m_shaderData = a_shaderData; }
 	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
@@ -112,6 +114,7 @@ public:
 	inline const char * GetPhysicsMeshName() const { return m_physicsMesh; }
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
+	inline float GetPhysicsMass() const { return m_physicsMass; }
 	inline Vector GetShaderData() const { return m_shaderData; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
 	inline Matrix & GetWorldMat() { return m_worldMat; }
@@ -186,6 +189,7 @@ private:
 	AnimationBlender *	  m_blender;									///< Pointer to an animation blender if present
 	GameObjectState::Enum m_state;										///< What state the object is in
 	float				  m_lifeTime;									///< How long this guy has been active
+	float				  m_physicsMass;								///< What mass the object has in the physics system, 0 is infinite and immovable
 	Vector				  m_shaderData;									///< 3 floats to transmit to the shader
 	ClipType::Enum		  m_clipType;									///< What kind of shape represents the bounds of the object
 	Vector				  m_clipVolumeSize;								///< Dimensions of the clipping volume for culling and picking
