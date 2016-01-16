@@ -340,6 +340,7 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 
 	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
 	btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
+	rigidBody->setFriction(100.0f);
 	rigidBody->setUserPointer(a_gameObj);
 	phys->SetRigidBody(rigidBody);
 
@@ -363,12 +364,11 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 		// Get the origin and rotational information from the physics world
 		btTransform rbTrans = phys->GetRigidBody()->getWorldTransform();
 		btQuaternion rbRot = rbTrans.getRotation();
-		btVector3 rbRotAxis = rbRot.getAxis();
-		float rbRotAngle = rbRot.getAngle();
-		Quaternion gameObjRot(Vector(rbRotAxis.getX(), rbRotAxis.getY(), rbRotAxis.getZ()), rbRotAngle);
+		Quaternion gameObjRot(Vector(rbRot.getAxis().getX(), rbRot.getAxis().getY(), rbRot.getAxis().getZ()), -rbRot.getAngle());
 
 		// Apply physics world transform to game object and collision state
 		Matrix gameObjMat = a_gameObj->GetWorldMat();
+		gameObjMat.SetIdentity();
 		gameObjRot.ApplyToMatrix(gameObjMat);
 		gameObjMat.SetPos(Vector(rbTrans.getOrigin().getX(), rbTrans.getOrigin().getY(), rbTrans.getOrigin().getZ()));
 		a_gameObj->SetWorldMat(gameObjMat);
@@ -404,6 +404,23 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 			delete phys;
 			a_gameObj->SetPhysics(NULL);
 			return true;
+		}
+	}
+	return false;
+}
+
+bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
+{
+	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != NULL)
+	{
+		if (PhysicsObject * phys = a_gameObj->GetPhysics())
+		{
+			if (btRigidBody * body = phys->GetRigidBody())
+			{
+				body->activate(true);
+				body->applyCentralImpulse(btVector3(a_force.GetX(), a_force.GetY(), a_force.GetZ()));
+				return true;
+			}
 		}
 	}
 	return false;

@@ -97,6 +97,9 @@ public:
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
 
+	//\brief TODO
+	bool ApplyForce(GameObject * a_gameObj, const Vector & a_force);
+
 	//\brief Cast a ray at the collision world and retrieve the results immediately
 	//\param a_rayStart is the start point in worldspace of the ray
 	//\param a_rayEnd is the end point in worldspace of the ray

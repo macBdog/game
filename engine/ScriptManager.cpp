@@ -77,6 +77,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"AddToPhysicsWorld", AddGameObjectToPhysicsWorld},
+	{ "ApplyPhysicsForce", ApplyGameObjectPhysicsForce},
 	{"HasCollisions", TestGameObjectCollisions},
 	{"GetCollisions", GetGameObjectCollisions},
 	{"GetRayCollision", RayCollisionTest},
@@ -2270,6 +2271,30 @@ int ScriptManager::AddGameObjectToPhysicsWorld(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "AddToPhysicsWorld", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::ApplyGameObjectPhysicsForce(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector force((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+			PhysicsManager::Get().ApplyForce(gameObj, force);
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "ApplyPhysicsForce", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "ApplyPhysicsForce", "expects 3 number parameters.");
 	}
 	return 0;
 }
