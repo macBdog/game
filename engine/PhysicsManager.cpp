@@ -426,6 +426,25 @@ bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 	return false;
 }
 
+Vector PhysicsManager::GetVelocity(GameObject * a_gameObj)
+{
+	Vector vel(0.0f);
+	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != NULL)
+	{
+		if (PhysicsObject * phys = a_gameObj->GetPhysics())
+		{
+			if (btRigidBody * body = phys->GetRigidBody())
+			{
+				btVector3 outVel = body->getLinearVelocity();
+				vel.SetX(outVel.getX());
+				vel.SetY(outVel.getY());
+				vel.SetZ(outVel.getZ());
+			}
+		}
+	}
+	return vel;
+}
+
 bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT)
 {
 	// Start and End are vectors

@@ -77,7 +77,8 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"AddToPhysicsWorld", AddGameObjectToPhysicsWorld},
-	{ "ApplyPhysicsForce", ApplyGameObjectPhysicsForce},
+	{"ApplyPhysicsForce", ApplyGameObjectPhysicsForce},
+	{"GetVelocity", GetGameObjectVelocity},
 	{"HasCollisions", TestGameObjectCollisions},
 	{"GetCollisions", GetGameObjectCollisions},
 	{"GetRayCollision", RayCollisionTest},
@@ -2295,6 +2296,30 @@ int ScriptManager::ApplyGameObjectPhysicsForce(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "ApplyPhysicsForce", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::GetGameObjectVelocity(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			Vector vel = PhysicsManager::Get().GetVelocity(gameObj);
+			lua_pushnumber(a_luaState, vel.GetX());
+			lua_pushnumber(a_luaState, vel.GetY());
+			lua_pushnumber(a_luaState, vel.GetZ());
+			return 3;
+		}
+		else
+		{
+			LogScriptError(a_luaState, "GetGameObjectVelocity", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGameObjectVelocity", "expects the game object as the self.");
 	}
 	return 0;
 }

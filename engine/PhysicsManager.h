@@ -97,8 +97,16 @@ public:
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
 
-	//\brief TODO
+	//\brief Apply an impulse to the centre of the physics object in a direction
+	//\param a_gameObj the object that owns the physics body to apply the force to
+	//\param a_force the direction the force should be applied
+	//\return true if the game object owned a rigid body that the force could be applied to
 	bool ApplyForce(GameObject * a_gameObj, const Vector & a_force);
+
+	//\\brief Get the velocity of a physics rigid body owned by a game objet
+	//\param a_gameObj the object that owns the physics body
+	//\return A vector of the velocity of the physics body
+	Vector GetVelocity(GameObject * a_gameObj);
 
 	//\brief Cast a ray at the collision world and retrieve the results immediately
 	//\param a_rayStart is the start point in worldspace of the ray
