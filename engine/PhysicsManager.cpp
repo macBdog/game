@@ -139,6 +139,13 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 		}
 		m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
 		m_dynamicsWorld->setGravity(btVector3(gravity.GetX(), gravity.GetY(), gravity.GetZ()));
+
+		// Set debug draw if correct config
+#ifdef _DEBUG
+		m_debugRender = new PhysicsDebugRender();
+		m_debugRender->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		m_dynamicsWorld->setDebugDrawer(m_debugRender);
+#endif
 	}
 
 	return m_dynamicsWorld != NULL || m_collisionWorld != NULL;
@@ -162,6 +169,10 @@ bool PhysicsManager::Shutdown()
     delete m_collisionConfiguration;
     delete m_broadphase;
 
+	if (m_debugRender != NULL)
+	{
+		delete m_debugRender;
+	}
 	return true;
 }
 
@@ -175,6 +186,14 @@ void PhysicsManager::Update(float a_dt)
 	if (m_dynamicsWorld != NULL)
 	{
 		m_dynamicsWorld->stepSimulation(a_dt, 10);
+
+#ifdef _DEBUG
+		if (m_debugRender != NULL)
+		{
+			m_dynamicsWorld->debugDrawWorld();
+		}
+#endif
+
 	}
 	m_collisionWorld->performDiscreteCollisionDetection();
 
@@ -507,3 +526,39 @@ void PhysicsManager::AddCollision(GameObject * a_gameObjA, GameObject * a_gameOb
 	colList->Insert(collider);
 }
 
+void PhysicsDebugRender::drawLine(const btVector3& from, const btVector3& to, const btVector3& fromColor, const btVector3& toColor)
+{
+	RenderManager::Get().AddDebugLine(Vector(from.getX(), from.getY(), from.getZ()), Vector(to.getX(), to.getY(), to.getZ()), Colour(fromColor.getX(), fromColor.getY(), fromColor.getZ(), 1.0f));
+}
+
+void PhysicsDebugRender::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+{
+	RenderManager::Get().AddDebugLine(Vector(from.getX(), from.getY(), from.getZ()), Vector(to.getX(), to.getY(), to.getZ()), Colour(color.getX(), color.getY(), color.getZ(), 1.0f));
+}
+
+void PhysicsDebugRender::drawSphere(const btVector3& p, btScalar radius, const btVector3& color)
+{
+	RenderManager::Get().AddDebugSphere(Vector(p.getX(), p.getY(), p.getZ()), radius, Colour(color.getX(), color.getY(), color.getZ(), 1.0f));
+}
+
+void PhysicsDebugRender::drawTriangle(const btVector3& a, const btVector3& b, const btVector3& c, const btVector3& color, btScalar alpha)
+{
+	RenderManager::Get().AddDebugLine(Vector(a.getX(), a.getY(), a.getZ()), Vector(b.getX(), b.getY(), b.getZ()), Colour(color.getX(), color.getY(), color.getZ(), alpha));
+	RenderManager::Get().AddDebugLine(Vector(b.getX(), b.getY(), b.getZ()), Vector(c.getX(), c.getY(), c.getZ()), Colour(color.getX(), color.getY(), color.getZ(), alpha));
+	RenderManager::Get().AddDebugLine(Vector(c.getX(), c.getY(), c.getZ()), Vector(a.getX(), a.getY(), a.getZ()), Colour(color.getX(), color.getY(), color.getZ(), alpha));
+}
+
+void PhysicsDebugRender::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color)
+{
+	RenderManager::Get().AddDebugSphere(Vector(PointOnB.getX(), PointOnB.getY(), PointOnB.getZ()), 0.1f, Colour(color.getX(), color.getY(), color.getZ(), 1.0f));
+}
+
+void PhysicsDebugRender::reportErrorWarning(const char* warningString)
+{
+	Log::Get().WriteEngineErrorNoParams(warningString);
+}
+
+void PhysicsDebugRender::draw3dText(const btVector3& location, const char* textString)
+{
+	FontManager::Get().DrawDebugString3D(textString, Vector(location.getX(), location.getY(), location.getZ()));
+}

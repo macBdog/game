@@ -2,6 +2,8 @@
 #define _ENGINE_PHYSICS_MANAGER
 #pragma once
 
+#include "..\external\bullet-2.82-r2704\src\LinearMath\btIDebugDraw.h"
+
 #include "..\core\BitSet.h"
 
 #include "GameFile.h"
@@ -21,6 +23,25 @@ struct btDefaultMotionState;
 class btRigidBody;
 
 class GameObject;
+
+//\brief Implementation of bullet's debug drawing
+class PhysicsDebugRender : public btIDebugDraw
+{
+public:
+	PhysicsDebugRender() : m_debugMode(0) {};
+	virtual ~PhysicsDebugRender() {};
+	virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& fromColor, const btVector3& toColor);
+	virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color);
+	virtual void drawSphere(const btVector3& p, btScalar radius, const btVector3& color);
+	virtual void drawTriangle(const btVector3& a, const btVector3& b, const btVector3& c, const btVector3& color, btScalar alpha);
+	virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color);
+	virtual void reportErrorWarning(const char* warningString);
+	virtual void draw3dText(const btVector3& location, const char* textString);
+	virtual inline void setDebugMode(int debugMode) { m_debugMode = debugMode; }
+	virtual inline int getDebugMode() const { return m_debugMode; }
+
+	int m_debugMode;
+};
 
 //\ brief Grouping of collision and physics states
 class PhysicsObject
@@ -70,7 +91,8 @@ public:
 		, m_dispatcher(NULL)
 		, m_solver(NULL)
 		, m_dynamicsWorld(NULL) 
-		, m_collisionWorld(NULL) { m_meshPath[0] = '\0'; }
+		, m_collisionWorld(NULL)
+		, m_debugRender(NULL) { m_meshPath[0] = '\0'; }
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
@@ -149,6 +171,7 @@ private:
 	btSequentialImpulseConstraintSolver * m_solver;
 	btDiscreteDynamicsWorld * m_dynamicsWorld;
 	btCollisionWorld * m_collisionWorld;
+	PhysicsDebugRender * m_debugRender;
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER
