@@ -40,8 +40,14 @@ public:
 	//\param a_tgaFilePath is a const pointer to a c string with the fully qualified path
 	//\param a_useLinearFilter is an optional, if set to false, textures will approximate by pixel
 	//\return bool true if the texture was loaded succesfullly
-	bool LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter = true);
-	bool LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter = true);
+	bool LoadTGAFromFile(const char * a_tgaFilePath, bool a_useLinearFilter = true);
+	bool LoadTGAFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter = true);
+
+	//\brief Load from a pre allocated buffer of memory that matches the bpp, so RGBA8 for 32 bpp, will free the memory after creating the texture
+	bool LoadFromMemoryAndFree(int a_width, int a_height, int a_bpp, void * a_textureData, bool a_useLinearFilter = true);
+
+	//\brief Reload a texture from a buffer of raw OpenGL format pixel data
+	bool RegenerateTexture(int a_width, int a_height, int a_bpp, void * a_textureData);
 
 	//\brief Utility methods for texture member data for convenience
 	inline bool IsLoaded() { return m_textureId >= 0; }

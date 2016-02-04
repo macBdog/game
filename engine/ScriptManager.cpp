@@ -76,6 +76,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetSpecularTexture", SetGameObjectSpecularTexture},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
+	{"AddToCollisionWorld", AddGameObjectToCollisionWorld},
 	{"AddToPhysicsWorld", AddGameObjectToPhysicsWorld},
 	{"ApplyPhysicsForce", ApplyGameObjectPhysicsForce},
 	{"GetVelocity", GetGameObjectVelocity},
@@ -2252,6 +2253,30 @@ int ScriptManager::DisableGameObjectCollision(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "DisableCollision", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::AddGameObjectToCollisionWorld(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			// Add object to collision world
+			if (gameObj->GetClipType() == ClipType::Mesh || gameObj->GetClipSize().LengthSquared() > 0.0f)
+			{
+				PhysicsManager::Get().AddCollisionObject(gameObj);
+			}
+		}
+		else
+		{
+			LogScriptError(a_luaState, "AddToCollisionWorld", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "AddToCollisionWorld", "expects no parameters.");
 	}
 	return 0;
 }

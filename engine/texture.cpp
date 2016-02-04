@@ -21,7 +21,7 @@ static const char tgaHeader[] = {
 static const GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};
 static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 
-bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
+bool Texture::LoadTGAFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 {
 	// Early out for no file case
 	if (a_tgaFilePath == NULL)
@@ -50,13 +50,13 @@ bool Texture::LoadFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 	bool loadSuccess = false;
 	if (textureFile.read(fileBuffer, textureSize))
 	{
-		loadSuccess = LoadFromMemory(fileBuffer, textureSize, a_useLinearFilter);
+		loadSuccess = LoadTGAFromMemory(fileBuffer, textureSize, a_useLinearFilter);
 	}
 	free(fileBuffer);
 	return loadSuccess;
 }
 
-bool Texture::LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter)
+bool Texture::LoadTGAFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter)
 {
 	// Early out for no pointer
 	if (a_texture == NULL || a_textureSize <= 0)
@@ -74,6 +74,48 @@ bool Texture::LoadFromMemory(void * a_texture, size_t a_textureSize, bool a_useL
 	}
 
 	return GenerateTexture(x, y, bpp, a_useLinearFilter, textureData);
+}
+
+bool Texture::LoadFromMemoryAndFree(int a_width, int a_height, int a_bpp, void * a_textureData, bool a_useLinearFilter)
+{
+	// Early out before any allocation for non power of two texture
+	if (!((a_width != 0) && !(a_width & (a_width - 1))) || !((a_height != 0) && !(a_height & (a_height - 1))))
+	{
+		printf("Can't load non power of two dimension texture\n");
+		return false;
+	}
+
+	const int bypp = ((a_bpp) >> 3);
+	const int textureSize = a_width * a_height * bypp;
+	GLubyte * textureData = (GLubyte *)a_textureData;
+	if (textureData == NULL)
+	{
+		printf("Malloc failed in texture load from blank\n");
+		return NULL;
+	}
+
+	return GenerateTexture(a_width, a_height, a_bpp, a_useLinearFilter, textureData);
+}
+
+bool Texture::RegenerateTexture(int a_width, int a_height, int a_bpp, void * a_textureData)
+{
+	// Early out before any allocation for non power of two texture
+	if (!((a_width != 0) && !(a_width & (a_width - 1))) || !((a_height != 0) && !(a_height & (a_height - 1))))
+	{
+		printf("Can't regen non power of two dimension texture\n");
+		return false;
+	}
+
+	if (a_bpp == 24)
+	{
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, a_width, a_height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)a_textureData);
+	}
+	else
+	{
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, a_width, a_height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)a_textureData);
+	}
+
+	return true;
 }
 
 bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilter, GLubyte * textureData)

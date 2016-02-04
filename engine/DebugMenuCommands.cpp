@@ -110,6 +110,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::CreateLight);
 	lastCreatedCommand = Create("Create DataPack",			m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourBlue, EditType::None);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateDataPack);
+	lastCreatedCommand = Create("Show/Hide Physics", m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::None);
+	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ShowHidePhysicsWorld);
 	
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
@@ -579,6 +581,18 @@ DebugCommandReturnData DebugMenuCommandRegistry::CreateDataPack(Widget * a_widge
 	// Write the existing datapack to disk out
 	Hide();
 	retVal.m_success = DataPack::Get().Serialize(DataPack::s_defaultDataPackPath);
+	return retVal;
+}
+
+DebugCommandReturnData DebugMenuCommandRegistry::ShowHidePhysicsWorld(Widget * a_widget)
+{
+	DebugCommandReturnData retVal;
+
+	// Toggle the state of physics debugging
+	Hide();
+	const bool curPhysicsDebug = DebugMenu::Get().IsPhysicsDebuggingOn();
+	DebugMenu::Get().SetPhysicsDebugging(!curPhysicsDebug);
+	retVal.m_success = true;
 	return retVal;
 }
 

@@ -1,6 +1,7 @@
 #include <btBulletDynamicsCommon.h>
 #include "btBulletWorldImporter.h"
 
+#include "DebugMenu.h"
 #include "GameObject.h"
 #include "Log.h"
 
@@ -141,7 +142,7 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 		m_dynamicsWorld->setGravity(btVector3(gravity.GetX(), gravity.GetY(), gravity.GetZ()));
 
 		// Set debug draw if correct config
-#ifdef _DEBUG
+#ifndef _RELEASE
 		m_debugRender = new PhysicsDebugRender();
 		m_debugRender->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 		m_dynamicsWorld->setDebugDrawer(m_debugRender);
@@ -169,10 +170,10 @@ bool PhysicsManager::Shutdown()
     delete m_collisionConfiguration;
     delete m_broadphase;
 
-	if (m_debugRender != NULL)
-	{
-		delete m_debugRender;
-	}
+#ifndef _RELEASE
+	delete m_debugRender;
+#endif
+
 	return true;
 }
 
@@ -187,8 +188,8 @@ void PhysicsManager::Update(float a_dt)
 	{
 		m_dynamicsWorld->stepSimulation(a_dt, 10);
 
-#ifdef _DEBUG
-		if (m_debugRender != NULL)
+#ifndef _RELEASE
+		if (DebugMenu::Get().IsPhysicsDebuggingOn())
 		{
 			m_dynamicsWorld->debugDrawWorld();
 		}

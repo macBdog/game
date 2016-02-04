@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
+#include "MathUtils.h"
+
 //\brief Basic 4 value colour class
 class Colour
 {
@@ -36,6 +38,41 @@ public:
 	bool operator == (const Colour & a_compare) const { return r == a_compare.r && g == a_compare.g && b == a_compare.b && a == a_compare.a; }
 	void operator += (const Colour & a_val) { r += a_val.r; g += a_val.g; b += a_val.b; a += a_val.a; }
 	void operator -= (const Colour & a_val) { r -= a_val.r; g -= a_val.g; b -= a_val.b; a -= a_val.a; }
+
+	static void Colour::HSVtoRGB(float hue, float saturation, float val, float& red_OUT, float& green_OUT, float& blue_OUT)
+	{
+		// Branchless conversion lifted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl 
+		const float cKx = hue + 1.0f;
+		const float cKy = hue + (2.0f / 3.0f);
+		const float cKz = hue + (1.0f / 3.0f);
+		const float fractPx = cKx - floorf(cKx);
+		const float fractPy = cKy - floorf(cKy);
+		const float fractPz = cKz - floorf(cKz);
+		const float pX = fabs(fractPx * 6.0f - 3.0f);
+		const float pY = fabs(fractPy * 6.0f - 3.0f);
+		const float pZ = fabs(fractPz * 6.0f - 3.0f);
+		red_OUT = val * MathUtils::LerpFloat(1.0f, MathUtils::Clamp(0.0f, pX - 1.0f, 1.0f), saturation);
+		green_OUT = val * MathUtils::LerpFloat(1.0f, MathUtils::Clamp(0.0f, pY - 1.0f, 1.0f), saturation);
+		blue_OUT = val * MathUtils::LerpFloat(1.0f, MathUtils::Clamp(0.0f, pZ - 1.0f, 1.0f), saturation);
+	}
+
+	static void Colour::RGBtoHSV(float red, float green, float blue, float& hue_OUT, float& saturation_OUT, float& value_OUT)
+	{
+		// Fast conditional conversion lifted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+		const float px = green < blue ? blue : green;
+		const float py = green < blue ? green : blue;
+		const float pz = green < blue ? -1.0f : 0.0f;
+		const float pw = green < blue ? 2.0f / 3.0f : 1.0f / 3.0f;
+		const float qx = red < px ? px : red;
+		const float qy = red < px ? py : py;
+		const float qz = red < px ? pw : pz;
+		const float qw = red < px ? red : px;
+		const float d = qx - MathUtils::GetMin(qw, qy);
+		const float e = 1.0e-10f;
+		hue_OUT = fabsf(qz + (qw - qy) / (6.0f * d + e));
+		saturation_OUT = d / (qx + e);
+		value_OUT = qx;
+	}
 
 private:
 	float r, g, b, a;

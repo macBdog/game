@@ -30,11 +30,13 @@ Vector2 DebugMenu::sc_vectorCursor[4] =
 DebugMenu::DebugMenu()
 : m_enabled(false)
 , m_timePaused(false)
+, m_debugPhysics(false)
 , m_gameTimeScale(1.0f)
 , m_dirtyFlags()
 , m_lastMousePosRelative(0.0f)
 , m_editType(EditType::None)
 , m_editMode(EditMode::None)
+, m_colourPicker(NULL)
 , m_widgetToEdit(NULL)
 , m_gameObjectToEdit(NULL)
 , m_lightToEdit(NULL)
@@ -153,7 +155,48 @@ bool DebugMenu::Startup()
 		sc_vectorCursor[i].SetY(sc_vectorCursor[i].GetY() * RenderManager::Get().GetViewAspect());
 	}
 
+	// Setup the colour picker texture
+	size_t colourPickerTextureMemorySize = sc_colourPickerTextureSize * sc_colourPickerTextureSize * ((sc_colourPickerTextureBpp) >> 3);
+	m_colourPickerTextureMemory = malloc(colourPickerTextureMemorySize);
+	int * currentPixel = (int*)m_colourPickerTextureMemory;
+	for (int i = 0; i < sc_colourPickerTextureSize; ++i)
+	{
+		for (int j = 0; j < sc_colourPickerTextureSize; ++j)
+		{
+			float h = (float)j / sc_colourPickerTextureSize;
+			float s = sinf(PI * (1.0f - (float)i / (float)sc_colourPickerTextureSize));
+			float v = (float)i / (float)sc_colourPickerTextureSize;
+			float r, g, b = 0.0f;
+			Colour::HSVtoRGB(h, s, v, r, g, b);
+			char * curChannel = (char*)currentPixel;
+			*curChannel = (char)(r * 255.0f);
+			curChannel++;
+			*curChannel = (char)(g * 255.0f);
+			curChannel++;
+			*curChannel = (char)(b * 255.0f);
+			curChannel++;
+			*curChannel = 255u;
+			currentPixel++;
+		}
+	}
+	m_colourPickerTexture.LoadFromMemoryAndFree(sc_colourPickerTextureSize, sc_colourPickerTextureSize, sc_colourPickerTextureBpp, m_colourPickerTextureMemory);
+
+	// Setup the colour picker
+	m_colourPicker = DebugMenuCommand::CreateButton("ChooseColour", gui.GetDebugRoot(), sc_colourWhite);
+	m_colourPicker->SetTexture(&m_colourPickerTexture);
+	m_colourPicker->SetSize(Vector2(0.5f, 0.5f));
+	m_colourPicker->SetPos(WidgetVector(-0.25f, 0.25f));
+
 	return true;
+}
+
+void DebugMenu::Shutdown() 
+{ 
+	m_commands.Shutdown(); 
+	if (m_colourPickerTextureMemory)
+	{
+		free(m_colourPickerTextureMemory);
+	}
 }
 
 void DebugMenu::Update(float a_dt)
@@ -199,9 +242,14 @@ void DebugMenu::Update(float a_dt)
 			}
 			case EditMode::Colour:
 			{
-				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
-				const float colorMag = colourVec.LengthSquared() * 3.0f;
-				Colour modColour(colourVec.GetX()*3.0f, colourVec.GetY()*3.0f, colorMag, 1.0f);
+				const float fracX = (mousePos.GetX() + 0.25f) * 2.0f;
+				const float fracY = MathUtils::Clamp(0.0f, ((mousePos.GetY() + 0.25f) * 2.0f), 1.0f);
+				float h = MathUtils::Clamp(0.0f, fracX, 1.0f);
+				float s = sinf(PI * (1.0f - fracY));
+				float v = fracY;
+				float r, g, b = 0.0f;
+				Colour::HSVtoRGB(h, s, v, r, g, b);
+				Colour modColour(r, g, b, 1.0f);
 				m_widgetToEdit->SetColour(modColour);
 				break;
 			}
@@ -644,6 +692,12 @@ bool DebugMenu::OnSelect(bool a_active)
 			ShowFontSelect();
 		}
 
+		// If the command requires choosing a colour
+		if (retVal.m_editMode == EditMode::Colour)
+		{
+			ShowColourPicker();
+		}
+
 		// If the command cleared the selection of items
 		if (retVal.m_clearSelection)
 		{
@@ -751,6 +805,11 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 	else // Cancel selections
 	{
+		// Hide the colour picker
+		if (m_editMode == EditMode::Colour)
+		{
+			HideColourPicker();
+		}
 		if (m_widgetToEdit != NULL)
 		{
 			m_editType = EditType::None;
@@ -1029,6 +1088,14 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	}
 }
 
+void DebugMenu::ShowColourPicker()
+{
+	if (m_colourPicker != NULL)
+	{
+		m_colourPicker->SetActive();
+	}
+}
+
 bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_posY)
 {
 	Gui & gui = Gui::Get();
@@ -1206,4 +1273,12 @@ void DebugMenu::HideTextInput()
 	m_textInputField->SetActive(false);
 	m_btnTextInputOk->SetActive(false);
 	m_btnTextInputCancel->SetActive(false);
+}
+
+void DebugMenu::HideColourPicker()
+{
+	if (m_colourPicker != NULL)
+	{
+		m_colourPicker->SetActive(false);
+	}
 }

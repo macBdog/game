@@ -229,6 +229,7 @@ private:
 	DebugCommandReturnData DeleteWidget(Widget * a_widget);
 
 	DebugCommandReturnData CreateDataPack(Widget * a_widget);
+	DebugCommandReturnData ShowHidePhysicsWorld(Widget * a_widget);
 
 	DebugCommandReturnData CreateGameObject(GameObject * a_gameObj);
 	DebugCommandReturnData ChangeGameObjectModel(GameObject * a_gameObj);

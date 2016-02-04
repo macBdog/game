@@ -123,7 +123,7 @@ void Widget::Draw()
 		{
 			Colour fillColour = selectColour * 0.3f;
 			fillColour.SetA(0.95f);
-			rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), NULL, TextureOrientation::Normal, fillColour);
+			rMan.AddQuad2D(renderLayer, drawPos, m_size.GetVector(), m_texture, TextureOrientation::Normal, fillColour);
 		}
 
 		// Draw widget bounds for editing mode or for debug widgets

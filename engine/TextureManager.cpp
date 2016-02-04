@@ -116,7 +116,7 @@ bool TextureManager::Update(float a_dt)
 					if (curTimeStamp > curTex->m_timeStamp)
 					{
 						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path);
-						textureReloaded = curTex->m_texture.LoadFromFile(curTex->m_path);
+						textureReloaded = curTex->m_texture.LoadTGAFromFile(curTex->m_path);
 						curTex->m_timeStamp = curTimeStamp;
 					}
 				}
@@ -177,7 +177,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 			// Insert the newly allocated texture
 			if (DataPackEntry * packedTexture = m_dataPack->GetEntry(fileNameBuf))
 			{
-				if (newTex->m_texture.LoadFromMemory((void *)packedTexture->m_data, packedTexture->m_size, a_currentFilter == TextureFilter::Linear))
+				if (newTex->m_texture.LoadTGAFromMemory((void *)packedTexture->m_data, packedTexture->m_size, a_currentFilter == TextureFilter::Linear))
 				{
 					sprintf(newTex->m_path, "%s", fileNameBuf);
 					m_textureMap[a_cat].Insert(texId, newTex);
@@ -198,7 +198,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 		else
 		{
 			// Insert the newly allocated texture
-			if (newTex->m_texture.LoadFromFile(fileNameBuf, a_currentFilter == TextureFilter::Linear))
+			if (newTex->m_texture.LoadTGAFromFile(fileNameBuf, a_currentFilter == TextureFilter::Linear))
 			{
 				FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
 				sprintf(newTex->m_path, "%s", fileNameBuf);

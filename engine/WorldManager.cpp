@@ -844,12 +844,6 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
 						}
 					}
-
-					// Add object to collision world
-					if (newGameObject->GetClipType() == ClipType::Mesh || newGameObject->GetClipSize().LengthSquared() > 0.0f)
-					{
-						pMan.AddCollisionObject(newGameObject);
-					}
 				}
 
 				// Support physics properties

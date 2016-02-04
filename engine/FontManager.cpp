@@ -347,7 +347,7 @@ bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
 	Font * newFont = newFontNode->GetData();
 
 	// Assign preloaded texture and add as the first in the list
-	if (m_defaultFontTexture.LoadFromMemory((void*)&defaultFontTextureBuffer, defaultFontTextureBufferLength, true))
+	if (m_defaultFontTexture.LoadTGAFromMemory((void*)&defaultFontTextureBuffer, defaultFontTextureBufferLength, true))
 	{
 		newFont->m_texture = &m_defaultFontTexture;
 	}

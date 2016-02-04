@@ -27,7 +27,7 @@ public:
 
 	//\brief Startup registers input callbacks for mouse clicks
 	bool Startup();
-	inline void Shutdown() { m_commands.Shutdown(); };
+	inline void Shutdown();
 
 	//\brief Update will draw all debug menu items
 	//\param a_dt float of time since the last frame in seconds
@@ -81,6 +81,10 @@ public:
 	//\brief If sim dt and game dt should advance
 	inline bool IsTimePaused() const { return m_timePaused; }
 
+	//\brief Accessors to turn the wireframe representation of the physics dynamics world on and off
+	inline bool IsPhysicsDebuggingOn() const { return m_debugPhysics; }
+	inline void SetPhysicsDebugging(bool a_on) { m_debugPhysics = a_on; }
+
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
 	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
@@ -93,6 +97,9 @@ public:
 	//\param a_startingText An optional pointer to a c string with the text that should be displayed
 	void ShowTextInput(const char * a_startingText = NULL);
 
+	//\\brief Show a widget with a colour spectrum that can be clicked to choose a colour
+	void ShowColourPicker();
+
 	//\brief Show a debug menu widget for a frame, called from script
 	bool ShowScriptDebugText(const char * a_text, float a_posX = -0.5f, float a_posY = 0.5f);
 
@@ -102,26 +109,28 @@ public:
 
 private:
 
-	static const float sc_gameTimeScaleFast;		// Value of game time scale in fast mode
-	static const float sc_gameTimeScaleSlow;		// Value of game time scale in slow mode
-	static const float sc_cursorSize;				// Size of debug mouse cursor
-	static Vector2 sc_vectorCursor[4];				// Debug menu does not have textures so it draws mouse cursors by vectors
-	static const int sc_numScriptDebugWidgets = 8;	// Number of debug widgets the script system owns
+	static const float sc_gameTimeScaleFast;			///< Value of game time scale in fast mode
+	static const float sc_gameTimeScaleSlow;			///< Value of game time scale in slow mode
+	static const float sc_cursorSize;					///< Size of debug mouse cursor
+	static Vector2 sc_vectorCursor[4];					///< Debug menu does not have textures so it draws mouse cursors by vectors
+	static const int sc_numScriptDebugWidgets = 8;		///< Number of debug widgets the script system owns
+	static const int sc_colourPickerTextureSize = 256;	///< How large the colour picker generated texture is, must be power of two
+	static const int sc_colourPickerTextureBpp = 32;	///< How many bits per pixel in for the generated texture
 	Widget * m_scriptDebugWidgets[sc_numScriptDebugWidgets];
 
 	//\brief All debug menu visuals are drawn here, called from Update()
 	void Draw();
 
-	//\brief Helper function to create a debug menu button in one line
-	Widget * CreateButton(const char * a_name, Colour a_colour, Widget * a_parent);
-
 	//\brief Helper function to close debug menus
 	void HideResoureSelect();
 	void HideTextInput();
+	void HideColourPicker();
 
 	bool m_enabled;									///< Is the menu being shown
 	bool m_timePaused;								///< Is the game dt running forward
+	bool m_debugPhysics;							///< Are we showing a wireframe representation of the physics world
 	float m_gameTimeScale;							///< How fast the game is running, 1.0 means real time
+	Texture m_colourPickerTexture;					///< Texture to be displayed when the user is picking a colour
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
 	EditType::Enum m_editType;						///< What type of object we are editing 
@@ -129,8 +138,11 @@ private:
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 	Light * m_lightToEdit;							///< If a light has been selected to edit, this will be set
+	void * m_colourPickerTextureMemory;				///< Memory for generating the colour spectrum
 
 	DebugMenuCommandRegistry m_commands;			///< List of commands that can be performed by the debug menu
+
+	Widget * m_colourPicker;
 
 	Widget * m_resourceSelect;
 		Widget * m_resourceSelectList;
