@@ -5,6 +5,7 @@
 #include "..\external\bullet-2.82-r2704\src\LinearMath\btIDebugDraw.h"
 
 #include "..\core\BitSet.h"
+#include "..\core\LinkedList.h"
 
 #include "GameFile.h"
 #include "Singleton.h"
@@ -43,40 +44,44 @@ public:
 	int m_debugMode;
 };
 
-//\ brief Grouping of collision and physics states
+//\ brief Grouping of collision and physics states, can have multiple objects and shapes
 class PhysicsObject
 {
 public:
 
+	typedef LinkedList<btCollisionShape> CollisionShapeList;
+	typedef LinkedList<btCollisionObject> CollisionObjectList;
+	typedef LinkedList<btRigidBody> RigidBodyList;
+
 	PhysicsObject() 
 		: m_collisionGroup(-1)
-		, m_collisionShape(NULL)
-		, m_collisionObject(NULL)
-		, m_rigidBody(NULL)
-		, m_fileLoader(NULL) { }
+		, m_collisionShapes()
+		, m_collisionObjects()
+		, m_rigidBodies()
+		, m_fileLoader(nullptr) { }
 	~PhysicsObject();
-	inline bool HasCollision() { return m_collisionShape != NULL; }
-	inline bool HasRigidBody() { return m_rigidBody != NULL; }
+	inline bool HasCollision() { return !m_collisionShapes.IsEmpty(); }
+	inline bool HasRigidBody() { return !m_rigidBodies.IsEmpty(); }
 	
 	inline int GetCollisionGroup() { return m_collisionGroup; }
-	inline btCollisionShape * GetCollisionShape() { return m_collisionShape; }
-	inline btCollisionObject * GetCollisionObject() { return m_collisionObject; }
-	inline btRigidBody * GetRigidBody() { return m_rigidBody; }
+	inline CollisionShapeList GetCollisionShapes() { return m_collisionShapes; }
+	inline CollisionObjectList GetCollisionObjects() { return m_collisionObjects; }
+	inline RigidBodyList GetRigidBodies() { return m_rigidBodies; }
 	inline btBulletWorldImporter * GetFileLoader() { return m_fileLoader; }
 
 	inline void SetCollisionGroup(int a_newGroup) { m_collisionGroup = a_newGroup; }
-	inline void SetCollisionShape(btCollisionShape * a_col) { if (m_collisionShape == NULL) { m_collisionShape = a_col; } }
-	inline void SetCollisionObject(btCollisionObject * a_col) { if (m_collisionObject == NULL) { m_collisionObject = a_col; } }
-	inline void SetRigidBody(btRigidBody * a_phy) { if (m_rigidBody == NULL) { m_rigidBody = a_phy; } }
+	inline void AddCollisionShape(btCollisionShape * a_col) { m_collisionShapes.InsertNew(a_col); }
+	inline void AddCollisionObject(btCollisionObject * a_col) { m_collisionObjects.InsertNew(a_col); }
+	inline void AddRigidBody(btRigidBody * a_phy) { m_rigidBodies.InsertNew(a_phy); }
 	inline void SetFileLoader(btBulletWorldImporter * a_loader) { m_fileLoader = a_loader; }
 	
 private:
 
-	int m_collisionGroup;					///< Group for collision filtering, if any
-	btRigidBody * m_rigidBody;				///< Rigid body present only if object driven by dynamics
-	btCollisionShape * m_collisionShape;	///< Dimensions and type of volume for collisions and dynamics if present
-	btCollisionObject * m_collisionObject;	///< All objects are represented in the collision world
-	btBulletWorldImporter * m_fileLoader;	///< Loader and memory for objects loaded from a bullet binary file
+	int m_collisionGroup;								///< Group for collision filtering, if any
+	RigidBodyList m_rigidBodies;						///< Rigid bodies present only if object driven by dynamics
+	CollisionShapeList m_collisionShapes;				///< Dimensions and type of volume for collisions and dynamics if present
+	CollisionObjectList m_collisionObjects;				///< All objects are represented in the collision world
+	btBulletWorldImporter * m_fileLoader;				///< Loader and memory for objects loaded from a bullet binary file
 };
 
 class PhysicsManager : public Singleton<PhysicsManager>

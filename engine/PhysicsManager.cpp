@@ -14,37 +14,61 @@ template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = NULL;
 PhysicsObject::~PhysicsObject()
 {
 	// Clean up physics if present
-	if (m_rigidBody != NULL)
+	if (!m_rigidBodies.IsEmpty())
 	{
-		if (btDiscreteDynamicsWorld * dynWorld = PhysicsManager::Get().GetDynamicsWorld())
+		LinkedListNode<btRigidBody> * curRigidBodyNode = m_rigidBodies.GetHead();
+		while (curRigidBodyNode)
 		{
-			dynWorld->removeRigidBody(m_rigidBody);
+			btRigidBody * rigidBody = curRigidBodyNode->GetData();
+			if (btDiscreteDynamicsWorld * dynWorld = PhysicsManager::Get().GetDynamicsWorld())
+			{
+				dynWorld->removeRigidBody(rigidBody);
+			}
+			delete rigidBody->getMotionState();
+			delete rigidBody;
+			LinkedListNode<btRigidBody> * nextNode = curRigidBodyNode->GetNext();
+			delete curRigidBodyNode;
+			curRigidBodyNode = nextNode;
 		}
-		delete m_rigidBody->getMotionState();
-		delete m_rigidBody;
 	}
 
-	// And collision object
-	if (m_collisionObject != NULL)
+	// And collision objects
+	if (!m_collisionObjects.IsEmpty())
 	{
-		if (btCollisionWorld * colWorld = PhysicsManager::Get().GetCollisionWorld())
+		LinkedListNode<btCollisionObject> * curObjectNode = m_collisionObjects.GetHead();
+		while (curObjectNode)
 		{
-			colWorld->removeCollisionObject(m_collisionObject);
+			btCollisionObject * collisionObject = curObjectNode->GetData();
+			if (btCollisionWorld * colWorld = PhysicsManager::Get().GetCollisionWorld())
+			{
+				colWorld->removeCollisionObject(collisionObject);
+			}
+			delete collisionObject;
+			LinkedListNode<btCollisionObject> * nextNode = curObjectNode->GetNext();
+			delete curObjectNode;
+			curObjectNode = nextNode;
 		}
-		delete m_collisionObject;
 	}
 
 	// File loader owns memory for collision shapes
-	if (m_fileLoader != NULL) 
+	if (m_fileLoader != nullptr) 
 	{
 		m_fileLoader->deleteAllData();
 		delete m_fileLoader;
 	}
 	else // Otherwise we own it
 	{
-		if (m_collisionShape != NULL)
+		if (!m_collisionShapes.IsEmpty())
 		{
-			delete m_collisionShape;
+			LinkedListNode<btCollisionShape> * curShapeNode = m_collisionShapes.GetHead();
+			while (curShapeNode)
+			{
+				btCollisionShape * collisionObject = curShapeNode->GetData();
+				delete collisionObject;
+				LinkedListNode<btCollisionShape> * nextNode = curShapeNode->GetNext();
+				delete curShapeNode;
+				curShapeNode = nextNode;
+			}
 		}
 	}
 }
@@ -252,7 +276,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		return false;
 	}
 
-	btCollisionShape * collisionShape = NULL;
+	PhysicsObject::CollisionShapeList collisionShapes;
 	btBulletWorldImporter * fileLoader = NULL;
 	
 	switch (a_gameObj->GetClipType())
@@ -261,12 +285,12 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		{	
 			const Vector halfBoxSize = a_gameObj->GetClipSize() * 0.5f;
 			btVector3 halfExt(halfBoxSize.GetX(), halfBoxSize.GetY(), halfBoxSize.GetZ());
-			collisionShape = new btBoxShape(halfExt);
+			collisionShapes.InsertNew(new btBoxShape(halfExt));
 			break;
 		}
 		case ClipType::Sphere:
 		{
-			collisionShape = new btSphereShape(a_gameObj->GetClipSize().GetX());
+			collisionShapes.InsertNew(new btSphereShape(a_gameObj->GetClipSize().GetX()));
 			break;
 		}
 		case ClipType::Mesh:
@@ -277,18 +301,19 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			{
 				if (fileLoader->loadFile(bulletFilePath))
 				{
+					// Add all collision shapes in file
 					const int numShapes = fileLoader->getNumCollisionShapes();
-					if (numShapes == 1)
+					for (int i = 0; i < numShapes; ++i)
 					{
-						collisionShape = fileLoader->getCollisionShapeByIndex(0);
+						collisionShapes.InsertNew(fileLoader->getCollisionShapeByIndex(i));
 					}
-					else
-					{
-						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Bullet collision mesh file %s has %d collision shapes, only 1 are supported!", bulletFilePath, numShapes);
-						fileLoader->deleteAllData();
-						delete fileLoader;
-						return false;
-					}
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Error, LogCategory::Game, "Error loading bullet collision mesh file %s!", bulletFilePath);
+					fileLoader->deleteAllData();
+					delete fileLoader;
+					return false;
 				}
 			}
 			break;
@@ -296,45 +321,54 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		default: return false;
 	}
 
-	btCollisionObject * collisionObject = NULL;
-	collisionShape->setMargin(0.0f);
-	collisionObject = new btCollisionObject();
-
-	// Assign the physics object to the game object
-	if (collisionShape != NULL && collisionObject != NULL)
+	PhysicsObject::CollisionObjectList collisionObjects;
+	LinkedListNode<btCollisionShape> * curShapeNode = collisionShapes.GetHead();
+	while (curShapeNode)
 	{
-		if (PhysicsObject * newObj = new PhysicsObject())
+		btCollisionShape * collisionShape = curShapeNode->GetData();
+		collisionShape->setMargin(0.0f);
+
+		btCollisionObject * collisionObject = new btCollisionObject();
+		collisionObjects.InsertNew(collisionObject);
+
+		// Assign the physics object to the game object
+		if (collisionShape != NULL && collisionObject != NULL)
 		{
-			btMatrix3x3 basis;
-			basis.setIdentity();
-			collisionObject->getWorldTransform().setBasis(basis);
-			collisionObject->setCollisionShape(collisionShape);
-			
-			newObj->SetCollisionObject(collisionObject);
-			newObj->SetCollisionShape(collisionShape);
-
-			if (fileLoader != NULL) 
+			if (PhysicsObject * newObj = new PhysicsObject())
 			{
-				newObj->SetFileLoader(fileLoader);
-			}
-			a_gameObj->SetPhysics(newObj);
-		}
-	}
+				btMatrix3x3 basis;
+				basis.setIdentity();
+				collisionObject->getWorldTransform().setBasis(basis);
+				collisionObject->setCollisionShape(collisionShape);
 
-	// And vice versa
-	collisionShape->setUserPointer(a_gameObj);
-	collisionObject->setUserPointer(a_gameObj);
-	
-	// Add to world
-	short colGroup = (short)1;
-	short colFilter = (short)-1;
-	int colGroupId = GetCollisionGroupId(a_gameObj->GetClipGroup());
-	if (colGroupId > 0)
-	{
-		colGroup = (short)(colGroupId);
-		colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
+				newObj->AddCollisionObject(collisionObject);
+				newObj->AddCollisionShape(collisionShape);
+
+				if (fileLoader != NULL)
+				{
+					newObj->SetFileLoader(fileLoader);
+				}
+				a_gameObj->SetPhysics(newObj);
+			}
+		}
+
+		// And vice versa
+		collisionShape->setUserPointer(a_gameObj);
+		collisionObject->setUserPointer(a_gameObj);
+
+		// Add to world
+		short colGroup = (short)1;
+		short colFilter = (short)-1;
+		int colGroupId = GetCollisionGroupId(a_gameObj->GetClipGroup());
+		if (colGroupId > 0)
+		{
+			colGroup = (short)(colGroupId);
+			colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
+		}
+		m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
+
+		curShapeNode = curShapeNode->GetNext();
 	}
-	m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
 
 	return a_gameObj->GetPhysics() != NULL;
 }
@@ -347,27 +381,32 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 	}
 
 	PhysicsObject * phys = a_gameObj->GetPhysics();
-	btCollisionShape * collisionShape = phys->GetCollisionShape();
+	PhysicsObject::CollisionShapeList collisionShapes = phys->GetCollisionShapes();
+	LinkedListNode<btCollisionShape> * curShapeNode = collisionShapes.GetHead();
+	while (curShapeNode)
+	{
+		// Setup motion state and construction info for game object shape
+		btCollisionShape * collisionShape = curShapeNode->GetData();
+		btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
+		btQuaternion bodyRotation(0, 0, 0, 1);
 
-	// Setup motion state and construction info for game object shape
-	btVector3 bodyPos(a_gameObj->GetPos().GetX(), a_gameObj->GetPos().GetY(), a_gameObj->GetPos().GetZ());
-	btQuaternion bodyRotation(0, 0, 0, 1);
+		// Activate physical properties mass and intertia
+		btVector3 startingInertia = btVector3(0, 0, 0);
+		btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
 
-	// Activate physical properties mass and intertia
-	btVector3 startingInertia = btVector3(0, 0, 0);
-	btDefaultMotionState * motionState = new btDefaultMotionState(btTransform(bodyRotation, bodyPos));
-	
-	const float objectMass = a_gameObj->GetPhysicsMass();
-	collisionShape->calculateLocalInertia(objectMass, startingInertia);
+		const float objectMass = a_gameObj->GetPhysicsMass();
+		collisionShape->calculateLocalInertia(objectMass, startingInertia);
 
-	btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
-	btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
-	rigidBody->setFriction(100.0f);
-	rigidBody->setUserPointer(a_gameObj);
-	phys->SetRigidBody(rigidBody);
+		btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
+		btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
+		rigidBody->setFriction(100.0f);
+		rigidBody->setUserPointer(a_gameObj);
+		phys->AddRigidBody(rigidBody);
 
-	// Add object to physics world
-	m_dynamicsWorld->addRigidBody(rigidBody);
+		// Add object to physics world
+		m_dynamicsWorld->addRigidBody(rigidBody);
+		curShapeNode = curShapeNode->GetNext();
+	}
 
 	return true;
 }
@@ -383,8 +422,11 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	PhysicsObject * phys = a_gameObj->GetPhysics();
 	if (phys->HasRigidBody())
 	{
-		// Get the origin and rotational information from the physics world
-		btTransform rbTrans = phys->GetRigidBody()->getWorldTransform();
+		// Get the origin and rotational information from the first rigid body in the physics world
+		PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
+		LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+		btRigidBody * rigidBody = curRigidBodyNode->GetData();
+		btTransform rbTrans = rigidBody->getWorldTransform();
 		btQuaternion rbRot = rbTrans.getRotation();
 		Quaternion gameObjRot(Vector(rbRot.getAxis().getX(), rbRot.getAxis().getY(), rbRot.getAxis().getZ()), -rbRot.getAngle());
 
@@ -394,7 +436,16 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 		gameObjRot.ApplyToMatrix(gameObjMat);
 		gameObjMat.SetPos(Vector(rbTrans.getOrigin().getX(), rbTrans.getOrigin().getY(), rbTrans.getOrigin().getZ()));
 		a_gameObj->SetWorldMat(gameObjMat);
-		phys->GetCollisionObject()->setWorldTransform(rbTrans);
+
+		// Set it on all the collision objects
+		PhysicsObject::CollisionObjectList collisionObjects = phys->GetCollisionObjects();
+		LinkedListNode<btCollisionObject> * curObjectNode = collisionObjects.GetHead();
+		while (curObjectNode)
+		{
+			btCollisionObject * collisionObject = curObjectNode->GetData();
+			collisionObject->setWorldTransform(rbTrans);
+			curObjectNode = curObjectNode->GetNext();
+		}
 	}
 	else // Or the other way around if this object is collision only
 	{
@@ -409,8 +460,15 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 		newWorldTrans.setRotation(rot);
 		newWorldTrans.setOrigin(trans);
 
-		// Set it on the physics and collision
-		phys->GetCollisionObject()->setWorldTransform(newWorldTrans);
+		// Set it on all the physics and collision
+		PhysicsObject::CollisionObjectList collisionObjects = phys->GetCollisionObjects();
+		LinkedListNode<btCollisionObject> * curObjectNode = collisionObjects.GetHead();
+		while (curObjectNode)
+		{
+			btCollisionObject * collisionObject = curObjectNode->GetData();
+			collisionObject->setWorldTransform(newWorldTrans);
+			curObjectNode = curObjectNode->GetNext();
+		}
 	}
 	ClearCollisions(a_gameObj);
 }
@@ -437,12 +495,19 @@ bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
-			if (btRigidBody * body = phys->GetRigidBody())
+			if (phys->HasRigidBody())
 			{
-				body->activate(true);
-				body->applyCentralImpulse(btVector3(a_force.GetX(), a_force.GetY(), a_force.GetZ()));
-				return true;
+				PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
+				LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+				while (curRigidBodyNode)
+				{
+					btRigidBody * rigidBody = curRigidBodyNode->GetData();
+					rigidBody->activate(true);
+					rigidBody->applyCentralImpulse(btVector3(a_force.GetX(), a_force.GetY(), a_force.GetZ()));
+					curRigidBodyNode = curRigidBodyNode->GetNext();
+				}
 			}
+			return true;
 		}
 	}
 	return false;
@@ -455,12 +520,19 @@ Vector PhysicsManager::GetVelocity(GameObject * a_gameObj)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
-			if (btRigidBody * body = phys->GetRigidBody())
+			if (phys->HasRigidBody())
 			{
-				btVector3 outVel = body->getLinearVelocity();
-				vel.SetX(outVel.getX());
-				vel.SetY(outVel.getY());
-				vel.SetZ(outVel.getZ());
+				PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
+				LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+				while (curRigidBodyNode)
+				{
+					btRigidBody * rigidBody = curRigidBodyNode->GetData();
+					btVector3 outVel = rigidBody->getLinearVelocity();
+					vel.SetX(outVel.getX());
+					vel.SetY(outVel.getY());
+					vel.SetZ(outVel.getZ());
+					curRigidBodyNode = curRigidBodyNode->GetNext();
+				}
 			}
 		}
 	}

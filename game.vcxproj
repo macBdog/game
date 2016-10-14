@@ -75,7 +75,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <AdditionalDependencies>engine.lib;Ws2_32.lib;winmm.lib;LibOVR.lib;lua52.lib;SDL2.lib;SDL2main.lib;irrKlang.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>

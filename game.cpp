@@ -430,9 +430,6 @@ int main(int argc, char *argv[])
 
 	PROFILE_SHUTDOWN
 
-	// Singletons are shutdown by their destructors
-    Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Exited cleanly");
-
 	// Shut everything down
 	WorldManager::Get().Shutdown();
 	PhysicsManager::Get().Shutdown();
@@ -457,6 +454,10 @@ int main(int argc, char *argv[])
 	SDL_GL_DeleteContext(glcontext);
 	SDL_DestroyWindow(sdlWindow);
 	SDL_Quit();
+
+	// Singletons are shutdown by their destructors
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Exited cleanly");
+	Log::Get().Shutdown();
 
     return 0;
 }
