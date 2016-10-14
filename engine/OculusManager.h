@@ -6,7 +6,6 @@
 
 #include "Singleton.h"
 
-class OculusCamera;
 class OculusRender;
 
 struct HWND__;
@@ -23,7 +22,6 @@ public:
 	, m_luid(nullptr)
 	, m_hmdWidth(0)
 	, m_hmdHeight(0)
-	, m_oculusCamera(nullptr)
 	, m_oculusRender(nullptr)
 	{ }
 	
@@ -37,7 +35,6 @@ public:
 
 	//\brief Convenience functions for the engine to call Oculus code
 	inline bool IsInitialised() const { return m_initialised; }
-	inline OculusCamera * GetOculusCamera() const { return m_oculusCamera; }
 	inline OculusRender * GetOculusRender() const { return m_oculusRender; }
 	inline int GetHmdWidth() const { return m_hmdWidth; }
 	inline int GetHmdHeight() const { return m_hmdHeight; }
@@ -51,7 +48,6 @@ private:
 	ovrGraphicsLuid * m_luid;
 	int m_hmdWidth;
 	int m_hmdHeight;
-	OculusCamera * m_oculusCamera;
 	OculusRender * m_oculusRender;
 };
 

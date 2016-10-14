@@ -101,9 +101,6 @@
     <ClInclude Include="DebugMenuCommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OculusCamera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SoundManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -194,9 +191,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebugMenuCommands.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OculusCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SoundManager.cpp">

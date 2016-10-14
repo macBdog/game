@@ -3,7 +3,6 @@
 #include "CameraManager.h"
 #include "InputManager.h"
 #include "Log.h"
-#include "OculusCamera.h"
 #include "OculusRender.h"
 
 #include "OculusManager.h"
@@ -32,17 +31,6 @@ void OculusManager::Startup()
 			{
 				Log::Get().WriteEngineErrorNoParams("Cannot create Oculus render component!");
 				return;
-			}
-
-			// Check for an oculus camera with the camera manager
-			if (m_oculusCamera = new OculusCamera())
-			{
-				m_oculusCamera->Startup();
-				CameraManager::Get().SetOculusCamera(m_oculusCamera);
-			}
-			else
-			{
-				Log::Get().WriteEngineErrorNoParams("Cannot initialise Oculus HMD device.");
 			}
 		}
 		else
@@ -79,11 +67,6 @@ void OculusManager::Shutdown()
 {
 	if (m_initialised)
 	{
-		if (m_oculusCamera)
-		{
-			delete m_oculusCamera;
-		}
-		
 		if (m_oculusRender)
 		{
 			m_oculusRender->Shutdown();

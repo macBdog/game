@@ -141,7 +141,6 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Time.h" />
-    <ClInclude Include="OculusCamera.h" />
     <ClInclude Include="Widget.h" />
     <ClInclude Include="WorldManager.h" />
   </ItemGroup>
@@ -174,7 +173,6 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Time.cpp" />
-    <ClCompile Include="OculusCamera.cpp" />
     <ClCompile Include="Widget.cpp" />
     <ClCompile Include="WorldManager.cpp" />
   </ItemGroup>

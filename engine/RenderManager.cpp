@@ -794,7 +794,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			m_fontCharCount[i] = 0;
 		}
 	}
-	glUseProgram(0);
 }
 
 void RenderManager::RenderFramebuffer()

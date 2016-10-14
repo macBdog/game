@@ -7,8 +7,6 @@
 
 #include "Singleton.h"
 
-class OculusCamera;
-
 class Camera
 {
 public:
@@ -66,7 +64,6 @@ public:
 	//\brief Contruct a valid camera at the origin look down the Y axis
 	CameraManager() 
 		: m_currentCamera(&m_gameCamera) 
-		, m_oculusCamera(NULL)
 	{ }
 
 	//\brief Stubbed out for loading cameras for each scene
@@ -84,16 +81,10 @@ public:
 	inline void SetFOV(const float & a_newFov) { /*m_currentCamera->SetFOV(a_newFov);*/ }
 	inline void SetTarget(const Vector & a_newTarget) { m_currentCamera->SetTarget(a_newTarget); }
 
-	//\brief Accessors for VR camera
-	inline bool HasOculusCamera() { return m_oculusCamera != NULL; }
-	inline void SetOculusCamera(OculusCamera * a_oculusCamera) { m_oculusCamera = a_oculusCamera; }
-	inline OculusCamera * GetOculusCamera() { return m_oculusCamera; }
-
 private:
 
 	Camera m_gameCamera;							///< Camera only modified by game/script 
 	Camera m_debugCamera;							///< Camera modified while debug menu is active
-	OculusCamera * m_oculusCamera;					///< Camera used for input from Oculus branded  VR/head mounted displays
 	Camera * m_currentCamera;						///< Pointer to either camera
 };
 

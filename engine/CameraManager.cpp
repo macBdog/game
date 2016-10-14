@@ -3,7 +3,6 @@
 #include "..\core\MathUtils.h"
 
 #include "CameraManager.h"
-#include "OculusCamera.h"
 #include "InputManager.h"
 
 const float Camera::sc_defaultCameraSpeed = 8.0f;
@@ -15,12 +14,6 @@ void CameraManager::Update(float a_dt)
 {
 	m_currentCamera = &m_gameCamera;
 	
-	// Use VR camera if enabled and initialised correctly
-	if (m_oculusCamera != NULL)
-	{
-		m_currentCamera = m_oculusCamera;
-	}
-
 	// Process camera controls
 	InputManager & inMan = InputManager::Get();
 	if (DebugMenu::Get().IsDebugMenuEnabled())

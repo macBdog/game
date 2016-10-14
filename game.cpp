@@ -442,12 +442,16 @@ int main(int argc, char *argv[])
 	TextureManager::Get().Shutdown();
 	ScriptManager::Get().Shutdown();
 	CameraManager::Get().Shutdown();
-	OculusManager::Get().Shutdown();
 	DebugMenu::Get().Shutdown();
 	Gui::Get().Shutdown();
 	RenderManager::Get().Shutdown();
 	InputManager::Get().Shutdown();
 	SoundManager::Get().Shutdown();
+
+	if (useVr)
+	{
+		OculusManager::Get().Shutdown();
+	}
 
 	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.
 	SDL_GL_DeleteContext(glcontext);

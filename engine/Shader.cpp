@@ -26,6 +26,8 @@ Shader::Shader(const char * a_name)
 
 Shader::~Shader() 
 {
+	glDetachShader(m_shader, m_vertexShader);
+	glDetachShader(m_shader, m_fragmentShader);
 	glDeleteProgram(m_shader);
 	glDeleteShader(m_vertexShader);
 	glDeleteShader(m_fragmentShader);
