@@ -12,7 +12,7 @@ DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colou
 : m_gameObjectFunction()
 , m_widgetFunction()
 , m_alignment(DebugMenuCommandAlign::Below)
-, m_widget(NULL)
+, m_widget(nullptr)
 , m_parentMenu(a_parentMenu)
 {
 	m_widget = CreateButton(a_name, a_parent, a_colour);

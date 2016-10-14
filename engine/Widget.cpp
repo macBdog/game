@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include "DebugMenu.h"
+#include "FontManager.h"
 #include "Log.h"
 #include "InputManager.h"
 #include "RenderManager.h"
@@ -782,6 +783,11 @@ Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
 	}
 	
 	return pos;
+}
+
+void Widget::MeasureText()
+{ 
+	FontManager::Get().MeasureString2D(m_text, m_fontNameHash, m_fontSize, m_textWidth, m_textHeight); 
 }
 
 #ifndef _RELEASE

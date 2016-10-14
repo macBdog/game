@@ -10,6 +10,7 @@
 #include "LuaScript.h"
 #include "OculusManager.h"
 #include "WorldManager.h"
+#include "RenderManager.h"
 #include "SoundManager.h"
 #include "TextureManager.h"
 
@@ -151,7 +152,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
 
-		lua_register(m_globalLua, "PlaySound", PlaySound);
+		lua_register(m_globalLua, "PlaySound", PlaySoundFX);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
 		lua_register(m_globalLua, "SetMusicVolume", SetMusicVolume);
 		lua_register(m_globalLua, "StopAllSoundsAndMusic", StopAllSoundsAndMusic);
@@ -954,7 +955,7 @@ int ScriptManager::NewScene(lua_State * a_luaState)
 	return 0;
 }
 
-int ScriptManager::PlaySound(lua_State * a_luaState)
+int ScriptManager::PlaySoundFX(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
 	{
@@ -962,7 +963,7 @@ int ScriptManager::PlaySound(lua_State * a_luaState)
 		const char * soundName = lua_tostring(a_luaState, 1);
 		if (soundName != NULL)
 		{
-			SoundManager::Get().PlaySound(soundName);
+			SoundManager::Get().PlaySoundFX(soundName);
 			return 0;
 		}
 	}

@@ -36,18 +36,19 @@ DebugMenu::DebugMenu()
 , m_lastMousePosRelative(0.0f)
 , m_editType(EditType::None)
 , m_editMode(EditMode::None)
-, m_colourPicker(NULL)
-, m_widgetToEdit(NULL)
-, m_gameObjectToEdit(NULL)
-, m_lightToEdit(NULL)
-, m_resourceSelect(NULL)
-, m_resourceSelectList(NULL)
-, m_btnResourceSelectOk(NULL)
-, m_btnResourceSelectCancel(NULL)
-, m_textInput(NULL)
-, m_textInputField(NULL)
-, m_btnTextInputOk(NULL)
-, m_btnTextInputCancel(NULL)
+, m_colourPicker(nullptr)
+, m_colourPickerTextureMemory(nullptr)
+, m_widgetToEdit(nullptr)
+, m_gameObjectToEdit(nullptr)
+, m_lightToEdit(nullptr)
+, m_resourceSelect(nullptr)
+, m_resourceSelectList(nullptr)
+, m_btnResourceSelectOk(nullptr)
+, m_btnResourceSelectCancel(nullptr)
+, m_textInput(nullptr)
+, m_textInputField(nullptr)
+, m_btnTextInputOk(nullptr)
+, m_btnTextInputCancel(nullptr)
 {
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
@@ -179,7 +180,10 @@ bool DebugMenu::Startup()
 			currentPixel++;
 		}
 	}
-	m_colourPickerTexture.LoadFromMemoryAndFree(sc_colourPickerTextureSize, sc_colourPickerTextureSize, sc_colourPickerTextureBpp, m_colourPickerTextureMemory);
+	if (m_colourPickerTexture.LoadFromMemoryAndFree(sc_colourPickerTextureSize, sc_colourPickerTextureSize, sc_colourPickerTextureBpp, m_colourPickerTextureMemory))
+	{
+		m_colourPickerTextureMemory = nullptr;
+	}
 
 	// Setup the colour picker
 	m_colourPicker = DebugMenuCommand::CreateButton("ChooseColour", gui.GetDebugRoot(), sc_colourWhite);

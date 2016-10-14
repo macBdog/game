@@ -380,7 +380,7 @@ private:
 	Vector2 GetPositionRelative(Widget * a_alignParent);
 	
 	///\brief Refresh the internal text width and height values, called only when text properties change
-	inline void MeasureText() { FontManager::Get().MeasureString2D(m_text, m_fontNameHash, m_fontSize, m_textWidth, m_textHeight); }
+	void MeasureText();
 
 	WidgetVector m_size;				///< How much of the parent container the element takes up
 	WidgetVector m_pos;					///< Where in the parent container the element resides

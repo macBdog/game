@@ -2,8 +2,36 @@
 #define _ENGINE_OCULUS_RENDER
 #pragma once
 
-#include "OVR_CAPI.h"
 #include "OVR_CAPI_GL.h"
+
+namespace OVR
+{
+	class GLEContext;
+}
+
+struct DepthBuffer
+{
+	DepthBuffer(ovrSizei size);
+	~DepthBuffer();
+	GLuint texId;	
+};
+
+struct TextureBuffer
+{
+	ovrSession Session;
+	ovrTextureSwapChain TextureChain;
+	GLuint texId;
+	GLuint fboId;
+	ovrSizei texSize;
+
+	TextureBuffer(ovrSession session, bool rendertarget, bool displayableOnHmd, ovrSizei size, int mipLevels, unsigned char * data); 		
+	~TextureBuffer();
+	
+	ovrSizei GetSize() const;	
+	void SetAndClearRenderSurface(DepthBuffer* dbuffer);
+	void UnsetRenderSurface();
+	void Commit();
+};
 
 //\brief OculusRender handles all the rendering and Gl specific Oculus API integration tasks
 class OculusRender
@@ -11,46 +39,50 @@ class OculusRender
 public:
 
 	OculusRender() 
-		: m_HMD(NULL)
-	{
-		for (int i = 0; i < ovrEye_Count; ++i)
-		{
-			m_frameBufferInitialised[i] = false;
-			m_frameBuffer[i] = false;
-			m_colourBuffer[i] = false;
-			m_renderBuffer[i] = false;
-		}
-	}
+		: m_session(nullptr)
+		, m_renderInit(false)
+		, m_winSizeW(0)
+		, m_winSizeH(0)
+		, m_fboId(0)
+		, m_wglContext()
+		, m_GLEContext(nullptr)
+		, m_mirrorTexture(nullptr)
+		, m_mirrorFBO(0) {};
 
-	void Startup(ovrHmd a_hmd, HWND a_window);
-	void Shutdown();
-
+	bool InitRendering(int a_winSizeW, int a_winSizeH, const LUID* a_luid, HWND * a_window);
+	void Startup(ovrSession * a_session);
+	
 	//\brief Calls OVR's begin frame and end frame calls with RenderManager::DrawScene sandwiched in between
 	void DrawToHMD();
 
-	//\breif OculusManager sets the HMD resources on the camera
-	inline void SetHMD(ovrHmd a_hmd) { m_HMD = a_hmd; }
+	void Shutdown();
+	void DeinitRendering();
 
 private:
 
-	//\brief Helper function to call the GL specific functions to generate render FBOs for each eye
-	//\param Eye index into the m_*Buffer members arrays to write into
-	//\param Size of the fbo to create
-	//\return true if the buffers were setup correctly
-	bool SetupFrameBuffer(const ovrEyeType & a_eye, const ovrSizei & a_textureSize);
+	bool m_renderInit;										///< Has InitRendering been called successfully
+	int m_winSizeW;
+	int m_winSizeH;
+	GLuint m_fboId;
+	HGLRC m_wglContext;
+	OVR::GLEContext * m_GLEContext;
+	ovrSession * m_session;									///< Pointer to the HMD structure owned by the oculus manager
+	TextureBuffer * m_eyeRenderTexture[2];
+	DepthBuffer * m_eyeDepthBuffer[2];
+	ovrMirrorTexture * m_mirrorTexture;
+	GLuint m_mirrorFBO;
 
-	ovrHmd m_HMD;										///< Pointer to the HMD structure owned by the oculus manager
-	ovrFovPort m_eyesFov[ovrEye_Count];					///< Fov for each eye render target
-	ovrPosef m_eyeRenderPose[ovrEye_Count];				///< Pose for each eye passed into endFrame
-	ovrTexture m_eyeTexture[ovrEye_Count];				///< Texture for each eye, drawn by the render function
-	ovrEyeRenderDesc m_eyeRenderDesc[ovrEye_Count];		///< Description of the rendering required for each eye
-	ovrVector3f m_eyeOffsets[ovrEye_Count];				///< Where each of the eyes are when rendered
-	ovrMatrix4f m_eyeProjections[ovrEye_Count];			///< Transformation for each eye's projection
+	//ovrFovPort m_eyesFov[ovrEye_Count];					///< Fov for each eye render target
+	//ovrPosef m_eyeRenderPose[ovrEye_Count];				///< Pose for each eye passed into endFrame
+	//ovrTexture m_eyeTexture[ovrEye_Count];				///< Texture for each eye, drawn by the render function
+	//ovrEyeRenderDesc m_eyeRenderDesc[ovrEye_Count];		///< Description of the rendering required for each eye
+	//ovrVector3f m_eyeOffsets[ovrEye_Count];				///< Where each of the eyes are when rendered
+	//ovrMatrix4f m_eyeProjections[ovrEye_Count];			///< Transformation for each eye's projection
 
-	bool m_frameBufferInitialised[ovrEye_Count];
-	unsigned int m_frameBuffer[ovrEye_Count];			///< Identifier for the whole scene framebuffers for each eye
-	unsigned int m_colourBuffer[ovrEye_Count];			///< Identifier for the texture to render to for each eye
-	unsigned int m_renderBuffer[ovrEye_Count];			///< Identifier for the buffers for pixel depth per eye
+	//bool m_frameBufferInitialised[ovrEye_Count];
+	//unsigned int m_frameBuffer[ovrEye_Count];			///< Identifier for the whole scene framebuffers for each eye
+	//unsigned int m_colourBuffer[ovrEye_Count];			///< Identifier for the texture to render to for each eye
+	//unsigned int m_renderBuffer[ovrEye_Count];			///< Identifier for the buffers for pixel depth per eye
 };
 
 

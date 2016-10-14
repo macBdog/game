@@ -50,11 +50,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;.\external\remotery\lib;$(IncludePath)</IncludePath>
+    <IncludePath>.\external\SDL2-2.0.3\include;.\external\LibOVRKernel\Src;.\external\LibOVR\Include;.\external\remotery\lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\LibOVR\Lib\Win32\VS2010;.\external\lua-5.2.3;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Debug;.\external\zlib-1.2.8\lib;.\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\lua-5.2.3;.\external\bullet-2.82-r2704\bin\lib\Debug;.\external\zlib-1.2.8\lib;.\Debug;.\external\LibOVR\Lib\Windows\$(Platform)\$(Configuration)\VS2010;$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;$(IncludePath)</IncludePath>
@@ -62,7 +63,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
     <IncludePath>.\external\glew-1.9.0\include;.\external\SDL2-2.0.3\include;.\external\LibOVR\Include;.\external\remotery\lib;$(IncludePath)</IncludePath>
-    <LibraryPath>.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\lua-5.2.3\;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\external\LibOVR\Lib\Win32\VS2010;.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\zlib-1.2.8\lib;.\Designer;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Release;.\external\lua-5.2.3\;.\external\glew-1.9.0\lib;.\external\bullet-2.82-r2704\bin\lib\Release;.\external\LibOVR\Lib\Win32\VS2013;.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\zlib-1.2.8\lib;.\Designer;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -70,11 +71,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>engine.lib;Ws2_32.lib;winmm.lib;libovrd.lib;glew32.lib;lua52.lib;SDL2.lib;SDL2main.lib;irrKlang.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>engine.lib;Ws2_32.lib;winmm.lib;LibOVR.lib;lua52.lib;SDL2.lib;SDL2main.lib;irrKlang.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>.\external\SDL-1.2.15\lib\x86</AdditionalLibraryDirectories>
@@ -118,12 +120,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="external\LibOVRKernel\Src\GL\CAPI_GLE.cpp" />
     <ClCompile Include="external\remotery\lib\Remotery.c" />
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="game.cfg" />
     <None Include="game.lua.example" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE.h" />
+    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE_GL.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

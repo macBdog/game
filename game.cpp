@@ -226,8 +226,17 @@ int main(int argc, char *argv[])
 	// Override display creation for VR mode so the resoultion is correct for the hmd
 	if (useVr)
 	{
-		width = OculusManager::s_hmdDefaultResolutionWidth;
-		height = OculusManager::s_hmdDefaultResolutionHeight;
+		const OculusManager& oculusMan = OculusManager::Get();
+		if (oculusMan.IsInitialised())
+		{
+			width = oculusMan.GetHmdWidth();
+			height = oculusMan.GetHmdHeight();
+		}
+		else
+		{
+			width = OculusManager::s_hmdDefaultResolutionWidth;
+			height = OculusManager::s_hmdDefaultResolutionHeight;
+		}
 	}
 
 	const char * gameName = titleConfigFile.GetString("config", "name");
@@ -256,6 +265,12 @@ int main(int argc, char *argv[])
 
 	// Subsystem creation and startup
 	MathUtils::InitialiseRandomNumberGenerator();
+
+	// Now the rendering device context is created, it can be passed into the Oculus rendering component
+	if (useVr)
+	{
+		OculusManager::Get().StartupRendering(&windowInfo.info.win.window);
+	}
 
 #ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);
@@ -286,12 +301,6 @@ int main(int argc, char *argv[])
 	Gui::Get().Startup(guiPath, NULL);
 	ScriptManager::Get().Startup(scriptPath, NULL);
 #endif
-	
-	// Now the rendering device context is created, it can be passed into the Oculus rendering component
-	if (useVr)
-	{
-		OculusManager::Get().StartupRendering(windowInfo.info.win.window);
-	}
 
 	// Profiling macros do nothing in release builds
 #ifdef _RELEASE									

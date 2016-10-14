@@ -1,9 +1,6 @@
 #ifndef _ENGINE_TEXTURE_H_
 #define _ENGINE_TEXTURE_H_
 
-#include <windows.h>
-#include <GL/glew.h>
-
 #include "StringUtils.h"
 
 //\brief Texcoords are generated from the orientation hint
@@ -28,6 +25,9 @@ namespace TGAVersion
 		Count
 	};
 }
+
+typedef unsigned char GLubyte;
+typedef unsigned int GLuint;
 
 class Texture
 {

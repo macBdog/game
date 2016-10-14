@@ -66,7 +66,7 @@ void SoundManager::Update(float a_dt)
 
 }
 
-bool SoundManager::PlaySound(const char * a_soundName) const
+bool SoundManager::PlaySoundFX(const char * a_soundName) const
 {
 	if (m_engine)
 	{

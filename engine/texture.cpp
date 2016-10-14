@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+#include <windows.h>
+
 #include <GL/glu.h>
 #include <iostream>
 #include <fstream>

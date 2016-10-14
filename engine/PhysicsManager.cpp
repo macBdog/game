@@ -2,8 +2,10 @@
 #include "btBulletWorldImporter.h"
 
 #include "DebugMenu.h"
+#include "FontManager.h"
 #include "GameObject.h"
 #include "Log.h"
+#include "RenderManager.h"
 
 #include "PhysicsManager.h"
 

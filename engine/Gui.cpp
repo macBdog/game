@@ -3,6 +3,7 @@
 #include "DataPack.h"
 #include "Log.h"
 #include "InputManager.h"
+#include "FontManager.h"
 #include "FileManager.h"
 #include "GameFile.h"
 #include "RenderManager.h"

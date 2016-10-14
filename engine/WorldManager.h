@@ -13,12 +13,12 @@
 #include "ModelManager.h"
 #include "PhysicsManager.h"
 #include "ScriptManager.h"
+#include "Shader.h"
 #include "Singleton.h"
 #include "StringUtils.h"
 
 struct Light;
 class DataPack;
-class Shader;
 
 //\brief SceneState keeps track of which scenes are loaded
 namespace SceneState

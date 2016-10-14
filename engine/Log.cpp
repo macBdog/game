@@ -1,3 +1,5 @@
+#include "FontManager.h"
+
 #include "Log.h"
 
 template<> Log * Singleton<Log>::s_instance = NULL;

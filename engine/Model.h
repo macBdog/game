@@ -119,6 +119,21 @@ private:
 						}
 						m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 					}
+					// Normal map name
+					else if (strstr(line, "map_Bump"))
+					{
+						char tempMatName[StringUtils::s_maxCharsPerLine];
+						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
+						if (strstr(line, "\\") == NULL)
+						{
+							sscanf(line, "map_Bump %s", &tempMatName);
+						}
+						else
+						{
+							sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+						}
+						m_normalTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
+					}
 					// Spec map name
 					else if (strstr(line, "map_Ks"))
 					{

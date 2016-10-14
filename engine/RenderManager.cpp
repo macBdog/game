@@ -5,8 +5,8 @@
 
 #include <windows.h>
 
-#include <GL/glew.h>
-#include <GL/glu.h>
+#include "GL/CAPI_GLE.h"
+#include "OVR_CAPI_GL.h"
 
 #include "../core/MathUtils.h"
 
@@ -106,12 +106,6 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	#include "Shaders\texture.fsh.inc"
 	#include "Shaders\lighting.vsh.inc"
 	#include "Shaders\lighting.fsh.inc"
-	GLenum extensionStartup = glewInit();
-	if (extensionStartup != GLEW_OK)
-	{
-		Log::Get().WriteEngineErrorNoParams("Initialisation of the shader extension library GLEW failed!");
-		return false;
-	} 
 	if (m_colourShader = new Shader("colour"))
 	{
 		m_colourShader->Init(colourVertexShader, colourFragmentShader);
@@ -539,10 +533,10 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 {
 	Matrix perspectiveMatrix = Matrix::Perspective(s_fovAngleY, 1.33334f /*m_aspect*/, s_nearClipPlane, s_farClipPlane);
-	RenderScene(a_viewMatrix, perspectiveMatrix, a_flushBuffers);
+	RenderScene(a_viewMatrix, perspectiveMatrix, a_flushBuffers, true);
 }
 
-void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat, bool a_flushBuffers)
+void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat, bool a_flushBuffers, bool a_clear)
 {
 	// Setup fresh data to pass to shaders
 	Matrix identityMatrix = Matrix::Identity();
@@ -583,12 +577,15 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		default: break;
 	}
 
-	// Set viewports to match render target
-	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
-	
-	// Clear the color and depth buffers in preparation for drawing
-	glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (a_clear)
+	{
+		// Set viewports to match render target
+		glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
+
+		// Clear the color and depth buffers in preparation for drawing
+		glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 
 	// Draw primitives for each renderLayer
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
@@ -797,6 +794,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			m_fontCharCount[i] = 0;
 		}
 	}
+	glUseProgram(0);
 }
 
 void RenderManager::RenderFramebuffer()

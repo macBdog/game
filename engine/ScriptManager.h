@@ -105,7 +105,7 @@ private:
 	static int SetLightSpecular(lua_State * a_luaState);
 	static int SetLightPosition(lua_State * a_luaState);
 
-	static int PlaySound(lua_State * a_luaState);
+	static int PlaySoundFX(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);
 	static int SetMusicVolume(lua_State * a_luaState);
 	static int StopAllSoundsAndMusic(lua_State * a_luaState);

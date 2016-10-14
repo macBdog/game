@@ -1,4 +1,6 @@
-#include "OVR_CAPI.h"
+#include "GL/CAPI_GLE.h"
+#include "Extras/OVR_Math.h"
+#include "OVR_CAPI_GL.h"
 
 #include "..\core\MathUtils.h"
 #include "..\core\Quaternion.h"
@@ -7,12 +9,12 @@
 
 #include "OculusCamera.h"
 
-void OculusCamera::Startup(ovrHmd a_hmd)
+void OculusCamera::Startup()
 {
-	m_HMD = a_hmd;
+
 }
 
-void OculusCamera::Update()
+void OculusCamera::Update(ovrSession * a_session)
 {
 	// Refresh the normal camera matrix by reconstruction
 	Vector forward = (m_target - m_pos);
@@ -30,26 +32,4 @@ void OculusCamera::Update()
 	m_mat.SetLook(up);
 	m_mat.SetUp(forward);
 	m_mat.SetPos(m_pos);
-
-	if (m_HMD != NULL)
-	{
-		// Query the HMD for the current tracking state.
-		ovrTrackingState trackingState = ovrHmd_GetTrackingState(m_HMD, ovr_GetTimeInSeconds());
-		if (trackingState.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked))
-		{
-			ovrPosef headPose = trackingState.HeadPose.ThePose;
-			ovrQuatf headOrient = headPose.Orientation;
-			ovrVector3f headPos = headPose.Position;
-
-			// Set the modified matrix to be the product of the game's normal camera plus HMD movement and orientation
-			m_modifiedMat = m_mat;
-
-			// Apply oculus sensor fusion orientation to camera mat
-			Quaternion quat = Quaternion(-headOrient.x, headOrient.z, -headOrient.y, headOrient.w);
-			quat.ApplyToMatrix(m_modifiedMat);
-
-			m_modifiedMat.SetPos(m_pos + Vector(headPos.x, headPos.y, headPos.z));
-		}
-	}
 }
-

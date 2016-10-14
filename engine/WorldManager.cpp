@@ -2,6 +2,7 @@
 
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
+#include "FontManager.h"
 #include "ModelManager.h"
 #include "RenderManager.h"
 

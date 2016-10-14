@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="GLE">
+      <UniqueIdentifier>{71e2c7f3-58e3-48f7-ac39-a2629749b086}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game.cpp">
@@ -17,9 +20,20 @@
     <ClCompile Include="external\remotery\lib\Remotery.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="external\LibOVRKernel\Src\GL\CAPI_GLE.cpp">
+      <Filter>GLE</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.cfg" />
     <None Include="game.lua.example" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE.h">
+      <Filter>GLE</Filter>
+    </ClInclude>
+    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE_GL.h">
+      <Filter>GLE</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

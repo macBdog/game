@@ -33,7 +33,7 @@ public:
 
 	void Update(float a_dt);
 
-	bool PlaySound(const char * a_soundName) const;
+	bool PlaySoundFX(const char * a_soundName) const;
 	bool PlayMusic(const char * a_musicName);
 	bool SetMusicVolume(const char * a_musicName, float a_newVolume);
 	void StopAllSoundsAndMusic();
