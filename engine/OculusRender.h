@@ -50,6 +50,7 @@ public:
 		, m_mirrorFBO(0) {};
 
 	bool InitRendering(int a_winSizeW, int a_winSizeH, const LUID* a_luid, HWND * a_window);
+	bool InitRenderingNoHMD();
 	void Startup(ovrSession * a_session);
 	
 	//\brief Calls OVR's begin frame and end frame calls with RenderManager::DrawScene sandwiched in between

@@ -203,10 +203,7 @@ int main(int argc, char *argv[])
 
 	// Oculus Rift init must precede render device context creation
 	bool useVr = gameConfig.GetBool("render", "vr");
-	if (useVr)
-	{
-		OculusManager::Get().Startup();
-	}
+	OculusManager::Get().Startup(useVr);
 
 	// The flags to pass to SDL_CreateWindow
 	int videoFlags = SDL_WINDOW_OPENGL;
@@ -267,10 +264,7 @@ int main(int argc, char *argv[])
 	MathUtils::InitialiseRandomNumberGenerator();
 
 	// Now the rendering device context is created, it can be passed into the Oculus rendering component
-	if (useVr)
-	{
-		OculusManager::Get().StartupRendering(&windowInfo.info.win.window);
-	}
+	OculusManager::Get().StartupRendering(&windowInfo.info.win.window, useVr);
 
 #ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);

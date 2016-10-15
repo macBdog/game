@@ -295,6 +295,12 @@ private:
 				}
 			}
 		}
+		else // Can't open file!
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game file resource");
+			a_input.close();
+			return false;
+		}
 		a_input.close();
 		return true;
 	}

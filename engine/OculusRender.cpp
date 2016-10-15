@@ -299,6 +299,14 @@ bool OculusRender::InitRendering(int a_winSizeW, int a_winSizeH, const LUID* a_l
 	return true;
 }
 
+bool OculusRender::InitRenderingNoHMD()
+{
+	m_GLEContext = new OVR::GLEContext();
+	OVR::GLEContext::SetCurrentContext(m_GLEContext);
+	m_GLEContext->Init();
+	return true;
+}
+
 void OculusRender::Startup(ovrSession * a_session)
 {
 	if (a_session != nullptr)
