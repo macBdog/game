@@ -23,10 +23,10 @@ using namespace std;	//< For fstream operations
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_updateFreq = 1.0f;
-const float RenderManager::s_renderDepth2D = -1.0f;
 const float RenderManager::s_nearClipPlane = 0.01f;
 const float RenderManager::s_farClipPlane = 10000.0f;
 const float RenderManager::s_fovAngleY = 55.0f;
+float RenderManager::s_renderDepth2D = -1.0f;
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
@@ -258,11 +258,11 @@ bool RenderManager::Shutdown()
 		LinkedListNode<Shader> * cur = nextShader;
 		nextShader = cur->GetNext();
 
+		Shader* curShader = cur->GetData();
 		m_shaders.Remove(cur);
-		delete cur->GetData();
+		delete curShader;
 		delete cur;
 	}
-
 	return true;
 }
 
@@ -608,8 +608,19 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 #endif
 			case RenderLayer::Gui:
 			{
-				shaderData.m_projectionMatrix = &orthoMatrix;
-				shaderData.m_viewMatrix = &identityMatrix;
+				if (m_vr)
+				{
+					Matrix guiTransform = identityMatrix;
+					Quaternion guiRotation = Quaternion(Vector(0.05f, 0.0f, 0.0f));
+					guiRotation.ApplyToMatrix(guiTransform);
+					shaderData.m_projectionMatrix = &a_perspectiveMat;
+					shaderData.m_viewMatrix = &guiTransform;
+				}
+				else
+				{
+					shaderData.m_projectionMatrix = &orthoMatrix;
+					shaderData.m_viewMatrix = &identityMatrix;
+				}
 				break;
 			}
 			default: break;
@@ -1090,6 +1101,11 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		{
 			// Alias model data
 			Material * modelMat = obj->GetMaterial();
+			if (!modelMat)
+			{
+				Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
+				return;
+			}
 			unsigned int numVertices = obj->GetNumVertices();
 			Texture * diffuseTex = modelMat->GetDiffuseTexture();
 			Texture * normalTex = modelMat->GetNormalTexture();

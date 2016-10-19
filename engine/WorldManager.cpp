@@ -607,7 +607,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 				if (newScene->Load(fullPath))
 				{
 					// Set file up so it can reload itself
-					newScene->SetFilePath(a_scenePath);
+					newScene->SetFilePath(fullPath);
 					newScene->ResetFileDateStamp();
 
 					// Insert into list

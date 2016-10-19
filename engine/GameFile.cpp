@@ -83,7 +83,7 @@ int GameFile::GetInt(const char * a_object, const char * a_property) const
 
 float GameFile::GetFloat(const char * a_object, const char * a_property) const
 {
-		// First find the object
+	// First find the object
 	if (Object * parentObject = FindObject(a_object))
 	{
 		// Then the property

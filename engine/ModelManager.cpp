@@ -129,6 +129,10 @@ bool ModelManager::Update(float a_dt)
 				}
 
 				ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
+				if (!curModel->m_model.Unload())
+				{
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Cannot unload model.");
+				}
 				modelReloaded = curModel->m_model.Load(curModel->m_path, mdp);
 
 				m_loadingVertPool.Reset();

@@ -442,23 +442,17 @@ void OculusRender::DrawToHMD()
 			// Switch to eye render target
 			m_eyeRenderTexture[eye]->SetAndClearRenderSurface(m_eyeDepthBuffer[eye]);
 
-			// Get view and projection matrices
-			static float Yaw(3.141592f);
-			Matrix4f rollPitchYaw = Matrix4f::RotationY(Yaw);
-			Matrix4f finalRollPitchYaw = rollPitchYaw * Matrix4f(EyeRenderPose[eye].Orientation);
-			Vector3f finalUp = finalRollPitchYaw.Transform(Vector3f(0, 1, 0));
-			Vector3f finalForward = finalRollPitchYaw.Transform(Vector3f(0, 0, -1));
-			Vector3f eyePos = rollPitchYaw.Transform(EyeRenderPose[eye].Position);
-
 			// Set the modified matrix to be the product of the game's normal camera plus HMD movement and orientation
+			const float eyeScale = 0.0f;
+			const Vector rawEyePos = Vector(EyeRenderPose[eye].Position.x, EyeRenderPose[eye].Position.z, EyeRenderPose[eye].Position.y) * eyeScale;
 			Matrix modifiedView = CameraManager::Get().GetCameraMatrix();
 			Vector existingPos = modifiedView.GetPos();
 			modifiedView.SetPos(Vector::Zero());
 			Quaternion quat = Quaternion(-EyeRenderPose[eye].Orientation.x, EyeRenderPose[eye].Orientation.z, -EyeRenderPose[eye].Orientation.y, EyeRenderPose[eye].Orientation.w);
 			quat.ApplyToMatrix(modifiedView);
-			modifiedView.SetPos(existingPos + Vector(eyePos.x, eyePos.y, eyePos.z));
+			const Vector transformedEyePos = modifiedView.Transform(rawEyePos);
+			modifiedView.SetPos(existingPos);
 			Matrix viewMatrix = modifiedView.GetInverse();
-			//viewMatrix.SetPos(existingPos + Vector(eyePos.x, eyePos.y, eyePos.z));
 
 			Matrix4f proj = ovrMatrix4f_Projection(hmdDesc.DefaultEyeFov[eye], 0.2f, 1000.0f, ovrProjection_None);
 			Matrix perspective(proj.M[0][0], proj.M[1][0], proj.M[2][0], proj.M[3][0],

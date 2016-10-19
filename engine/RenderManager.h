@@ -115,6 +115,7 @@ public:
 	//\brief Setup the viewport
     bool Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen = false);
 	inline void SetRenderTargetSize(unsigned int a_viewWidth, unsigned int a_viewHeight) { m_viewWidth = a_viewWidth; m_viewHeight = a_viewHeight; }
+	inline void Set2DRenderDepth(float a_newDepth) { s_renderDepth2D = a_newDepth; }
 
 	//\brief Dump everything to the buffer after transforming to an arbitrary coordinate system
 	//\param a_viewMatrix const ref to a matrix to be loaded into the modelview, usually the camera matrix
@@ -296,11 +297,11 @@ private:
 
 	static const int s_maxPrimitivesPerrenderLayer = 64 * 1024;		///< Flat storage amount for quads
 	static const int s_maxLines = 1600;								///< Storage amount for debug lines
-	static const float s_renderDepth2D;								///< Z value for ortho rendered primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
+	static float s_renderDepth2D;									///< Z value for ortho rendered primitives
 
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime;											///< How long the last frame took

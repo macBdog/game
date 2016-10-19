@@ -81,7 +81,6 @@ void OculusManager::Shutdown()
 	{
 		if (m_oculusRender)
 		{
-			m_oculusRender->DeinitRendering();
 			m_oculusRender->Shutdown();
 			delete m_oculusRender;
 		}

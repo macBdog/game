@@ -4,6 +4,7 @@
 
 #include "CameraManager.h"
 #include "InputManager.h"
+#include "FontManager.h"
 
 const float Camera::sc_defaultCameraSpeed = 8.0f;
 const float Camera::sc_defaultCameraRotSpeed = 48.0f;
@@ -66,6 +67,15 @@ void CameraManager::Update(float a_dt)
 				m_currentCamera->SetTarget(newTarget);
 
 				m_currentCamera->SetOrientationInput(curInput);
+			}
+		
+			// Draw camera position on top of everything
+			if (DebugMenu::Get().IsDebugMenuEnabled())
+			{
+				const Vector & camPos = m_currentCamera->GetPosition();
+				char buf[32];
+				sprintf(buf, "%.2f, %.2f, %.2f", camPos.GetX(), camPos.GetY(), camPos.GetZ());
+				FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 0.95f));
 			}
 		}
 	}

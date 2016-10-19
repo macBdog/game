@@ -56,13 +56,11 @@ bool Model::Unload()
 
 		// Deallocate memory for the object storage in the model list
 		ObjectNode * next = curObjectNode->GetNext();
+		m_objects.Remove(curObjectNode);
 		delete curObject;
 		delete curObjectNode;
-
 		curObjectNode = next;
 	}
-
-	
 	return true;
 }
 

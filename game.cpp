@@ -296,6 +296,20 @@ int main(int argc, char *argv[])
 	ScriptManager::Get().Startup(scriptPath, NULL);
 #endif
 
+	// Allow custom  GUI setup in VR
+	if (useVr)
+	{
+		float newRenderDepth = gameConfig.GetFloat("render", "guiDepth");
+		if (newRenderDepth < 0.0f)
+		{
+			RenderManager::Get().Set2DRenderDepth(newRenderDepth);
+		}
+		else
+		{
+			RenderManager::Get().Set2DRenderDepth(-0.95f);
+		}
+	}
+
 	// Profiling macros do nothing in release builds
 #ifdef _RELEASE									
 #define PROFILE_STARTUP
