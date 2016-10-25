@@ -104,6 +104,9 @@ private:
 	static int SetLightDiffuse(lua_State * a_luaState);
 	static int SetLightSpecular(lua_State * a_luaState);
 	static int SetLightPosition(lua_State * a_luaState);
+	static int GetNumCPUCores(lua_State * a_luaState);
+	static int GetStorageDrives(lua_State * a_luaState);
+	static int GetDirectoryListing(lua_State * a_luaState);
 
 	static int PlaySoundFX(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);

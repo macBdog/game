@@ -9,7 +9,7 @@
 
 template<> FileManager * Singleton<FileManager>::s_instance = NULL;
 
-#if __WIN32__
+#if _WIN32
 bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {
 	WIN32_FIND_DATA findFileData;

@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "../core/Vector.h"
 #include "../core/Matrix.h"
 #include "../core/Quaternion.h"
@@ -151,6 +155,10 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightDiffuse", SetLightDiffuse);
 		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
+
+		lua_register(m_globalLua, "GetNumCPUCores", GetNumCPUCores);
+		lua_register(m_globalLua, "GetStorageDrives", GetStorageDrives);
+		lua_register(m_globalLua, "GetDirectoryListing", GetDirectoryListing);
 
 		lua_register(m_globalLua, "PlaySound", PlaySoundFX);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
@@ -382,7 +390,13 @@ bool ScriptManager::Update(float a_dt)
 	// Call back to LUA main thread
 	if (m_gameLua != NULL)
 	{
-		lua_resume(m_gameLua, NULL, 0);
+		int yieldResult = lua_resume(m_gameLua, NULL, 0);
+		if (yieldResult != LUA_YIELD)
+		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
+			ReloadScripts();
+			return false;
+		}
 		return true;
 	}
 	return false;
@@ -1175,6 +1189,82 @@ int ScriptManager::SetLightPosition(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "SetLightPosition", "expects 4 parameter: the light ID then x, y, z.");
+	}
+	return 0;
+}
+
+int ScriptManager::GetNumCPUCores(lua_State * a_luaState)
+{
+	int numCores = 1;
+#ifdef _WIN32
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	numCores = sysInfo.dwNumberOfProcessors;
+#endif
+	lua_pushnumber(a_luaState, numCores);
+	return 1;
+}
+
+int ScriptManager::GetStorageDrives(lua_State * a_luaState)
+{
+	lua_newtable(a_luaState);
+#ifdef _WIN32
+	DWORD drives = GetLogicalDrives();
+	int driveCount = 1;
+	for (int i = 0; i < 26; i++)
+	{
+		if ((drives & (1 << i)))
+		{
+			char driveLetter = 'a' + i;
+			char driveString[2] = { driveLetter, '\0' };
+			lua_pushnumber(a_luaState, driveCount++);
+			lua_pushstring(a_luaState, &driveString[0]);
+			lua_settable(a_luaState, -3);
+		}
+	}
+#endif
+	return 1;
+}
+
+int ScriptManager::GetDirectoryListing(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		lua_newtable(a_luaState);
+		if (const char * filePath = lua_tostring(a_luaState, 1))
+		{
+			lua_createtable(a_luaState, 1, 0);
+			int fileCount = 1;
+			FileManager & fileMan = FileManager::Get();
+			FileManager::FileList allFiles;
+			fileMan.FillFileList(filePath, allFiles);
+			FileManager::FileListNode * curNode = allFiles.GetHead();
+			while (curNode != NULL)
+			{	
+				FileManager::FileInfo * fileInfo = curNode->GetData();
+				lua_pushnumber(a_luaState, fileCount++);
+
+				lua_createtable(a_luaState, 0, 3);
+					
+				lua_pushstring(a_luaState, fileInfo->m_name);
+				lua_setfield(a_luaState, -2, "name");
+
+				lua_pushnumber(a_luaState, fileInfo->m_sizeBytes);
+				lua_setfield(a_luaState, -2, "size");
+
+				lua_pushboolean(a_luaState, fileInfo->m_isDir);
+				lua_setfield(a_luaState, -2, "isDir");
+
+				lua_settable(a_luaState, -3);
+				curNode = curNode->GetNext();
+			}
+			fileMan.CleanupFileList(allFiles);
+			return 1;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetDirectoryListing", "expects 1 parameter: path of the directory to get.");
 	}
 	return 0;
 }

@@ -47,6 +47,9 @@ SetLightAmbient(indexOfLightToModify, r, g, b, a)
 SetLightDiffuse(indexOfLightToModify, r, g, b, a)
 SetLightSpecular(indexOfLightToModify, r, g, b, a)
 SetLightPosition(indexOfLightToModify, x, y, z)
+x = GetNumCPUCores()
+tableWithDriveLetters = GetStorageDrives()
+tableOfFiles = GetDirectoryListing()
 bool = IsVR()
 bool = IsKeyDown(keyCodes.character)
 bool = IsGamePadConnected(padId) -- First gamepad ID is 0
@@ -69,7 +72,6 @@ DebugPrint("A string to be displayed in a box on screen for one frame")
 DebugLog("A string to be printed into the log")
 DebugLine(x1, y1, z1, x2, y2, z2)
 DebugPoint(x, y, z, r, g, b)
-
 
 GUI Functions
 -------------

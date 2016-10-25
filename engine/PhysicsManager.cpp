@@ -27,7 +27,7 @@ PhysicsObject::~PhysicsObject()
 			delete rigidBody->getMotionState();
 			delete rigidBody;
 			LinkedListNode<btRigidBody> * nextNode = curRigidBodyNode->GetNext();
-			delete curRigidBodyNode;
+			m_rigidBodies.RemoveDelete(curRigidBodyNode);
 			curRigidBodyNode = nextNode;
 		}
 	}
@@ -45,7 +45,7 @@ PhysicsObject::~PhysicsObject()
 			}
 			delete collisionObject;
 			LinkedListNode<btCollisionObject> * nextNode = curObjectNode->GetNext();
-			delete curObjectNode;
+			m_collisionObjects.RemoveDelete(curObjectNode);
 			curObjectNode = nextNode;
 		}
 	}
@@ -55,6 +55,14 @@ PhysicsObject::~PhysicsObject()
 	{
 		m_fileLoader->deleteAllData();
 		delete m_fileLoader;
+
+		LinkedListNode<btCollisionShape> * curShapeNode = m_collisionShapes.GetHead();
+		while (curShapeNode)
+		{
+			LinkedListNode<btCollisionShape> * nextNode = curShapeNode->GetNext();
+			m_collisionShapes.RemoveDelete(curShapeNode);
+			curShapeNode = nextNode;
+		}
 	}
 	else // Otherwise we own it
 	{
@@ -66,7 +74,7 @@ PhysicsObject::~PhysicsObject()
 				btCollisionShape * collisionObject = curShapeNode->GetData();
 				delete collisionObject;
 				LinkedListNode<btCollisionShape> * nextNode = curShapeNode->GetNext();
-				delete curShapeNode;
+				m_collisionShapes.RemoveDelete(curShapeNode);
 				curShapeNode = nextNode;
 			}
 		}
