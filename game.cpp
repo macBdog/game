@@ -75,9 +75,6 @@ int main(int argc, char *argv[])
 	DataPack & dataPack = DataPack::Get();
 	dataPack.SetRelativePath(partialPath);
 
-#ifdef _RELEASE
-	#define _DATAPACK 1
-#endif
 #ifdef _DATAPACK
 	dataPack.Load(DataPack::s_defaultDataPackPath);
 	
@@ -186,7 +183,7 @@ int main(int argc, char *argv[])
 	dataPack.AddFolder(texturePath, ".tga");
 	dataPack.AddFolder(fontPath, ".tga,.fnt");
 	dataPack.AddFolder(guiPath, ".cfg,.mnu");
-	dataPack.AddFolder(modelPath, ".obj,.mtl,.fbx");
+	dataPack.AddFolder(modelPath, ".obj,.mtl,.fbx,.bullet");
 	dataPack.AddFolder(templatePath, ".tmp");
 	dataPack.AddFolder(scenePath, ".scn");
 	dataPack.AddFolder(scriptPath, ".lua");

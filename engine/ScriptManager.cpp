@@ -10,6 +10,7 @@
 #include "CameraManager.h"
 #include "DataPack.h"
 #include "DebugMenu.h"
+#include "FontManager.h"
 #include "InputManager.h"
 #include "LuaScript.h"
 #include "OculusManager.h"
@@ -155,6 +156,8 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightDiffuse", SetLightDiffuse);
 		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
+
+		lua_register(m_globalLua, "Draw3DText", Draw3DText);
 
 		lua_register(m_globalLua, "GetNumCPUCores", GetNumCPUCores);
 		lua_register(m_globalLua, "GetStorageDrives", GetStorageDrives);
@@ -1224,6 +1227,39 @@ int ScriptManager::GetStorageDrives(lua_State * a_luaState)
 	}
 #endif
 	return 1;
+}
+
+int ScriptManager::Draw3DText(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 10)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		luaL_checktype(a_luaState, 2, LUA_TSTRING);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 7, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 8, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 9, LUA_TNUMBER);
+		const char * string = lua_tostring(a_luaState, 1);
+		const char * fontName = lua_tostring(a_luaState, 2);
+		const float size = (float)lua_tonumber(a_luaState, 3);
+		const float x = (float)lua_tonumber(a_luaState, 4);
+		const float y = (float)lua_tonumber(a_luaState, 5);
+		const float z = (float)lua_tonumber(a_luaState, 6);
+		const float r = (float)lua_tonumber(a_luaState, 7);
+		const float g = (float)lua_tonumber(a_luaState, 8);
+		const float b = (float)lua_tonumber(a_luaState, 9);
+		const float a = (float)lua_tonumber(a_luaState, 10);
+		StringHash fontNameHash(fontName);
+		FontManager::Get().DrawString(string, fontNameHash.GetHash(), size, Vector(x, y, z), Colour(r, g, b, a));
+	}
+	else
+	{
+		LogScriptError(a_luaState, "Draw3DText", "expects 10 parameters: string, font, size, posX, posY, posZ, colourR, colourG, colourB, colourA.");
+	}
+	return 0;
 }
 
 int ScriptManager::GetDirectoryListing(lua_State * a_luaState)

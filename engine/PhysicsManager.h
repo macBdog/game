@@ -91,13 +91,17 @@ class PhysicsManager : public Singleton<PhysicsManager>
 public:
 
 	PhysicsManager() 
-		: m_broadphase(NULL)
-		, m_collisionConfiguration(NULL)
-		, m_dispatcher(NULL)
-		, m_solver(NULL)
-		, m_dynamicsWorld(NULL) 
-		, m_collisionWorld(NULL)
-		, m_debugRender(NULL) { m_meshPath[0] = '\0'; }
+		: m_dataPack(nullptr)
+		, m_broadphase(nullptr)
+		, m_collisionConfiguration(nullptr)
+		, m_dispatcher(nullptr)
+		, m_solver(nullptr)
+		, m_dynamicsWorld(nullptr)
+		, m_collisionWorld(nullptr)
+		, m_debugRender(nullptr) 
+	{
+		m_meshPath[0] = '\0';
+	}
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
@@ -170,6 +174,7 @@ private:
 
 	char m_meshPath[StringUtils::s_maxCharsPerLine];
 
+	const DataPack * m_dataPack;										///< Pointer to a datapack to load from, if any
 	btBroadphaseInterface * m_broadphase;
 	btDefaultCollisionConfiguration * m_collisionConfiguration;
 	btCollisionDispatcher * m_dispatcher;

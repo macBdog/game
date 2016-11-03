@@ -6,8 +6,9 @@
 #include "InputManager.h"
 #include "FontManager.h"
 
-const float Camera::sc_defaultCameraSpeed = 8.0f;
-const float Camera::sc_defaultCameraRotSpeed = 48.0f;
+const float Camera::sc_defaultCameraSpeed = 32.0f;
+const float Camera::sc_defaultCameraRotSpeed = 64.0f;
+const float Camera::sc_defaultCameraTargetDistance = 10.0f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
 
@@ -43,14 +44,14 @@ void CameraManager::Update(float a_dt)
 			// Move both the camera and the target together
 			m_currentCamera->SetPosition(camPos + moveOffset);
 			m_currentCamera->SetTarget(camTarget + moveOffset);
-			
+
 			// Set rotation based on mouse delta while hotkey pressed
 			if (inMan.IsKeyDepressed(SDLK_LSHIFT))
 			{
 				// Get current camera inputs
 				const float maxRot = 360.0f;
 				Vector2 curInput = inMan.GetMousePosRelative();
-				Vector2 lastInput = m_currentCamera->GetOrientationInput();
+				Vector2 lastInput = m_debugOrientationInput;
 
 				// Cancel out mouse movement above an epsilon to prevent the camera jumping around
 				const float cameraMoveEpsilonSq = 0.05f;
@@ -60,15 +61,17 @@ void CameraManager::Update(float a_dt)
 					vecInput = Vector2::Vector2Zero();
 				}
 
-				Quaternion rotation(Vector(vecInput.GetY() * a_dt * rotSpeed, 0.0f, -vecInput.GetX() * a_dt * rotSpeed));
+				m_debugMouseLookAngleEuler += Vector(vecInput.GetY() * a_dt * rotSpeed, 0.0f, -vecInput.GetX() * a_dt * rotSpeed);
+				Quaternion rotation(m_debugMouseLookAngleEuler);
 				Matrix rotMat = Matrix::Identity();
 				rotation.ApplyToMatrix(rotMat);
-				Vector newTarget = rotMat.Transform(camTarget);
-				m_currentCamera->SetTarget(newTarget);
+				Vector newTarget = rotMat.Transform(Vector(0.0f, Camera::sc_defaultCameraTargetDistance, 0.0f));
+				m_currentCamera->SetTarget(camPos + newTarget);
 
-				m_currentCamera->SetOrientationInput(curInput);
+				m_debugOrientationInput = curInput;
 			}
-		
+
+
 			// Draw camera position on top of everything
 			if (DebugMenu::Get().IsDebugMenuEnabled())
 			{

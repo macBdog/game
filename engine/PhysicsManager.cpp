@@ -89,6 +89,12 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 		strncpy(m_meshPath, a_meshPath, sizeof(char) * strlen(a_meshPath) + 1);
 	}
 
+	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	{
+		// Cache off the datapack path for loading models from pack
+		m_dataPack = a_dataPack;
+	}
+
 	// Initialise physics world
 	m_broadphase = new btDbvtBroadphase();
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -279,6 +285,8 @@ void PhysicsManager::Update(float a_dt)
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 {
+	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
+
 	if (a_gameObj == NULL)
 	{
 		return false;
@@ -307,21 +315,51 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			sprintf(bulletFilePath, "%s%s", m_meshPath, a_gameObj->GetPhysicsMeshName());
 			if (fileLoader = new btBulletWorldImporter(m_dynamicsWorld))
 			{
-				if (fileLoader->loadFile(bulletFilePath))
+				if (readFromDataPack)
 				{
-					// Add all collision shapes in file
-					const int numShapes = fileLoader->getNumCollisionShapes();
-					for (int i = 0; i < numShapes; ++i)
+					if (DataPackEntry * packedBulletFile = m_dataPack->GetEntry(bulletFilePath))
 					{
-						collisionShapes.InsertNew(fileLoader->getCollisionShapeByIndex(i));
+						// This is crazy, bullet's file loader must read off the end of the buffer, the stack being safe?
+						char * bulletReadBuffer = (char *)malloc(packedBulletFile->m_size + 1);
+						memcpy(&bulletReadBuffer[0], &packedBulletFile->m_data[0], packedBulletFile->m_size);
+						if (fileLoader->loadFileFromMemory(bulletReadBuffer, packedBulletFile->m_size))
+						{
+							// Add all collision shapes in buffer
+							const int numShapes = fileLoader->getNumCollisionShapes();
+							for (int i = 0; i < numShapes; ++i)
+							{
+								collisionShapes.InsertNew(fileLoader->getCollisionShapeByIndex(i));
+							}
+							free(bulletReadBuffer);
+						}
+						else
+						{
+							free(bulletReadBuffer);
+							Log::Get().Write(LogLevel::Error, LogCategory::Game, "Error loading bullet collision mesh buffer %s!", bulletFilePath);
+							fileLoader->deleteAllData();
+							delete fileLoader;
+							return false;
+						}
 					}
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Game, "Error loading bullet collision mesh file %s!", bulletFilePath);
-					fileLoader->deleteAllData();
-					delete fileLoader;
-					return false;
+					if (fileLoader->loadFile(bulletFilePath))
+					{
+						// Add all collision shapes in file
+						const int numShapes = fileLoader->getNumCollisionShapes();
+						for (int i = 0; i < numShapes; ++i)
+						{
+							collisionShapes.InsertNew(fileLoader->getCollisionShapeByIndex(i));
+						}
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Error loading bullet collision mesh file %s!", bulletFilePath);
+						fileLoader->deleteAllData();
+						delete fileLoader;
+						return false;
+					}
 				}
 			}
 			break;
@@ -408,6 +446,7 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 		btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
 		btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
 		rigidBody->setFriction(100.0f);
+		rigidBody->setRollingFriction(100.0f);
 		rigidBody->setUserPointer(a_gameObj);
 		phys->AddRigidBody(rigidBody);
 

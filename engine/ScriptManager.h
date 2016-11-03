@@ -108,6 +108,8 @@ private:
 	static int GetStorageDrives(lua_State * a_luaState);
 	static int GetDirectoryListing(lua_State * a_luaState);
 
+	static int Draw3DText(lua_State * a_luaState);
+
 	static int PlaySoundFX(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);
 	static int SetMusicVolume(lua_State * a_luaState);

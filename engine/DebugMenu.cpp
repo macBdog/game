@@ -828,7 +828,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	{
 		// Picking point is the mouse cursor transformed to 3D space in cam direction
 		bool selectedObject = false;
-		const float pickDepth = 100.0f;
+		const float pickDepth = 10000.0f;
 		RenderManager & renMan = RenderManager::Get();
 		CameraManager & camMan = CameraManager::Get();
 		Matrix camMat = camMan.GetCameraMatrix();

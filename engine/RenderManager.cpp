@@ -741,7 +741,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		{
 			fontCharMat.SetIdentity();
 			fontCharMat.SetPos(fc->m_pos);
-			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), 1.0f));
+			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), fc->m_2d ? 1.0f : fc->m_size.GetY()));
 			shaderData.m_objectMatrix = &fontCharMat;
 			pLastShader->UseShader(shaderData);
 			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());

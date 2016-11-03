@@ -188,87 +188,83 @@ bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExten
 
 bool DataPack::Serialize(const char * a_path) const
 {
-	if (IsLoaded())
+	// First compute the complete size of all resources in the pack
+	size_t packSize = 0;
+	EntryNode * cur = m_manifest.GetHead();
+	while (cur != NULL)
 	{
-		// First compute the complete size of all resources in the pack
-		size_t packSize = 0;
+		DataPackEntry * curEntry = cur->GetData();
+		packSize += curEntry->m_size;
+		cur = cur->GetNext();
+	}
+
+	const int numEntries = m_manifest.GetLength();
+	char tempFilePath[StringUtils::s_maxCharsPerLine];
+	sprintf(tempFilePath, "%s.tmp", a_path);
+	ofstream outputFile(tempFilePath, ios::out | ios::binary);
+	if (outputFile.is_open())
+	{
+		// First write the number of entries in the manifest and the total resource size
+		outputFile.write((char *)&numEntries, sizeof(int));
+		outputFile.write((char *)&packSize, sizeof(size_t));
+
+		// Write each file in the manifest
 		EntryNode * cur = m_manifest.GetHead();
 		while (cur != NULL)
 		{
 			DataPackEntry * curEntry = cur->GetData();
-			packSize += curEntry->m_size;
+
+			// First write the entry header so the reading function knows how far to read
+			outputFile.write((char *)&curEntry->m_size, sizeof(size_t));
+			outputFile.write((char *)&curEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
+				
+			// Now write the resource by opening and reading it from the disk
+			char diskPath[StringUtils::s_maxCharsPerLine];
+
+			// Special case for game.cfg as it lives outside the data folder
+			if (strstr(curEntry->m_path, "game.cfg") != 0)
+			{ 
+				sprintf(diskPath, "%s", curEntry->m_path);
+			}
+			else
+			{
+				sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
+			}
+			size_t writeByteCount = 0;
+			ifstream resourceFile(diskPath, ifstream::in | ifstream::binary);
+			if (resourceFile.is_open())
+			{
+				// Read and write the resource file in one pass for faster data pack writes
+				char * resourceBuffer = (char *)malloc(sizeof(char) * curEntry->m_size);
+				memset(resourceBuffer, 0, sizeof(char) * curEntry->m_size);
+				resourceFile.read(resourceBuffer, curEntry->m_size);
+				outputFile.write(resourceBuffer, curEntry->m_size);
+				writeByteCount += curEntry->m_size;
+				resourceFile.close();
+				free(resourceBuffer);
+			}
+			else
+			{
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open file %s for writing to the datapack, this will corrupt the datapack.", diskPath);
+			}
 			cur = cur->GetNext();
 		}
-
-		const int numEntries = m_manifest.GetLength();
-		char tempFilePath[StringUtils::s_maxCharsPerLine];
-		sprintf(tempFilePath, "%s.tmp", a_path);
-		ofstream outputFile(tempFilePath, ios::out | ios::binary);
-		if (outputFile.is_open())
-		{
-			// First write the number of entries in the manifest and the total resource size
-			outputFile.write((char *)&numEntries, sizeof(int));
-			outputFile.write((char *)&packSize, sizeof(size_t));
-
-			// Write each file in the manifest
-			EntryNode * cur = m_manifest.GetHead();
-			while (cur != NULL)
-			{
-				DataPackEntry * curEntry = cur->GetData();
-
-				// First write the entry header so the reading function knows how far to read
-				outputFile.write((char *)&curEntry->m_size, sizeof(size_t));
-				outputFile.write((char *)&curEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
-				
-				// Now write the resource by opening and reading it from the disk
-				char diskPath[StringUtils::s_maxCharsPerLine];
-
-				// Special case for game.cfg as it lives outside the data folder
-				if (strstr(curEntry->m_path, "game.cfg") != 0)
-				{ 
-					sprintf(diskPath, "%s", curEntry->m_path);
-				}
-				else
-				{
-					sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
-				}
-				size_t writeByteCount = 0;
-				ifstream resourceFile(diskPath, ifstream::in | ifstream::binary);
-				if (resourceFile.is_open())
-				{
-					// TODO read the resource file in one pass for faster data pack writes
-					while (resourceFile.good() && writeByteCount < curEntry->m_size)
-					{
-						char c = resourceFile.get();
-						outputFile.write(&c, sizeof(char));
-						++writeByteCount;
-					}
-					resourceFile.close();
-				}
-				else
-				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open file %s for writing to the datapack, this will corrupt the datapack.", diskPath);
-				}
-				cur = cur->GetNext();
-			}
-		}
-		outputFile.close();
-
-		// Now compress the file
-		FILE * inputFile = fopen(tempFilePath, "rb");
-		gzFile outfile = gzopen(s_defaultDataPackPath, "wb");
-		char readBuffer[128];
-		int bytesRead = 0;
-		while ((bytesRead = fread(readBuffer, 1, sizeof(readBuffer), inputFile)) > 0)
-		{
-			gzwrite(outfile, readBuffer, bytesRead);
-		}
-		fclose(inputFile);
-		gzclose(outfile);
-
-		return true;
 	}
-	return false;
+	outputFile.close();
+
+	// Now compress the file
+	FILE * inputFile = fopen(tempFilePath, "rb");
+	gzFile outfile = gzopen(s_defaultDataPackPath, "wb");
+	char readBuffer[128];
+	int bytesRead = 0;
+	while ((bytesRead = fread(readBuffer, 1, sizeof(readBuffer), inputFile)) > 0)
+	{
+		gzwrite(outfile, readBuffer, bytesRead);
+	}
+	fclose(inputFile);
+	gzclose(outfile);
+
+	return true;
 }
 
 DataPackEntry * DataPack::GetEntry(const char * a_path) const
