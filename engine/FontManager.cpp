@@ -161,7 +161,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 						{
 							float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX());
 							float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
-							float zPos = a_pos.GetZ() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
+							float zPos = a_pos.GetZ() -((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
 
 							// Align font chars 2D vs 3D
 							if (is2D)
@@ -170,7 +170,6 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 							}
 							else
 							{
-								zPos = a_pos.GetZ() - (curChar.m_yoffset / font->m_sizeY);
 								renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId3D, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
 							}
 						}

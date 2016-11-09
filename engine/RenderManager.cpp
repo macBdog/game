@@ -728,27 +728,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			q++;
 		}
 
-		// Draw font chars by calling their display lists
-		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
-		{
-			glEnable(GL_TEXTURE_2D);
-			pLastShader = m_textureShader;
-		}
-
-		FontChar * fc = m_fontChars[i];
-		Matrix fontCharMat = Matrix::Identity();
-		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
-		{
-			fontCharMat.SetIdentity();
-			fontCharMat.SetPos(fc->m_pos);
-			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), fc->m_2d ? 1.0f : fc->m_size.GetY()));
-			shaderData.m_objectMatrix = &fontCharMat;
-			pLastShader->UseShader(shaderData);
-			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
-			glCallList(fc->m_displayListId);
-			++fc;
-		}
-
 		// Draw models by calling their display lists
 		RenderModel * rm = m_models[i];
 		Shader * pLastModelShader = NULL;	
@@ -773,6 +752,27 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 				glCallList(obj->GetDisplayListId());
 			}
 			++rm;
+		}
+
+		// Draw font chars by calling their display lists
+		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
+		{
+			glEnable(GL_TEXTURE_2D);
+			pLastShader = m_textureShader;
+		}
+
+		FontChar * fc = m_fontChars[i];
+		Matrix fontCharMat = Matrix::Identity();
+		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
+		{
+			fontCharMat.SetIdentity();
+			fontCharMat.SetPos(fc->m_pos);
+			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), fc->m_2d ? 1.0f : fc->m_size.GetY()));
+			shaderData.m_objectMatrix = &fontCharMat;
+			pLastShader->UseShader(shaderData);
+			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
+			glCallList(fc->m_displayListId);
+			++fc;
 		}
 		
 		// Swith to colour shader for lines as they cannot be textured
