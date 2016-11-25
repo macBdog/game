@@ -96,12 +96,13 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 	}
 
 	// Initialise physics world
+	btScalar worldSize(10000);
 	m_broadphase = new btDbvtBroadphase();
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
 	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 	m_solver = new btSequentialImpulseConstraintSolver;
-	btVector3 worldAabbMin(-1000,-1000,-1000);
-	btVector3 worldAabbMax(1000,1000,1000);
+	btVector3 worldAabbMin(-worldSize, -worldSize, -worldSize);
+	btVector3 worldAabbMax(worldSize, worldSize, worldSize);
 
 	btAxisSweep3*	broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	
@@ -263,6 +264,14 @@ void PhysicsManager::Update(float a_dt)
 				continue;
 			}
 
+			// Manually check the collision filter - bullet should be doing this??
+			int collisionGroupA = GetCollisionGroupId(gameObjA->GetClipGroup());
+			int collisionGroupB = GetCollisionGroupId(gameObjB->GetClipGroup());
+			if (!m_collisionFilters[collisionGroupA].IsBitSet(collisionGroupB) &&
+				!m_collisionFilters[collisionGroupB].IsBitSet(collisionGroupA))
+			{
+				continue;
+			}
 			AddCollision(gameObjA, gameObjB);
 			AddCollision(gameObjB, gameObjA);
 			
@@ -411,7 +420,8 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 			colGroup = (short)(colGroupId);
 			colFilter = (short)(m_collisionFilters[colGroupId].GetBits());
 		}
-		m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
+		//m_collisionWorld->addCollisionObject(collisionObject, colGroup, colFilter);
+		m_collisionWorld->addCollisionObject(collisionObject);
 
 		curShapeNode = curShapeNode->GetNext();
 	}

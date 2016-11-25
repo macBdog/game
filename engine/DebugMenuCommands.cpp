@@ -2,6 +2,7 @@
 #include "Gui.h"
 #include "InputManager.h"
 #include "FontManager.h"
+#include "ModelManager.h"
 #include "TextureManager.h"
 #include "Widget.h"
 #include "WorldManager.h"

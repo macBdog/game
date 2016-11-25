@@ -132,6 +132,7 @@
     <ClInclude Include="OculusRender.h" />
     <ClInclude Include="PhysicsManager.h" />
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="OculusRender.cpp" />
     <ClCompile Include="PhysicsManager.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SoundManager.cpp" />

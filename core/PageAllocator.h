@@ -80,6 +80,7 @@ public:
 		: m_itemSize(0)
 		, m_numPages(0)
 		, m_itemsPerPage(0)
+		, m_count(0)
 	{ }
 
 	inline bool Init(unsigned int a_numItems, size_t a_itemSize)
@@ -87,6 +88,11 @@ public:
 		m_itemSize = a_itemSize;
 		m_itemsPerPage = a_numItems;
 		return m_pages[m_numPages++].Init(m_itemSize, m_itemsPerPage);
+	}
+
+	inline T * Add()
+	{
+		return Add(m_count);
 	}
 
 	inline T * Add(unsigned int a_index)
@@ -102,11 +108,13 @@ public:
 			newAlloc = m_pages[m_numPages-1].Add(pagePos);
 		}
 		assert(newAlloc != NULL);
+		++m_count;
 		return (T*)newAlloc;
 	}
 
 	inline bool Reset()
 	{
+		m_count = 0;
 		m_numPages = 1;
 		return true;
 	}
@@ -118,6 +126,8 @@ public:
 		return (T*)m_pages[m_numPages-1].Get(pagePos);
 	}
 
+	inline unsigned int GetCount() const { return m_count; }
+
 private:
 
 	static const int s_maxPages = 32;	///< Pages are 20 byte classes so assume a max number of pages
@@ -126,6 +136,7 @@ private:
 	size_t m_itemSize;					///< How big each item is inside each page
 	unsigned int m_itemsPerPage;		///< The number of items in each page
 	unsigned int m_numPages;			///< How many pages are currently being utilised
+	unsigned int m_count;				///< How many objects in the allocator
 };
 
 #endif // _CORE_PAGE_ALLOCATOR_

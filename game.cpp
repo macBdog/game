@@ -175,6 +175,7 @@ int main(int argc, char *argv[])
 	if (!gameConfig.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", gameConfigPath);
+		Sleep(10000);
 		return 1;
 	}
 

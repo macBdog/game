@@ -167,6 +167,7 @@ private:
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int AddGameObjectToCollisionWorld(lua_State * a_luaState);
+	static int SetGameObjectClipSize(lua_State * a_luaState);
 	static int AddGameObjectToPhysicsWorld(lua_State * a_luaState);
 	static int ApplyGameObjectPhysicsForce(lua_State * a_luaState);
 	static int GetGameObjectVelocity(lua_State * a_luaState);

@@ -13,11 +13,13 @@
 #include "FontManager.h"
 #include "InputManager.h"
 #include "LuaScript.h"
+#include "ModelManager.h"
 #include "OculusManager.h"
-#include "WorldManager.h"
+#include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "SoundManager.h"
 #include "TextureManager.h"
+#include "WorldManager.h"
 
 #include "ScriptManager.h"
 
@@ -83,6 +85,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"AddToCollisionWorld", AddGameObjectToCollisionWorld},
+	{"SetClipSize", SetGameObjectClipSize},
 	{"AddToPhysicsWorld", AddGameObjectToPhysicsWorld},
 	{"ApplyPhysicsForce", ApplyGameObjectPhysicsForce},
 	{"GetVelocity", GetGameObjectVelocity},
@@ -2021,7 +2024,7 @@ int ScriptManager::GetGameObjectScale(lua_State * a_luaState)
 	}
 	else // Wrong number of args
 	{
-		LogScriptError(a_luaState, "SetScale", "expects no parameters.");
+		LogScriptError(a_luaState, "GetScale", "expects no parameters.");
 	}
 	return 0;
 }
@@ -2404,6 +2407,30 @@ int ScriptManager::AddGameObjectToCollisionWorld(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "AddToCollisionWorld", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetGameObjectClipSize(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector clipSize((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+			gameObj->SetClipSize(clipSize);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetClipSize", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetClipSize", "expects 3 numbers of size X, Y and Z.");
 	}
 	return 0;
 }

@@ -43,6 +43,11 @@ bool GameObject::Update(float a_dt)
 		return true;
 	}
 
+	if (m_state == GameObjectState::Death)
+	{
+		return false;
+	}
+
 	// Become active if ready
 	if (m_state == GameObjectState::Loading && m_model != NULL)
 	{
@@ -143,6 +148,8 @@ bool GameObject::Shutdown()
 	{
 		RenderManager::Get().UnManageShader(this);
 	}
+
+	SetState(GameObjectState::Death);
 
 	return true;
 }

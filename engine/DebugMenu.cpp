@@ -7,6 +7,7 @@
 #include "Log.h"
 #include "ModelManager.h"
 #include "RenderManager.h"
+#include "ScriptManager.h"
 #include "StringHash.h"
 #include "TextureManager.h"
 #include "Widget.h"
