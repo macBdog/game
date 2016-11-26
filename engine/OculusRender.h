@@ -52,9 +52,10 @@ public:
 	bool InitRendering(int a_winSizeW, int a_winSizeH, const LUID* a_luid, HWND * a_window);
 	bool InitRenderingNoHMD();
 	void Startup(ovrSession * a_session);
+	void Update(float a_dt);
 	
 	//\brief Calls OVR's begin frame and end frame calls with RenderManager::DrawScene sandwiched in between
-	void DrawToHMD();
+	bool DrawToHMD();
 
 	void Shutdown();
 	void DeinitRendering();
@@ -64,6 +65,8 @@ private:
 	bool m_renderInit;										///< Has InitRendering been called successfully
 	int m_winSizeW;
 	int m_winSizeH;
+	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
+	float m_lastRenderTime;											///< How long the last frame took
 	GLuint m_fboId;
 	HGLRC m_wglContext;
 	OVR::GLEContext * m_GLEContext;

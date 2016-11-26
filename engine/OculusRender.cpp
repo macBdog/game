@@ -13,6 +13,7 @@
 #include "RenderManager.h"
 
 #include "OculusRender.h"
+#include "WorldManager.h"
 
 using namespace OVR;
 
@@ -402,7 +403,13 @@ void OculusRender::DeinitRendering()
 	m_renderInit = false;
 }
 
-void OculusRender::DrawToHMD()
+void OculusRender::Update(float a_dt)
+{
+	m_lastRenderTime = a_dt;
+	m_renderTime += a_dt;
+}
+
+bool OculusRender::DrawToHMD()
 {
 	static int frameIndex = 0;
 	++frameIndex;
@@ -411,7 +418,7 @@ void OculusRender::DrawToHMD()
 	ovr_GetSessionStatus(*m_session, &sessionStatus);
 	if (sessionStatus.ShouldQuit)
 	{
-		return;
+		return false;
 	}
 	if (sessionStatus.ShouldRecenter)
 	{
@@ -419,7 +426,7 @@ void OculusRender::DrawToHMD()
 	}
 
 	RenderManager & renMan = RenderManager::Get();
-	if (sessionStatus.IsVisible)
+	if (sessionStatus.IsVisible && sessionStatus.HmdPresent && sessionStatus.HmdMounted)
 	{
 		// Call ovr_GetRenderDesc each frame to get the ovrEyeRenderDesc, as the returned values (e.g. HmdToEyeOffset) may change at runtime.
 		ovrSession & session = *m_session;
@@ -462,8 +469,23 @@ void OculusRender::DrawToHMD()
 
 			// Render world
 			renMan.SetRenderTargetSize(m_winSizeW, m_winSizeH);
+
 			const bool shouldClearRenderBuffers = eye == ovrEye_Count - 1;
 			renMan.RenderScene(viewMatrix, perspective, shouldClearRenderBuffers, false);
+
+			// Now render with full scene shader if specified
+			Matrix identityMat = Matrix::Identity();
+			Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
+			Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_winSizeW, (float)m_winSizeH, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
+			bool bUseDefaultShader = true;
+			if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
+			{
+				if (Shader * pSceneShader = pCurScene->GetShader())
+				{
+					pSceneShader->UseShader(shaderData);
+					bUseDefaultShader = false;
+				}
+			}
 
 			// Avoids an error when calling SetAndClearRenderSurface during next iteration.
 			// Without this, during the next while loop iteration SetAndClearRenderSurface
@@ -501,8 +523,7 @@ void OculusRender::DrawToHMD()
 	}
 	else
 	{
-		// HMD is not visible, render the scene to clear the buffers
-		renMan.RenderScene(Matrix(), Matrix(), true, false);
+		return false;
 	}
 
 	// Blit mirror texture to back buffer
@@ -515,4 +536,6 @@ void OculusRender::DrawToHMD()
 
 	HDC hDC = wglGetCurrentDC();
 	SwapBuffers(hDC);
+
+	return true;
 }

@@ -10,6 +10,9 @@
 #include "../core/Quaternion.h"
 
 #include "GameFile.h"
+#ifndef _RELEASE
+	#include "FileManager.h"
+#endif
 #include "StringHash.h"
 #include "StringUtils.h"
 
@@ -137,7 +140,7 @@ public:
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
 	inline void SetState(GameObjectState::Enum a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
-	inline void SetTemplate(const char * a_templateName) { strncpy(m_template, a_templateName, StringUtils::s_maxCharsPerName); }
+	void SetTemplate(const char * a_templateName);
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
 	inline void RemoveScale() { m_worldMat.RemoveScale(); }
@@ -178,6 +181,9 @@ public:
 	static const char * s_clipTypeStrings[ClipType::Count];				///< String literals for the clip types
 
 private:
+	
+	//\brief Reset member data from any template properties that exist
+	void SetTemplateProperties();
 
 	unsigned int		  m_id;											///< Unique identifier, objects can be resolved from ids
 	GameObject *		  m_child;										///< Pointer to first child game obhject
@@ -201,6 +207,9 @@ private:
 	Matrix				  m_finalMat;									///< Aggregate of world and local only used by render
 	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
+#ifndef _RELEASE
+	FileManager::Timestamp m_templateTimeStamp;							///< For auto-reloading of templates
+#endif
 	char				  m_physicsMesh[StringUtils::s_maxCharsPerName];///< If the clip type of mesh is used, this is the name of the mesh to load
 	int					  m_scriptRef;									///< If the object is created and managed by script, the ID on the script side is stored here
 };

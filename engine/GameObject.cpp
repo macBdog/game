@@ -4,6 +4,7 @@
 #include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
+#include "ModelManager.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "WorldManager.h"
@@ -22,6 +23,61 @@ const char * GameObject::s_clipTypeStrings[ClipType::Count] =
 	".bullet",
 };
 
+void GameObject::SetTemplateProperties()
+{
+	char fullTemplatePath[StringUtils::s_maxCharsPerLine];
+	sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+	GameFile templateFile;
+	if (templateFile.Load(fullTemplatePath) && templateFile.IsLoaded())
+	{
+		if (GameFile::Object * object = templateFile.FindObject("gameObject"))
+		{
+			if (GameFile::Property * model = object->FindProperty("model"))
+			{
+				if (Model * newModel = ModelManager::Get().GetModel(model->GetString()))
+				{
+					SetModel(newModel);
+				}
+			}
+			if (GameFile::Property * clipType = object->FindProperty("clipType"))
+			{
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+				{
+					SetClipType(ClipType::Sphere);
+				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+				{
+					SetClipType(ClipType::Box);
+				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+				{
+					SetClipType(ClipType::Mesh);
+					SetPhysicsMesh(clipType->GetString());
+				}
+			}
+			if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
+			{
+				SetClipSize(clipSize->GetVector());
+			}
+			if (GameFile::Property * clipOffset = object->FindProperty("clipOffset"))
+			{
+				SetClipOffset(clipOffset->GetVector());
+			}
+			// Shader 
+			RenderManager & rMan = RenderManager::Get();
+			if (GameFile::Property * shader = object->FindProperty("shader"))
+			{
+				// First try to find if the shader is already loaded
+				rMan.ManageShader(this, shader->GetString());
+			}
+			if (GameFile::Property * massProp = object->FindProperty("physicsMass"))
+			{
+				SetPhysicsMass(massProp->GetFloat());
+			}
+		}
+	}
+}
+
 bool GameObject::Update(float a_dt)
 {
 #ifndef _RELEASE
@@ -36,6 +92,22 @@ bool GameObject::Update(float a_dt)
 	{
 		return true;
 	}
+
+	// Monitor and reload from template
+	if (HasTemplate())
+	{
+		FileManager::Timestamp tempTime;
+		char fullTemplatePath[StringUtils::s_maxCharsPerLine];
+		sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+		FileManager::Get().GetFileTimeStamp(fullTemplatePath, tempTime);
+		if (tempTime > m_templateTimeStamp)
+		{
+			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in template file %s, reloading.", fullTemplatePath);
+			SetTemplateProperties();
+			m_templateTimeStamp = tempTime;
+		}
+	}
+
 #endif
 	// Early out for deactivated objects
 	if (m_state == GameObjectState::Sleep)
@@ -162,6 +234,17 @@ Quaternion GameObject::GetRot() const
 Vector GameObject::GetScale() const
 {
 	return m_worldMat.GetScale();
+}
+
+void GameObject::SetTemplate(const char * a_templateName) 
+{ 
+	strncpy(m_template, a_templateName, StringUtils::s_maxCharsPerName);
+	// Find the timestamp for the template file monitoring
+#ifndef _RELEASE
+	char fullTemplatePath[StringUtils::s_maxCharsPerLine];
+	sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), a_templateName);
+	FileManager::Get().GetFileTimeStamp(fullTemplatePath, m_templateTimeStamp);
+#endif
 }
 
 void GameObject::SetRot(const Vector & a_rot)

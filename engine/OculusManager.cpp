@@ -34,6 +34,7 @@ void OculusManager::Startup(bool a_useVr)
 				ovrSizei windowSize = { hmdDesc.Resolution.w / 2, hmdDesc.Resolution.h / 2 };
 				m_hmdWidth = windowSize.w;
 				m_hmdHeight = windowSize.h;
+				m_initialised = true;
 			}
 			else
 			{
@@ -42,7 +43,6 @@ void OculusManager::Startup(bool a_useVr)
 				return;
 			}
 		}
-		m_initialised = true;
 	}
 }
 
@@ -67,12 +67,22 @@ void OculusManager::StartupRendering(HWND * a_window, bool a_useVr)
 	}
 }
 
-void OculusManager::DrawToHMD()
+void OculusManager::Update(float a_dt)
 {
 	if (m_oculusRender)
 	{
-		m_oculusRender->DrawToHMD();
+		m_oculusRender->Update(a_dt);
 	}
+}
+
+bool OculusManager::DrawToHMD()
+{
+	if (m_oculusRender)
+	{
+		return m_oculusRender->DrawToHMD();
+	}
+
+	return false;
 }
 
 void OculusManager::Shutdown()

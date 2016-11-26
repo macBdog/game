@@ -30,7 +30,8 @@ public:
 
 	void Startup(bool a_useVr); // Calls ovr_Initialize which must happen before render context initilization in StartupRendering 
 	void StartupRendering(HWND * a_window, bool a_useVr);
-	void DrawToHMD();
+	void Update(float a_dt);
+	bool DrawToHMD();
 	void Shutdown();
 
 	//\brief Convenience functions for the engine to call Oculus code

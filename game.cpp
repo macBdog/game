@@ -396,6 +396,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Drawing the scene will flush the renderLayers
+		UPDATE_AND_PROFILE(OculusManager);
 		UPDATE_AND_PROFILE(RenderManager);
 		
 #ifndef _RELEASE
@@ -407,7 +408,10 @@ int main(int argc, char *argv[])
 		// Only swap the buffers at the end of all the rendering passes
 		if (useVr)
 		{
-			OculusManager::Get().DrawToHMD();
+			if (!OculusManager::Get().DrawToHMD())
+			{
+				RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
+			}
 		}
 		else
 		{
