@@ -32,8 +32,9 @@ public:
 	bool Shutdown();
 
 	void Update(float a_dt);
-
+	void SetListenerPosition(const Vector & a_position, const Vector & a_direction, const Vector & a_velocity);
 	bool PlaySoundFX(const char * a_soundName) const;
+	bool PlaySoundFX3D(const char * a_soundName, const Vector & a_position) const;
 	bool PlayMusic(const char * a_musicName);
 	bool SetMusicVolume(const char * a_musicName, float a_newVolume);
 	void StopAllSoundsAndMusic();

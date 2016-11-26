@@ -35,6 +35,7 @@ bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack
 
 			// Clean up the list of sounds
 			a_dataPack->CleanupEntryList(soundEntries);
+			m_engine->setDefault3DSoundMinDistance(0.1f);
 		}
 		return true;
 	}
@@ -63,7 +64,18 @@ bool SoundManager::Shutdown()
 
 void SoundManager::Update(float a_dt)
 {
+}
 
+void SoundManager::SetListenerPosition(const Vector & a_position, const Vector & a_direction, const Vector & a_velocity)
+{ 
+	if (m_engine != nullptr) 
+	{ 
+		const irrklang::vec3df iPos(a_position.GetX(), a_position.GetY(), a_position.GetZ());
+		const irrklang::vec3df iDir(a_direction.GetX(), a_direction.GetY(), a_direction.GetZ());
+		const irrklang::vec3df iVel(a_velocity.GetX(), a_velocity.GetY(), a_velocity.GetZ());
+		const irrklang::vec3df upDir(0.0f, 0.0f, 1.0f);
+		m_engine->setListenerPosition(iPos, iDir, iVel, upDir);
+	} 
 }
 
 bool SoundManager::PlaySoundFX(const char * a_soundName) const
@@ -83,6 +95,32 @@ bool SoundManager::PlaySoundFX(const char * a_soundName) const
 		if (irrklang::ISound * soundHandle = m_engine->play2D(soundNameBuf, false))
 		{
 			// Not holding on to the reference for any reason so destruct it right away
+			soundHandle->drop();
+			return true;
+		}
+	}
+	return false;
+}
+
+bool SoundManager::PlaySoundFX3D(const char * a_soundName, const Vector & a_position) const
+{
+	if (m_engine)
+	{
+		// Check if the sound name needs the path added
+		char soundNameBuf[StringUtils::s_maxCharsPerLine];
+		if (!strstr(a_soundName, ":\\"))
+		{
+			sprintf(soundNameBuf, "%s%s", m_soundPath, a_soundName);
+		}
+		else // Already fully qualified
+		{
+			sprintf(soundNameBuf, "%s", a_soundName);
+		}
+		if (irrklang::ISound * soundHandle = m_engine->play3D(soundNameBuf, irrklang::vec3df(a_position.GetX(), a_position.GetY(), a_position.GetZ()), false))
+		{
+			// Not holding on to the reference for any reason so destruct it right away
+			soundHandle->setMinDistance(0.1f);
+			soundHandle->setMaxDistance(10000.0f);
 			soundHandle->drop();
 			return true;
 		}

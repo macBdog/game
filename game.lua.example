@@ -62,8 +62,10 @@ f = GetGamePadLeftTrigger(padId)
 f = GetGamePadRightTrigger(padId)
 rayHitX, rayHitY, rayHitZ, rayNormX, rayNormY, rayNormZ, hitGameObj = GetRayCollision(rayStartX, rayStartY, rayStaryZ, rayEndX, rayEndZ, rayEndZ)
 PlaySound("fileNameInSoundFolder.wav")
+PlaySound3D("fileNameInSoundFolder.wav", posX, posY, posZ)
 PlayMusic("loopingFileNameInSoundFolder.wav")
 SetMusicVolume("fileNameOfMusicThatsPlayer", 0.5)
+SetListenerPosition(posX, posY, posZ, dirX, dirY, dirZ, velX, velY, velZ)
 StopAllSoundsAndMusic()
 
 Debugging

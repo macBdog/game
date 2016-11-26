@@ -111,8 +111,10 @@ private:
 	static int Draw3DText(lua_State * a_luaState);
 
 	static int PlaySoundFX(lua_State * a_luaState);
+	static int PlaySoundFX3D(lua_State * a_luaState);
 	static int PlayMusic(lua_State * a_luaState);
 	static int SetMusicVolume(lua_State * a_luaState);
+	static int SetListenerPosition(lua_State * a_luaState);
 	static int StopAllSoundsAndMusic(lua_State * a_luaState);
 
 	static int GUIGetValue(lua_State * a_luaState);

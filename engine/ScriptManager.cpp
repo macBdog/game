@@ -167,8 +167,10 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "GetDirectoryListing", GetDirectoryListing);
 
 		lua_register(m_globalLua, "PlaySound", PlaySoundFX);
+		lua_register(m_globalLua, "PlaySound3D", PlaySoundFX3D);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
 		lua_register(m_globalLua, "SetMusicVolume", SetMusicVolume);
+		lua_register(m_globalLua, "SetListenerPosition", SetListenerPosition);
 		lua_register(m_globalLua, "StopAllSoundsAndMusic", StopAllSoundsAndMusic);
 		lua_register(m_globalLua, "Yield", YieldLuaEnvironment);
 		lua_register(m_globalLua, "DebugPrint", DebugPrint);
@@ -994,6 +996,31 @@ int ScriptManager::PlaySoundFX(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::PlaySoundFX3D(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		const char * soundName = lua_tostring(a_luaState, 1);
+		if (soundName != NULL)
+		{
+			float x = (float)lua_tonumber(a_luaState, 2);
+			float y = (float)lua_tonumber(a_luaState, 3);
+			float z = (float)lua_tonumber(a_luaState, 4);
+			SoundManager::Get().PlaySoundFX3D(soundName, Vector(x, y, z));
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "PlaySound3D", "expects 4 parameter: filename of the sound to play then 3 floats for the position.");
+	}
+	return 0;
+}
+
 int ScriptManager::PlayMusic(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -1037,6 +1064,42 @@ int ScriptManager::SetMusicVolume(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "SetMusicVolume", "expects 2 parameter: filename of the music that's playing then the volume of the music between 0 and 1.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetListenerPosition(lua_State * a_luaState)
+{
+	const int numArg = lua_gettop(a_luaState);
+	if (lua_gettop(a_luaState) == 9)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 7, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 8, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 9, LUA_TNUMBER);
+		float posX = (float)lua_tonumber(a_luaState, 1);
+		float posY = (float)lua_tonumber(a_luaState, 2);
+		float posZ = (float)lua_tonumber(a_luaState, 3);
+		float dirX = (float)lua_tonumber(a_luaState, 4);
+		float dirY = (float)lua_tonumber(a_luaState, 5);
+		float dirZ = (float)lua_tonumber(a_luaState, 6);
+		float velX = (float)lua_tonumber(a_luaState, 7);
+		float velY = (float)lua_tonumber(a_luaState, 8);
+		float velZ = (float)lua_tonumber(a_luaState, 9);
+		const Vector pos(posX, posY, posZ);
+		const Vector dir(dirX, dirY, dirZ);
+		const Vector vel(velX, velY, velZ);
+		SoundManager::Get().SetListenerPosition(pos, dir, vel);
+		return 0;
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetListenerPosition", "expects 9 parameter: xyz numbers for pos, dir and vel.");
 	}
 	return 0;
 }

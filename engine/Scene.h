@@ -17,7 +17,7 @@ class DataPack;
 //\brief SceneState keeps track of which scenes are loaded
 namespace SceneState
 {
-	enum Enum
+	enum Enum : unsigned int
 	{
 		Unloaded = 0,	///< Not rendering or updating
 		Loading,		///< Loading settings and game objects
@@ -53,7 +53,7 @@ public:
 	}
 	bool Load(DataPackEntry * a_sceneConfigData)
 	{
-		if (a_sceneConfigData != NULL && a_sceneConfigData->m_size > 0 && m_sourceFile.Load(a_sceneConfigData))
+		if (a_sceneConfigData != nullptr && a_sceneConfigData->m_size > 0 && m_sourceFile.Load(a_sceneConfigData))
 		{
 			return InitFromConfig();
 		}
@@ -64,6 +64,7 @@ public:
 	GameObject * AddObject(unsigned int a_objectId);
 	void RemoveAllObjects(bool a_destroyScriptOwned);
 	void RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings);
+	void Reset();
 
 	//\brief When an object is removed from the page storage, it is swapped with the last element, so the IDs will need to be remapped
 	//\return -1 if the swap last failed, otherwise return the ID of the last object

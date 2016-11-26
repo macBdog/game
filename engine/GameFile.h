@@ -191,6 +191,7 @@ public:
 	//\brief Load the game file and parse it into data
 	bool Load(const char * a_filePath)
 	{
+		Unload();
 		ifstream file(a_filePath, ifstream::in);
 		if (LoadData<ifstream>(file))
 		{

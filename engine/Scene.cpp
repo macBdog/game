@@ -15,7 +15,7 @@ const float Scene::s_updateFreq = 1.0f;								///< How often the scene should c
 Scene::Scene() 
 : m_state(SceneState::Unloaded) 
 , m_beginLoaded(false)
-, m_shader(NULL)
+, m_shader(nullptr)
 , m_numLights(0)
 , m_updateTimer(0.0f)
 , m_updateFreq(s_updateFreq)
@@ -30,6 +30,11 @@ Scene::Scene()
 
 Scene::~Scene()
 {
+	Reset();
+}
+
+void Scene::Reset()
+{
 	// Shutdown all game objects in the scene
 	for (unsigned int i = 0; i < m_objects.GetCount(); ++i)
 	{
@@ -38,12 +43,16 @@ Scene::~Scene()
 			gameObj->Shutdown();
 		}
 	}
-	
+
 	// Clean up shader if set
-	if (m_shader != NULL)
+	if (m_shader != nullptr)
 	{
 		RenderManager::Get().UnManageShader(this);
+		m_shader = nullptr;
 	}
+
+	m_numLights = 0;
+	m_objects.Reset();
 }
 
 bool Scene::InitFromConfig()
@@ -397,7 +406,10 @@ void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 	m_objects.Reset();
 
 	// Load scene front scratch so we are back with just scene objects and no script objects
-	InitFromConfig();
+	if (m_sourceFile.Load(m_filePath))
+	{
+		InitFromConfig();
+	}
 }
 
 bool Scene::Update(float a_dt)
@@ -434,6 +446,12 @@ bool Scene::Update(float a_dt)
 		FileManager::Get().GetFileTimeStamp(m_filePath, curTimeStamp);
 		if (curTimeStamp > m_timeStamp)
 		{
+			Reset();
+
+			if (m_sourceFile.Load(m_filePath))
+			{
+				InitFromConfig();
+			}
 			ScriptManager::Get().ReloadScripts();
 			ResetFileDateStamp();
 		}
