@@ -30,6 +30,7 @@ public:
 	//\brief Update will poll for model changes and reload any models that have a newer version than on disk
 	//\return true if a model was old and needed to be reloaded
 	bool Update(float a_dt);
+	bool ReloadModelsWithTexture(Texture * a_texture);
 
 	//\brief Get or load a TGA file into model memory
 	//\param a_tgaPath cstring to identify the model by

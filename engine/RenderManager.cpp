@@ -1482,17 +1482,20 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 	}
 
 	// Init then free the memory for shader sources
-	bool shadersCompiled = InitShaderFromMemory(vertexSource, fragmentSource, a_shader_OUT);
-	if (vertexSource != NULL)
+	if (vertexSource && fragmentSource)
 	{
-		free(vertexSource);
+		bool shadersCompiled = InitShaderFromMemory(vertexSource, fragmentSource, a_shader_OUT);
+		if (vertexSource != nullptr)
+		{
+			free(vertexSource);
+		}
+		if (fragmentSource != nullptr)
+		{
+			free(fragmentSource);
+		}
+		return shadersCompiled;
 	}
-	if (fragmentSource != NULL)
-	{
-		free(fragmentSource);
-	}
-
-	return shadersCompiled;
+	return false;
 }
 
 bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragShaderSrc, Shader & a_shader_OUT)

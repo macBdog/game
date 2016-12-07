@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "GL/CAPI_GLE.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <fstream>
@@ -146,16 +147,18 @@ bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilte
 		break;
     }
     
+	const int numMips = 8;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
-
+	glTexStorage2D(GL_TEXTURE_2D, numMips, GL_UNSIGNED_BYTE, a_x, a_y);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	if (a_useLinearFilter)
 	{
+		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	}
 	else
 	{
@@ -164,6 +167,11 @@ bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilte
 	}
     
     glTexImage2D(GL_TEXTURE_2D, 0, intTexFormat, a_x, a_y, 0, texFormat, GL_UNSIGNED_BYTE, textureData);
+
+	if (a_useLinearFilter)
+	{
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
 
 	m_textureId = textureID;
 

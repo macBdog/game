@@ -455,8 +455,8 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 
 		btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(objectMass, motionState, collisionShape, startingInertia);
 		btRigidBody * rigidBody = new btRigidBody(rigidBodyCI);
-		rigidBody->setFriction(100.0f);
-		rigidBody->setRollingFriction(100.0f);
+		rigidBody->setFriction(10.0f);
+		rigidBody->setRollingFriction(0.45f);
 		rigidBody->setUserPointer(a_gameObj);
 		phys->AddRigidBody(rigidBody);
 

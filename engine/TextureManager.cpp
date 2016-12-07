@@ -2,6 +2,7 @@
 #include "Log.h"
 
 #include "TextureManager.h"
+#include "ModelManager.h"
 
 template<> TextureManager * Singleton<TextureManager>::s_instance = NULL;
 
@@ -118,6 +119,9 @@ bool TextureManager::Update(float a_dt)
 						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path);
 						textureReloaded = curTex->m_texture.LoadTGAFromFile(curTex->m_path);
 						curTex->m_timeStamp = curTimeStamp;
+
+						// Check any models that use this texture and reload them
+						ModelManager::Get().ReloadModelsWithTexture(&curTex->m_texture);
 					}
 				}
 			}

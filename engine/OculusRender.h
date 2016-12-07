@@ -43,6 +43,10 @@ public:
 		, m_renderInit(false)
 		, m_winSizeW(0)
 		, m_winSizeH(0)
+		, m_renderTime(0.0f)
+		, m_lastRenderTime(0.0f)
+		, m_lookDir(0.0f)
+		, m_lookPos(0.0f)
 		, m_fboId(0)
 		, m_wglContext()
 		, m_GLEContext(nullptr)
@@ -57,6 +61,9 @@ public:
 	//\brief Calls OVR's begin frame and end frame calls with RenderManager::DrawScene sandwiched in between
 	bool DrawToHMD();
 
+	inline const Vector& GetLookDir() const { return m_lookDir; }
+	inline const Vector& GetLookPos() const { return m_lookPos; }
+
 	void Shutdown();
 	void DeinitRendering();
 
@@ -67,6 +74,8 @@ private:
 	int m_winSizeH;
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime;											///< How long the last frame took
+	Vector m_lookDir;												///< Cache off the latest head sensor reading for feedback into the game
+	Vector m_lookPos;												///< Cache off the latest head sensor reading for feedback into the game
 	GLuint m_fboId;
 	HGLRC m_wglContext;
 	OVR::GLEContext * m_GLEContext;

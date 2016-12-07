@@ -15,6 +15,7 @@
 #include "LuaScript.h"
 #include "ModelManager.h"
 #include "OculusManager.h"
+#include "OculusRender.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "SoundManager.h"
@@ -136,6 +137,8 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "GetFrameDelta", GetFrameDelta);
 		lua_register(m_globalLua, "CreateGameObject", CreateGameObject);
 		lua_register(m_globalLua, "IsVR", IsVR);
+		lua_register(m_globalLua, "GetVRLookDirection", GetVRLookDirection);
+		lua_register(m_globalLua, "GetVRLookPosition", GetVRLookPosition);
 		lua_register(m_globalLua, "IsKeyDown", IsKeyDown);
 		lua_register(m_globalLua, "IsGamePadConnected", IsGamePadConnected);
 		lua_register(m_globalLua, "IsGamePadButtonDown", IsGamePadButtonDown);
@@ -600,6 +603,50 @@ int ScriptManager::IsVR(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, keyIsDown);
 	return 1; // One bool returned
+}
+
+int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
+{
+	Vector lookDir(0.0f);
+	if (lua_gettop(a_luaState) == 0)
+	{
+		OculusManager& ocMan = OculusManager::Get();
+		if (ocMan.IsInitialised())
+		{
+			lookDir = ocMan.GetOculusRender()->GetLookDir();
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetVRLookDirection", "expects no parameters.");
+	}
+
+	lua_pushnumber(a_luaState, lookDir.GetX());
+	lua_pushnumber(a_luaState, lookDir.GetY());
+	lua_pushnumber(a_luaState, lookDir.GetZ());
+	return 3;
+}
+
+int ScriptManager::GetVRLookPosition(lua_State * a_luaState)
+{
+	Vector lookDir(0.0f);
+	if (lua_gettop(a_luaState) == 0)
+	{
+		OculusManager& ocMan = OculusManager::Get();
+		if (ocMan.IsInitialised())
+		{
+			lookDir = ocMan.GetOculusRender()->GetLookPos();
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetVRLookPosition", "expects no parameters.");
+	}
+
+	lua_pushnumber(a_luaState, lookDir.GetX());
+	lua_pushnumber(a_luaState, lookDir.GetY());
+	lua_pushnumber(a_luaState, lookDir.GetZ());
+	return 3;
 }
 
 int ScriptManager::IsKeyDown(lua_State * a_luaState)

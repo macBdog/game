@@ -144,6 +144,46 @@ bool ModelManager::Update(float a_dt)
 	}
 }
 
+bool ModelManager::ReloadModelsWithTexture(Texture * a_texture)
+{
+	bool modelReloaded = false;
+
+	// Each model in the pool gets tested
+	ManagedModel * curModel = NULL;
+	while (m_modelMap.GetNext(curModel) && curModel != NULL)
+	{
+		bool modelNeedsReload = false;
+		const int numObjects = curModel->m_model.GetNumObjects();
+		for (int i = 0l; i < numObjects; ++i)
+		{
+			if (Material * curMat = curModel->m_model.GetObjectAtIndex(i)->GetMaterial())
+			{
+				if (curMat->GetDiffuseTexture() == a_texture ||
+					curMat->GetNormalTexture() == a_texture ||
+					curMat->GetSpecularTexture() == a_texture)
+				{
+					modelNeedsReload = true;
+					break;
+				}
+			}
+		}
+		if (modelNeedsReload)
+		{
+			ModelDataPool mdp(m_objectPool, m_loadingVertPool, m_loadingNormalPool, m_loadingUvPool, m_materialPool);
+			if (!curModel->m_model.Unload())
+			{
+				Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Cannot unload model.");
+			}
+			modelReloaded = curModel->m_model.Load(curModel->m_path, mdp);
+
+			m_loadingVertPool.Reset();
+			m_loadingNormalPool.Reset();
+			m_loadingUvPool.Reset();
+		}
+	}
+	return modelReloaded;
+}
+
 Model * ModelManager::GetModel(const char * a_modelPath)
 {
 	// Model paths are either fully qualified or relative to the config model dir

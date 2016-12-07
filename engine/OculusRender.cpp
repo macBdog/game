@@ -459,6 +459,8 @@ bool OculusRender::DrawToHMD()
 			quat.ApplyToMatrix(modifiedView);
 			const Vector transformedEyePos = modifiedView.Transform(rawEyePos);
 			modifiedView.SetPos(existingPos);
+			m_lookPos = transformedEyePos;
+			m_lookDir = modifiedView.GetRight();
 			Matrix viewMatrix = modifiedView.GetInverse();
 
 			Matrix4f proj = ovrMatrix4f_Projection(hmdDesc.DefaultEyeFov[eye], 0.2f, 1000.0f, ovrProjection_None);

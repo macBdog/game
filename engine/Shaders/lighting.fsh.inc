@@ -21,7 +21,7 @@ const char * lightingFragmentShader =
 "		vec3 lightDiffuse = vec3(Lights[i+7], Lights[i+8], Lights[i+9]); \n"
 "		vec3 lightSpecular = vec3(Lights[i+10], Lights[i+11], Lights[i+12]); \n"
 " \n"
-"		vec3 Iamb = lightAmbient * gl_FrontMaterial.ambient.xyz * lightWeight; \n"
+"		vec3 Iamb = (lightAmbient * 0.25) * gl_FrontMaterial.ambient.xyz * lightWeight; \n"
 " \n"
 "		vec4 vertexLight = normalize(vec4(lightVertexPos, 1.0));	\n"
 "		vec4 lightDirection = lightPos - vec4(lightVertexPos, 1.0);	\n"

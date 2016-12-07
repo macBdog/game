@@ -189,7 +189,7 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 	}
 	else
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
+			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
 		return false;
 	}
 }
