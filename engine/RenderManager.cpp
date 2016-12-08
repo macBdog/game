@@ -1111,6 +1111,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			Texture * normalTex = modelMat->GetNormalTexture();
 			Texture * specularTex = modelMat->GetSpecularTexture();
 			Vector * verts = obj->GetVertices();
+			Vector * normals = obj->GetNormals();
 			TexCoord * uvs = obj->GetUvs();
 
 			GLuint displayListId = glGenLists(1);
@@ -1142,12 +1143,15 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			// Draw vertices in threes
 			for (unsigned int i = 0; i < numVertices; i += Model::s_vertsPerTri)
 			{
+				glNormal3f(normals[i].GetX(), normals[i].GetY(), normals[i].GetZ());
 				glTexCoord2f(uvs[i].GetX(), uvs[i].GetY()); 
 				glVertex3f(verts[i].GetX(), verts[i].GetY(), verts[i].GetZ());
 
+				glNormal3f(normals[i+1].GetX(), normals[i+1].GetY(), normals[i+1].GetZ());
 				glTexCoord2f(uvs[i+1].GetX(), uvs[i+1].GetY()); 
 				glVertex3f(verts[i+1].GetX(), verts[i+1].GetY(), verts[i+1].GetZ());
 
+				glNormal3f(normals[i+2].GetX(), normals[i+2].GetY(), normals[i+2].GetZ());
 				glTexCoord2f(uvs[i+2].GetX(), uvs[i+2].GetY()); 
 				glVertex3f(verts[i+2].GetX(), verts[i+2].GetY(), verts[i+2].GetZ());
 			}
