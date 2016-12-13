@@ -84,22 +84,38 @@ public:
 						Matrix * a_objectMatrix,
 						Matrix * a_viewMatrix,
 						Matrix * a_projectionMatrix)
-						: m_time(a_time)
+						: m_diffuseTextureId(0)
+						, m_normalTextureId(0)
+						, m_specularTextureId(0)
+						, m_materialShininess(1024)
+						, m_time(a_time)
 						, m_lifeTime(a_lifeTime)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
-						, m_viewHeight(a_viewHeight) 
+						, m_viewHeight(a_viewHeight)
+						, m_materialAmbient(1.0f)
+						, m_materialDiffuse(1.0f)
+						, m_materialSpecular(1.0f)
+						, m_materialEmission(1.0f)
 						, m_shaderData(a_shaderData)
 						, m_objectMatrix(a_objectMatrix)
 						, m_viewMatrix(a_viewMatrix)
 						, m_projectionMatrix(a_projectionMatrix)
 						{ }
 
+		unsigned int m_diffuseTextureId;
+		unsigned int m_normalTextureId;
+		unsigned int m_specularTextureId;
+		int m_materialShininess;
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_lifeTime;				///< How much time in seconds has passed since the object using the shader was initialised
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
+		Vector m_materialAmbient;
+		Vector m_materialDiffuse;
+		Vector m_materialSpecular;
+		Vector m_materialEmission;
 		Vector m_shaderData;			///< 3 generic floats to pass to the shader
 		Matrix * m_objectMatrix;		///< Pointer to matrix containing game object position
 		Matrix * m_viewMatrix;			///< Pointer to matrix containing game object position
@@ -143,11 +159,17 @@ private:
 	Uniform<int> m_diffuseTexture;					///< Standard set of uniforms follow
 	Uniform<int> m_normalTexture;
 	Uniform<int> m_specularTexture;
+	Uniform<int> m_materialShininess;
+	Uniform<int> m_numActiveLights;
 	Uniform<float> m_time;
 	Uniform<float> m_lifeTime;
 	Uniform<float> m_frameTime;
 	Uniform<float> m_viewWidth;
 	Uniform<float> m_viewHeight;
+	Uniform<Vector> m_materialAmbient;
+	Uniform<Vector> m_materialDiffuse;
+	Uniform<Vector> m_materialSpecular;
+	Uniform<Vector> m_materialEmission;
 	Uniform<Vector> m_shaderData;
 	Uniform<Matrix> m_objectMatrix;
 	Uniform<Matrix> m_viewMatrix;

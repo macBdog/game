@@ -1,5 +1,8 @@
 const char * colourFragmentShader = 
-"void main(void) \n"
+"#version 400\n"
+"in vec4 Colour;\n"
+"layout(location = 0) out vec4 FragmentColour;\n"
+"void main()\n"
 "{ \n"
-"	gl_FragColor = gl_Color; \n"
+"	FragmentColour = Colour;\n"
 "}\n";

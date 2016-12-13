@@ -78,7 +78,7 @@ void CameraManager::Update(float a_dt)
 				const Vector & camPos = m_currentCamera->GetPosition();
 				char buf[32];
 				sprintf(buf, "%.2f, %.2f, %.2f", camPos.GetX(), camPos.GetY(), camPos.GetZ());
-				FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 0.95f));
+				FontManager::Get().DrawDebugString2D(buf, Vector2(0.8f, 0.95f));
 			}
 		}
 	}

@@ -51,7 +51,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\remotery\lib;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

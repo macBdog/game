@@ -1,7 +1,10 @@
 const char * textureFragmentShader = 
-"uniform sampler2D DiffuseTexture; \n"
-"varying vec2 OutTexCoord; \n"
-"void main(void) \n"
+"#version 400\n"
+"in vec4 Colour;\n"
+"in vec2 OutTexCoord;\n"
+"layout(location = 0) out vec4 FragmentColour;\n"
+"uniform sampler2D DiffuseTexture;\n"
+"void main()\n"
 "{ \n"
-"	gl_FragColor = texture2D(DiffuseTexture, OutTexCoord) * gl_Color; \n"
+"	FragmentColour = texture2D(DiffuseTexture, OutTexCoord) * Colour;\n"
 "}\n";

@@ -73,6 +73,7 @@ public:
 					, m_frameBuffer(0)
 					, m_colourBuffer(0)
 					, m_depthBuffer(0)
+					, m_fullscreenQuad()
 					, m_viewWidth(0)
 					, m_viewHeight(0)
 					, m_bpp(0)
@@ -101,6 +102,11 @@ public:
 			m_frameBuffers[i] = 0;
 			m_colourBuffers[i] = 0;
 			m_depthBuffers[i] = 0;
+		}
+
+		for (int i = 0; i < s_numRenderTargets; ++i)
+		{
+			m_renderTargets[i] = 0;
 		}
 	}
 	~RenderManager() { Shutdown(); }
@@ -139,14 +145,6 @@ public:
 	inline Shader * GetTextureShader() { return m_textureShader; }
 	inline Shader * GetLightingShader() { return m_lightingShader; }
 
-	//\brief Set up a display list for a font character so drawing only involves calling a list
-	//\param a_size is an arbitrary width to height to generate the list at
-	//\param a_texCoord is the starting coordinate to draw
-	//\param a_texSize is the size of the character in reference to the font texture
-	//\return The uint equivalent of the GLuint that is returned from glGenLists
-	unsigned int RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture);
-	unsigned int RegisterFontChar3D(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture);
-
 	//\brief Drawing functions for lines
 	//\param a_point1 is the start of the line
 	//\param a_point2 is the end of the line
@@ -180,7 +178,7 @@ public:
 	//\param a_fontCharId is the display list ID of the character to call
 	//\param a_size is the size multiplier to use
 	//\param a_pos is the position in 3D space to draw. If a 2D renderLayer is used, the Z component will be ignored
-	void AddFontChar(RenderLayer::Enum a_layer, unsigned int a_fontCharId, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);
+	void AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);					 
 	
 	//\brief Add a line to the debug renderLayer
 	//\param Vector a_point1 start of the line
@@ -230,50 +228,165 @@ public:
 
 private:
 
-	//\brief Fixed size structure for queing line primitives
-	struct Line
+	//\brief Data set for passing into a vertex buffer
+	struct Vertex
 	{
-		Vector m_verts[2];
+		Vertex()
+			: m_pos(0.0f, 0.0f, 0.0f)
+			, m_colour(0.0f, 0.0f, 0.0f, 0.0f)
+			, m_uv(0.0f, 0.0f)
+			, m_normal(0.0f, 0.0f, 0.0f) {}
+		Vector m_pos;
 		Colour m_colour;
+		TexCoord m_uv;
+		Vector m_normal;
+	};
+
+	struct VertexBuffer
+	{
+		VertexBuffer()
+			: m_vertexArrayId(0)
+			, m_vertexBufferId(0)
+			, m_indexBufferId(0)
+			, m_textureId(0)
+			, m_verts(nullptr)
+			, m_indicies(nullptr)
+			, m_numVerts(0) {}
+		VertexBuffer(unsigned int a_numVerts)
+			: m_vertexArrayId(0)
+			, m_vertexBufferId(0)
+			, m_indexBufferId(0) 
+			, m_textureId(-1)
+			, m_verts(nullptr)
+			, m_indicies(nullptr)
+			, m_numVerts(a_numVerts)
+		{
+			Alloc(a_numVerts);
+		}
+		~VertexBuffer() 
+		{ 
+			if (m_numVerts > 0) 
+			{ 
+				Dealloc(); 
+			} 
+		}
+		inline void Alloc(unsigned int a_numVerts)
+		{
+			if (m_numVerts > 0)
+			{
+				Dealloc();
+			}
+			m_numVerts = a_numVerts;
+			m_verts = new Vertex[a_numVerts];
+			m_indicies = new unsigned int[a_numVerts];
+		}
+		void Dealloc()
+		{
+			m_numVerts = 0;
+			delete m_verts;
+			delete m_indicies;
+			m_verts = nullptr;
+			m_indicies = nullptr;
+		}
+		inline void Realloc(unsigned int a_numVerts)
+		{
+			Dealloc();
+			Alloc(a_numVerts);
+		}
+		void Bind();
+		void Rebind();
+		void Unbind();
+		void SetVert(unsigned int a_index, const Vector& a_pos, const Colour& a_colour, const TexCoord& a_uv, const Vector& a_normal)
+		{
+			m_verts[a_index].m_pos = a_pos;
+			m_verts[a_index].m_colour = a_colour;
+			m_verts[a_index].m_uv = a_uv;
+			m_verts[a_index].m_normal = a_normal;
+			m_indicies[a_index] = a_index;
+		}
+		void SetVert2D(unsigned int a_index, const Vector& a_pos, const Colour& a_colour, const TexCoord& a_uv)
+		{
+			m_verts[a_index].m_pos = a_pos;
+			m_verts[a_index].m_colour = a_colour;
+			m_verts[a_index].m_uv = a_uv;
+			m_verts[a_index].m_normal = Vector(0.0, 0.0, -1.0f);
+			m_indicies[a_index] = a_index;
+		}
+		void SetVertBasic(unsigned int a_index, const Vector& a_pos, const Colour& a_colour)
+		{
+			m_verts[a_index].m_pos = a_pos;
+			m_verts[a_index].m_colour = a_colour;
+			m_verts[a_index].m_uv = Vector2(0.0f, 0.0f);
+			m_verts[a_index].m_normal = Vector(0.0, 0.0, -1.0f);
+			m_indicies[a_index] = a_index;
+		}
+		unsigned int m_vertexArrayId;
+		unsigned int m_vertexBufferId;
+		unsigned int m_indexBufferId;
+		int m_textureId;
+		Vertex* m_verts;
+		unsigned int* m_indicies;
+		int m_numVerts;
+	};
+
+	//\brief Fixed size structure for queing line primitives
+	struct Line : VertexBuffer
+	{
+		Line() : VertexBuffer(2) {}
 	};
 
 	//\brief Fixed size structure for queing render primitices
-	struct Tri
+	struct Tri : VertexBuffer
 	{
-		Vector m_verts[3];
-		TexCoord m_coords[3];
-		int m_textureId;
-		Colour m_colour;
+		Tri() : VertexBuffer(3) {}
 	};
 
 	//\brief Fixed size structure for queing render primitives
-	struct Quad
+	struct Quad : VertexBuffer
 	{
-		Vector m_verts[4];
-		TexCoord m_coords[4];
-		int m_textureId;
-		Colour m_colour;
+		Quad() : VertexBuffer(4) {}
 	};
 
 	//\brief Fixed size structure for queing render models
-	struct RenderModel
+	struct RenderModel : VertexBuffer
 	{
+		RenderModel()
+			: m_model(nullptr)
+			, m_mat(nullptr)
+			, m_shader(nullptr)
+			, m_material(nullptr)
+			, m_lifeTime(0.0f)
+			, m_shininess(1024)
+			, m_ambient(1.0f)
+			, m_diffuse(1.0f)
+			, m_specular(1.0f)
+			, m_emission(1.0f)
+			, m_shaderData(0.0f, 0.0f, 0.0f)
+			, m_diffuseTexId(0)
+			, m_normalTexId(0)
+			, m_specularTexId(0) {}
 		Model * m_model;
 		Matrix * m_mat;
 		Shader * m_shader;
 		Material * m_material;
 		float m_lifeTime;
+		int m_shininess;
+		Vector m_ambient;
+		Vector m_diffuse;
+		Vector m_specular;
+		Vector m_emission;
 		Vector m_shaderData;
+		unsigned int m_diffuseTexId;
+		unsigned int m_normalTexId;
+		unsigned int m_specularTexId;
 	};
 
 	//\brief Fixes size structure for queing font characters that are just a display list
-	struct FontChar
+	struct FontChar : VertexBuffer
 	{
-		unsigned int m_displayListId;
-		Vector2 m_size;
+		FontChar() : VertexBuffer(4) {}
 		Vector m_pos;
-		Colour m_colour;
-		bool m_2d;
+		Vector m_scale;
 	};
 
 	//\brief A managed shader contains a reference to the shader and the file to reload on change for hot reloading
@@ -295,8 +408,11 @@ private:
 	void AddManagedShader(ManagedShader * a_newManShader);
 	Shader * GetShader(const char * a_shaderName);
 
-	static const int s_maxPrimitivesPerrenderLayer = 64 * 1024;		///< Flat storage amount for quads
+	static const int s_maxPrimitivesPerrenderLayer = 1024;			///< Flat storage amount for quads
+	static const int s_maxFontCharsPerRenderLayer = 8096;			///< Flat storage amount for quads for fonts
+	static const int s_maxLinePrimitivesPerRenderLayer = 8096;		///< Flat storage amount for quads for lines
 	static const int s_maxLines = 1600;								///< Storage amount for debug lines
+	static const int s_numRenderTargets = 8;						///< Number of screen sized buffers for general use
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
@@ -320,10 +436,14 @@ private:
 	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffers for each stage
 	unsigned int m_colourBuffer;									///< Identifier for the texture to render to
 	unsigned int m_depthBuffer;										///< Identifier for the buffers for pixel depth per stage
+	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
+	unsigned int m_mrtAttachments[s_numRenderTargets + 1];			///< Array of identifies for all colour attachments
 
 	unsigned int m_frameBuffers[RenderStage::Count];				///< Identifier for the whole scene framebuffers for each stage
 	unsigned int m_colourBuffers[RenderStage::Count];				///< Identifier for the texture to render to
 	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage
+
+	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
 
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified

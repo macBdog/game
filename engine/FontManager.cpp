@@ -166,11 +166,11 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 							// Align font chars 2D vs 3D
 							if (is2D)
 							{
-								renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId, sizeWithAspect, Vector(xPos, yPos, 0.0f), a_colour);
+								renderMan.AddFontChar(a_renderLayer, curChar.m_charSize, curChar.m_texSize, curChar.m_texCoord, font->m_texture, sizeWithAspect, Vector(xPos, yPos, 0.0f), a_colour);
 							}
 							else
 							{
-								renderMan.AddFontChar(a_renderLayer, curChar.m_displayListId3D, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
+								renderMan.AddFontChar(a_renderLayer, curChar.m_charSize, curChar.m_texSize, curChar.m_texCoord, font->m_texture, sizeWithAspect, Vector(xPos, a_pos.GetY(), zPos), a_colour);
 							}
 						}
 						xAdvance += (float)(curChar.m_xadvance * sizeRatio.GetX());
@@ -412,15 +412,12 @@ bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
 
 					// This is the glyph size as a ratio of the texture size
 					Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
-					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
+					newFont->m_chars[charId].m_charSize = Vector2(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
 
 					// Used to generate the position of the character within the texture
-					TexCoord texSize(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
-					TexCoord texCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
+					newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
+					newFont->m_chars[charId].m_texCoord = TexCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
 
-					// Generate a display list for each character in the font in 2D
-					newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
-					newFont->m_chars[charId].m_displayListId3D = renMan.RegisterFontChar3D(charSize, texCoord, texSize, newFont->m_texture);
 					line = strtok(NULL, delimeter);
 				}
 				break;

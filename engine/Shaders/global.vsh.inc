@@ -1,4 +1,9 @@
 const char * globalVertexShader = 
+"#version 400\n"
+"in vec3 VertexPosition;\n"
+"in vec4 VertexColour;\n"
+"in vec2 VertexUV;\n"
+"in vec3 VertexNormal;\n"
 "uniform float Time; \n" 
 "uniform float LifeTime; \n"
 "uniform float FrameTime; \n"
@@ -8,7 +13,6 @@ const char * globalVertexShader =
 "uniform mat4 ObjectMatrix; \n"
 "uniform mat4 ViewMatrix; \n"
 "uniform mat4 ProjectionMatrix; \n"
-"varying vec2 OutTexCoord; \n"
 "float rand(vec2 co) \n"
 "{ \n"
 "	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); \n"

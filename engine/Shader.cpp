@@ -1,4 +1,4 @@
-#include "GL/CAPI_GLE.h"
+﻿#include "GL/CAPI_GLE.h"
 #include "OVR_CAPI_GL.h"
 
 #include "Shader.h"
@@ -41,6 +41,8 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
 		return false;
 	}
 
+	unsigned int glErrorEnum = glGetError();
+
 	// Compile the shader components
 	m_vertexShader = Compile(GL_VERTEX_SHADER, a_vertexSource);
 	m_fragmentShader = Compile(GL_FRAGMENT_SHADER, a_fragmentSource);
@@ -51,17 +53,29 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
 		m_shader = glCreateProgram();
 		glAttachShader(m_shader, m_vertexShader);
 		glAttachShader(m_shader, m_fragmentShader);
+
+		glBindAttribLocation(m_shader, 0, "VertexPosition");
+		glBindAttribLocation(m_shader, 1, "VertexColour");
+		glBindAttribLocation(m_shader, 2, "VertexUV");
+		glBindAttribLocation(m_shader, 3, "VertexNormal");
+
 		glLinkProgram(m_shader);
 
 		// Set up the standard uniforms
 		m_diffuseTexture.Init(m_shader, "DiffuseTexture");
 		m_normalTexture.Init(m_shader, "NormalTexture");
 		m_specularTexture.Init(m_shader, "SpecularTexture");
+		m_materialShininess.Init(m_shader, "MaterialShininess");
+		m_numActiveLights.Init(m_shader, "NumActiveLights");
 		m_time.Init(m_shader, "Time");
 		m_lifeTime.Init(m_shader, "LifeTime");
 		m_frameTime.Init(m_shader, "FrameTime");
 		m_viewWidth.Init(m_shader, "ViewWidth");
 		m_viewHeight.Init(m_shader, "ViewHeight");
+		m_materialAmbient.Init(m_shader, "MaterialAmbient");
+		m_materialDiffuse.Init(m_shader, "MaterialDiffuse");
+		m_materialSpecular.Init(m_shader, "MaterialSpecular");
+		m_materialEmission.Init(m_shader, "MaterialEmission");
 		m_shaderData.Init(m_shader, "ShaderData");
 		m_objectMatrix.Init(m_shader, "ObjectMatrix");
 		m_viewMatrix.Init(m_shader, "ViewMatrix");
@@ -119,6 +133,7 @@ void Shader::UseShader(const UniformData & a_data)
 {
 	// Write the lighting data into the static memory location for the shader to reference
 	int lightValCount = 0;
+	int numActiveLights = 0;
 	for (int i = 0; i < s_maxLights; ++i)
 	{
 		// Enabled
@@ -139,6 +154,8 @@ void Shader::UseShader(const UniformData & a_data)
 		s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetR();
 		s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetG();
 		s_lightingData[lightValCount++] = a_data.m_lights[i].m_specular.GetB();
+
+		numActiveLights += a_data.m_lights[i].m_enabled ? 1 : 0;
 	}
 	glUseProgram(m_shader);
 	glActiveTexture(GL_TEXTURE0);
@@ -147,11 +164,17 @@ void Shader::UseShader(const UniformData & a_data)
 	glUniform1i(m_normalTexture.m_id, 1);
 	glActiveTexture(GL_TEXTURE2);
 	glUniform1i(m_specularTexture.m_id, 2);
+	glUniform1i(m_materialShininess.m_id, a_data.m_materialShininess);
+	glUniform1i(m_numActiveLights.m_id, numActiveLights);
 	glUniform1f(m_time.m_id, a_data.m_time);
 	glUniform1f(m_lifeTime.m_id, a_data.m_lifeTime);
 	glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 	glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 	glUniform1f(m_viewHeight.m_id, a_data.m_viewHeight);
+	glUniform3f(m_materialAmbient.m_id, a_data.m_materialAmbient.GetX(), a_data.m_materialAmbient.GetY(), a_data.m_materialAmbient.GetZ());
+	glUniform3f(m_materialDiffuse.m_id, a_data.m_materialDiffuse.GetX(), a_data.m_materialDiffuse.GetY(), a_data.m_materialDiffuse.GetZ());
+	glUniform3f(m_materialSpecular.m_id, a_data.m_materialSpecular.GetX(), a_data.m_materialSpecular.GetY(), a_data.m_materialSpecular.GetZ());
+	glUniform3f(m_materialEmission.m_id, a_data.m_materialEmission.GetX(), a_data.m_materialEmission.GetY(), a_data.m_materialEmission.GetZ());
 	glUniform3f(m_shaderData.m_id, a_data.m_shaderData.GetX(), a_data.m_shaderData.GetY(), a_data.m_shaderData.GetZ());
 	glUniform1fv(m_lights.m_id, s_maxLights * s_numLightFloats, &s_lightingData[0]);
 	glUniformMatrix4fv(m_objectMatrix.m_id, 1, GL_TRUE, a_data.m_objectMatrix->GetValues());

@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
 		rmt_BeginCPUSample(Draw);
 		rmt_BeginOpenGLSample(DrawToScreen);
 #endif
-
+		
 		// Only swap the buffers at the end of all the rendering passes
 		if (useVr)
 		{

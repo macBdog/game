@@ -1,8 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <assert.h>
-
 #include <windows.h>
 
 #include "GL/CAPI_GLE.h"
@@ -27,6 +25,52 @@ const float RenderManager::s_nearClipPlane = 0.01f;
 const float RenderManager::s_farClipPlane = 10000.0f;
 const float RenderManager::s_fovAngleY = 55.0f;
 float RenderManager::s_renderDepth2D = -1.0f;
+
+void RenderManager::VertexBuffer::Bind()
+{
+	unsigned int glErrorEnum = glGetError();
+	glGenVertexArrays(1, &m_vertexArrayId);
+	glBindVertexArray(m_vertexArrayId);
+	glGenBuffers(1, &m_vertexBufferId);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glBufferData(GL_ARRAY_BUFFER, m_numVerts * sizeof(Vertex), m_verts, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);  // Vertex position
+	glEnableVertexAttribArray(1);  // Vertex color
+	glEnableVertexAttribArray(2);  // Texture coordinates
+	glEnableVertexAttribArray(3);  // Normals
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(Vertex), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(Vertex), (unsigned char*)nullptr + sizeof(Vector));
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(2, 2, GL_FLOAT, false, sizeof(Vertex), (unsigned char*)nullptr + sizeof(Vector) + sizeof(Colour));
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(3, 3, GL_FLOAT, true, sizeof(Vertex), (unsigned char*)nullptr + sizeof(Vector) + sizeof(Colour) + sizeof(TexCoord));
+	glGenBuffers(1, &m_indexBufferId);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBufferId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_numVerts * sizeof(unsigned int), m_indicies, GL_STATIC_DRAW);
+	glErrorEnum = glGetError();
+}
+
+void RenderManager::VertexBuffer::Rebind()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glBufferData(GL_ARRAY_BUFFER, m_numVerts * sizeof(Vertex), m_verts, GL_STATIC_DRAW);
+}
+
+void RenderManager::VertexBuffer::Unbind()
+{
+	glDisableVertexAttribArray(0);	// Vertex position
+	glDisableVertexAttribArray(1);	// Vertex color
+	glDisableVertexAttribArray(2);	// Texture coordinates
+	glDisableVertexAttribArray(3);	// Normals
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &m_vertexBufferId);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &m_indexBufferId);
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &m_vertexArrayId);
+}
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
@@ -62,34 +106,39 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
 	glEnable(GL_COLOR_MATERIAL);
+	
+	unsigned int glErrorEnum = glGetError();
+	
+	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(0.0f, 0.0f));
+	m_fullscreenQuad.SetVert2D(1, Vector(1.0f, -1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(1.0f, 0.0f));
+	m_fullscreenQuad.SetVert2D(2, Vector(-1.0f, 1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f),  TexCoord(0.0f, 1.0f));
+	m_fullscreenQuad.SetVert2D(3, Vector(1.0f, 1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(1.0f, 1.0f));
+	m_fullscreenQuad.Bind();
+
+	glErrorEnum = glGetError();
 
 	// Storage for all the primitives
 	bool renderLayerAlloc = true;
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
 		// Tris
-		m_tris[i] = (Tri *)malloc(sizeof(Tri) * s_maxPrimitivesPerrenderLayer);
-		renderLayerAlloc &= m_tris[i] != NULL;
+		m_tris[i] = new Tri[s_maxPrimitivesPerrenderLayer];
 		m_triCount[i] = 0;
 
 		// Quads
-		m_quads[i] = (Quad *)malloc(sizeof(Quad) * s_maxPrimitivesPerrenderLayer);
-		renderLayerAlloc &= m_quads[i] != NULL;
+		m_quads[i] = new Quad[s_maxPrimitivesPerrenderLayer];
 		m_quadCount[i] = 0;
 
 		// Lines
-		m_lines[i] = (Line *)malloc(sizeof(Line) * s_maxPrimitivesPerrenderLayer);
-		renderLayerAlloc &= m_lines[i] != NULL;
+		m_lines[i] = new Line[s_maxLinePrimitivesPerRenderLayer];
 		m_lineCount[i] = 0;
 
 		// Render models
-		m_models[i] = (RenderModel *)malloc(sizeof(RenderModel) * s_maxPrimitivesPerrenderLayer);
-		renderLayerAlloc &= m_models[i] != NULL;
+		m_models[i] = new RenderModel[s_maxPrimitivesPerrenderLayer];
 		m_modelCount[i] = 0;
 
 		// Font characters
-		m_fontChars[i] = (FontChar *)malloc(sizeof(FontChar) * s_maxPrimitivesPerrenderLayer);
-		renderLayerAlloc &= m_fontChars[i] != NULL;
+		m_fontChars[i] = new FontChar[s_maxFontCharsPerRenderLayer];
 		m_fontCharCount[i] = 0;
 	}
 
@@ -118,6 +167,8 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	{
 		m_lightingShader->Init(lightingVertexShader, lightingFragmentShader);
 	}
+
+	glErrorEnum = glGetError();
 
 	// Cache off the shader path
 	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
@@ -190,6 +241,8 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		a_dataPack->CleanupEntryList(shaderEntries);
 	}
 
+	glErrorEnum = glGetError();
+
 	// Set flag to enable the vr rendering to be wedged in
 	m_vr = a_vr;
 
@@ -204,14 +257,53 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 
 bool RenderManager::Shutdown()
 {
+	m_fullscreenQuad.Unbind();
+
 	// Clean up storage for all primitives
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
-		free(m_tris[i]);
-		free(m_quads[i]);
-		free(m_lines[i]);
+		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		{
+			Tri * t = m_tris[i] + j;
+			if (t->m_vertexArrayId == 0 && t->m_vertexBufferId == 0 && t->m_indexBufferId == 0)
+			{
+				t->Unbind();
+			}
+		}
+		delete(m_tris[i]);
+
+		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		{
+			Quad * q = m_quads[j] + j;
+			if (q->m_vertexArrayId == 0 && q->m_vertexBufferId == 0 && q->m_indexBufferId == 0)
+			{
+				q->Unbind();
+			}
+		}
+		delete(m_quads[i]);
+
+		for (unsigned int j = 0; j < s_maxLinePrimitivesPerRenderLayer; ++j)
+		{
+			Line * l = m_lines[j] + j;
+			if (l->m_vertexArrayId == 0 && l->m_vertexBufferId == 0 && l->m_indexBufferId == 0)
+			{
+				l->Unbind();
+			}
+		}
+		delete(m_lines[i]);
+
 		free(m_models[i]);
-		free(m_fontChars[i]);
+
+		for (unsigned int j = 0; j < s_maxFontCharsPerRenderLayer; ++j)
+		{
+			FontChar * fc = m_fontChars[j] + j;
+			if (fc->m_vertexArrayId == 0 && fc->m_vertexBufferId == 0 && fc->m_indexBufferId == 0)
+			{
+				fc->Unbind();
+			}
+		}
+		delete(m_fontChars[i]);
+		
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
@@ -235,6 +327,12 @@ bool RenderManager::Shutdown()
 		glDeleteFramebuffers(1, &m_frameBuffers[i]);
 		glDeleteTextures(1, &m_colourBuffers[i]);
 		glDeleteRenderbuffers(1, &m_depthBuffers[i]);   
+	}
+
+	// And render targets
+	for (int i = 0; i < s_numRenderTargets; ++i)
+	{
+		glDeleteTextures(1, &m_renderTargets[i]);
 	}
 
 	// And any managed shaders
@@ -443,7 +541,7 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glBindTexture(GL_TEXTURE_2D, m_colourBuffers[i]);
  		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colourBuffers[i], 0);
 
 		// Depth parameters
@@ -453,6 +551,23 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);	
 		framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 	}
+
+	unsigned int glErrorEnum = glGetError();
+
+	// Create render targets for general use and attach them to colour attachments after 0
+	m_mrtAttachments[0] = GL_COLOR_ATTACHMENT0;
+	for (int i = 0; i < s_numRenderTargets; ++i)
+	{
+		glGenTextures(1, &m_renderTargets[i]);
+		glBindTexture(GL_TEXTURE_2D, m_renderTargets[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1 + i, GL_TEXTURE_2D, m_renderTargets[i], 0);
+		m_mrtAttachments[i+1] = GL_COLOR_ATTACHMENT1 + i;
+	}
+	framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+	glDrawBuffers(s_numRenderTargets, m_mrtAttachments);
 
 	return framebuffersOk;
 }
@@ -464,6 +579,9 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
+
+	// Enable writing to the gbuffers
+	glDrawBuffers(s_numRenderTargets, m_mrtAttachments);
 
 	RenderScene(a_viewMatrix);
 	
@@ -501,6 +619,9 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	}
 #endif
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);
+
 	// Otherwise use the default
 	if (bUseDefaultShader)
 	{	
@@ -511,6 +632,9 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	
+	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
@@ -520,7 +644,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	// Final drawing pass
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::PostFX]);
-	
+
 	// Render once 
 	m_textureShader->UseShader(shaderData);
 	RenderFramebuffer();
@@ -586,7 +710,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-
+	
 	// Draw primitives for each renderLayer
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
@@ -626,7 +750,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			default: break;
 		}
 
-		// Ensure 2D renderLayeres render on top of everything
+		// Ensure 2D layers render on top of everything
 		if ((RenderLayer::Enum)i == RenderLayer::Gui)
 		{
 			glClear(GL_DEPTH_BUFFER_BIT);
@@ -635,13 +759,11 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Use the texture shader on world objects
 		glEnable(GL_TEXTURE_2D);
 		Shader * pLastShader = m_textureShader;
-
+		
 		// Submit the tris
 		Tri * t = m_tris[i];
 		for (unsigned int j = 0; j < m_triCount[i]; ++j)
 		{
-			glColor4f(t->m_colour.GetR(), t->m_colour.GetG(), t->m_colour.GetB(), t->m_colour.GetA());
-
 			// Draw a tri with a texture
 			if (t->m_textureId >= 0)
 			{
@@ -664,19 +786,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			
 			pLastShader->UseShader(shaderData);
 
-			glBegin(GL_TRIANGLES);
+			glBindVertexArray(t->m_vertexArrayId);
+			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
-			glTexCoord2f(t->m_coords[0].GetX(), t->m_coords[0].GetY()); 
-			glVertex3f(t->m_verts[0].GetX(), t->m_verts[0].GetY(), t->m_verts[0].GetZ());
-
-			glTexCoord2f(t->m_coords[1].GetX(), t->m_coords[1].GetY()); 
-			glVertex3f(t->m_verts[1].GetX(), t->m_verts[1].GetY(), t->m_verts[1].GetZ());
-
-			glTexCoord2f(t->m_coords[2].GetX(), t->m_coords[2].GetY()); 
-			glVertex3f(t->m_verts[2].GetX(), t->m_verts[2].GetY(), t->m_verts[2].GetZ());
-
-			glEnd();
-			
 			t++;
 		}
 
@@ -685,8 +797,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		shaderData.m_objectMatrix = &identityMatrix;
 		for (unsigned int j = 0; j < m_quadCount[i]; ++j)
 		{
-			glColor4f(q->m_colour.GetR(), q->m_colour.GetG(), q->m_colour.GetB(), q->m_colour.GetA());
-
 			// Draw a quad with a texture
 			if (q->m_textureId >= 0)
 			{
@@ -708,53 +818,43 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			}
 
 			pLastShader->UseShader(shaderData);
-	
-			glBegin(GL_QUADS);
-
-			glTexCoord2f(q->m_coords[0].GetX(), q->m_coords[0].GetY()); 
-			glVertex3f(q->m_verts[0].GetX(), q->m_verts[0].GetY(), q->m_verts[0].GetZ());
-
-			glTexCoord2f(q->m_coords[1].GetX(), q->m_coords[1].GetY()); 
-			glVertex3f(q->m_verts[1].GetX(), q->m_verts[1].GetY(), q->m_verts[1].GetZ());
-
-			glTexCoord2f(q->m_coords[2].GetX(), q->m_coords[2].GetY()); 
-			glVertex3f(q->m_verts[2].GetX(), q->m_verts[2].GetY(), q->m_verts[2].GetZ());
-
-			glTexCoord2f(q->m_coords[3].GetX(), q->m_coords[3].GetY()); 
-			glVertex3f(q->m_verts[3].GetX(), q->m_verts[3].GetY(), q->m_verts[3].GetZ());
-
-			glEnd();
+			glBindVertexArray(q->m_vertexArrayId);
+			glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0);
 			
 			q++;
 		}
-
-		// Draw models by calling their display lists
+		
+		// Draw models by calling their VBOs
 		RenderModel * rm = m_models[i];
 		Shader * pLastModelShader = NULL;	
 		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
 		{
-			// Draw each object of each model with it's own material
-			for (unsigned int k = 0; k < rm->m_model->GetNumObjects(); ++k)
-			{
-				Object * obj = rm->m_model->GetObjectAtIndex(k);
-				pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
-				shaderData.m_projectionMatrix = &a_perspectiveMat;
-				shaderData.m_viewMatrix = &a_viewMatrix;
-				shaderData.m_objectMatrix = rm->m_mat;
-				shaderData.m_lifeTime = rm->m_lifeTime;
-				shaderData.m_shaderData = rm->m_shaderData;
-				pLastModelShader->UseShader(shaderData);
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, obj->GetMaterial()->m_ambient.GetValues());
-				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, obj->GetMaterial()->m_diffuse.GetValues());
-				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, obj->GetMaterial()->m_specular.GetValues());
-				glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, obj->GetMaterial()->m_emission.GetValues());
-				glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, obj->GetMaterial()->m_shininess);
-				glCallList(obj->GetDisplayListId());
-			}
+			pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
+			shaderData.m_projectionMatrix = &a_perspectiveMat;
+			shaderData.m_viewMatrix = &a_viewMatrix;
+			shaderData.m_objectMatrix = rm->m_mat;
+			shaderData.m_lifeTime = rm->m_lifeTime;
+			shaderData.m_materialShininess = rm->m_shininess;
+			shaderData.m_materialAmbient = rm->m_ambient;
+			shaderData.m_materialDiffuse = rm->m_diffuse;
+			shaderData.m_materialSpecular = rm->m_specular;
+			shaderData.m_materialEmission = rm->m_emission;
+			shaderData.m_shaderData = rm->m_shaderData;
+			pLastModelShader->UseShader(shaderData);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, rm->m_diffuseTexId);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, rm->m_normalTexId);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, rm->m_specularTexId);
+
+			glBindVertexArray(rm->m_vertexArrayId);
+			glDrawElements(GL_TRIANGLES, rm->m_numVerts, GL_UNSIGNED_INT, 0);
 			++rm;
 		}
-
-		// Draw font chars by calling their display lists
+		
+		// Draw font chars by calling their VBOs
 		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
 		{
 			glEnable(GL_TEXTURE_2D);
@@ -767,31 +867,33 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		{
 			fontCharMat.SetIdentity();
 			fontCharMat.SetPos(fc->m_pos);
-			fontCharMat.SetScale(Vector(fc->m_size.GetX(), fc->m_size.GetY(), fc->m_2d ? 1.0f : fc->m_size.GetY()));
+			fontCharMat.SetScale(fc->m_scale);
 			shaderData.m_objectMatrix = &fontCharMat;
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, fc->m_textureId);
+
 			pLastShader->UseShader(shaderData);
-			glColor4f(fc->m_colour.GetR(), fc->m_colour.GetG(), fc->m_colour.GetB(), fc->m_colour.GetA());
-			glCallList(fc->m_displayListId);
+			glBindVertexArray(fc->m_vertexArrayId);
+			glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
 			++fc;
 		}
 		
-		// Swith to colour shader for lines as they cannot be textured
+		// Switch to colour shader for lines as they cannot be textured
 		if (m_lineCount[i] > 0)
 		{
-			glDisable(GL_TEXTURE_2D);
-			shaderData.m_objectMatrix = &identityMatrix;
+			shaderData.m_objectMatrix->SetIdentity();
 			m_colourShader->UseShader(shaderData);
+			glDisable(GL_TEXTURE_2D);
 		}
 
 		// Draw lines in the current renderLayer
 		Line * l = m_lines[i];
+		Matrix lineMat = Matrix::Identity();
 		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
 		{
-			glColor4f(l->m_colour.GetR(), l->m_colour.GetG(), l->m_colour.GetB(), l->m_colour.GetA());
-			glBegin(GL_LINES);
-			glVertex3f(l->m_verts[0].GetX(), l->m_verts[0].GetY(), l->m_verts[0].GetZ());
-			glVertex3f(l->m_verts[1].GetX(), l->m_verts[1].GetY(), l->m_verts[1].GetZ());
-			glEnd();
+			glBindVertexArray(l->m_vertexArrayId);
+			glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 			++l;
 		}
 		
@@ -804,79 +906,13 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			m_modelCount[i] = 0;
 			m_fontCharCount[i] = 0;
 		}
-	}
+	}	
 }
 
 void RenderManager::RenderFramebuffer()
-{	
-	// Draw whole screen triangle pair
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, s_renderDepth2D);
-		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, s_renderDepth2D);
-		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, s_renderDepth2D);
-	glEnd();
-}
-
-unsigned int RenderManager::RegisterFontChar(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)
 {
-	// Generate and begin compiling a new display list
-	GLuint displayListId = glGenLists(1);
-	glNewList(displayListId, GL_COMPILE);
-	
-	// Bind the texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
-	
-	// Draw the verts
-	glBegin(GL_QUADS);
-	glTexCoord2f(a_texCoord.GetX(), 1.0f - a_texCoord.GetY()); 
-	glVertex3f(0.0f, 0.0f, s_renderDepth2D);
-
-	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
-	glVertex3f(a_size.GetX(), 0.0f, s_renderDepth2D);
-
-	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
-	glVertex3f(a_size.GetX(), -a_size.GetY(), s_renderDepth2D);
-
-	glTexCoord2f(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
-	glVertex3f(0.0f, -a_size.GetY(), s_renderDepth2D);
-	glEnd();
-
-	glEndList();
-
-	return displayListId;
-}
-
-unsigned int RenderManager::RegisterFontChar3D(Vector2 a_size, TexCoord a_texCoord, TexCoord a_texSize, Texture * a_texture)
-{
-	// Generate and begin compiling a new display list
-	GLuint displayListId = glGenLists(1);
-	glNewList(displayListId, GL_COMPILE);
-	
-	// Bind the texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, a_texture->GetId());
-	
-	// Draw the verts
-	glBegin(GL_QUADS);
-	glTexCoord2f(a_texCoord.GetX(), 1.0f - a_texCoord.GetY()); 
-	glVertex3f(0.0f, 0.0f, a_size.GetY());
-
-	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
-	glVertex3f(a_size.GetX(), 0.0f, a_size.GetY());
-
-	glTexCoord2f(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
-	glVertex3f(a_size.GetX(), 0.0f, -a_size.GetY());
-
-	glTexCoord2f(a_texCoord.GetX(),						1.0f - a_texSize.GetY() - a_texCoord.GetY());
-	glVertex3f(0.0f, 0.0f, -a_size.GetY());
-	glEnd();
-
-	glEndList();
-
-	return displayListId;
+	glBindVertexArray(m_fullscreenQuad.m_vertexArrayId);
+	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0);
 }
 
 void RenderManager::AddLine2D(RenderLayer::Enum a_renderLayer, Vector2 a_point1, Vector2 a_point2, Colour a_tint)
@@ -891,9 +927,9 @@ void RenderManager::AddLine2D(RenderLayer::Enum a_renderLayer, Vector2 a_point1,
 void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_lineCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_lineCount[a_renderLayer] >= s_maxLinePrimitivesPerRenderLayer)
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", m_lineCount);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxLinePrimitivesPerRenderLayer);
 		return;
 	}
 
@@ -901,11 +937,17 @@ void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Ve
 	Line * l = m_lines[a_renderLayer];
 	l += m_lineCount[a_renderLayer]++;
 
-	l->m_colour = a_tint;
-		
-	// Setup verts 
-	l->m_verts[0] = a_point1;
-	l->m_verts[1] = a_point2;
+	l->SetVertBasic(0, a_point1, a_tint);
+	l->SetVertBasic(1, a_point2, a_tint);
+
+	if (l->m_vertexArrayId == 0 && l->m_vertexBufferId == 0 && l->m_indexBufferId == 0)
+	{
+		l->Bind();
+	}
+	else // This is super slow
+	{
+		l->Rebind();
+	}
 }
 
 void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TextureOrientation::Enum a_orient, Colour a_tint)
@@ -918,10 +960,13 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft
 
 void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient, Colour a_tint)
 {
-	Vector2 verts[4] =	{Vector2(a_topLeft.GetX(), a_topLeft.GetY()),
-						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY()),
-						Vector2(a_topLeft.GetX() + a_size.GetX(), a_topLeft.GetY() - a_size.GetY()),
-						Vector2(a_topLeft.GetX(), a_topLeft.GetY() - a_size.GetY())};
+	Vector2 verts[4] =	{
+		Vector2(a_topLeft.GetX(),					a_topLeft.GetY() - a_size.GetY()),
+		Vector2(a_topLeft.GetX() + a_size.GetX(),	a_topLeft.GetY() - a_size.GetY()),
+		Vector2(a_topLeft.GetX(),					a_topLeft.GetY()),
+		Vector2(a_topLeft.GetX() + a_size.GetX(),	a_topLeft.GetY())
+	};
+
 	AddQuad2D(a_renderLayer, &verts[0], a_tex, a_texCoord, a_texSize, a_orient, a_tint);
 }
 
@@ -943,6 +988,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 	// Copy params to next queue item
 	Quad * q = m_quads[a_renderLayer];
 	q += m_quadCount[a_renderLayer]++;
+
 	if (a_tex)
 	{
 		q->m_textureId = a_tex->GetId();
@@ -951,14 +997,13 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 	{
 		q->m_textureId = -1;
 	}
-	q->m_colour = a_tint;
-	
-	// Setup verts for clockwise drawing 
-	q->m_verts[0] = Vector(a_verts[0].GetX(), a_verts[0].GetY(), s_renderDepth2D);
-	q->m_verts[1] = Vector(a_verts[1].GetX(), a_verts[1].GetY(), s_renderDepth2D);
-	q->m_verts[2] = Vector(a_verts[2].GetX(), a_verts[2].GetY(), s_renderDepth2D);
-	q->m_verts[3] = Vector(a_verts[3].GetX(), a_verts[3].GetY(), s_renderDepth2D);
 
+	// Setup verts for clockwise drawing 
+	for (int i = 0; i < 4; ++i)
+	{
+		q->SetVertBasic(i, Vector(a_verts[i].GetX(), a_verts[i].GetY(), s_renderDepth2D), a_tint);
+	}
+	
 	// Set texcoords based on orientation
 	if (a_tex)
 	{
@@ -966,10 +1011,10 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 		{
 			case TextureOrientation::Normal:
 			{
-				q->m_coords[0] = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
-				q->m_coords[1] = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
-				q->m_coords[2] = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
-				q->m_coords[3] = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_verts[0].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
+				q->m_verts[1].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
+				q->m_verts[2].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_verts[3].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
 				break;
 			}
 			case TextureOrientation::FlipVert:
@@ -991,6 +1036,15 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 			default: break;
 		}
 	}
+
+	if (q->m_vertexArrayId == 0 && q->m_vertexBufferId == 0 && q->m_indexBufferId == 0)
+	{
+		q->Bind();
+	}
+	else // This is super slow
+	{
+		q->Rebind();
+	}
 }
 
 void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts, Texture * a_tex, Colour a_tint)
@@ -1011,6 +1065,7 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 	// Copy params to next queue item
 	Quad * q = m_quads[a_renderLayer];
 	q += m_quadCount[a_renderLayer]++;
+
 	if (a_tex)
 	{
 		q->m_textureId = a_tex->GetId();
@@ -1019,21 +1074,25 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 	{
 		q->m_textureId = -1;
 	}
-	q->m_colour = a_tint;
 	
 	// Setup verts for clockwise drawing 
-	q->m_verts[0] = a_verts[0];
-	q->m_verts[1] = a_verts[1];
-	q->m_verts[2] = a_verts[2];
-	q->m_verts[3] = a_verts[3];
-
+	for (int i = 0; i < 4; ++i)
+	{
+		q->SetVertBasic(i, a_verts[i], a_tint);
+	}
+	
 	// Only one tex coord style for now
 	if (a_tex)
 	{
-		q->m_coords[0] = TexCoord(0.0f,	1.0f);
-		q->m_coords[1] = TexCoord(1.0f,	1.0f);
-		q->m_coords[2] = TexCoord(1.0f,	0.0f);
-		q->m_coords[3] = TexCoord(0.0f,	0.0f);
+		q->m_verts[0].m_uv = TexCoord(0.0f,	1.0f);
+		q->m_verts[1].m_uv = TexCoord(1.0f,	1.0f);
+		q->m_verts[2].m_uv = TexCoord(1.0f,	0.0f);
+		q->m_verts[3].m_uv = TexCoord(0.0f,	0.0f);
+	}
+
+	if (q->m_vertexArrayId == 0 && q->m_vertexBufferId == 0 && q->m_indexBufferId == 0)
+	{
+		q->Bind();
 	}
 }
 
@@ -1055,6 +1114,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	// Copy params to next queue item
 	Tri * t = m_tris[a_renderLayer];
 	t += m_triCount[a_renderLayer]++;
+
 	if (a_tex)
 	{
 		t->m_textureId = a_tex->GetId();
@@ -1063,17 +1123,16 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	{
 		t->m_textureId = -1;
 	}
-	t->m_colour = a_tint;
 	
 	// Setup verts for clockwise drawing
-	t->m_verts[0] = a_point1;
-	t->m_verts[1] = a_point2;
-	t->m_verts[2] = a_point3;
-	
-	// Set texcoords based on orientation
-	t->m_coords[0] = a_txc1;
-	t->m_coords[1] = a_txc2;
-	t->m_coords[2] = a_txc3;
+	t->SetVert2D(0, a_point1, a_tint, a_txc1);
+	t->SetVert2D(1, a_point1, a_tint, a_txc2);
+	t->SetVert2D(2, a_point1, a_tint, a_txc3);
+
+	if (t->m_vertexArrayId == 0 && t->m_vertexBufferId == 0 && t->m_indexBufferId == 0)
+	{
+		t->Bind();
+	}
 }
 
 void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime)
@@ -1090,110 +1149,129 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	{
 		Object * obj = a_model->GetObjectAtIndex(i);
 
-		// Check to see if the list has already been generated but needs to be torn down
-		if (obj->GetDisplayListId() > 0 && !obj->IsDisplayListGenerated())
+		RenderModel * r = m_models[a_renderLayer];
+		r += m_modelCount[a_renderLayer]++;
+
+		// Early out for a pre streamed model
+		unsigned int numVertices = obj->GetNumVertices();
+		const unsigned int renderVerts = r->m_numVerts;
+		if (r->m_model == a_model && numVertices == renderVerts)
 		{
-			glDeleteLists(obj->GetDisplayListId(), 1);
+			continue;
 		}
 
-		// Now regenerate the list
-		if (!obj->IsDisplayListGenerated())
+		// Alias model data
+		Material * modelMat = obj->GetMaterial();
+		if (!modelMat)
 		{
-			// Alias model data
-			Material * modelMat = obj->GetMaterial();
-			if (!modelMat)
-			{
-				Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
-				return;
-			}
-			unsigned int numVertices = obj->GetNumVertices();
+			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
+			return;
+		}
+		
+		// First object in model sets the material properties
+		Vector * verts = obj->GetVertices();
+		Vector * normals = obj->GetNormals();
+		TexCoord * uvs = obj->GetUvs();
+		if (i == 0)
+		{
 			Texture * diffuseTex = modelMat->GetDiffuseTexture();
 			Texture * normalTex = modelMat->GetNormalTexture();
 			Texture * specularTex = modelMat->GetSpecularTexture();
-			Vector * verts = obj->GetVertices();
-			Vector * normals = obj->GetNormals();
-			TexCoord * uvs = obj->GetUvs();
 
-			GLuint displayListId = glGenLists(1);
-			glNewList(displayListId, GL_COMPILE);
+			r->m_model = a_model;
+			r->m_mat = a_mat;
+			r->m_shader = a_shader;
+			r->m_lifeTime = a_lifeTime;
+			r->m_shaderData = a_shaderData;
+			r->m_diffuseTexId = diffuseTex->GetId();
+			r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
+			r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		}
 
-			// Bind the texture and set colour
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-			if (diffuseTex != NULL)
-			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
-			}
-			if (normalTex != NULL)
-			{
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, normalTex->GetId());
-			}
-			if (specularTex != NULL)
-			{
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, specularTex->GetId());
-			}
-			else if (diffuseTex != NULL) // No spec map, bind the diffuse instead as a default
-			{
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, diffuseTex->GetId());
-			}
-			glBegin(GL_TRIANGLES);
-			// Draw vertices in threes
-			for (unsigned int i = 0; i < numVertices; i += Model::s_vertsPerTri)
-			{
-				glNormal3f(normals[i].GetX(), normals[i].GetY(), normals[i].GetZ());
-				glTexCoord2f(uvs[i].GetX(), uvs[i].GetY()); 
-				glVertex3f(verts[i].GetX(), verts[i].GetY(), verts[i].GetZ());
+		// Make sure the VBO has enough storage for the verts of the model
+		bool bind = false;
+		bool rebind = false;
+		if (renderVerts == 0)
+		{
+			r->Alloc(numVertices);
+			r->m_numVerts = numVertices;
+			bind = true;
+		}
+		else if(renderVerts != numVertices)
+		{
+			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Model %s being reallocated, if this happens frequently your game will be slow.",  a_model->GetName());
+			r->Realloc(numVertices);
+			r->m_numVerts = numVertices;
+			rebind = true;
+		}
 
-				glNormal3f(normals[i+1].GetX(), normals[i+1].GetY(), normals[i+1].GetZ());
-				glTexCoord2f(uvs[i+1].GetX(), uvs[i+1].GetY()); 
-				glVertex3f(verts[i+1].GetX(), verts[i+1].GetY(), verts[i+1].GetZ());
-
-				glNormal3f(normals[i+2].GetX(), normals[i+2].GetY(), normals[i+2].GetZ());
-				glTexCoord2f(uvs[i+2].GetX(), uvs[i+2].GetY()); 
-				glVertex3f(verts[i+2].GetX(), verts[i+2].GetY(), verts[i+2].GetZ());
+		// Pump verts from model data into VBO
+		if (bind || rebind)
+		{
+			for (unsigned int j = 0; j < numVertices; ++j)
+			{
+				r->SetVert(j, verts[j], Colour(1.0f, 1.0f, 1.0f, 1.0f), uvs[j], normals[j]);
 			}
-			glEnd();
-			glEndList();
+		}
 
-			obj->SetDisplayListId(displayListId);
+		if (bind)
+		{
+			r->Bind();
+		}
+		else if (rebind)
+		{
+			r->Rebind();
 		}
 	}
-
-	RenderModel * r = m_models[a_renderLayer];
-	r += m_modelCount[a_renderLayer]++;
-	r->m_model = a_model;
-	r->m_mat = a_mat;
-	r->m_shader = a_shader;
-	r->m_lifeTime = a_lifeTime;
-	r->m_shaderData = a_shaderData;
-
+	
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
 		AddDebugMatrix(*a_mat);
 	}
-
 }
 
-void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, unsigned int a_fontCharId, const Vector2 & a_size, Vector a_pos, Colour a_colour)
+void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour)
 {
 	// Don't add more font characters than have been allocated for
-	if (m_fontCharCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_fontCharCount[a_renderLayer] >= s_maxFontCharsPerRenderLayer)
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxFontCharsPerRenderLayer);
 		return;
 	}
 
 	FontChar * fc = m_fontChars[a_renderLayer];
 	fc += m_fontCharCount[a_renderLayer]++;
-	fc->m_displayListId = a_fontCharId;
-	fc->m_size = a_size;
+	
+	const bool is2D = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
+
+	if (is2D)
+	{
+		fc->SetVert2D(0, Vector(0.0f,				0.0f,				s_renderDepth2D),	a_colour, TexCoord(a_texCoord.GetX(),						1.0f - a_texCoord.GetY()));
+		fc->SetVert2D(1, Vector(a_charSize.GetX(),	0.0f,				s_renderDepth2D),	a_colour, TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY()));
+		fc->SetVert2D(2, Vector(a_charSize.GetX(),	-a_charSize.GetY(),	s_renderDepth2D),	a_colour, TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY() - a_texSize.GetY()));
+		fc->SetVert2D(3, Vector(0.0f,				-a_charSize.GetY(),	s_renderDepth2D),	a_colour, TexCoord(a_texCoord.GetX(),						1.0f - a_texCoord.GetY() - a_texSize.GetY()));
+	}
+	else
+	{
+		fc->SetVert2D(0, Vector(0.0f,				0.0f,	0.0f),		a_colour, TexCoord(a_texCoord.GetX(),						1.0f - a_texCoord.GetY()));
+		fc->SetVert2D(1, Vector(a_charSize.GetX(),	0.0f,	0.0f),		a_colour, TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY()));
+		fc->SetVert2D(2, Vector(a_charSize.GetX(),	0.0f,	-a_charSize.GetY()),	a_colour, TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY() - a_texSize.GetY()));
+		fc->SetVert2D(3, Vector(0.0f,				0.0f,	-a_charSize.GetY()),	a_colour, TexCoord(a_texCoord.GetX(),						1.0f - a_texCoord.GetY() - a_texSize.GetY()));
+	}
+
+	if (fc->m_vertexArrayId == 0 && fc->m_vertexBufferId == 0 && fc->m_indexBufferId == 0)
+	{
+		fc->Bind();
+	}
+	else
+	{
+		fc->Rebind();
+	}
+
+	fc->m_textureId = a_texture->GetId();
 	fc->m_pos = a_pos;
-	fc->m_colour = a_colour;
-	fc->m_2d = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
+	fc->m_scale = Vector(a_size.GetX(), a_size.GetY(), is2D ? 1.0f : a_size.GetY());
 }
 
 void RenderManager::AddDebugArrow(Vector a_start, Vector a_end, Colour a_tint)
@@ -1312,6 +1390,7 @@ void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dime
 
 void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shaderName)
 {
+	bool shaderReferenced = false;
 	if (Shader * existingShader = GetShader(a_shaderName))
 	{
 		// It's already in the list, link it to the game object
@@ -1329,6 +1408,7 @@ void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shade
 		}
 		else // Compile error will be reported in the log
 		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with game object %s", a_shaderName, a_gameObject->GetName());
 			delete pNewShader;
 			a_gameObject->SetShader(NULL);
 		}
@@ -1366,6 +1446,7 @@ void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 		}
 		else // Compile error will be reported in the log
 		{
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with scene %s", a_shaderName, a_scene->GetName());
 			delete pNewShader;
 			a_scene->SetShader(NULL);
 		}
@@ -1566,7 +1647,7 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 		Shader * pShader = a_newManShader->m_shaderObject != NULL ? a_newManShader->m_shaderObject->GetShader() : a_newManShader->m_shaderScene->GetShader();
 		if (pShader == NULL)
 		{
-			assert(!"AddManagedShader called without an valid shader assigned to an object or scene");
+			Log::Get().WriteEngineErrorNoParams("AddManagedShader called without a valid shader assigned to an object or scene");
 			return;
 		}
 

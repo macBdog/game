@@ -78,8 +78,9 @@ private:
 		float m_xoffset;				///< X position of the glyph insuide it's box
 		float m_yoffset;				///< Y position of the glyph inside it's box
 		float m_xadvance;				///< How much spacing to put in front of the glyph
-		unsigned int m_displayListId;	///< The generated display list ID for drawing each character in 2D screen space
-		unsigned int m_displayListId3D;	///< The generated display list ID for drawing each character in 3D world space
+		Vector2 m_charSize;
+		TexCoord m_texSize;
+		TexCoord m_texCoord;
 	};
 
 	//\brief Info about a font and a group of all the character info
@@ -189,12 +190,8 @@ private:
 					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
 
 					// Used to generate the position of the character within the texture
-					TexCoord texSize(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
-					TexCoord texCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
-
-					// Generate a display list for each character in the font in 2D
-					newFont->m_chars[charId].m_displayListId = renMan.RegisterFontChar(charSize, texCoord, texSize, newFont->m_texture);
-					newFont->m_chars[charId].m_displayListId3D = renMan.RegisterFontChar3D(charSize, texCoord, texSize, newFont->m_texture);
+					newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
+					newFont->m_chars[charId].m_texCoord = TexCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
 				}
 
 				// There is more info such as kerning here but we don't support it

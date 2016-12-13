@@ -1,4 +1,5 @@
 const char * globalFragmentShader = 
+"#version 400\n"
 "uniform sampler2D DiffuseTexture; \n"
 "uniform sampler2D NormalTexture; \n"
 "uniform sampler2D SpecularTexture; \n"
@@ -12,4 +13,12 @@ const char * globalFragmentShader =
 "uniform mat4 ViewMatrix; \n"
 "uniform mat4 ProjectionMatrix; \n"
 "uniform float Lights[4*((4*3)+1)]; \n"
-"varying vec2 OutTexCoord; \n";
+"layout(location = 0) out vec4 FragmentColour;\n"
+"layout(location = 1) out vec4 GBuffer1;\n"
+"layout(location = 2) out vec4 GBuffer2;\n"
+"layout(location = 3) out vec4 GBuffer3;\n"
+"layout(location = 4) out vec4 GBuffer4;\n"
+"layout(location = 5) out vec4 GBuffer5;\n"
+"layout(location = 6) out vec4 GBuffer6;\n"
+"layout(location = 7) out vec4 GBuffer7;\n"
+"layout(location = 8) out vec4 GBuffer8;\n";
