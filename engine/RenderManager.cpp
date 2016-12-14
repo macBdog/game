@@ -270,7 +270,7 @@ bool RenderManager::Shutdown()
 				t->Unbind();
 			}
 		}
-		delete(m_tris[i]);
+		delete[] m_tris[i];
 
 		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
 		{
@@ -280,7 +280,7 @@ bool RenderManager::Shutdown()
 				q->Unbind();
 			}
 		}
-		delete(m_quads[i]);
+		delete[] m_quads[i];
 
 		for (unsigned int j = 0; j < s_maxLinePrimitivesPerRenderLayer; ++j)
 		{
@@ -290,9 +290,17 @@ bool RenderManager::Shutdown()
 				l->Unbind();
 			}
 		}
-		delete(m_lines[i]);
+		delete[] m_lines[i];
 
-		free(m_models[i]);
+		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		{
+			RenderModel * r = m_models[j] + j;
+			if (r->m_vertexArrayId == 0 && r->m_vertexBufferId == 0 && r->m_indexBufferId == 0)
+			{
+				r->Unbind();
+			}
+		}
+		delete[] m_models[i];
 
 		for (unsigned int j = 0; j < s_maxFontCharsPerRenderLayer; ++j)
 		{
@@ -512,6 +520,8 @@ bool RenderManager::Update(float a_dt)
 
 bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, unsigned int a_viewBpp, bool a_fullScreen)
 {
+	unsigned int glErrorEnum = glGetError();
+
     // Setup viewport ratio avoiding a divide by zero
     if (a_viewHeight == 0)
 	{
@@ -541,20 +551,18 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glBindTexture(GL_TEXTURE_2D, m_colourBuffers[i]);
  		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colourBuffers[i], 0);
 
 		// Depth parameters
 		glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffers[i]);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffers[i]);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);	
 		framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 	}
 
-	unsigned int glErrorEnum = glGetError();
-
 	// Create render targets for general use and attach them to colour attachments after 0
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);
 	m_mrtAttachments[0] = GL_COLOR_ATTACHMENT0;
 	for (int i = 0; i < s_numRenderTargets; ++i)
 	{
@@ -562,26 +570,26 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glBindTexture(GL_TEXTURE_2D, m_renderTargets[i]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1 + i, GL_TEXTURE_2D, m_renderTargets[i], 0);
 		m_mrtAttachments[i+1] = GL_COLOR_ATTACHMENT1 + i;
 	}
 	framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-	glDrawBuffers(s_numRenderTargets, m_mrtAttachments);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return framebuffersOk;
 }
 
 void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
+	unsigned int glError = glGetError();
+
 	// Do offscreen rendering pass to first stage framebuffer
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
-	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage buffer
-
-	// Enable writing to the gbuffers
-	glDrawBuffers(s_numRenderTargets, m_mrtAttachments);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage render buffer
+	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments);					//<< Enable drawing into all colour attachments
 
 	RenderScene(a_viewMatrix);
 	
@@ -596,11 +604,16 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
     glDisable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	// Now render with full scene shader if specified
 	Matrix identityMat = Matrix::Identity();
 	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
 	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
+	for (int i = 0; i < s_numRenderTargets; ++i)
+	{
+		shaderData.m_gBufferIds[i] = m_renderTargets[i];
+	}
+	
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -619,35 +632,66 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	}
 #endif
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);
-
 	// Otherwise use the default
 	if (bUseDefaultShader)
 	{	
 		m_textureShader->UseShader(shaderData);
 	}
 
+	// Output of the previous pass goes in the DiffuseTexture slot for the scene shader pass
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);	// Diffuse
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[0]);					// GBuffers follow
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[1]);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[2]);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[3]);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[4]);
+	glActiveTexture(GL_TEXTURE8);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[5]);
+
 	RenderFramebuffer();
 
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-	
+
 	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
 	glEnable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	// Final drawing pass
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::PostFX]);
 
 	// Render once 
 	m_textureShader->UseShader(shaderData);
+
+	// Output of the previous pass goes in the DiffuseTexture slot for the final render
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::PostFX]);
+
 	RenderFramebuffer();
+
+#ifndef _RELEASE
+	// Visualise what's in the gbuffers when editing
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		const int borderSize = 20;
+		const GLint rtSizeX = (GLint)(m_viewWidth - borderSize * s_numRenderTargets) / (s_numRenderTargets + 1);
+		const GLint rtSizeY = (GLint)m_viewHeight / (s_numRenderTargets + 1);
+		for (int i = 0; i < s_numRenderTargets + 1; ++i)
+		{
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_colourBuffers[RenderStage::Scene]);
+			glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			GLint xImageStart = borderSize + (i * (rtSizeX + borderSize));
+			glBlitFramebuffer(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight, xImageStart, borderSize, xImageStart + rtSizeX, rtSizeY, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		}
+	}
+#endif
 	
 	// Unbind shader
     glUseProgram(0);
@@ -662,6 +706,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, bool a_flushBuffers)
 
 void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat, bool a_flushBuffers, bool a_clear)
 {
+	unsigned int glError = glGetError();
+
 	// Setup fresh data to pass to shaders
 	Matrix identityMatrix = Matrix::Identity();
 	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);

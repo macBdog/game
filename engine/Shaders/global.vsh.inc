@@ -16,4 +16,5 @@ const char * globalVertexShader =
 "float rand(vec2 co) \n"
 "{ \n"
 "	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); \n"
-"} \n";
+"} \n"
+;

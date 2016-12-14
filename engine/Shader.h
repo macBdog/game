@@ -101,11 +101,17 @@ public:
 						, m_objectMatrix(a_objectMatrix)
 						, m_viewMatrix(a_viewMatrix)
 						, m_projectionMatrix(a_projectionMatrix)
-						{ }
+						{
+							for (int i = 0; i < 6; ++i)
+							{
+								m_gBufferIds[i] = 0;
+							}	
+						}
 
 		unsigned int m_diffuseTextureId;
 		unsigned int m_normalTextureId;
 		unsigned int m_specularTextureId;
+		unsigned int m_gBufferIds[6];
 		int m_materialShininess;
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_lifeTime;				///< How much time in seconds has passed since the object using the shader was initialised
@@ -159,6 +165,12 @@ private:
 	Uniform<int> m_diffuseTexture;					///< Standard set of uniforms follow
 	Uniform<int> m_normalTexture;
 	Uniform<int> m_specularTexture;
+	Uniform<int> m_gBuffer1;
+	Uniform<int> m_gBuffer2;
+	Uniform<int> m_gBuffer3;
+	Uniform<int> m_gBuffer4;
+	Uniform<int> m_gBuffer5;
+	Uniform<int> m_gBuffer6;
 	Uniform<int> m_materialShininess;
 	Uniform<int> m_numActiveLights;
 	Uniform<float> m_time;

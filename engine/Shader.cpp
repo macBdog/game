@@ -65,6 +65,12 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
 		m_diffuseTexture.Init(m_shader, "DiffuseTexture");
 		m_normalTexture.Init(m_shader, "NormalTexture");
 		m_specularTexture.Init(m_shader, "SpecularTexture");
+		m_gBuffer1.Init(m_shader, "GBuffer1");
+		m_gBuffer2.Init(m_shader, "GBuffer2");
+		m_gBuffer3.Init(m_shader, "GBuffer3");
+		m_gBuffer4.Init(m_shader, "GBuffer4");
+		m_gBuffer5.Init(m_shader, "GBuffer5");
+		m_gBuffer6.Init(m_shader, "GBuffer6");
 		m_materialShininess.Init(m_shader, "MaterialShininess");
 		m_numActiveLights.Init(m_shader, "NumActiveLights");
 		m_time.Init(m_shader, "Time");
@@ -164,6 +170,20 @@ void Shader::UseShader(const UniformData & a_data)
 	glUniform1i(m_normalTexture.m_id, 1);
 	glActiveTexture(GL_TEXTURE2);
 	glUniform1i(m_specularTexture.m_id, 2);
+	
+	glActiveTexture(GL_TEXTURE3);
+	glUniform1i(m_gBuffer1.m_id, a_data.m_gBufferIds[0]);
+	glActiveTexture(GL_TEXTURE4);
+	glUniform1i(m_gBuffer2.m_id, a_data.m_gBufferIds[1]);
+	glActiveTexture(GL_TEXTURE5);
+	glUniform1i(m_gBuffer3.m_id, a_data.m_gBufferIds[2]);
+	glActiveTexture(GL_TEXTURE6);
+	glUniform1i(m_gBuffer4.m_id, a_data.m_gBufferIds[3]);
+	glActiveTexture(GL_TEXTURE7);
+	glUniform1i(m_gBuffer5.m_id, a_data.m_gBufferIds[4]);
+	glActiveTexture(GL_TEXTURE8);
+	glUniform1i(m_gBuffer6.m_id, a_data.m_gBufferIds[5]);
+
 	glUniform1i(m_materialShininess.m_id, a_data.m_materialShininess);
 	glUniform1i(m_numActiveLights.m_id, numActiveLights);
 	glUniform1f(m_time.m_id, a_data.m_time);

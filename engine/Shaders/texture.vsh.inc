@@ -14,4 +14,5 @@ const char * textureVertexShader =
 "	gl_Position = vec4(VertexPosition, 1.0) * ObjectMatrix * ViewMatrix * ProjectionMatrix;\n"
 "	Colour = VertexColour;\n"
 "	OutTexCoord = VertexUV;\n"
-"} \n";
+"} \n"
+;

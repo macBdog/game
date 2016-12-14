@@ -144,6 +144,7 @@ public:
 	inline Shader * GetColourShader() { return m_colourShader; }
 	inline Shader * GetTextureShader() { return m_textureShader; }
 	inline Shader * GetLightingShader() { return m_lightingShader; }
+	inline unsigned int GetGBufferIndex(unsigned int a_id) { return m_renderTargets[a_id]; }
 
 	//\brief Drawing functions for lines
 	//\param a_point1 is the start of the line
@@ -225,6 +226,8 @@ public:
 	//\param a_shader_OUT is pointer to a shader that will be allocated
 	//\return true if the shader was compiled and allocated successfully
 	static bool InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragShaderSrc, Shader & a_shader_OUT);
+
+	static const int s_numRenderTargets = 6;						///< Number of screen sized gbuffers for general use
 
 private:
 
@@ -412,7 +415,6 @@ private:
 	static const int s_maxFontCharsPerRenderLayer = 8096;			///< Flat storage amount for quads for fonts
 	static const int s_maxLinePrimitivesPerRenderLayer = 8096;		///< Flat storage amount for quads for lines
 	static const int s_maxLines = 1600;								///< Storage amount for debug lines
-	static const int s_numRenderTargets = 8;						///< Number of screen sized buffers for general use
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
