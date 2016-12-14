@@ -583,16 +583,23 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
 	unsigned int glError = glGetError();
+	Matrix identityMat = Matrix::Identity();
+	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
+	for (int i = 0; i < s_numRenderTargets; ++i)
+	{
+		shaderData.m_gBufferIds[i] = m_renderTargets[i];
+	}
 
 	// Do offscreen rendering pass to first stage framebuffer
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage render buffer
-	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments);					//<< Enable drawing into all colour attachments
-
-	RenderScene(a_viewMatrix);
+	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments );					//<< Enable drawing into all colour attachments
 	
+	RenderScene(a_viewMatrix);
+
 	// Start rendering to the first render stage
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
@@ -606,14 +613,6 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Now render with full scene shader if specified
-	Matrix identityMat = Matrix::Identity();
-	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
-	for (int i = 0; i < s_numRenderTargets; ++i)
-	{
-		shaderData.m_gBufferIds[i] = m_renderTargets[i];
-	}
-	
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -658,6 +657,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDrawBuffers(1, m_mrtAttachments);
 
 	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
@@ -685,6 +685,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		for (int i = 0; i < s_numRenderTargets + 1; ++i)
 		{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_colourBuffers[RenderStage::Scene]);
+			glDrawBuffers(1, m_mrtAttachments);
 			glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			GLint xImageStart = borderSize + (i * (rtSizeX + borderSize));
