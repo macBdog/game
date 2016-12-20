@@ -652,16 +652,18 @@ int ScriptManager::GetVRLookPosition(lua_State * a_luaState)
 int ScriptManager::IsKeyDown(lua_State * a_luaState)
 {
 	bool keyIsDown = false;
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int keyCode = (int)lua_tonumber(a_luaState, 1);
-		keyIsDown = InputManager::Get().IsKeyDepressed((SDL_Keycode)keyCode);
+		if (lua_gettop(a_luaState) == 1)
+		{
+			int keyCode = (int)lua_tonumber(a_luaState, 1);
+			keyIsDown = InputManager::Get().IsKeyDepressed((SDL_Keycode)keyCode);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsKeyDown", "expects 1 parameter of the key code to test.");
+		}
 	}
-	else
-	{
-		LogScriptError(a_luaState, "IsKeyDown", "expects 1 parameter of the key code to test.");
-	}
-
 	lua_pushboolean(a_luaState, keyIsDown);
 	return 1; // One bool returned
 }
@@ -685,15 +687,18 @@ int ScriptManager::IsGamePadConnected(lua_State * a_luaState)
 int ScriptManager::IsGamePadButtonDown(lua_State * a_luaState)
 {
 	bool buttonDown = false;
-	if (lua_gettop(a_luaState) == 2)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int padId = (int)lua_tonumber(a_luaState, 1);
-		int buttonId = (int)lua_tonumber(a_luaState, 2);
-		buttonDown = InputManager::Get().IsGamePadButtonDepressed(padId, buttonId);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "IsGamePadButtonDown", "expects 2 parameters of the ID of the pad to query and the button to check.");
+		if (lua_gettop(a_luaState) == 2)
+		{
+			int padId = (int)lua_tonumber(a_luaState, 1);
+			int buttonId = (int)lua_tonumber(a_luaState, 2);
+			buttonDown = InputManager::Get().IsGamePadButtonDepressed(padId, buttonId);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsGamePadButtonDown", "expects 2 parameters of the ID of the pad to query and the button to check.");
+		}
 	}
 	lua_pushboolean(a_luaState, buttonDown);
 	return 1;
@@ -703,15 +708,18 @@ int ScriptManager::GetGamePadLeftStick(lua_State * a_luaState)
 {
 	float xPos = 0.0f;
 	float yPos = 0.0f;
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int padId = (int)lua_tonumber(a_luaState, 1);
-		xPos = InputManager::Get().GetGamePadAxis(padId, 0);
-		yPos = InputManager::Get().GetGamePadAxis(padId, 1);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "GetGamePadLeftStick", "expects 1 parameters of the ID of the pad to query.");
+		if (lua_gettop(a_luaState) == 1)
+		{
+			int padId = (int)lua_tonumber(a_luaState, 1);
+			xPos = InputManager::Get().GetGamePadAxis(padId, 0);
+			yPos = InputManager::Get().GetGamePadAxis(padId, 1);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "GetGamePadLeftStick", "expects 1 parameters of the ID of the pad to query.");
+		}
 	}
 	lua_pushnumber(a_luaState, xPos);
 	lua_pushnumber(a_luaState, yPos);
@@ -722,15 +730,18 @@ int ScriptManager::GetGamePadRightStick(lua_State * a_luaState)
 {
 	float xPos = 0.0f;
 	float yPos = 0.0f;
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int padId = (int)lua_tonumber(a_luaState, 1);
-		xPos = InputManager::Get().GetGamePadAxis(padId, 4);
-		yPos = InputManager::Get().GetGamePadAxis(padId, 3);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "GetGamePadRightStick", "expects 1 parameters of the ID of the pad to query.");
+		if (lua_gettop(a_luaState) == 1)
+		{
+			int padId = (int)lua_tonumber(a_luaState, 1);
+			xPos = InputManager::Get().GetGamePadAxis(padId, 4);
+			yPos = InputManager::Get().GetGamePadAxis(padId, 3);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "GetGamePadRightStick", "expects 1 parameters of the ID of the pad to query.");
+		}
 	}
 	lua_pushnumber(a_luaState, xPos);
 	lua_pushnumber(a_luaState, yPos);
@@ -740,21 +751,24 @@ int ScriptManager::GetGamePadRightStick(lua_State * a_luaState)
 int ScriptManager::GetGamePadLeftTrigger(lua_State * a_luaState)
 {
 	float pos = 0.0f;
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int padId = (int)lua_tonumber(a_luaState, 1);
-		if (InputManager::Get().IsGamePadConnected(padId))
+		if (lua_gettop(a_luaState) == 1)
 		{
-			float rawVal = InputManager::Get().GetGamePadAxis(padId, 4);
-			if (rawVal > -1.0f)
+			int padId = (int)lua_tonumber(a_luaState, 1);
+			if (InputManager::Get().IsGamePadConnected(padId))
 			{
-				pos = (rawVal + 1.0f) * 0.5f;
+				float rawVal = InputManager::Get().GetGamePadAxis(padId, 4);
+				if (rawVal > -1.0f)
+				{
+					pos = (rawVal + 1.0f) * 0.5f;
+				}
 			}
 		}
-	}
-	else
-	{
-		LogScriptError(a_luaState, "GetGamePadLeftTrigger", "expects 1 parameters of the ID of the pad to query.");
+		else
+		{
+			LogScriptError(a_luaState, "GetGamePadLeftTrigger", "expects 1 parameters of the ID of the pad to query.");
+		}
 	}
 	lua_pushnumber(a_luaState, pos);
 	return 1;
@@ -763,21 +777,24 @@ int ScriptManager::GetGamePadLeftTrigger(lua_State * a_luaState)
 int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
 {
 	float pos = 0.0f;
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		int padId = (int)lua_tonumber(a_luaState, 1);
-		if (InputManager::Get().IsGamePadConnected(padId))
+		if (lua_gettop(a_luaState) == 1)
 		{
-			float rawVal = InputManager::Get().GetGamePadAxis(padId, 5);
-			if (rawVal > -1.0f)
+			int padId = (int)lua_tonumber(a_luaState, 1);
+			if (InputManager::Get().IsGamePadConnected(padId))
 			{
-				pos = (rawVal + 1.0f) * 0.5f;
+				float rawVal = InputManager::Get().GetGamePadAxis(padId, 5);
+				if (rawVal > -1.0f)
+				{
+					pos = (rawVal + 1.0f) * 0.5f;
+				}
 			}
 		}
-	}
-	else
-	{
-		LogScriptError(a_luaState, "GetGamePadRightTrigger", "expects 1 parameters of the ID of the pad to query.");
+		else
+		{
+			LogScriptError(a_luaState, "GetGamePadRightTrigger", "expects 1 parameters of the ID of the pad to query.");
+		}
 	}
 	lua_pushnumber(a_luaState, pos);
 	return 1;
@@ -786,13 +803,16 @@ int ScriptManager::GetGamePadRightTrigger(lua_State * a_luaState)
 int ScriptManager::IsMouseLeftButtonDown(lua_State * a_luaState)
 {
 	bool buttonDown = false;
-	if (lua_gettop(a_luaState) == 0)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Left);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "IsMouseLeftButtonDown", "expects no parameters.");
+		if (lua_gettop(a_luaState) == 0)
+		{
+			buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Left);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsMouseLeftButtonDown", "expects no parameters.");
+		}
 	}
 	lua_pushboolean(a_luaState, buttonDown);
 	return 1;
@@ -801,13 +821,16 @@ int ScriptManager::IsMouseLeftButtonDown(lua_State * a_luaState)
 int ScriptManager::IsMouseRightButtonDown(lua_State * a_luaState)
 {
 	bool buttonDown = false;
-	if (lua_gettop(a_luaState) == 0)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Right);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "IsMouseRightButtonDown", "expects no parameters.");
+		if (lua_gettop(a_luaState) == 0)
+		{
+			buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Right);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsMouseRightButtonDown", "expects no parameters.");
+		}
 	}
 	lua_pushboolean(a_luaState, buttonDown);
 	return 1;
@@ -816,13 +839,16 @@ int ScriptManager::IsMouseRightButtonDown(lua_State * a_luaState)
 int ScriptManager::IsMouseMiddleButtonDown(lua_State * a_luaState)
 {
 	bool buttonDown = false;
-	if (lua_gettop(a_luaState) == 0)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Middle);
-	}
-	else
-	{
-		LogScriptError(a_luaState, "IsMouseMiddleButtonDown", "expects no parameters.");
+		if (lua_gettop(a_luaState) == 0)
+		{
+			buttonDown = InputManager::Get().IsMouseButtonDepressed(MouseButton::Middle);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "IsMouseMiddleButtonDown", "expects no parameters.");
+		}
 	}
 	lua_pushboolean(a_luaState, buttonDown);
 	return 1;
@@ -1780,6 +1806,13 @@ int ScriptManager::GUIDisableMouse(lua_State * a_luaState)
 
 int ScriptManager::GUIGetMouseClipPosition(lua_State * a_luaState)
 {
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		lua_pushnumber(a_luaState, 0.0f);
+		lua_pushnumber(a_luaState, 0.0f);
+		return 2;
+	}
+
 	InputManager & inMan = InputManager::Get();
 	const Vector2 mousePos = inMan.GetMousePosRelative();
 	lua_pushnumber(a_luaState, mousePos.GetX());
@@ -1789,6 +1822,13 @@ int ScriptManager::GUIGetMouseClipPosition(lua_State * a_luaState)
 
 int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
 {
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		lua_pushnumber(a_luaState, 0.0f);
+		lua_pushnumber(a_luaState, 0.0f);
+		return 2;
+	}
+
 	InputManager & inMan = InputManager::Get();
 	const Vector2 mousePos = inMan.GetMousePosAbsolute();
 	lua_pushnumber(a_luaState, mousePos.GetX());
@@ -1798,6 +1838,13 @@ int ScriptManager::GUIGetMouseScreenPosition(lua_State * a_luaState)
 
 int ScriptManager::GUIGetMouseDirection(lua_State * a_luaState)
 {
+	if (DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		lua_pushnumber(a_luaState, 0.0f);
+		lua_pushnumber(a_luaState, 0.0f);
+		return 2;
+	}
+	
 	InputManager & inMan = InputManager::Get();
 	const Vector2 mouseDir = inMan.GetMouseDirection();
 	lua_pushnumber(a_luaState, mouseDir.GetX());

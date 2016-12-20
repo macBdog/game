@@ -243,5 +243,11 @@
     <None Include="Font\default.tga.inc">
       <Filter>Source Files\Font</Filter>
     </None>
+    <None Include="Shaders\post.fsh.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Shaders\post.vsh.inc">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

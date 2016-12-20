@@ -18,11 +18,6 @@ const char * lightingFragmentShader =
 "uniform float Lights[4*((4*3)+1)]; \n"
 "layout(location = 0) out vec4 FragmentColour;\n"
 "layout(location = 1) out vec4 GBuffer1Colour;\n"
-"layout(location = 2) out vec4 GBuffer2Colour;\n"
-"layout(location = 3) out vec4 GBuffer3Colour;\n"
-"layout(location = 4) out vec4 GBuffer4Colour;\n"
-"layout(location = 5) out vec4 GBuffer5Colour;\n"
-"layout(location = 6) out vec4 GBuffer6Colour;\n"
 "void main(void) \n"
 "{ \n"
 "	vec4 fragColour = vec4(0.0, 0.0, 0.0, 0.0); \n"
@@ -57,5 +52,5 @@ const char * lightingFragmentShader =
 "		vec4 texFrag = texture2D(DiffuseTexture, OutTexCoord); \n"
 "		fragColour += texFrag * vec4((Iamb + Idiff + Ispec), texFrag.a); \n"
 "	} \n"
-"	FragmentColour = fragColour; \n"
+"	GBuffer1Colour = fragColour; \n"
 " } \n";

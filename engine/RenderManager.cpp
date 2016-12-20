@@ -77,9 +77,6 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
     // Set the clear colour
     m_clearColour = a_clearColour;
 
-	// Enable texture mapping
-	glEnable(GL_TEXTURE_2D);
-
     // Enable smooth shading
     glShadeModel(GL_SMOOTH);
 
@@ -149,12 +146,18 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	}
 
 	// Setup default shaders
+	#include "Shaders\post.vsh.inc"
+	#include "Shaders\post.fsh.inc"
 	#include "Shaders\colour.vsh.inc"
 	#include "Shaders\colour.fsh.inc"
 	#include "Shaders\texture.vsh.inc"
 	#include "Shaders\texture.fsh.inc"
 	#include "Shaders\lighting.vsh.inc"
 	#include "Shaders\lighting.fsh.inc"
+	if (m_postShader = new Shader("post"))
+	{
+		m_postShader->Init(postVertexShader, postFragmentShader);
+	}
 	if (m_colourShader = new Shader("colour"))
 	{
 		m_colourShader->Init(colourVertexShader, colourFragmentShader);
@@ -247,9 +250,11 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	m_vr = a_vr;
 
     return renderLayerAlloc && 
-			m_colourShader != NULL && 
-			m_textureShader != NULL && 
-			m_lightingShader != NULL &&
+			m_postShader != nullptr &&
+			m_colourShader != nullptr &&
+			m_textureShader != nullptr &&
+			m_lightingShader != nullptr &&
+			m_postShader->IsCompiled() &&
 			m_colourShader->IsCompiled() && 
 			m_textureShader->IsCompiled() && 
 			m_lightingShader->IsCompiled();
@@ -270,63 +275,75 @@ bool RenderManager::Shutdown()
 				t->Unbind();
 			}
 		}
-		delete[] m_tris[i];
 
 		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
 		{
-			Quad * q = m_quads[j] + j;
+			Quad * q = m_quads[i] + j;
 			if (q->m_vertexArrayId == 0 && q->m_vertexBufferId == 0 && q->m_indexBufferId == 0)
 			{
 				q->Unbind();
 			}
 		}
-		delete[] m_quads[i];
 
 		for (unsigned int j = 0; j < s_maxLinePrimitivesPerRenderLayer; ++j)
 		{
-			Line * l = m_lines[j] + j;
+			Line * l = m_lines[i] + j;
 			if (l->m_vertexArrayId == 0 && l->m_vertexBufferId == 0 && l->m_indexBufferId == 0)
 			{
 				l->Unbind();
 			}
 		}
-		delete[] m_lines[i];
 
 		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
 		{
-			RenderModel * r = m_models[j] + j;
+			RenderModel * r = m_models[i] + j;
 			if (r->m_vertexArrayId == 0 && r->m_vertexBufferId == 0 && r->m_indexBufferId == 0)
 			{
 				r->Unbind();
 			}
 		}
-		delete[] m_models[i];
 
 		for (unsigned int j = 0; j < s_maxFontCharsPerRenderLayer; ++j)
 		{
-			FontChar * fc = m_fontChars[j] + j;
+			FontChar * fc = m_fontChars[i] + j;
 			if (fc->m_vertexArrayId == 0 && fc->m_vertexBufferId == 0 && fc->m_indexBufferId == 0)
 			{
 				fc->Unbind();
 			}
 		}
-		delete(m_fontChars[i]);
-		
+
 		m_triCount[i] = 0;
 		m_quadCount[i] = 0;
 		m_lineCount[i] = 0;
 		m_modelCount[i] = 0;
 		m_fontCharCount[i] = 0;
 	}
+
+	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
+	{
+		delete[] m_tris[i];
+		delete[] m_quads[i];
+		delete[] m_lines[i];
+		delete[] m_models[i];
+		delete[] m_fontChars[i];
+	}
 	
 	// Clean up the default shaders
-	if (m_colourShader != NULL)
+	if (m_postShader != nullptr)
+	{
+		delete m_postShader;
+	}
+	if (m_colourShader != nullptr)
 	{
 		delete m_colourShader;
 	}
-	if (m_textureShader != NULL)
+	if (m_textureShader != nullptr)
 	{
 		delete m_textureShader;
+	}
+	if (m_lightingShader != nullptr)
+	{
+		delete m_lightingShader;
 	}
 
 	// Clean up the framebuffer resources
@@ -583,16 +600,13 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 {
 	unsigned int glError = glGetError();
-	Matrix identityMat = Matrix::Identity();
-	Matrix orthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMat, &identityMat, &orthoMat);
+	Shader::UniformData shaderData(m_renderTime, m_renderTime, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &m_shaderIdentityMat, &m_shaderIdentityMat, &m_shaderOrthoMat);
 	for (int i = 0; i < s_numRenderTargets; ++i)
 	{
 		shaderData.m_gBufferIds[i] = m_renderTargets[i];
 	}
 
 	// Do offscreen rendering pass to first stage framebuffer
-	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage render buffer
@@ -607,7 +621,6 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
-	glEnable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -634,7 +647,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	// Otherwise use the default
 	if (bUseDefaultShader)
 	{	
-		m_textureShader->UseShader(shaderData);
+		m_postShader->UseShader(shaderData);
 	}
 
 	// Output of the previous pass goes in the DiffuseTexture slot for the scene shader pass
@@ -661,7 +674,6 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 
 	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
-	glEnable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -680,13 +692,13 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
 		const int borderSize = 20;
-		const GLint rtSizeX = (GLint)(m_viewWidth - borderSize * s_numRenderTargets) / (s_numRenderTargets + 1);
-		const GLint rtSizeY = (GLint)m_viewHeight / (s_numRenderTargets + 1);
-		for (int i = 0; i < s_numRenderTargets + 1; ++i)
+		const GLint rtSizeX = (GLint)(m_viewWidth - borderSize * (s_numRenderTargets + 1)) / s_numRenderTargets;
+		const GLint rtSizeY = (GLint)m_viewHeight / s_numRenderTargets;
+		for (int i = 0; i < s_numRenderTargets; ++i)
 		{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_colourBuffers[RenderStage::Scene]);
 			glDrawBuffers(1, m_mrtAttachments);
-			glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
+			glReadBuffer(GL_COLOR_ATTACHMENT1 + i);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			GLint xImageStart = borderSize + (i * (rtSizeX + borderSize));
 			glBlitFramebuffer(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight, xImageStart, borderSize, xImageStart + rtSizeX, rtSizeY, GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -710,9 +722,27 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 	unsigned int glError = glGetError();
 
 	// Setup fresh data to pass to shaders
-	Matrix identityMatrix = Matrix::Identity();
-	Matrix orthoMatrix = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
-	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &identityMatrix, &a_viewMatrix, &a_perspectiveMat);
+	m_shaderIdentityMat = Matrix::Identity();
+	m_shaderOrthoMat = Matrix::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f);
+	Shader::UniformData shaderData(m_renderTime, 0.0f, m_lastRenderTime, (float)m_viewWidth, (float)m_viewHeight, Vector::Zero(), &m_shaderIdentityMat, &a_viewMatrix, &a_perspectiveMat);
+	for (int i = 0; i < s_numRenderTargets; ++i)
+	{
+		shaderData.m_gBufferIds[i] = m_renderTargets[i];
+	}
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);	// Diffuse
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[0]);					// GBuffers follow
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[1]);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[2]);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[3]);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[4]);
+	glActiveTexture(GL_TEXTURE8);
+	glBindTexture(GL_TEXTURE_2D, m_renderTargets[5]);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -781,7 +811,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				if (m_vr)
 				{
-					Matrix guiTransform = identityMatrix;
+					Matrix guiTransform = m_shaderIdentityMat;
 					Quaternion guiRotation = Quaternion(Vector(0.05f, 0.0f, 0.0f));
 					guiRotation.ApplyToMatrix(guiTransform);
 					shaderData.m_projectionMatrix = &a_perspectiveMat;
@@ -789,8 +819,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 				}
 				else
 				{
-					shaderData.m_projectionMatrix = &orthoMatrix;
-					shaderData.m_viewMatrix = &identityMatrix;
+					shaderData.m_projectionMatrix = &m_shaderOrthoMat;
+					shaderData.m_viewMatrix = &m_shaderIdentityMat;
 				}
 				break;
 			}
@@ -804,9 +834,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		}
 
 		// Use the texture shader on world objects
-		glEnable(GL_TEXTURE_2D);
 		Shader * pLastShader = m_textureShader;
-		
+
 		// Submit the tris
 		Tri * t = m_tris[i];
 		for (unsigned int j = 0; j < m_triCount[i]; ++j)
@@ -816,7 +845,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				if (pLastShader != m_textureShader)
 				{
-					glEnable(GL_TEXTURE_2D);
 					pLastShader = m_textureShader;
 				}
 				glActiveTexture(GL_TEXTURE0);
@@ -826,7 +854,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				if (pLastShader != m_colourShader)
 				{
-					glDisable(GL_TEXTURE_2D);
 					pLastShader = m_colourShader;
 				}
 			}
@@ -841,7 +868,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 		// Submit the quad
 		Quad * q = m_quads[i];
-		shaderData.m_objectMatrix = &identityMatrix;
+		shaderData.m_objectMatrix = &m_shaderIdentityMat;
 		for (unsigned int j = 0; j < m_quadCount[i]; ++j)
 		{
 			// Draw a quad with a texture
@@ -849,7 +876,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				if (pLastShader != m_textureShader)
 				{
-					glEnable(GL_TEXTURE_2D);
 					pLastShader = m_textureShader;
 				}
 				glActiveTexture(GL_TEXTURE0);
@@ -859,7 +885,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				if (pLastShader != m_colourShader)
 				{
-					glDisable(GL_TEXTURE_2D);
 					pLastShader = m_colourShader;
 				}
 			}
@@ -900,11 +925,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glDrawElements(GL_TRIANGLES, rm->m_numVerts, GL_UNSIGNED_INT, 0);
 			++rm;
 		}
-		
+
 		// Draw font chars by calling their VBOs
 		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
 		{
-			glEnable(GL_TEXTURE_2D);
 			pLastShader = m_textureShader;
 		}
 
@@ -931,7 +955,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		{
 			shaderData.m_objectMatrix->SetIdentity();
 			m_colourShader->UseShader(shaderData);
-			glDisable(GL_TEXTURE_2D);
 		}
 
 		// Draw lines in the current renderLayer
@@ -953,7 +976,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			m_modelCount[i] = 0;
 			m_fontCharCount[i] = 0;
 		}
-	}	
+	}
 }
 
 void RenderManager::RenderFramebuffer()

@@ -67,9 +67,10 @@ public:
 					, m_clearColour(sc_colourBlack)
 					, m_renderMode(RenderMode::Full)
 					, m_vr(false)
-					, m_colourShader(NULL)
-					, m_textureShader(NULL)
-					, m_lightingShader(NULL)
+					, m_postShader(nullptr)
+					, m_colourShader(nullptr)
+					, m_textureShader(nullptr)
+					, m_lightingShader(nullptr)
 					, m_frameBuffer(0)
 					, m_colourBuffer(0)
 					, m_depthBuffer(0)
@@ -141,6 +142,7 @@ public:
 	inline float GetViewAspect() { return m_aspect; }
 	inline const char * GetShaderPath() { return m_shaderPath; }
 	inline bool GetVrSupport() { return m_vr; }
+	inline Shader * GetPostShader() { return m_postShader; }
 	inline Shader * GetColourShader() { return m_colourShader; }
 	inline Shader * GetTextureShader() { return m_textureShader; }
 	inline Shader * GetLightingShader() { return m_lightingShader; }
@@ -447,6 +449,10 @@ private:
 
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
 
+	Matrix m_shaderOrthoMat;
+	Matrix m_shaderIdentityMat;
+	
+	Shader * m_postShader;											///< Shader used to draw the gbuffers each frame
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
 	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified

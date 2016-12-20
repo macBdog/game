@@ -11,4 +11,5 @@ const char * colourFragmentShader =
 "void main()\n"
 "{ \n"
 "	FragmentColour = Colour;\n"
+"	GBuffer1Colour = Colour;\n"
 "}\n";

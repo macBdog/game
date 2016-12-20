@@ -187,6 +187,8 @@
     <None Include="Shaders\global.vsh.inc" />
     <None Include="Shaders\lighting.fsh.inc" />
     <None Include="Shaders\lighting.vsh.inc" />
+    <None Include="Shaders\post.fsh.inc" />
+    <None Include="Shaders\post.vsh.inc" />
     <None Include="Shaders\texture.fsh.inc" />
     <None Include="Shaders\texture.vsh.inc" />
   </ItemGroup>

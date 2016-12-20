@@ -1,4 +1,4 @@
-const char * textureFragmentShader = 
+const char * postFragmentShader = 
 "#version 400\n"
 "uniform sampler2D DiffuseTexture;\n"
 "uniform sampler2D NormalTexture; \n"
@@ -20,6 +20,6 @@ const char * textureFragmentShader =
 "in vec2 OutTexCoord;\n"
 "void main()\n"
 "{ \n"
-"	GBuffer1Colour = texture2D(DiffuseTexture, OutTexCoord) * Colour;\n"
+"	GBuffer1Colour = texture2D(GBuffer1, OutTexCoord) * Colour;\n"
 "}\n"
 ;
