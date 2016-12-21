@@ -54,6 +54,20 @@ namespace RenderStage
 	};
 }
 
+//\brief Type of objects to draw
+namespace RenderObjectType
+{
+	enum Enum
+	{
+		Tris = 0,
+		Quads,
+		Lines,
+		Models,
+		FontChars,
+		Count,
+	};
+}
+
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
 //		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
@@ -71,9 +85,6 @@ public:
 					, m_colourShader(nullptr)
 					, m_textureShader(nullptr)
 					, m_lightingShader(nullptr)
-					, m_frameBuffer(0)
-					, m_colourBuffer(0)
-					, m_depthBuffer(0)
 					, m_fullscreenQuad()
 					, m_viewWidth(0)
 					, m_viewHeight(0)
@@ -394,6 +405,18 @@ private:
 		Vector m_scale;
 	};
 
+	//\brief Container for sorting render models before drawing
+	struct SortedRenderModel
+	{
+		SortedRenderModel() : m_id(0), m_distance(0.0f) {}
+		SortedRenderModel(int a_id, float a_distance) : m_id(a_id), m_distance(a_distance) {}
+		bool operator > (const SortedRenderModel & a_rhs) { return m_distance > a_rhs.m_distance; }
+		bool operator < (const SortedRenderModel & a_rhs) { return m_distance < a_rhs.m_distance; }
+		int m_id;
+		float m_distance;
+	};
+	typedef LinkedListNode<SortedRenderModel> SortedRenderNode;
+
 	//\brief A managed shader contains a reference to the shader and the file to reload on change for hot reloading
 	struct ManagedShader
 	{
@@ -413,15 +436,15 @@ private:
 	void AddManagedShader(ManagedShader * a_newManShader);
 	Shader * GetShader(const char * a_shaderName);
 
-	static const int s_maxPrimitivesPerrenderLayer = 1024;			///< Flat storage amount for quads
-	static const int s_maxFontCharsPerRenderLayer = 8096;			///< Flat storage amount for quads for fonts
-	static const int s_maxLinePrimitivesPerRenderLayer = 8096;		///< Flat storage amount for quads for lines
-	static const int s_maxLines = 1600;								///< Storage amount for debug lines
+	static const int s_maxObjects[(int)RenderObjectType::Count];	///< The amount of storage amount for all types of primitives
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
 	static float s_renderDepth2D;									///< Z value for ortho rendered primitives
+
+	SortedRenderModel * m_sortedRenderModelPool;					///< Storage for pointers to objects and their render distances
+	SortedRenderNode * m_sortedRenderNodePool;						///< Storage for the above in a list for sorting
 
 	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime;											///< How long the last frame took
@@ -431,18 +454,14 @@ private:
 	Line * m_lines[RenderLayer::Count];								///< Lines for each renderLayer
 	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
 	FontChar * m_fontChars[RenderLayer::Count];
-	unsigned int m_triCount[RenderLayer::Count];					///< Number of tris per renderLayer per frame
-	unsigned int m_quadCount[RenderLayer::Count];					///< Number of primitives in each renderLayer per frame
-	unsigned int m_lineCount[RenderLayer::Count];					///< Number of lines per frame
-	unsigned int m_modelCount[RenderLayer::Count];					///< Number of models to render
-	unsigned int m_fontCharCount[RenderLayer::Count];				///< Number for font characters to render
+	int m_triCount[RenderLayer::Count];								///< Number of tris per renderLayer per frame
+	int m_quadCount[RenderLayer::Count];							///< Number of primitives in each renderLayer per frame
+	int m_lineCount[RenderLayer::Count];							///< Number of lines per frame
+	int m_modelCount[RenderLayer::Count];							///< Number of models to render
+	int m_fontCharCount[RenderLayer::Count];						///< Number for font characters to render
 
-	unsigned int m_frameBuffer;										///< Identifier for the whole scene framebuffers for each stage
-	unsigned int m_colourBuffer;									///< Identifier for the texture to render to
-	unsigned int m_depthBuffer;										///< Identifier for the buffers for pixel depth per stage
 	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
 	unsigned int m_mrtAttachments[s_numRenderTargets + 1];			///< Array of identifies for all colour attachments
-
 	unsigned int m_frameBuffers[RenderStage::Count];				///< Identifier for the whole scene framebuffers for each stage
 	unsigned int m_colourBuffers[RenderStage::Count];				///< Identifier for the texture to render to
 	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage

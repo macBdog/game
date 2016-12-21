@@ -87,6 +87,7 @@ public:
 						: m_diffuseTextureId(0)
 						, m_normalTextureId(0)
 						, m_specularTextureId(0)
+						, m_depthBuffer(0)
 						, m_materialShininess(1024)
 						, m_time(a_time)
 						, m_lifeTime(a_lifeTime)
@@ -112,6 +113,7 @@ public:
 		unsigned int m_normalTextureId;
 		unsigned int m_specularTextureId;
 		unsigned int m_gBufferIds[6];
+		unsigned int m_depthBuffer;
 		int m_materialShininess;
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_lifeTime;				///< How much time in seconds has passed since the object using the shader was initialised
@@ -171,6 +173,7 @@ private:
 	Uniform<int> m_gBuffer4;
 	Uniform<int> m_gBuffer5;
 	Uniform<int> m_gBuffer6;
+	Uniform<int> m_depthBuffer;
 	Uniform<int> m_materialShininess;
 	Uniform<int> m_numActiveLights;
 	Uniform<float> m_time;

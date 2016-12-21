@@ -9,6 +9,7 @@ const char * globalFragmentShader =
 "uniform sampler2D GBuffer4; \n"
 "uniform sampler2D GBuffer5; \n"
 "uniform sampler2D GBuffer6; \n"
+"uniform sampler2D DepthBuffer; \n"
 "uniform int MaterialShininess; \n"
 "uniform int NumActiveLights; \n"
 "uniform vec3 MaterialAmbient; \n"

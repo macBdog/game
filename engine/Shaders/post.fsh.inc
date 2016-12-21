@@ -9,6 +9,7 @@ const char * postFragmentShader =
 "uniform sampler2D GBuffer4; \n"
 "uniform sampler2D GBuffer5; \n"
 "uniform sampler2D GBuffer6; \n"
+"uniform sampler2D DepthBuffer; \n"
 "layout(location = 0) out vec4 FragmentColour;\n"
 "layout(location = 1) out vec4 GBuffer1Colour;\n"
 "layout(location = 2) out vec4 GBuffer2Colour;\n"

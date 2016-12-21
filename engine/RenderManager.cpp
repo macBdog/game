@@ -21,10 +21,18 @@ using namespace std;	//< For fstream operations
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_updateFreq = 1.0f;
-const float RenderManager::s_nearClipPlane = 0.01f;
-const float RenderManager::s_farClipPlane = 10000.0f;
+const float RenderManager::s_nearClipPlane = 1.0f;
+const float RenderManager::s_farClipPlane = 1000.0f;
 const float RenderManager::s_fovAngleY = 55.0f;
 float RenderManager::s_renderDepth2D = -1.0f;
+const int RenderManager::s_maxObjects[(int)RenderObjectType::Count] =
+{
+	 256, // Tri
+	 512, // Quad
+	 1024, // Line
+	 2056, // Model
+	 8096 // FontChar
+};
 
 void RenderManager::VertexBuffer::Bind()
 {
@@ -119,25 +127,29 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
 		// Tris
-		m_tris[i] = new Tri[s_maxPrimitivesPerrenderLayer];
+		m_tris[i] = new Tri[s_maxObjects[(int)RenderObjectType::Tris]];
 		m_triCount[i] = 0;
 
 		// Quads
-		m_quads[i] = new Quad[s_maxPrimitivesPerrenderLayer];
+		m_quads[i] = new Quad[s_maxObjects[(int)RenderObjectType::Quads]];
 		m_quadCount[i] = 0;
 
 		// Lines
-		m_lines[i] = new Line[s_maxLinePrimitivesPerRenderLayer];
+		m_lines[i] = new Line[s_maxObjects[(int)RenderObjectType::Lines]];
 		m_lineCount[i] = 0;
 
 		// Render models
-		m_models[i] = new RenderModel[s_maxPrimitivesPerrenderLayer];
+		m_models[i] = new RenderModel[s_maxObjects[(int)RenderObjectType::Models]];
 		m_modelCount[i] = 0;
 
 		// Font characters
-		m_fontChars[i] = new FontChar[s_maxFontCharsPerRenderLayer];
+		m_fontChars[i] = new FontChar[s_maxObjects[(int)RenderObjectType::FontChars]];
 		m_fontCharCount[i] = 0;
 	}
+
+	const int numModels = s_maxObjects[(int)RenderObjectType::Models];
+	m_sortedRenderModelPool = new SortedRenderModel[numModels];
+	m_sortedRenderNodePool = new SortedRenderNode[numModels];
 
 	// Alert if memory allocation failed
 	if (!renderLayerAlloc)
@@ -267,7 +279,7 @@ bool RenderManager::Shutdown()
 	// Clean up storage for all primitives
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
-		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::Tris]; ++j)
 		{
 			Tri * t = m_tris[i] + j;
 			if (t->m_vertexArrayId == 0 && t->m_vertexBufferId == 0 && t->m_indexBufferId == 0)
@@ -276,7 +288,7 @@ bool RenderManager::Shutdown()
 			}
 		}
 
-		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::Quads]; ++j)
 		{
 			Quad * q = m_quads[i] + j;
 			if (q->m_vertexArrayId == 0 && q->m_vertexBufferId == 0 && q->m_indexBufferId == 0)
@@ -285,7 +297,7 @@ bool RenderManager::Shutdown()
 			}
 		}
 
-		for (unsigned int j = 0; j < s_maxLinePrimitivesPerRenderLayer; ++j)
+		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::Lines]; ++j)
 		{
 			Line * l = m_lines[i] + j;
 			if (l->m_vertexArrayId == 0 && l->m_vertexBufferId == 0 && l->m_indexBufferId == 0)
@@ -294,7 +306,7 @@ bool RenderManager::Shutdown()
 			}
 		}
 
-		for (unsigned int j = 0; j < s_maxPrimitivesPerrenderLayer; ++j)
+		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::Models]; ++j)
 		{
 			RenderModel * r = m_models[i] + j;
 			if (r->m_vertexArrayId == 0 && r->m_vertexBufferId == 0 && r->m_indexBufferId == 0)
@@ -303,7 +315,7 @@ bool RenderManager::Shutdown()
 			}
 		}
 
-		for (unsigned int j = 0; j < s_maxFontCharsPerRenderLayer; ++j)
+		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::FontChars]; ++j)
 		{
 			FontChar * fc = m_fontChars[i] + j;
 			if (fc->m_vertexArrayId == 0 && fc->m_vertexBufferId == 0 && fc->m_indexBufferId == 0)
@@ -327,7 +339,10 @@ bool RenderManager::Shutdown()
 		delete[] m_models[i];
 		delete[] m_fontChars[i];
 	}
-	
+
+	delete[] m_sortedRenderModelPool;
+	delete[] m_sortedRenderNodePool;
+
 	// Clean up the default shaders
 	if (m_postShader != nullptr)
 	{
@@ -351,7 +366,7 @@ bool RenderManager::Shutdown()
 	{
 		glDeleteFramebuffers(1, &m_frameBuffers[i]);
 		glDeleteTextures(1, &m_colourBuffers[i]);
-		glDeleteRenderbuffers(1, &m_depthBuffers[i]);   
+		glDeleteTextures(1, &m_depthBuffers[i]);
 	}
 
 	// And render targets
@@ -559,9 +574,8 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 	{
 		// Generate whole scene render targets
 		glGenFramebuffers(1, &m_frameBuffers[i]);
-		glGenTextures(1, &m_colourBuffers[i]);                                                                                               
-		glGenRenderbuffers(1, &m_depthBuffers[i]);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[i]);
+		glGenTextures(1, &m_colourBuffers[i]);       
 
 		// Colour parameters
 		glActiveTexture(GL_TEXTURE0);
@@ -570,11 +584,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colourBuffers[i], 0);
-
-		// Depth parameters
-		glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffers[i]);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffers[i]);
 		framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 	}
 
@@ -592,6 +601,22 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 		m_mrtAttachments[i+1] = GL_COLOR_ATTACHMENT1 + i;
 	}
 	framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+	
+	// Create depth textures
+	for (int i = 0; i < RenderStage::Count; ++i)
+	{
+		glGenTextures(1, &m_depthBuffers[i]);
+		glBindTexture(GL_TEXTURE_2D, m_depthBuffers[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_viewWidth, m_viewHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthBuffers[i], 0);
+	}
+	framebuffersOk |= glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return framebuffersOk;
@@ -605,12 +630,13 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	{
 		shaderData.m_gBufferIds[i] = m_renderTargets[i];
 	}
+	shaderData.m_depthBuffer = m_depthBuffers[RenderStage::Scene];
 
 	// Do offscreen rendering pass to first stage framebuffer
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);         
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage render buffer
-	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments );					//<< Enable drawing into all colour attachments
+	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments);					//<< Enable drawing into all colour attachments
 	
 	RenderScene(a_viewMatrix);
 
@@ -619,11 +645,10 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);			//<< Render using first stage buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::PostFX]);		//<< Render to first stage colour
 
-	glLoadIdentity();
 	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
     glDisable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Now render with full scene shader if specified
 	bool bUseDefaultShader = true;
@@ -650,33 +675,16 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 		m_postShader->UseShader(shaderData);
 	}
 
-	// Output of the previous pass goes in the DiffuseTexture slot for the scene shader pass
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);	// Diffuse
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[0]);					// GBuffers follow
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[1]);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[2]);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[3]);
-	glActiveTexture(GL_TEXTURE7);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[4]);
-	glActiveTexture(GL_TEXTURE8);
-	glBindTexture(GL_TEXTURE_2D, m_renderTargets[5]);
-
 	RenderFramebuffer();
 
 	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDrawBuffers(1, m_mrtAttachments);
 
-	glLoadIdentity();
-	glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
+	//glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
     glDisable(GL_DEPTH_TEST);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Render once 
 	m_textureShader->UseShader(shaderData);
@@ -729,8 +737,11 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 	{
 		shaderData.m_gBufferIds[i] = m_renderTargets[i];
 	}
+	shaderData.m_depthBuffer = m_depthBuffers[RenderStage::Scene];
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_colourBuffers[RenderStage::Scene]);	// Diffuse
+
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_renderTargets[0]);					// GBuffers follow
 	glActiveTexture(GL_TEXTURE4);
@@ -743,6 +754,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 	glBindTexture(GL_TEXTURE_2D, m_renderTargets[4]);
 	glActiveTexture(GL_TEXTURE8);
 	glBindTexture(GL_TEXTURE_2D, m_renderTargets[5]);
+
+	glActiveTexture(GL_TEXTURE9);
+	glBindTexture(GL_TEXTURE_2D, m_depthBuffers[RenderStage::Scene]);
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
@@ -830,7 +844,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Ensure 2D layers render on top of everything
 		if ((RenderLayer::Enum)i == RenderLayer::Gui)
 		{
-			glClear(GL_DEPTH_BUFFER_BIT);
+			//glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
 		// Use the texture shader on world objects
@@ -838,7 +852,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 		// Submit the tris
 		Tri * t = m_tris[i];
-		for (unsigned int j = 0; j < m_triCount[i]; ++j)
+		for (int j = 0; j < m_triCount[i]; ++j)
 		{
 			// Draw a tri with a texture
 			if (t->m_textureId >= 0)
@@ -869,7 +883,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Submit the quad
 		Quad * q = m_quads[i];
 		shaderData.m_objectMatrix = &m_shaderIdentityMat;
-		for (unsigned int j = 0; j < m_quadCount[i]; ++j)
+		for (int j = 0; j < m_quadCount[i]; ++j)
 		{
 			// Draw a quad with a texture
 			if (q->m_textureId >= 0)
@@ -896,11 +910,27 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			q++;
 		}
 		
-		// Draw models by calling their VBOs
-		RenderModel * rm = m_models[i];
-		Shader * pLastModelShader = NULL;	
-		for (unsigned int j = 0; j < m_modelCount[i]; ++j)
+		// Generate sorted list of models
+		LinkedList<SortedRenderModel> modelSort;
+		for (int j = 0; j < m_modelCount[i]; ++j)
 		{
+			RenderModel * rm = m_models[i] + j;
+			SortedRenderModel * curSortedModel = m_sortedRenderModelPool + j;
+			SortedRenderNode * curSortedNode = m_sortedRenderNodePool + j;
+			const float dist = (rm->m_mat->GetPos() - shaderData.m_viewMatrix->GetPos()).LengthSquared();
+			curSortedModel->m_id = j;
+			curSortedModel->m_distance = dist;
+			m_sortedRenderNodePool[j].SetData(curSortedModel);
+			modelSort.Insert(curSortedNode);
+		}
+		modelSort.MergeSort();
+
+		// Draw models by calling their VBOs
+		Shader * pLastModelShader = NULL;	
+		SortedRenderNode * curNode = modelSort.GetHead();
+		while (curNode != nullptr)
+		{
+			RenderModel * rm = m_models[i] + curNode->GetData()->m_id;
 			pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
 			shaderData.m_projectionMatrix = &a_perspectiveMat;
 			shaderData.m_viewMatrix = &a_viewMatrix;
@@ -923,7 +953,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 			glBindVertexArray(rm->m_vertexArrayId);
 			glDrawElements(GL_TRIANGLES, rm->m_numVerts, GL_UNSIGNED_INT, 0);
-			++rm;
+			curNode = curNode->GetNext();
 		}
 
 		// Draw font chars by calling their VBOs
@@ -934,7 +964,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 		FontChar * fc = m_fontChars[i];
 		Matrix fontCharMat = Matrix::Identity();
-		for (unsigned int j = 0; j < m_fontCharCount[i]; ++j)
+		for (int j = 0; j < m_fontCharCount[i]; ++j)
 		{
 			fontCharMat.SetIdentity();
 			fontCharMat.SetPos(fc->m_pos);
@@ -960,7 +990,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Draw lines in the current renderLayer
 		Line * l = m_lines[i];
 		Matrix lineMat = Matrix::Identity();
-		for (unsigned int j = 0; j < m_lineCount[i]; ++j)
+		for (int j = 0; j < m_lineCount[i]; ++j)
 		{
 			glBindVertexArray(l->m_vertexArrayId);
 			glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
@@ -997,9 +1027,9 @@ void RenderManager::AddLine2D(RenderLayer::Enum a_renderLayer, Vector2 a_point1,
 void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_lineCount[a_renderLayer] >= s_maxLinePrimitivesPerRenderLayer)
+	if (m_lineCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Lines])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxLinePrimitivesPerRenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxObjects[(int)RenderObjectType::Lines]);
 		return;
 	}
 
@@ -1043,9 +1073,9 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft
 void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_quadCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
 	}
 
@@ -1120,9 +1150,9 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_quadCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
 	}
 
@@ -1169,9 +1199,9 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Vector a_point3, TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_triCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_triCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Tris])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Tris]);
 		return;
 	}
 
@@ -1208,9 +1238,9 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime)
 {
 	// Don't add more models than have been allocated for
-	if (m_modelCount[a_renderLayer] >= s_maxPrimitivesPerrenderLayer)
+	if (m_modelCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Models])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many render models added for renderLayer %d, max is %d", a_renderLayer, s_maxPrimitivesPerrenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many render models added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Models]);
 		return;
 	}
 
@@ -1304,9 +1334,9 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour)
 {
 	// Don't add more font characters than have been allocated for
-	if (m_fontCharCount[a_renderLayer] >= s_maxFontCharsPerRenderLayer)
+	if (m_fontCharCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::FontChars])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxFontCharsPerRenderLayer);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::FontChars]);
 		return;
 	}
 

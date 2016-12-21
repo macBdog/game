@@ -71,6 +71,7 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
 		m_gBuffer4.Init(m_shader, "GBuffer4");
 		m_gBuffer5.Init(m_shader, "GBuffer5");
 		m_gBuffer6.Init(m_shader, "GBuffer6");
+		m_depthBuffer.Init(m_shader, "DepthBuffer");
 		m_materialShininess.Init(m_shader, "MaterialShininess");
 		m_numActiveLights.Init(m_shader, "NumActiveLights");
 		m_time.Init(m_shader, "Time");
@@ -183,6 +184,8 @@ void Shader::UseShader(const UniformData & a_data)
 	glUniform1i(m_gBuffer5.m_id, a_data.m_gBufferIds[4]);
 	glActiveTexture(GL_TEXTURE8);
 	glUniform1i(m_gBuffer6.m_id, a_data.m_gBufferIds[5]);
+	glActiveTexture(GL_TEXTURE9);
+	glUniform1i(m_depthBuffer.m_id, a_data.m_depthBuffer);
 
 	glUniform1i(m_materialShininess.m_id, a_data.m_materialShininess);
 	glUniform1i(m_numActiveLights.m_id, numActiveLights);
