@@ -123,6 +123,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
 {
 	const bool is2D = a_renderLayer != RenderLayer::Debug3D && a_renderLayer != RenderLayer::World;
+
 	FontListNode * curFont = m_fonts.GetHead();
 	RenderManager & renderMan = RenderManager::Get();
 	const float viewAspect = renderMan.GetViewAspect();

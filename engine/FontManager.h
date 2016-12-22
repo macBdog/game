@@ -187,7 +187,7 @@ private:
 
 					// This is the glyph size as a ratio of the texture size
 					Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
-					Vector2 charSize(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
+					newFont->m_chars[charId].m_charSize = Vector2(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
 
 					// Used to generate the position of the character within the texture
 					newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);

@@ -28,8 +28,10 @@ float RenderManager::s_renderDepth2D = -1.0f;
 const int RenderManager::s_maxObjects[(int)RenderObjectType::Count] =
 {
 	 256, // Tri
-	 512, // Quad
-	 1024, // Line
+	 256, // Quad
+	 256, // Line
+	 256, // DebugBox
+	 256, // DebugSphere
 	 2056, // Model
 	 8096 // FontChar
 };
@@ -82,6 +84,8 @@ void RenderManager::VertexBuffer::Unbind()
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
+	unsigned int glErrorEnum = glGetError();
+
     // Set the clear colour
     m_clearColour = a_clearColour;
 
@@ -110,41 +114,83 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
     // Really Nice Perspective Calculations
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
-	glEnable(GL_COLOR_MATERIAL);
 	
-	unsigned int glErrorEnum = glGetError();
-	
-	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(0.0f, 0.0f));
-	m_fullscreenQuad.SetVert2D(1, Vector(1.0f, -1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(1.0f, 0.0f));
-	m_fullscreenQuad.SetVert2D(2, Vector(-1.0f, 1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f),  TexCoord(0.0f, 1.0f));
-	m_fullscreenQuad.SetVert2D(3, Vector(1.0f, 1.0f, s_renderDepth2D), Colour(1.0f, 1.0f, 1.0f, 1.0f), TexCoord(1.0f, 1.0f));
+	const Colour debugWhite(1.0f, 1.0f, 1.0f, 1.0f);
+	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), debugWhite, TexCoord(0.0f, 0.0f));
+	m_fullscreenQuad.SetVert2D(1, Vector(1.0f, -1.0f, s_renderDepth2D), debugWhite, TexCoord(1.0f, 0.0f));
+	m_fullscreenQuad.SetVert2D(2, Vector(-1.0f, 1.0f, s_renderDepth2D), debugWhite, TexCoord(0.0f, 1.0f));
+	m_fullscreenQuad.SetVert2D(3, Vector(1.0f, 1.0f, s_renderDepth2D), debugWhite, TexCoord(1.0f, 1.0f));
 	m_fullscreenQuad.Bind();
 
-	glErrorEnum = glGetError();
+	m_debugBoxBuffer.Alloc(s_numDebugBoxVerts);
+	const Vector halfSize = 0.5f;
+	m_debugBoxBuffer.SetVertBasic(0, Vector(-halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(1, Vector(-halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(2, Vector(halfSize.GetX(), -halfSize.GetY(), halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(3, Vector(halfSize.GetX(), -halfSize.GetY(), -halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(4, Vector(-halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(5, Vector(-halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(6, Vector(halfSize.GetX(), halfSize.GetY(), halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.SetVertBasic(7, Vector(halfSize.GetX(), halfSize.GetY(), -halfSize.GetZ()), debugWhite);
+	m_debugBoxBuffer.Bind();
+
+	m_debugSphereBuffer.Alloc(s_numDebugSphereVerts);
+	const int axisMax = 3;
+	const int numSegments = s_numDebugSphereVerts / axisMax / 2;
+	Vector lineStart = Vector(0.0f);
+	Vector lineEnd = Vector(0.0f);
+	int vertCount = 0;
+	for (int axisCount = 0; axisCount < axisMax; ++axisCount)
+	{
+		for (int i = 0; i < numSegments; ++i)
+		{
+			const float rFactor = ((float)i / (float)numSegments)*TAU;
+			const float rFactorNext = ((float)(i + 1) / (float)numSegments)*TAU;
+			switch (axisCount)
+			{
+				case 0: // X axis 
+				{
+					lineStart = Vector(sin(rFactor), cos(rFactor), 0.0f);
+					lineEnd = Vector(sin(rFactorNext), cos(rFactorNext), 0.0f);
+					break;
+				}
+				case 1: // Y axis 
+				{
+					lineStart = Vector(0.0f, sin(rFactor), cos(rFactor));
+					lineEnd = Vector(0.0f, sin(rFactorNext), cos(rFactorNext));
+					break;
+				}
+				case 2: // Z axis 
+				{
+					lineStart = Vector(sin(rFactor), 0.0f, cos(rFactor));
+					lineEnd = Vector(sin(rFactorNext), 0.0f, cos(rFactorNext));
+					break;
+				}
+				default: break;
+			}
+			m_debugSphereBuffer.SetVertBasic(vertCount++, lineStart, debugWhite);
+			m_debugSphereBuffer.SetVertBasic(vertCount++, lineEnd, debugWhite);
+		}
+	}
+	m_debugSphereBuffer.Bind();
 
 	// Storage for all the primitives
 	bool renderLayerAlloc = true;
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
-		// Tris
 		m_tris[i] = new Tri[s_maxObjects[(int)RenderObjectType::Tris]];
-		m_triCount[i] = 0;
-
-		// Quads
 		m_quads[i] = new Quad[s_maxObjects[(int)RenderObjectType::Quads]];
-		m_quadCount[i] = 0;
-
-		// Lines
 		m_lines[i] = new Line[s_maxObjects[(int)RenderObjectType::Lines]];
-		m_lineCount[i] = 0;
-
-		// Render models
+		m_debugBoxes[i] = new DebugBox[s_maxObjects[(int)RenderObjectType::DebugBoxes]];
+		m_debugSpheres[i] = new DebugSphere[s_maxObjects[(int)RenderObjectType::DebugSpheres]];
 		m_models[i] = new RenderModel[s_maxObjects[(int)RenderObjectType::Models]];
-		m_modelCount[i] = 0;
-
-		// Font characters
 		m_fontChars[i] = new FontChar[s_maxObjects[(int)RenderObjectType::FontChars]];
-		m_fontCharCount[i] = 0;
+
+		// Reset the counts for all types
+		for (int j = 0; j < RenderObjectType::Count; ++j)
+		{
+			m_objectCount[i][j] = 0;
+		}
 	}
 
 	const int numModels = s_maxObjects[(int)RenderObjectType::Models];
@@ -275,6 +321,12 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 bool RenderManager::Shutdown()
 {
 	m_fullscreenQuad.Unbind();
+	m_debugBoxBuffer.Unbind();
+	m_debugSphereBuffer.Unbind();
+
+	m_fullscreenQuad.Dealloc();
+	m_debugBoxBuffer.Dealloc();
+	m_debugSphereBuffer.Dealloc();
 
 	// Clean up storage for all primitives
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
@@ -324,11 +376,10 @@ bool RenderManager::Shutdown()
 			}
 		}
 
-		m_triCount[i] = 0;
-		m_quadCount[i] = 0;
-		m_lineCount[i] = 0;
-		m_modelCount[i] = 0;
-		m_fontCharCount[i] = 0;
+		for (int j = 0; j < RenderObjectType::Count; ++j)
+		{
+			m_objectCount[i][j] = 0;
+		}
 	}
 
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
@@ -336,6 +387,8 @@ bool RenderManager::Shutdown()
 		delete[] m_tris[i];
 		delete[] m_quads[i];
 		delete[] m_lines[i];
+		delete[] m_debugBoxes[i];
+		delete[] m_debugSpheres[i];
 		delete[] m_models[i];
 		delete[] m_fontChars[i];
 	}
@@ -777,11 +830,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			// Clear the queues as the rest of the system will continue to add primitives
 			for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 			{
-				m_triCount[i] = 0;
-				m_quadCount[i] = 0;
-				m_lineCount[i] = 0;
-				m_modelCount[i] = 0;
-				m_fontCharCount[i] = 0;
+				for (int j = 0; j < RenderObjectType::Count; ++j)
+				{
+					m_objectCount[i][j] = 0;
+				}
 			}
 			return;
 		}
@@ -844,7 +896,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Ensure 2D layers render on top of everything
 		if ((RenderLayer::Enum)i == RenderLayer::Gui)
 		{
-			//glClear(GL_DEPTH_BUFFER_BIT);
+			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
 		// Use the texture shader on world objects
@@ -852,7 +904,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 		// Submit the tris
 		Tri * t = m_tris[i];
-		for (int j = 0; j < m_triCount[i]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::Tris]; ++j)
 		{
 			// Draw a tri with a texture
 			if (t->m_textureId >= 0)
@@ -883,7 +935,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Submit the quad
 		Quad * q = m_quads[i];
 		shaderData.m_objectMatrix = &m_shaderIdentityMat;
-		for (int j = 0; j < m_quadCount[i]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::Quads]; ++j)
 		{
 			// Draw a quad with a texture
 			if (q->m_textureId >= 0)
@@ -912,7 +964,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		
 		// Generate sorted list of models
 		LinkedList<SortedRenderModel> modelSort;
-		for (int j = 0; j < m_modelCount[i]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::Models]; ++j)
 		{
 			RenderModel * rm = m_models[i] + j;
 			SortedRenderModel * curSortedModel = m_sortedRenderModelPool + j;
@@ -957,14 +1009,14 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		}
 
 		// Draw font chars by calling their VBOs
-		if (pLastShader != m_textureShader && m_fontCharCount[i] > 0)
+		if (pLastShader != m_textureShader && m_objectCount[i][RenderObjectType::FontChars] > 0)
 		{
 			pLastShader = m_textureShader;
 		}
 
 		FontChar * fc = m_fontChars[i];
 		Matrix fontCharMat = Matrix::Identity();
-		for (int j = 0; j < m_fontCharCount[i]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::FontChars]; ++j)
 		{
 			fontCharMat.SetIdentity();
 			fontCharMat.SetPos(fc->m_pos);
@@ -980,31 +1032,53 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			++fc;
 		}
 		
-		// Switch to colour shader for lines as they cannot be textured
-		if (m_lineCount[i] > 0)
-		{
-			shaderData.m_objectMatrix->SetIdentity();
-			m_colourShader->UseShader(shaderData);
-		}
-
+		// Switch to colour shader for things made of lines as they cannot be textured
+		shaderData.m_objectMatrix->SetIdentity();
+		m_colourShader->UseShader(shaderData);
+		
 		// Draw lines in the current renderLayer
 		Line * l = m_lines[i];
 		Matrix lineMat = Matrix::Identity();
-		for (int j = 0; j < m_lineCount[i]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::Lines]; ++j)
 		{
 			glBindVertexArray(l->m_vertexArrayId);
 			glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 			++l;
 		}
+
+		// Draw lines in the current renderLayer
+		DebugBox * b = m_debugBoxes[i];
+		Matrix debugBoxMat = Matrix::Identity();
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugBoxes]; ++j)
+		{
+			debugBoxMat.SetPos(b->m_pos);
+			shaderData.m_objectMatrix = &debugBoxMat;
+			m_colourShader->UseShader(shaderData);
+			glBindVertexArray(m_debugBoxBuffer.m_vertexArrayId);
+			glDrawElements(GL_LINE_LOOP, s_numDebugBoxVerts, GL_UNSIGNED_INT, 0);
+			++b;
+		}
+
+		// Draw lines in the current renderLayer
+		DebugSphere * s = m_debugSpheres[i];
+		Matrix debugSphereMat = Matrix::Identity();
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
+		{
+			debugSphereMat.SetPos(b->m_pos);
+			shaderData.m_objectMatrix = &debugSphereMat;
+			m_colourShader->UseShader(shaderData);
+			glBindVertexArray(m_debugSphereBuffer.m_vertexArrayId);
+			glDrawElements(GL_LINE_LOOP, s_numDebugSphereVerts, GL_UNSIGNED_INT, 0);
+			++b;
+		}
 		
 		// Flush the renderLayers if we are not rendering more than once
 		if (a_flushBuffers)
 		{
-			m_triCount[i] = 0;
-			m_quadCount[i] = 0;
-			m_lineCount[i] = 0;
-			m_modelCount[i] = 0;
-			m_fontCharCount[i] = 0;
+			for (int j = 0; j < RenderObjectType::Count; ++j)
+			{
+				m_objectCount[i][j] = 0;
+			}
 		}
 	}
 }
@@ -1027,7 +1101,7 @@ void RenderManager::AddLine2D(RenderLayer::Enum a_renderLayer, Vector2 a_point1,
 void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_lineCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Lines])
+	if (m_objectCount[a_renderLayer][RenderObjectType::Lines] >= s_maxObjects[(int)RenderObjectType::Lines])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxObjects[(int)RenderObjectType::Lines]);
 		return;
@@ -1035,7 +1109,7 @@ void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Ve
 
 	// Copy params to next queue item
 	Line * l = m_lines[a_renderLayer];
-	l += m_lineCount[a_renderLayer]++;
+	l += m_objectCount[a_renderLayer][RenderObjectType::Lines]++;
 
 	l->SetVertBasic(0, a_point1, a_tint);
 	l->SetVertBasic(1, a_point2, a_tint);
@@ -1073,7 +1147,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 a_topLeft
 void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Quads])
+	if (m_objectCount[a_renderLayer][RenderObjectType::Quads] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
@@ -1087,7 +1161,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 
 	// Copy params to next queue item
 	Quad * q = m_quads[a_renderLayer];
-	q += m_quadCount[a_renderLayer]++;
+	q += m_objectCount[a_renderLayer][RenderObjectType::Quads]++;
 
 	if (a_tex)
 	{
@@ -1150,7 +1224,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_quadCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Quads])
+	if (m_objectCount[a_renderLayer][RenderObjectType::Quads] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
@@ -1164,7 +1238,7 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 
 	// Copy params to next queue item
 	Quad * q = m_quads[a_renderLayer];
-	q += m_quadCount[a_renderLayer]++;
+	q += m_objectCount[a_renderLayer][RenderObjectType::Quads]++;
 
 	if (a_tex)
 	{
@@ -1199,7 +1273,7 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vector a_point2, Vector a_point3, TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3, Texture * a_tex, Colour a_tint)
 {
 	// Don't add more primitives than have been allocated for
-	if (m_triCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Tris])
+	if (m_objectCount[a_renderLayer][RenderObjectType::Tris] >= s_maxObjects[(int)RenderObjectType::Tris])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Tris]);
 		return;
@@ -1213,7 +1287,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 
 	// Copy params to next queue item
 	Tri * t = m_tris[a_renderLayer];
-	t += m_triCount[a_renderLayer]++;
+	t += m_objectCount[a_renderLayer][RenderObjectType::Tris]++;
 
 	if (a_tex)
 	{
@@ -1238,7 +1312,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime)
 {
 	// Don't add more models than have been allocated for
-	if (m_modelCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::Models])
+	if (m_objectCount[a_renderLayer][RenderObjectType::Models] >= s_maxObjects[(int)RenderObjectType::Models])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many render models added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Models]);
 		return;
@@ -1250,7 +1324,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		Object * obj = a_model->GetObjectAtIndex(i);
 
 		RenderModel * r = m_models[a_renderLayer];
-		r += m_modelCount[a_renderLayer]++;
+		r += m_objectCount[a_renderLayer][RenderObjectType::Models]++;
 
 		// Early out for a pre streamed model
 		unsigned int numVertices = obj->GetNumVertices();
@@ -1334,14 +1408,14 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour)
 {
 	// Don't add more font characters than have been allocated for
-	if (m_fontCharCount[a_renderLayer] >= s_maxObjects[(int)RenderObjectType::FontChars])
+	if (m_objectCount[a_renderLayer][RenderObjectType::FontChars] >= s_maxObjects[(int)RenderObjectType::FontChars])
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many font characters added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::FontChars]);
 		return;
 	}
 
 	FontChar * fc = m_fontChars[a_renderLayer];
-	fc += m_fontCharCount[a_renderLayer]++;
+	fc += m_objectCount[a_renderLayer][RenderObjectType::FontChars]++;
 	
 	const bool is2D = a_renderLayer == RenderLayer::Gui || a_renderLayer == RenderLayer::Debug2D;
 
@@ -1413,70 +1487,36 @@ void RenderManager::AddDebugMatrix(const Matrix & a_mat)
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
 #ifndef _RELEASE
-	// Draw a wireframe sphere with three circles in each dimension
-	const unsigned int numSegments = 16;
-	Vector lineStart = a_worldPos;
-	Vector lineEnd = a_worldPos;
-	for (unsigned int axisCount = 0; axisCount < 3; ++axisCount)
+	// Don't add more primitives than have been allocated for
+	if (m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugSpheres] >= s_maxObjects[(int)RenderObjectType::DebugSpheres])
 	{
-		for (unsigned int i = 0; i < numSegments; ++i)
-		{
-			const float rFactor = ((float)i / (float)numSegments)*TAU;
-			const float rFactorNext = ((float)(i+1) / (float)numSegments)*TAU;
-			switch (axisCount)
-			{
-				case 0: // X axis 
-				{
-					lineStart = a_worldPos + Vector(sin(rFactor), cos(rFactor), 0.0f);
-					lineEnd = a_worldPos +  Vector(sin(rFactorNext), cos(rFactorNext), 0.0f);
-					break;
-				}
-				case 1: // Y axis 
-				{
-					lineStart = a_worldPos + Vector(0.0f, sin(rFactor), cos(rFactor));
-					lineEnd = a_worldPos +  Vector(0.0f, sin(rFactorNext), cos(rFactorNext));
-					break;
-				}
-				case 2: // Z axis 
-				{
-					lineStart = a_worldPos + Vector(sin(rFactor), 0.0f, cos(rFactor));
-					lineEnd = a_worldPos +  Vector(sin(rFactorNext), 0.0f, cos(rFactorNext));
-					break;
-				}
-				default: break;
-			}
-			AddDebugLine(lineStart, lineEnd, a_colour);
-		}
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many DebugSphere primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugSpheres, s_maxObjects[(int)RenderObjectType::DebugSpheres]);
+		return;
 	}
+
+	// Copy params to next queue item
+	DebugBox * t = m_debugBoxes[RenderLayer::Debug3D];
+	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugSpheres]++;
+	t->m_pos = a_worldPos;
+	t->m_scale = Vector(a_radius);
 #endif
 }
 
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
 #ifndef _RELEASE
-	// Define the corners of the box
-	Vector halfSize = a_dimensions * 0.5f;
-	Vector corners[8];
-	corners[0] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
-	corners[1] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
-	corners[2] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
-	corners[3] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() - halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
-	
-	corners[4] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
-	corners[5] = Vector(a_worldPos.GetX() - halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
-	corners[6] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() + halfSize.GetZ());
-	corners[7] = Vector(a_worldPos.GetX() + halfSize.GetX(), a_worldPos.GetY() + halfSize.GetY(), a_worldPos.GetZ() - halfSize.GetZ());
-	
-	// Draw the lines between each corner
-	for (unsigned int i = 0; i < 3; ++i)
+	// Don't add more primitives than have been allocated for
+	if (m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugBoxes] >= s_maxObjects[(int)RenderObjectType::DebugBoxes])
 	{
-		AddLine(RenderLayer::Debug3D, corners[i], corners[i+1], a_colour);
-		AddLine(RenderLayer::Debug3D, corners[i+4], corners[i+5], a_colour);
-		AddLine(RenderLayer::Debug3D, corners[i], corners[i+4], a_colour);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many DebugBox primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugBoxes, s_maxObjects[(int)RenderObjectType::DebugBoxes]);
+		return;
 	}
-	AddLine(RenderLayer::Debug3D, corners[3], corners[0], a_colour);
-	AddLine(RenderLayer::Debug3D, corners[7], corners[4], a_colour);
-	AddLine(RenderLayer::Debug3D, corners[3], corners[7], a_colour);
+
+	// Copy params to next queue item
+	DebugBox * t = m_debugBoxes[RenderLayer::Debug3D];
+	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugBoxes]++;
+	t->m_pos = a_worldPos;
+	t->m_scale = a_dimensions;
 #endif
 }
 

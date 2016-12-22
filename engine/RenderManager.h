@@ -62,6 +62,8 @@ namespace RenderObjectType
 		Tris = 0,
 		Quads,
 		Lines,
+		DebugBoxes,
+		DebugSpheres,
 		Models,
 		FontChars,
 		Count,
@@ -86,6 +88,8 @@ public:
 					, m_textureShader(nullptr)
 					, m_lightingShader(nullptr)
 					, m_fullscreenQuad()
+					, m_debugBoxBuffer()
+					, m_debugSphereBuffer()
 					, m_viewWidth(0)
 					, m_viewHeight(0)
 					, m_bpp(0)
@@ -102,11 +106,10 @@ public:
 			m_lines[i] = NULL;
 			m_models[i] = NULL;
 			m_fontChars[i] = NULL;
-			m_triCount[i] = 0;
-			m_quadCount[i] = 0;
-			m_lineCount[i] = 0;
-			m_modelCount[i] = 0;
-			m_fontCharCount[i] = 0;
+			for (int j = 0; j < RenderObjectType::Count; ++j)
+			{
+				m_objectCount[i][j] = 0;
+			}
 		}
 
 		for (int i = 0; i < RenderStage::Count; ++i)
@@ -363,6 +366,20 @@ private:
 		Quad() : VertexBuffer(4) {}
 	};
 
+	struct DebugBox
+	{
+		DebugBox() : m_pos(0.0f), m_scale(0.0f) {}
+		Vector m_pos;
+		Vector m_scale;
+	};
+
+	struct DebugSphere
+	{
+		DebugSphere() : m_pos(0.0f), m_scale(0.0f) {}
+		Vector m_pos;
+		Vector m_scale;
+	};
+
 	//\brief Fixed size structure for queing render models
 	struct RenderModel : VertexBuffer
 	{
@@ -437,6 +454,8 @@ private:
 	Shader * GetShader(const char * a_shaderName);
 
 	static const int s_maxObjects[(int)RenderObjectType::Count];	///< The amount of storage amount for all types of primitives
+	static const int s_numDebugBoxVerts = 8;
+	static const int s_numDebugSphereVerts = 96;
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
@@ -452,13 +471,11 @@ private:
 	Tri	 * m_tris[RenderLayer::Count];								///< Pointer to a pool of memory for tris
 	Quad * m_quads[RenderLayer::Count];								///< Pointer to a pool of memory for quads
 	Line * m_lines[RenderLayer::Count];								///< Lines for each renderLayer
+	DebugBox * m_debugBoxes[RenderLayer::Count];					///< Debug boxes made of lines
+	DebugSphere * m_debugSpheres[RenderLayer::Count];				///< Debug spheres made of lines
 	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
-	FontChar * m_fontChars[RenderLayer::Count];
-	int m_triCount[RenderLayer::Count];								///< Number of tris per renderLayer per frame
-	int m_quadCount[RenderLayer::Count];							///< Number of primitives in each renderLayer per frame
-	int m_lineCount[RenderLayer::Count];							///< Number of lines per frame
-	int m_modelCount[RenderLayer::Count];							///< Number of models to render
-	int m_fontCharCount[RenderLayer::Count];						///< Number for font characters to render
+	FontChar * m_fontChars[RenderLayer::Count];						///< Characters of a display string
+	int m_objectCount[RenderLayer::Count][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
 
 	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
 	unsigned int m_mrtAttachments[s_numRenderTargets + 1];			///< Array of identifies for all colour attachments
@@ -467,6 +484,8 @@ private:
 	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage
 
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
+	VertexBuffer m_debugBoxBuffer;									///< One set of vertices for all boxes
+	VertexBuffer m_debugSphereBuffer;								///< Same concept for spheres
 
 	Matrix m_shaderOrthoMat;
 	Matrix m_shaderIdentityMat;
