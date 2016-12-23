@@ -164,7 +164,7 @@ bool GameObject::Draw()
 		{
 			Matrix debugMat = m_worldMat;
 			debugMat.SetPos(GetClipPos());
-			rMan.AddDebugMatrix(debugMat);
+			rMan.AddDebugTransform(debugMat);
 
 			// Draw different debug render shapes accoarding to clip type
 			switch (m_clipType)

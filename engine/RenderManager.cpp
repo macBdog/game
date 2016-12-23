@@ -32,7 +32,8 @@ const int RenderManager::s_maxObjects[(int)RenderObjectType::Count] =
 	 256, // Line
 	 256, // DebugBox
 	 256, // DebugSphere
-	 2056, // Model
+	 1024, // DebugTransform
+	 1024, // Model
 	 8096 // FontChar
 };
 
@@ -174,6 +175,15 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	}
 	m_debugSphereBuffer.Bind();
 
+	m_debugTransformBuffer.Alloc(s_numDebugTransformVerts);
+	m_debugTransformBuffer.SetVertBasic(0, Vector(0.0f), sc_colourRed);	// Red for X right axis left to right
+	m_debugTransformBuffer.SetVertBasic(1, Vector(1.0f, 0.0f, 0.0f), sc_colourRed);
+	m_debugTransformBuffer.SetVertBasic(2, Vector(0.0f), sc_colourGreen);	// Green for Y axis look forward
+	m_debugTransformBuffer.SetVertBasic(3, Vector(0.0f, 1.0f, 0.0f), sc_colourGreen);
+	m_debugTransformBuffer.SetVertBasic(4, Vector(0.0f), sc_colourBlue);	// Blue for Z axis up
+	m_debugTransformBuffer.SetVertBasic(5, Vector(0.0f, 0.0f, 1.0f), sc_colourBlue);
+	m_debugTransformBuffer.Bind();
+
 	// Storage for all the primitives
 	bool renderLayerAlloc = true;
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
@@ -183,6 +193,7 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		m_lines[i] = new Line[s_maxObjects[(int)RenderObjectType::Lines]];
 		m_debugBoxes[i] = new DebugBox[s_maxObjects[(int)RenderObjectType::DebugBoxes]];
 		m_debugSpheres[i] = new DebugSphere[s_maxObjects[(int)RenderObjectType::DebugSpheres]];
+		m_debugTransforms[i] = new DebugTransform[s_maxObjects[(int)RenderObjectType::DebugTransforms]];
 		m_models[i] = new RenderModel[s_maxObjects[(int)RenderObjectType::Models]];
 		m_fontChars[i] = new FontChar[s_maxObjects[(int)RenderObjectType::FontChars]];
 
@@ -389,6 +400,7 @@ bool RenderManager::Shutdown()
 		delete[] m_lines[i];
 		delete[] m_debugBoxes[i];
 		delete[] m_debugSpheres[i];
+		delete[] m_debugTransforms[i];
 		delete[] m_models[i];
 		delete[] m_fontChars[i];
 	}
@@ -1059,7 +1071,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			++b;
 		}
 
-		// Draw lines in the current renderLayer
+		// Draw spheres in the current renderLayer
 		DebugSphere * s = m_debugSpheres[i];
 		Matrix debugSphereMat = Matrix::Identity();
 		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
@@ -1070,6 +1082,17 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glBindVertexArray(m_debugSphereBuffer.m_vertexArrayId);
 			glDrawElements(GL_LINE_LOOP, s_numDebugSphereVerts, GL_UNSIGNED_INT, 0);
 			++b;
+		}
+
+		// Draw transforms in the current renderLayer
+		DebugTransform * tr = m_debugTransforms[i];
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
+		{
+			shaderData.m_objectMatrix = &tr->m_mat;
+			m_colourShader->UseShader(shaderData);
+			glBindVertexArray(m_debugTransformBuffer.m_vertexArrayId);
+			glDrawElements(GL_LINES, s_numDebugTransformVerts, GL_UNSIGNED_INT, 0);
+			++tr;
 		}
 		
 		// Flush the renderLayers if we are not rendering more than once
@@ -1103,7 +1126,7 @@ void RenderManager::AddLine(RenderLayer::Enum a_renderLayer, Vector a_point1, Ve
 	// Don't add more primitives than have been allocated for
 	if (m_objectCount[a_renderLayer][RenderObjectType::Lines] >= s_maxObjects[(int)RenderObjectType::Lines])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxObjects[(int)RenderObjectType::Lines]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many line primitives added, max is %d", s_maxObjects[(int)RenderObjectType::Lines]);
 		return;
 	}
 
@@ -1149,7 +1172,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 	// Don't add more primitives than have been allocated for
 	if (m_objectCount[a_renderLayer][RenderObjectType::Quads] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
 	}
 
@@ -1226,7 +1249,7 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 	// Don't add more primitives than have been allocated for
 	if (m_objectCount[a_renderLayer][RenderObjectType::Quads] >= s_maxObjects[(int)RenderObjectType::Quads])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Quads]);
 		return;
 	}
 
@@ -1275,7 +1298,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	// Don't add more primitives than have been allocated for
 	if (m_objectCount[a_renderLayer][RenderObjectType::Tris] >= s_maxObjects[(int)RenderObjectType::Tris])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Tris]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many tri primitives added for renderLayer %d, max is %d", a_renderLayer, s_maxObjects[(int)RenderObjectType::Tris]);
 		return;
 	}
 
@@ -1401,7 +1424,7 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 	// Show the local matrix in debug mode
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		AddDebugMatrix(*a_mat);
+		AddDebugTransform(*a_mat);
 	}
 }
 
@@ -1474,27 +1497,28 @@ void RenderManager::AddDebugArrow2D(Vector2 a_start, Vector2 a_end, Colour a_tin
 	AddLine2D(RenderLayer::Debug2D, a_end, arrowPointY, a_tint);
 }
 
-void RenderManager::AddDebugMatrix(const Matrix & a_mat)
+void RenderManager::AddDebugTransform(const Matrix & a_mat)
 {
 #ifndef _RELEASE
-	Vector startPos = a_mat.GetPos();
-	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetRight(), sc_colourRed);		// Red for X right axis left to right
-	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetLook(), sc_colourGreen);		// Green for Y axis look forward
-	AddLine(RenderLayer::Debug3D, startPos, startPos + a_mat.GetUp(), sc_colourBlue);			// Blue for Z axis up
+	if (m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugTransforms] >= s_maxObjects[(int)RenderObjectType::DebugTransforms])
+	{
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many DebugTransforms primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugTransforms, s_maxObjects[(int)RenderObjectType::DebugTransforms]);
+		return;
+	}
+	DebugTransform * t = m_debugTransforms[RenderLayer::Debug3D];
+	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugTransforms]++;
+	t->m_mat = a_mat;
 #endif
 }
 
 void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_radius, Colour a_colour)
 {
 #ifndef _RELEASE
-	// Don't add more primitives than have been allocated for
 	if (m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugSpheres] >= s_maxObjects[(int)RenderObjectType::DebugSpheres])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many DebugSphere primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugSpheres, s_maxObjects[(int)RenderObjectType::DebugSpheres]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many DebugSphere primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugSpheres, s_maxObjects[(int)RenderObjectType::DebugSpheres]);
 		return;
 	}
-
-	// Copy params to next queue item
 	DebugBox * t = m_debugBoxes[RenderLayer::Debug3D];
 	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugSpheres]++;
 	t->m_pos = a_worldPos;
@@ -1505,14 +1529,11 @@ void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_ra
 void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_dimensions, Colour a_colour)
 {
 #ifndef _RELEASE
-	// Don't add more primitives than have been allocated for
 	if (m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugBoxes] >= s_maxObjects[(int)RenderObjectType::DebugBoxes])
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many DebugBox primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugBoxes, s_maxObjects[(int)RenderObjectType::DebugBoxes]);
+		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many DebugBox primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugBoxes, s_maxObjects[(int)RenderObjectType::DebugBoxes]);
 		return;
 	}
-
-	// Copy params to next queue item
 	DebugBox * t = m_debugBoxes[RenderLayer::Debug3D];
 	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugBoxes]++;
 	t->m_pos = a_worldPos;

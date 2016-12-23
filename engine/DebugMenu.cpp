@@ -1164,7 +1164,7 @@ void DebugMenu::Draw()
 	// Draw an identity matrix nearby the origin (not directly on to avoid Z fighting)
 	Matrix fakeIdentity = Matrix::Identity();
 	fakeIdentity.Translate(Vector(0.0f, 0.0f, EPSILON));
-	renMan.AddDebugMatrix(fakeIdentity);
+	renMan.AddDebugTransform(fakeIdentity);
 
 	// Draw selection box around objects - slightly larger than clip size so there is no z fighting
 	const float extraSelectionSize = 0.025f;

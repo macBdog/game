@@ -64,6 +64,7 @@ namespace RenderObjectType
 		Lines,
 		DebugBoxes,
 		DebugSpheres,
+		DebugTransforms,
 		Models,
 		FontChars,
 		Count,
@@ -101,11 +102,14 @@ public:
 
 		for (int i = 0; i < RenderLayer::Count; ++i)
 		{
-			m_tris[i] = NULL;
-			m_quads[i] = NULL;
-			m_lines[i] = NULL;
-			m_models[i] = NULL;
-			m_fontChars[i] = NULL;
+			m_tris[i] = nullptr;
+			m_quads[i] = nullptr;
+			m_lines[i] = nullptr;
+			m_debugBoxes[i] = nullptr;
+			m_debugSpheres[i] = nullptr;
+			m_debugTransforms[i] = nullptr;
+			m_models[i] = nullptr;
+			m_fontChars[i] = nullptr;
 			for (int j = 0; j < RenderObjectType::Count; ++j)
 			{
 				m_objectCount[i][j] = 0;
@@ -209,9 +213,9 @@ public:
 	void AddDebugArrow(Vector a_start, Vector a_end, Colour a_tint = sc_colourWhite);
 	void AddDebugArrow2D(Vector2 a_start, Vector2 a_end, Colour a_tint = sc_colourWhite);
 
-	//\brief A matrix is position and orientation displayed with lines
+	//\brief A transform is position and orientation displayed with coloured lines
 	//\param a const ref of the matrix containing the position and orientation to display
-	void AddDebugMatrix(const Matrix & a_mat);
+	void AddDebugTransform(const Matrix & a_mat);
 
 	//\brief A sphere is a position and radius displayed with lines
 	//\param a_colour optional argument for the colour of the box
@@ -380,6 +384,12 @@ private:
 		Vector m_scale;
 	};
 
+	struct DebugTransform
+	{
+		DebugTransform() : m_mat() {}
+		Matrix m_mat;
+	};
+
 	//\brief Fixed size structure for queing render models
 	struct RenderModel : VertexBuffer
 	{
@@ -456,6 +466,7 @@ private:
 	static const int s_maxObjects[(int)RenderObjectType::Count];	///< The amount of storage amount for all types of primitives
 	static const int s_numDebugBoxVerts = 8;
 	static const int s_numDebugSphereVerts = 96;
+	static const int s_numDebugTransformVerts = 6;
 	static const float s_updateFreq;								///< How often the render manager should check for shader updates
 	static const float s_nearClipPlane;								///< Distance from the viewer to the near clipping plane (always positive) 
 	static const float s_farClipPlane;								///< Distance from the viewer to the far clipping plane (always positive).
@@ -473,6 +484,7 @@ private:
 	Line * m_lines[RenderLayer::Count];								///< Lines for each renderLayer
 	DebugBox * m_debugBoxes[RenderLayer::Count];					///< Debug boxes made of lines
 	DebugSphere * m_debugSpheres[RenderLayer::Count];				///< Debug spheres made of lines
+	DebugTransform * m_debugTransforms[RenderLayer::Count];			///< Debug transforms made of 3 coloured lines
 	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
 	FontChar * m_fontChars[RenderLayer::Count];						///< Characters of a display string
 	int m_objectCount[RenderLayer::Count][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
@@ -486,6 +498,7 @@ private:
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
 	VertexBuffer m_debugBoxBuffer;									///< One set of vertices for all boxes
 	VertexBuffer m_debugSphereBuffer;								///< Same concept for spheres
+	VertexBuffer m_debugTransformBuffer;							///< Three coloured lines for transforms
 
 	Matrix m_shaderOrthoMat;
 	Matrix m_shaderIdentityMat;

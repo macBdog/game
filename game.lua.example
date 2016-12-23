@@ -200,6 +200,42 @@ gameObject
   physicsMass: 15
 }
 
+Script Reference
+----------------
+
+package.path = package.path .. ";C:/path/to/where/your/scripts/live/?.lua"
+require("debugging")
+require("gamepadCodes")
+require("keyCodes")
+require("vec2")
+require("vec3")
+
+function Startup()
+	io.write("Game started.\n")
+
+  	DebuggingStartup(false)
+
+  	seed = os.time()
+	math.randomseed(seed)
+
+	-- Main game loop
+	while Update() do
+		Yield()
+	end
+
+	Shutdown()
+end
+
+function Update()
+	local dt = GetFrameDelta()
+	return true
+end
+
+function Shutdown()
+	io.write("Game shutdown.\n")
+end
+
+Startup()
 
 
 Other Notes
