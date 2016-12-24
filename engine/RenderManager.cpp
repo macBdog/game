@@ -987,7 +987,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			m_sortedRenderNodePool[j].SetData(curSortedModel);
 			modelSort.Insert(curSortedNode);
 		}
-		modelSort.MergeSort();
 
 		// Draw models by calling their VBOs
 		Shader * pLastModelShader = NULL;	
@@ -1349,23 +1348,8 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		RenderModel * r = m_models[a_renderLayer];
 		r += m_objectCount[a_renderLayer][RenderObjectType::Models]++;
 
-		// Early out for a pre streamed model
-		unsigned int numVertices = obj->GetNumVertices();
-		const unsigned int renderVerts = r->m_numVerts;
-		if (r->m_model == a_model && numVertices == renderVerts)
-		{
-			continue;
-		}
-
-		// Alias model data
-		Material * modelMat = obj->GetMaterial();
-		if (!modelMat)
-		{
-			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
-			return;
-		}
-		
 		// First object in model sets the material properties
+		Material * modelMat = obj->GetMaterial();
 		Vector * verts = obj->GetVertices();
 		Vector * normals = obj->GetNormals();
 		TexCoord * uvs = obj->GetUvs();
@@ -1383,6 +1367,21 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			r->m_diffuseTexId = diffuseTex->GetId();
 			r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
 			r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		}
+
+		// Early out for a pre streamed model
+		unsigned int numVertices = obj->GetNumVertices();
+		const unsigned int renderVerts = r->m_numVerts;
+		if (r->m_model == a_model && numVertices == renderVerts)
+		{
+			continue;
+		}
+
+		// Alias model data
+		if (!modelMat)
+		{
+			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
+			return;
 		}
 
 		// Make sure the VBO has enough storage for the verts of the model

@@ -71,6 +71,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetPosition", SetGameObjectPosition},
 	{"GetRotation", GetGameObjectRotation},
 	{"SetRotation", SetGameObjectRotation},
+	{"SetAttachedTo", SetAttachedTo },
 	{"GetScale", GetGameObjectScale},
 	{"SetScale", SetGameObjectScale},
 	{"ResetScale", ResetGameObjectScale},
@@ -2226,6 +2227,38 @@ int ScriptManager::ResetGameObjectScale(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "ResetScale", "expects no parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetAttachedTo(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 8)
+	{
+		GameObject * attachmentGameObj = CheckGameObject(a_luaState);
+		GameObject * parentGameObj = CheckGameObject(a_luaState, 2);
+		if (attachmentGameObj != nullptr && parentGameObj != nullptr)
+		{
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 7, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 8, LUA_TNUMBER);
+			const Vector offsetPos((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5));
+			const Vector offsetRot((float)lua_tonumber(a_luaState, 6), (float)lua_tonumber(a_luaState, 7), (float)lua_tonumber(a_luaState, 8));
+			Matrix attachmentMat = parentGameObj->GetWorldMat();
+			attachmentMat.SetPos(attachmentMat.GetPos() + offsetPos);
+			attachmentGameObj->SetWorldMat(attachmentMat);
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetAttachedTo", "could not find game object referred to as parent or attachment.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetAttachedTo", "expects 7 parameters - the object to attach to then offsetPosX, offsetPosY, offsetPosZ, offsetRotX, offsetRotY, offsetRotZ.");
 	}
 	return 0;
 }

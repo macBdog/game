@@ -331,17 +331,27 @@ public:
 						a_vec.GetX() * row[1][0] + a_vec.GetY() * row[1][1] + a_vec.GetZ() * row[1][2],
 						a_vec.GetX() * row[2][0] + a_vec.GetY() * row[2][1] + a_vec.GetZ() * row[2][2]);
 	}
-	inline void SetScale(const float & a_scalar) 
+	inline void MulScale(const float & a_scalar) 
 	{ 
 		row[0][0] *= a_scalar;
 		row[1][1] *= a_scalar;
 		row[2][2] *= a_scalar;
 	}
-	inline void SetScale(const Vector & a_scalar) 
+	inline void MulScale(const Vector & a_scalar) 
 	{ 
 		row[0][0] *= a_scalar.GetX();
 		row[1][1] *= a_scalar.GetY();
 		row[2][2] *= a_scalar.GetZ();
+	}
+	inline void SetScale(const float & a_scalar)
+	{
+		RemoveScale();
+		MulScale(a_scalar);
+	}
+	inline void SetScale(const Vector & a_scalar)
+	{
+		RemoveScale();
+		MulScale(a_scalar);
 	}
 	inline Vector GetScale() const
 	{
