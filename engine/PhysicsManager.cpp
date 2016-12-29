@@ -185,8 +185,11 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 		// Set debug draw if correct config
 #ifndef _RELEASE
 		m_debugRender = new PhysicsDebugRender();
-		m_debugRender->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		m_debugRender->setDebugMode(	btIDebugDraw::DBG_DrawWireframe |
+										btIDebugDraw::DBG_DrawFeaturesText | 
+										btIDebugDraw::DBG_DrawContactPoints);
 		m_dynamicsWorld->setDebugDrawer(m_debugRender);
+		m_collisionWorld->setDebugDrawer(m_debugRender);
 #endif
 	}
 
@@ -232,10 +235,10 @@ void PhysicsManager::Update(float a_dt)
 #ifndef _RELEASE
 		if (DebugMenu::Get().IsPhysicsDebuggingOn())
 		{
+			m_collisionWorld->debugDrawWorld();
 			m_dynamicsWorld->debugDrawWorld();
 		}
 #endif
-
 	}
 	m_collisionWorld->performDiscreteCollisionDetection();
 
@@ -381,7 +384,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	while (curShapeNode)
 	{
 		btCollisionShape * collisionShape = curShapeNode->GetData();
-		collisionShape->setMargin(0.0f);
+		collisionShape->setMargin(0.05f);
 
 		btCollisionObject * collisionObject = new btCollisionObject();
 		collisionObjects.InsertNew(collisionObject);
@@ -525,7 +528,9 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 			btCollisionObject * collisionObject = curObjectNode->GetData();
 			collisionObject->setWorldTransform(newWorldTrans);
 			curObjectNode = curObjectNode->GetNext();
+			m_collisionWorld->updateSingleAabb(collisionObject);
 		}
+
 	}
 	ClearCollisions(a_gameObj);
 }

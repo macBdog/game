@@ -96,6 +96,7 @@ GUI:DisableMouse()
 mousePosClipSpaceX, mousePosClipSpaceY = GUI:GetMouseClipPosition()
 mousePosPixelsX, mousePosPixelsY = GUI:GetMouseScreenPosition()
 mouseDirX, mouseDirY = GUI:GetMouseDirection()
+GUI:SetMousePosition(x, y)
 
 GameObject Functions
 --------------------
@@ -197,8 +198,11 @@ gameObject
   model: player_ball.obj
   clipType: player_ball.bullet
   clipGroup: player
+  clipSize: 10, 10 10
+  clipOffset: 10, 10, 10
   physics: true
   physicsMass: 15
+  shader: myshader
 }
 
 Script Reference

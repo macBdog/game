@@ -50,6 +50,7 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetMouseClipPosition", GUIGetMouseClipPosition},
 	{"GetMouseScreenPosition", GUIGetMouseScreenPosition},
 	{"GetMouseDirection", GUIGetMouseDirection},
+	{"SetMousePosition", GUISetMousePosition},
 	{NULL, NULL}
 };
 
@@ -1851,6 +1852,16 @@ int ScriptManager::GUIGetMouseDirection(lua_State * a_luaState)
 	lua_pushnumber(a_luaState, mouseDir.GetX());
 	lua_pushnumber(a_luaState, mouseDir.GetY());
 	return 2;
+}
+
+int ScriptManager::GUISetMousePosition(lua_State * a_luaState)
+{
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
+	{
+		// Stubbed out
+		// SDL_WarpMouseGlobal(0, 0);
+	}
+	return 0;
 }
 
 int ScriptManager::DataPackRequire(lua_State * a_luaState)
