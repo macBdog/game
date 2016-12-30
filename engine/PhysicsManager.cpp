@@ -509,16 +509,11 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	}
 	else // Or the other way around if this object is collision only
 	{
-		const Vector gPos = a_gameObj->GetPos();
-		const Quaternion gRot = a_gameObj->GetRot();
-		const btQuaternion rot(gRot.GetX(), gRot.GetY(), gRot.GetZ(), gRot.GetW());
-		const btVector3 trans(gPos.GetX(), gPos.GetY(), gPos.GetZ());
-
+		Matrix & gMat = a_gameObj->GetWorldMat();
+		
 		// Create a bullet transform that matches the game object's matrix
 		btTransform newWorldTrans;
-		newWorldTrans.setIdentity();
-		newWorldTrans.setRotation(rot);
-		newWorldTrans.setOrigin(trans);
+		newWorldTrans.setFromOpenGLMatrix(gMat.GetValues());
 
 		// Set it on all the physics and collision
 		PhysicsObject::CollisionObjectList collisionObjects = phys->GetCollisionObjects();

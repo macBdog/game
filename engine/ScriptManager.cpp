@@ -73,6 +73,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"GetRotation", GetGameObjectRotation},
 	{"SetRotation", SetGameObjectRotation},
 	{"SetAttachedTo", SetAttachedTo },
+	{"SetAttachedToCamera", SetAttachedToCamera },
 	{"GetScale", GetGameObjectScale},
 	{"SetScale", SetGameObjectScale},
 	{"ResetScale", ResetGameObjectScale},
@@ -182,6 +183,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "DebugLog", DebugLog);
 		lua_register(m_globalLua, "DebugLine", DebugLine);
 		lua_register(m_globalLua, "DebugPoint", DebugPoint);
+		lua_register(m_globalLua, "IsDebugMenuActive", IsDebugMenuActive);
 
 		// Register C++ functions available on the global GUI
 		lua_newtable(m_globalLua);
@@ -1966,6 +1968,16 @@ int ScriptManager::DebugPoint(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::IsDebugMenuActive(lua_State * a_luaState)
+{
+	bool menuActive = false;
+#ifndef _RELEASE
+	menuActive = DebugMenu::Get().IsDebugMenuActive();
+#endif
+	lua_pushboolean(a_luaState, menuActive);
+	return 1;
+}
+
 int ScriptManager::GetGameObjectId(lua_State * a_luaState)
 {
 	if (lua_gettop(a_luaState) == 1)
@@ -2270,6 +2282,27 @@ int ScriptManager::SetAttachedTo(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "SetAttachedTo", "expects 7 parameters - the object to attach to then offsetPosX, offsetPosY, offsetPosZ, offsetRotX, offsetRotY, offsetRotZ.");
+	}
+	return 0;
+}
+
+int ScriptManager::SetAttachedToCamera(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			Matrix & cameraMat = CameraManager::Get().GetCameraMatrix();
+			gameObj->SetWorldMat(cameraMat);
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetAttachedToCamera", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetAttachedToCamera", "expects no parameters.");
 	}
 	return 0;
 }

@@ -146,6 +146,7 @@ private:
 	static int DebugLog(lua_State * a_luaState);
 	static int DebugLine(lua_State * a_luaState);
 	static int DebugPoint(lua_State * a_luaState);
+	static int IsDebugMenuActive(lua_State * a_luaState);
 
 	//brief LUA versions of game object functions
 	static int GetGameObjectId(lua_State * a_luaState);
@@ -161,6 +162,7 @@ private:
 	static int SetGameObjectScale(lua_State * a_luaState);
 	static int ResetGameObjectScale(lua_State * a_luaState);
 	static int SetAttachedTo(lua_State * a_luaState);
+	static int SetAttachedToCamera(lua_State * a_luaState);
 	static int GetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectLifeTime(lua_State * a_luaState);
 	static int SetGameObjectSleeping(lua_State * a_luaState);
