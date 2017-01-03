@@ -172,6 +172,7 @@ private:
 	static int SetGameObjectDiffuseTexture(lua_State * a_luaState);
 	static int SetGameObjectNormalTexture(lua_State * a_luaState);
 	static int SetGameObjectSpecularTexture(lua_State * a_luaState);
+	static int SetGameObjectVisibility(lua_State * a_luaState);
 	static int EnableGameObjectCollision(lua_State * a_luaState);
 	static int DisableGameObjectCollision(lua_State * a_luaState);
 	static int AddGameObjectToCollisionWorld(lua_State * a_luaState);

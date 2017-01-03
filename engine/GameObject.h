@@ -74,6 +74,7 @@ public:
 		, m_clipVolumeSize(1.0f)
 		, m_clipVolumeOffset(0.0f)
 		, m_clipping(true)
+		, m_visible(true)
 		, m_clipGroup()
 		, m_worldMat(Matrix::Identity())
 		, m_localMat(Matrix::Identity())
@@ -106,6 +107,7 @@ public:
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
 	inline void SetClipGroup(const char * a_clipGroupName) { m_clipGroup.SetCString(a_clipGroupName); }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
+	inline void SetVisible(bool a_enable) { m_visible = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
@@ -201,6 +203,7 @@ private:
 	Vector				  m_clipVolumeSize;								///< Dimensions of the clipping volume for culling and picking
 	Vector				  m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
 	bool				  m_clipping;									///< If collision is enabled
+	bool				  m_visible;									///< If the game object's model should be added to the render list
 	StringHash			  m_clipGroup;									///< What group the object belongs to and can collide with
 	Matrix				  m_worldMat;									///< Position and orientation in the world
 	Matrix				  m_localMat;									///< Position and orientation relative to world mat, used for animation

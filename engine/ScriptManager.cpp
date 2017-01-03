@@ -86,6 +86,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetDiffuseTexture", SetGameObjectDiffuseTexture},
 	{"SetNormalTexture", SetGameObjectNormalTexture},
 	{"SetSpecularTexture", SetGameObjectSpecularTexture},
+	{"SetVisible", SetGameObjectVisibility},
 	{"EnableCollision", EnableGameObjectCollision},
 	{"DisableCollision", DisableGameObjectCollision},
 	{"AddToCollisionWorld", AddGameObjectToCollisionWorld},
@@ -2577,6 +2578,27 @@ int ScriptManager::SetGameObjectSpecularTexture(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "SetSpecularTexture", "expects 1 string parameter of the texture to set.");
+	}
+	return 0;
+}
+
+
+int ScriptManager::SetGameObjectVisibility(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 2)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			gameObj->SetVisible(lua_toboolean(a_luaState, 2) != 0);
+		}
+		else
+		{
+			LogScriptError(a_luaState, "SetGameObjectVisibility", "could not find game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "SetGameObjectVisibility", "expects 1 bool parameter of the visible state to set.");
 	}
 	return 0;
 }

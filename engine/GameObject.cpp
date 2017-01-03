@@ -154,7 +154,7 @@ bool GameObject::Draw()
 		Vector finalPos = m_worldMat.GetPos() + m_localMat.GetPos();
 		m_finalMat = m_worldMat.Multiply(m_localMat);
 		m_finalMat.SetPos(finalPos);
-		if (m_model != NULL && m_model->IsLoaded())
+		if (m_visible && m_model != NULL && m_model->IsLoaded())
 		{
 			rMan.AddModel(RenderLayer::World, m_model, &m_finalMat, m_shader, m_shaderData, m_lifeTime);
 		}
