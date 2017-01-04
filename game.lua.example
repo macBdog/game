@@ -66,6 +66,7 @@ rayHitX, rayHitY, rayHitZ, rayNormX, rayNormY, rayNormZ, hitGameObj = GetRayColl
 PlaySound("fileNameInSoundFolder.wav")
 PlaySound3D("fileNameInSoundFolder.wav", posX, posY, posZ)
 PlayMusic("loopingFileNameInSoundFolder.wav")
+StopMusic("loopingFileNameInSoundFolder.wav")
 SetMusicVolume("fileNameOfMusicThatsPlayer", 0.5)
 SetListenerPosition(posX, posY, posZ, dirX, dirY, dirZ, velX, velY, velZ)
 StopAllSoundsAndMusic()

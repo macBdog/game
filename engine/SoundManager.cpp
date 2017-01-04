@@ -185,6 +185,31 @@ bool SoundManager::SetMusicVolume(const char * a_musicName, float a_newVolume)
 	return false;
 }
 
+
+bool SoundManager::StopMusic(const char * a_musicName)
+{
+	// Look through all playing music and try to stop
+	SoundNode * cur = m_music.GetHead();
+	while (cur != NULL)
+	{
+		// Found our sound
+		PlayingSoundInfo * curInfo = cur->GetData();
+		if (strcmp(curInfo->m_name, a_musicName) == 0)
+		{
+			if (irrklang::ISound * soundHandle = curInfo->m_handle)
+			{
+				soundHandle->stop();
+
+				m_music.RemoveDelete(cur);
+				return true;
+			}
+		}
+
+		cur = cur->GetNext();
+	}
+	return false;
+}
+
 void SoundManager::StopAllSoundsAndMusic()
 {
 	if (m_engine)

@@ -36,6 +36,7 @@ public:
 	bool PlaySoundFX(const char * a_soundName) const;
 	bool PlaySoundFX3D(const char * a_soundName, const Vector & a_position) const;
 	bool PlayMusic(const char * a_musicName);
+	bool StopMusic(const char * a_musicName);
 	bool SetMusicVolume(const char * a_musicName, float a_newVolume);
 	void StopAllSoundsAndMusic();
 	bool FadeOutMusic();

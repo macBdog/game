@@ -176,6 +176,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "PlaySound", PlaySoundFX);
 		lua_register(m_globalLua, "PlaySound3D", PlaySoundFX3D);
 		lua_register(m_globalLua, "PlayMusic", PlayMusic);
+		lua_register(m_globalLua, "StopMusic", StopMusic);
 		lua_register(m_globalLua, "SetMusicVolume", SetMusicVolume);
 		lua_register(m_globalLua, "SetListenerPosition", SetListenerPosition);
 		lua_register(m_globalLua, "StopAllSoundsAndMusic", StopAllSoundsAndMusic);
@@ -1114,6 +1115,25 @@ int ScriptManager::PlayMusic(lua_State * a_luaState)
 	else
 	{
 		LogScriptError(a_luaState, "PlayMusic", "expects 1 parameter: filename of the music to play.");
+	}
+	return 0;
+}
+
+int ScriptManager::StopMusic(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		const char * musicName = lua_tostring(a_luaState, 1);
+		if (musicName != NULL)
+		{
+			SoundManager::Get().StopMusic(musicName);
+			return 0;
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "StopMusic", "expects 1 parameter: filename of the music to stop.");
 	}
 	return 0;
 }
