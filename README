@@ -1,13 +1,12 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: DK2 support. Skeletal animations, not just root motion.
-TASK QUEUE: Decent colour picker. Bullet dynamics world wireframe switch through debug menu. Normals/spec visualisation shader and switch in debug menu. Defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
-BUGS: Circular reference of widget align parents. DebugMenu selection not clearing on some actions.
+WHAT IS THE CURRENT SHORT TERM GOAL: OpenVR support, not just Oculus Rift.
+TASK QUEUE: Decent colour picker. Defragmenting page allocator to rid the codebase of std::new. Write an easy-to-read and fast hashmap to rid the codebase of std*
+BUGS:
 
 What is this project?
 
-1. A lightweight, simple framework for gamejamming indie 2D and 3D PC games.
+1. A lightweight, simple framework for gamejamming indie 2D and 3D PC and VR games.
 2. Well organised and easy to read and understand.
-3. Focused on making games easier to develop by using only in-engine tools and hotloading.
-4. Compatable with VR displays like the Oculus Rift.
+3. Focused on making games quicker to develop by using only in-engine tools and hotloading.
 
 What isn't this project?
 
@@ -18,7 +17,7 @@ What isn't this project?
 Technology Choices:
 
 * libSDL for IO
-* OpenGL for rendering
+* OpenGL w/ GLSL 4.0 for rendering
 * LUA for scripting
 * irrKlang for Sound
 * TGA, OBJ and FBX file formats
