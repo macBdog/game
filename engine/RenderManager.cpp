@@ -106,11 +106,9 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 
     // Depth testing and alpha blending
     glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // The Type Of Depth Test To Do
-    glDepthFunc(GL_LEQUAL);
 
     // Really Nice Perspective Calculations
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -746,7 +744,6 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDrawBuffers(1, m_mrtAttachments);
 
-	//glViewport(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight);
     glDisable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -908,7 +905,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		// Ensure 2D layers render on top of everything
 		if ((RenderLayer::Enum)i == RenderLayer::Gui)
 		{
-			glClear(GL_DEPTH_BUFFER_BIT);
+			// This is clearing the depth buffer before the RTs get a chance to sample it in the final render stage
+			//glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
 		// Use the texture shader on world objects
