@@ -98,6 +98,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"GetCollisions", GetGameObjectCollisions},
 	{"GetRayCollision", RayCollisionTest},
 	{"PlayAnimation", PlayGameObjectAnimation},
+	{"GetTransformedPos", GetGameObjectTransformedPos},
 	{"Destroy", DestroyGameObject},
 	{NULL, NULL}
 };
@@ -896,8 +897,8 @@ int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
-		const Vector newPos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
-		CameraManager::Get().SetRotation(newPos);	
+		const Vector newRot((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
+		CameraManager::Get().SetRotation(newRot);
 	}
 	else // Wrong number of parms
 	{
@@ -2289,9 +2290,12 @@ int ScriptManager::SetAttachedTo(lua_State * a_luaState)
 			luaL_checktype(a_luaState, 6, LUA_TNUMBER);
 			luaL_checktype(a_luaState, 7, LUA_TNUMBER);
 			luaL_checktype(a_luaState, 8, LUA_TNUMBER);
-			const Vector offsetPos((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5));
+			Vector offsetPos((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5));
 			const Vector offsetRot((float)lua_tonumber(a_luaState, 6), (float)lua_tonumber(a_luaState, 7), (float)lua_tonumber(a_luaState, 8));
 			Matrix attachmentMat = parentGameObj->GetWorldMat();
+			offsetPos = attachmentMat.Transform(offsetPos);
+			Quaternion qRot = Quaternion(offsetRot);
+			qRot.ApplyToMatrix(attachmentMat);
 			attachmentMat.SetPos(attachmentMat.GetPos() + offsetPos);
 			attachmentGameObj->SetWorldMat(attachmentMat);
 		}
@@ -2309,21 +2313,42 @@ int ScriptManager::SetAttachedTo(lua_State * a_luaState)
 
 int ScriptManager::SetAttachedToCamera(lua_State * a_luaState)
 {
-	if (lua_gettop(a_luaState) == 1)
+	if (!DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		if (lua_gettop(a_luaState) == 7)
 		{
-			Matrix & cameraMat = CameraManager::Get().GetCameraMatrix();
-			gameObj->SetWorldMat(cameraMat);
+			if (GameObject * gameObj = CheckGameObject(a_luaState))
+			{
+				luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+				luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+				luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+				luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+				luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+				luaL_checktype(a_luaState, 7, LUA_TNUMBER);
+				Vector offsetPos((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+				Vector offsetRot((float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6), (float)lua_tonumber(a_luaState, 7));
+				Quaternion qOffsetRot = Quaternion(offsetRot);
+
+				// Construct a new object matrix as the camera looks down the up vector
+				Matrix & cameraMat = CameraManager::Get().GetCameraMatrix();
+				Matrix newGameObjMat = Matrix::Identity();
+				newGameObjMat.SetRight(cameraMat.GetRight());
+				newGameObjMat.SetLook(cameraMat.GetUp());
+				newGameObjMat.SetUp(cameraMat.GetLook());
+				qOffsetRot.ApplyToMatrix(newGameObjMat);
+				offsetPos = newGameObjMat.Transform(offsetPos);
+				newGameObjMat.SetPos(cameraMat.GetPos() + offsetPos);
+				gameObj->SetWorldMat(newGameObjMat);
+			}
+			else // Object not found, destroyed?
+			{
+				LogScriptError(a_luaState, "SetAttachedToCamera", "could not find game object referred to.");
+			}
 		}
-		else // Object not found, destroyed?
+		else // Wrong number of args
 		{
-			LogScriptError(a_luaState, "SetAttachedToCamera", "could not find game object referred to.");
+			LogScriptError(a_luaState, "SetAttachedToCamera", "expects 6 parameters - offsetX, offsetY, offsetZ, rotationX, rotationY, rotationZ.");
 		}
-	}
-	else // Wrong number of args
-	{
-		LogScriptError(a_luaState, "SetAttachedToCamera", "expects no parameters.");
 	}
 	return 0;
 }
@@ -2478,7 +2503,6 @@ int ScriptManager::SetGameObjectDiffuseTexture(lua_State * a_luaState)
 							{
 								mat->SetDiffuseTexture(diffuseTex);
 							}
-							object->RegenerateDisplayList();
 						}
 					}
 				}
@@ -2526,7 +2550,6 @@ int ScriptManager::SetGameObjectNormalTexture(lua_State * a_luaState)
 							{
 								mat->SetNormalTexture(normalTex);
 							}
-							object->RegenerateDisplayList();
 						}
 					}
 				}
@@ -2574,7 +2597,6 @@ int ScriptManager::SetGameObjectSpecularTexture(lua_State * a_luaState)
 							{
 								mat->SetSpecularTexture(specTex);
 							}
-							object->RegenerateDisplayList();
 						}
 					}
 				}
@@ -2873,6 +2895,38 @@ int ScriptManager::PlayGameObjectAnimation(lua_State * a_luaState)
 
 	lua_pushboolean(a_luaState, playedAnim);
 	return 1;
+}
+
+int ScriptManager::GetGameObjectTransformedPos(lua_State * a_luaState)
+{
+	float x, y, z = 0.0f;
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector inVec((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+			Matrix & gameObjMat = gameObj->GetWorldMat();
+			Vector outMat = gameObjMat.Transform(inVec);
+			x = outMat.GetX();
+			y = outMat.GetY();
+			z = outMat.GetZ();
+		}
+		else
+		{
+			LogScriptError(a_luaState, "GetGameObjectTransformPos", "cannot find the game object referred to.");
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetGameObjectTransformPos", "expects 3 parameters: X, Y and Z components of the vector to transform.");
+	}
+	lua_pushnumber(a_luaState, x);
+	lua_pushnumber(a_luaState, y);
+	lua_pushnumber(a_luaState, z);
+	return 3;
 }
 
 int ScriptManager::DestroyGameObject(lua_State * a_luaState)

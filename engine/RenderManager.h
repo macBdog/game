@@ -390,11 +390,21 @@ private:
 		Matrix m_mat;
 	};
 
+	// Buffer data for a model
+	struct RenderModelBuffer : VertexBuffer
+	{
+		RenderModelBuffer()
+			: m_model(nullptr)
+			, m_object(nullptr) {}
+		Model * m_model;
+		Object * m_object;
+	};
+
 	//\brief Fixed size structure for queing render models
-	struct RenderModel : VertexBuffer
+	struct RenderModel
 	{
 		RenderModel()
-			: m_model(nullptr)
+			: m_buffer(nullptr)
 			, m_mat(nullptr)
 			, m_shader(nullptr)
 			, m_material(nullptr)
@@ -408,7 +418,8 @@ private:
 			, m_diffuseTexId(0)
 			, m_normalTexId(0)
 			, m_specularTexId(0) {}
-		Model * m_model;
+		
+		RenderModelBuffer * m_buffer;
 		Matrix * m_mat;
 		Shader * m_shader;
 		Material * m_material;
@@ -464,6 +475,7 @@ private:
 	Shader * GetShader(const char * a_shaderName);
 
 	static const int s_maxObjects[(int)RenderObjectType::Count];	///< The amount of storage amount for all types of primitives
+	static const int s_maxModelBuffers = 512;						///< Storage for vertex buffers across all layers, unique meshes share buffers
 	static const int s_numDebugBoxVerts = 8;
 	static const int s_numDebugSphereVerts = 96;
 	static const int s_numDebugTransformVerts = 6;
@@ -499,6 +511,7 @@ private:
 	VertexBuffer m_debugBoxBuffer;									///< One set of vertices for all boxes
 	VertexBuffer m_debugSphereBuffer;								///< Same concept for spheres
 	VertexBuffer m_debugTransformBuffer;							///< Three coloured lines for transforms
+	RenderModelBuffer m_modelBuffers[s_maxModelBuffers];			///< Storage for model vertex data, one per unique mesh across all render stages
 
 	Matrix m_shaderOrthoMat;
 	Matrix m_shaderIdentityMat;

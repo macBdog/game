@@ -337,6 +337,16 @@ bool RenderManager::Shutdown()
 	m_debugBoxBuffer.Dealloc();
 	m_debugSphereBuffer.Dealloc();
 
+	// Clean up shared vertex storage
+	for (int i = 0; i < s_maxModelBuffers; ++i)
+	{
+		RenderModelBuffer * r = &m_modelBuffers[i];
+		if (r->m_vertexArrayId == 0 && r->m_vertexBufferId == 0 && r->m_indexBufferId == 0)
+		{
+			r->Unbind();
+		}
+	}
+
 	// Clean up storage for all primitives
 	for (unsigned int i = 0; i < RenderLayer::Count; ++i)
 	{
@@ -370,10 +380,7 @@ bool RenderManager::Shutdown()
 		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::Models]; ++j)
 		{
 			RenderModel * r = m_models[i] + j;
-			if (r->m_vertexArrayId == 0 && r->m_vertexBufferId == 0 && r->m_indexBufferId == 0)
-			{
-				r->Unbind();
-			}
+			r->m_buffer = nullptr;
 		}
 
 		for (int j = 0; j < s_maxObjects[(int)RenderObjectType::FontChars]; ++j)
@@ -1012,8 +1019,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, rm->m_specularTexId);
 
-			glBindVertexArray(rm->m_vertexArrayId);
-			glDrawElements(GL_TRIANGLES, rm->m_numVerts, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(rm->m_buffer->m_vertexArrayId);
+			glDrawElements(GL_TRIANGLES, rm->m_buffer->m_numVerts, GL_UNSIGNED_INT, 0);
 			curNode = curNode->GetNext();
 		}
 
@@ -1338,43 +1345,73 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		return;
 	}
 
-	// If we have not generated buffers for this model
-	for (unsigned int i = 0; i < a_model->GetNumObjects(); ++i)
+	// Find a render buffer for this object
+	const int numObjects = a_model->GetNumObjects();
+	for (int i = 0; i < numObjects; ++i)
 	{
-		Object * obj = a_model->GetObjectAtIndex(i);
-
 		RenderModel * r = m_models[a_renderLayer];
 		r += m_objectCount[a_renderLayer][RenderObjectType::Models]++;
 
-		// First object in model sets the material properties
+		Object * obj = a_model->GetObjectAtIndex(i);
+		unsigned int numVertices = obj->GetNumVertices();
 		Material * modelMat = obj->GetMaterial();
 		Vector * verts = obj->GetVertices();
 		Vector * normals = obj->GetNormals();
 		TexCoord * uvs = obj->GetUvs();
-		if (i == 0)
-		{
-			Texture * diffuseTex = modelMat->GetDiffuseTexture();
-			Texture * normalTex = modelMat->GetNormalTexture();
-			Texture * specularTex = modelMat->GetSpecularTexture();
+		Texture * diffuseTex = modelMat->GetDiffuseTexture();
+		Texture * normalTex = modelMat->GetNormalTexture();
+		Texture * specularTex = modelMat->GetSpecularTexture();
 
-			r->m_model = a_model;
-			r->m_mat = a_mat;
-			r->m_shader = a_shader;
-			r->m_lifeTime = a_lifeTime;
-			r->m_shaderData = a_shaderData;
-			r->m_diffuseTexId = diffuseTex->GetId();
-			r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
-			r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		bool bind = false;
+		bool rebind = false;
+		int vertexBufferId = obj->GetVertexBufferId();
+		RenderModelBuffer * vertexBuffer = nullptr;
+		if (obj->HasVertexBuffer())
+		{
+			vertexBuffer = &m_modelBuffers[vertexBufferId];
+		}
+		else
+		{
+			for (int j = 0; j < s_maxModelBuffers; ++j)
+			{
+				if (m_modelBuffers[j].m_model == nullptr && m_modelBuffers[j].m_object == nullptr)
+				{
+					vertexBuffer = &m_modelBuffers[j];
+					vertexBufferId = j;
+					bind = true;
+					break;
+				}
+			}
+		}
+			
+		if (bind)
+		{
+			unsigned int numVertices = obj->GetNumVertices();
+			vertexBuffer->m_model = a_model;
+			vertexBuffer->m_object = obj;
+			vertexBuffer->Alloc(numVertices);
+			vertexBuffer->m_numVerts = numVertices;
+			obj->SetVertexBufferId(vertexBufferId);
+			bind = true;
+		}
+		
+		// Make sure the VBO has enough storage for the verts of the model
+		if (rebind)
+		{
+			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Model %s being reallocated, if this happens frequently your game will be slow.", a_model->GetName());
+			vertexBuffer->Realloc(numVertices);
+			vertexBuffer->m_numVerts = numVertices;
 		}
 
-		// Early out for a pre streamed model
-		unsigned int numVertices = obj->GetNumVertices();
-		const unsigned int renderVerts = r->m_numVerts;
-		if (r->m_model == a_model && numVertices == renderVerts)
-		{
-			continue;
-		}
-
+		r->m_buffer = vertexBuffer;
+		r->m_mat = a_mat;
+		r->m_shader = a_shader;
+		r->m_lifeTime = a_lifeTime;
+		r->m_shaderData = a_shaderData;
+		r->m_diffuseTexId = diffuseTex->GetId();
+		r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
+		r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		
 		// Alias model data
 		if (!modelMat)
 		{
@@ -1382,39 +1419,22 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 			return;
 		}
 
-		// Make sure the VBO has enough storage for the verts of the model
-		bool bind = false;
-		bool rebind = false;
-		if (renderVerts == 0)
-		{
-			r->Alloc(numVertices);
-			r->m_numVerts = numVertices;
-			bind = true;
-		}
-		else if(renderVerts != numVertices)
-		{
-			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Model %s being reallocated, if this happens frequently your game will be slow.",  a_model->GetName());
-			r->Realloc(numVertices);
-			r->m_numVerts = numVertices;
-			rebind = true;
-		}
-
 		// Pump verts from model data into VBO
 		if (bind || rebind)
 		{
 			for (unsigned int j = 0; j < numVertices; ++j)
 			{
-				r->SetVert(j, verts[j], Colour(1.0f, 1.0f, 1.0f, 1.0f), uvs[j], normals[j]);
+				vertexBuffer->SetVert(j, verts[j], Colour(1.0f, 1.0f, 1.0f, 1.0f), uvs[j], normals[j]);
 			}
 		}
 
 		if (bind)
 		{
-			r->Bind();
+			vertexBuffer->Bind();
 		}
 		else if (rebind)
 		{
-			r->Rebind();
+			vertexBuffer->Rebind();
 		}
 	}
 	

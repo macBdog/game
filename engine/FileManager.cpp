@@ -36,9 +36,9 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	}
 
 	// Strip any trailing slash from the path
-	if (workingPath[pathLength-1] == '\\')
+	if (workingPath[pathLength - 1] == '\\')
 	{
-		workingPath[pathLength-1] = '\0';
+		workingPath[pathLength - 1] = '\0';
 	}
 	
 	// Now try getting the first file of the list
@@ -50,7 +50,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	// Check path can be traversed
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s with error %d", a_path, GetLastError());
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s with error %d", workingPath, GetLastError());
 		return false;
 	} 
 	

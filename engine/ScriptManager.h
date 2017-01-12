@@ -184,6 +184,7 @@ private:
 	static int TestGameObjectCollisions(lua_State * a_luaState);
 	static int GetGameObjectCollisions(lua_State * a_luaState);
 	static int PlayGameObjectAnimation(lua_State * a_luaState);
+	static int GetGameObjectTransformedPos(lua_State * a_luaState);
 	static int DestroyGameObject(lua_State * a_luaState);
 
 	//brief LUA versions of render manager functions

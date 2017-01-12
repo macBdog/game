@@ -49,7 +49,6 @@ void CameraManager::Update(float a_dt)
 			if (inMan.IsKeyDepressed(SDLK_LSHIFT))
 			{
 				// Get current camera inputs
-				const float maxRot = 360.0f;
 				Vector2 curInput = inMan.GetMousePosRelative();
 				Vector2 lastInput = m_debugOrientationInput;
 
@@ -104,4 +103,13 @@ void Camera::Update()
 	m_mat.SetLook(up);
 	m_mat.SetUp(forward);
 	m_mat.SetPos(m_pos);
+}
+
+void Camera::SetRotation(const Vector & a_rotationEuler)
+{
+	Quaternion rotation(a_rotationEuler);
+	Matrix rotMat = Matrix::Identity();
+	rotation.ApplyToMatrix(rotMat);
+	Vector newTarget = rotMat.Transform(Vector(0.0f, 1.0f, 0.0f));
+	SetTarget(GetPosition() + newTarget);
 }

@@ -39,6 +39,7 @@ public:
 	//\ingroup Mutators
 	inline void SetPosition(const Vector & a_worldPos) { m_pos = a_worldPos; }
 	inline void SetTarget(const Vector & a_worldPos) { m_target = a_worldPos; }
+	void SetRotation(const Vector & a_rotationEuler);
 
 	static const float sc_defaultCameraSpeed;			///< Debug camera translation constant
 	static const float sc_defaultCameraRotSpeed;		///< Debug camera rotation speed degrees per second
@@ -76,7 +77,7 @@ public:
 	
 	///\brief Mutators affecting the currently active camera
 	inline void SetPosition(const Vector & a_newPos) { m_currentCamera->SetPosition(a_newPos); }
-	inline void SetRotation(const Vector & a_newRot) { /*m_currentCamera->SetRot(a_newRot);*/ }
+	inline void SetRotation(const Vector & a_newRot) { m_currentCamera->SetRotation(a_newRot); }
 	inline void SetFOV(const float & a_newFov) { /*m_currentCamera->SetFOV(a_newFov);*/ }
 	inline void SetTarget(const Vector & a_newTarget) { m_currentCamera->SetTarget(a_newTarget); }
 

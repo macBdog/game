@@ -213,12 +213,11 @@ public:
 
 	Object()
 		: m_material(NULL)
-		, m_displayListGenerated(false)
+		, m_vertexBufferId(-1)
 		, m_verts(NULL)
 		, m_normals(NULL)
 		, m_uvs(NULL)
-		, m_numVertices(0) 
-		, m_displayListId(0) { m_name[0] = '\0'; }
+		, m_numVertices(0) { m_name[0] = '\0'; }
 
 	inline const char * GetName() { return m_name; }
 	inline void SetName(const char * a_name) { strncpy(m_name, a_name, strlen(a_name) + 1); }
@@ -232,10 +231,9 @@ public:
 	inline TexCoord * GetUvs() const { return m_uvs; }
 
 	//\brief Accessors for rendering buffer Ids
-	inline bool IsDisplayListGenerated() const { return m_displayListGenerated; }
-	inline unsigned int GetDisplayListId() const { return m_displayListId; }
-	inline void SetDisplayListId(unsigned int a_displayListId) { m_displayListId = a_displayListId; m_displayListGenerated = true; }
-	inline void RegenerateDisplayList() { m_displayListGenerated = false; }
+	inline bool HasVertexBuffer() const { return m_vertexBufferId >= 0; }
+	inline unsigned int GetVertexBufferId() const { return m_vertexBufferId; }
+	inline void SetVertexBufferId(int a_bufferId) { m_vertexBufferId = a_bufferId; }
 	
 	//\brief Accessors for material data
 	inline void SetMaterial(Material * a_material) { m_material = a_material; }
@@ -253,8 +251,7 @@ private:
 	Material * m_material;							///< Material properties loaded from file
 
 	unsigned int m_numVertices;						///< All indexed by vertex
-	unsigned int m_displayListId;					///< Assigned by the render manager when added for rendering
-	bool m_displayListGenerated;					///< If the render manager has set the buffer Ids
+	int m_vertexBufferId;							///< Assigned by the render manager when added for rendering
 
 	Vector * m_verts;								///< Storage for the verts of the model
 	Vector * m_normals;								///< Storage for the normals
