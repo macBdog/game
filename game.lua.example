@@ -49,7 +49,8 @@ SetLightSpecular(indexOfLightToModify, r, g, b, a)
 SetLightPosition(indexOfLightToModify, x, y, z)
 x = GetNumCPUCores()
 tableWithDriveLetters = GetStorageDrives()
-tableOfFiles = GetDirectoryListing()
+tableOfFiles = GetDirectoryListing(path)
+tableOfBytes = GetFileBytes(path, offsetBytes, numberOfBytes)
 bool = IsVR()
 x, y, z = GetVRLookDirection()
 x, y, z = GetVRLookPosition()
@@ -70,6 +71,7 @@ StopMusic("loopingFileNameInSoundFolder.wav")
 SetMusicVolume("fileNameOfMusicThatsPlayer", 0.5)
 SetListenerPosition(posX, posY, posZ, dirX, dirY, dirZ, velX, velY, velZ)
 StopAllSoundsAndMusic()
+emitterId = CreateParticleEmitter(numParticles, emissionRate, lifeTime)
 
 Debugging
 ---------

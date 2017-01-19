@@ -1118,7 +1118,7 @@ bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_p
 		}
 	}
 
-	Log::Get().WriteGameErrorNoParams("Ran out of debug DebugPrint resources!");
+	Log::Get().WriteGameErrorNoParams("Ran out of DebugPrint resources!");
 	return false;
 }
 

@@ -14,6 +14,7 @@ float Shader::s_lightingData[Shader::s_numLightFloats];
 Shader::Shader(const char * a_name)
 : m_vertexShader(0)
 , m_fragmentShader(0)
+, m_geometryShader(0)
 , m_shader(0)
 {
 	if (a_name != NULL || a_name[0] != '\0')
@@ -31,9 +32,13 @@ Shader::~Shader()
 	glDeleteProgram(m_shader);
 	glDeleteShader(m_vertexShader);
 	glDeleteShader(m_fragmentShader);
+	if (m_geometryShader > 0)
+	{
+		glDeleteShader(m_geometryShader);
+	}
 }
 
-bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
+bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, const char * a_geometrySource)
 {
 	if (m_name == NULL || a_vertexSource == NULL || a_fragmentSource == NULL ||
 		m_name[0] == '\0' || a_vertexSource[0] == '\0' || a_fragmentSource[0] == '\0')
@@ -46,10 +51,45 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource)
 	// Compile the shader components
 	m_vertexShader = Compile(GL_VERTEX_SHADER, a_vertexSource);
 	m_fragmentShader = Compile(GL_FRAGMENT_SHADER, a_fragmentSource);
-
-	// Only proceed if the compilation of both shader components was successful
-	if (m_vertexShader > 0 && m_fragmentShader > 0)
+	if (a_geometrySource != nullptr)
 	{
+		m_geometryShader = Compile(GL_GEOMETRY_SHADER, a_geometrySource);
+	}
+
+	// Only shader using geometry is the particle shader so setup the vertex stream to match the particle emitter vertex buffer format
+	if (m_geometryShader > 0)
+	{
+		m_shader = glCreateProgram();
+		glAttachShader(m_shader, m_vertexShader);
+		glAttachShader(m_shader, m_fragmentShader);
+		glAttachShader(m_shader, m_geometryShader);
+
+		glBindAttribLocation(m_shader, 0, "ParticlePosition");
+		glBindAttribLocation(m_shader, 1, "ParticleColour");
+		glBindAttribLocation(m_shader, 2, "ParticleLife");
+
+		glLinkProgram(m_shader);
+
+		// Other particle shader inputs
+		m_diffuseTexture.Init(m_shader, "DiffuseTexture");
+		m_gBuffer1.Init(m_shader, "GBuffer1");
+		m_gBuffer2.Init(m_shader, "GBuffer2");
+		m_gBuffer3.Init(m_shader, "GBuffer3");
+		m_gBuffer4.Init(m_shader, "GBuffer4");
+		m_gBuffer5.Init(m_shader, "GBuffer5");
+		m_gBuffer6.Init(m_shader, "GBuffer6");
+		m_time.Init(m_shader, "Time");
+		m_lifeTime.Init(m_shader, "LifeTime");
+		m_shaderData.Init(m_shader, "ShaderData");
+		m_objectMatrix.Init(m_shader, "ObjectMatrix");
+		m_viewMatrix.Init(m_shader, "ViewMatrix");
+		m_projectionMatrix.Init(m_shader, "ProjectionMatrix");
+		m_lights.Init(m_shader, "Lights");
+		return true;
+	}
+	else if (m_vertexShader > 0 && m_fragmentShader > 0)
+	{
+		// Only proceed if the compilation of both shader components was successful
 		m_shader = glCreateProgram();
 		glAttachShader(m_shader, m_vertexShader);
 		glAttachShader(m_shader, m_fragmentShader);

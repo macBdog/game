@@ -249,5 +249,14 @@
     <None Include="Shaders\post.vsh.inc">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Shaders\particle.fsh.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Shaders\particle.vsh.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Shaders\particle.gsh.inc">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

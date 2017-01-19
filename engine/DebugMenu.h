@@ -113,7 +113,7 @@ private:
 	static const float sc_gameTimeScaleSlow;			///< Value of game time scale in slow mode
 	static const float sc_cursorSize;					///< Size of debug mouse cursor
 	static Vector2 sc_vectorCursor[4];					///< Debug menu does not have textures so it draws mouse cursors by vectors
-	static const int sc_numScriptDebugWidgets = 8;		///< Number of debug widgets the script system owns
+	static const int sc_numScriptDebugWidgets = 16;		///< Number of debug widgets the script system owns
 	static const int sc_colourPickerTextureSize = 256;	///< How large the colour picker generated texture is, must be power of two
 	static const int sc_colourPickerTextureBpp = 32;	///< How many bits per pixel in for the generated texture
 	Widget * m_scriptDebugWidgets[sc_numScriptDebugWidgets];

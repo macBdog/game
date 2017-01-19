@@ -1,0 +1,18 @@
+const char * particleVertexShader = 
+"#version 400\n"
+"uniform float Time; \n"
+"in vec3 ParticlePosition;\n"
+"in vec4 ParticleColour;\n"
+"in float ParticleLife;\n"
+"out Particle \n"
+"{ \n"
+"	vec3 Position;\n"
+"	vec4 Colour;\n"
+"	float Life;\n"
+"} particle;\n"
+"void main() \n"
+"{ \n"
+"	particle.Position = ParticlePosition + vec3(0.0, 0.0, 0.001);\n"
+"	particle.Colour = ParticleColour - vec4(0.0, 0.0, 0.0, max(Time, 1.0));\n"
+"} \n"
+;

@@ -11,6 +11,7 @@
 #include "../core/Colour.h"
 #include "../core/LinkedList.h"
 #include "../core/Matrix.h"
+#include "../core/Range.h"
 #include "../core/Vector.h"
 
 class DataPack;
@@ -88,7 +89,9 @@ public:
 					, m_colourShader(nullptr)
 					, m_textureShader(nullptr)
 					, m_lightingShader(nullptr)
+					, m_particleShader(nullptr)
 					, m_fullscreenQuad()
+					, m_numParticleEmitters(0)
 					, m_debugBoxBuffer()
 					, m_debugSphereBuffer()
 					, m_viewWidth(0)
@@ -201,6 +204,13 @@ public:
 	//\param a_pos is the position in 3D space to draw. If a 2D renderLayer is used, the Z component will be ignored
 	void AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);					 
 	
+	//\brief Add a particle emitter
+	//\param a_numParticles the maximum particles that can be alive at once for this emitter
+	//\param a_emissionRate how many particles should be emitted per second
+	//\param a_lifeTime the life of the emitter
+	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime/*, const ParticleDefinition & a_def*/);
+	void RemoveAllParticleEmitters();
+
 	//\brief Add a line to the debug renderLayer
 	//\param Vector a_point1 start of the line
 	//\param Vector a_point2 end of the line
@@ -443,6 +453,115 @@ private:
 		Vector m_scale;
 	};
 
+	//\brief Data that the user authors for each particle system
+	struct ParticleDefinition
+	{
+		ParticleDefinition()
+			: m_lifeTime(-1.0f)
+			, m_startSize(-1.0f)
+			, m_endSize(-1.0f)
+			, m_startColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
+			, m_endColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
+			, m_startVel(Vector(0.0f, 0.0f, 0.0f))
+			, m_endVel(Vector(0.0f, 0.0f, 0.0f))
+		{}
+
+		inline void SetDefault()
+		{
+			m_lifeTime = Range<float>(0.5f, 2.0f);
+			m_startSize = Range<float>(0.25f, 0.5f);
+			m_endSize = Range<float>(9.0f, 10.0f);
+			m_startColour = Range<Colour>(Colour(1.0f, 1.0f, 1.0f, 0.75f), Colour(1.0f, 1.0f, 1.0f, 1.0f));
+			m_endColour = Range<Colour>(Colour(0.0f, 1.0f, 1.0f, 1.0f));
+			m_startVel = Range<Vector>(Vector(-1.0f, -1.0f, -1.0f), Vector(1.0f, 1.0f, 1.0f));
+			m_endVel = Range<Vector>(Vector(0.0f, 0.0f, 0.0f), Vector(0.25f, 0.25f, 0.25f));
+		}
+
+		inline void Set(const ParticleDefinition & a_def)
+		{
+			if (a_def.m_lifeTime.IsValid())				{ m_lifeTime = a_def.m_lifeTime; }
+			if (a_def.m_startSize.IsValid())			{ m_startSize = a_def.m_startSize; }
+			if (a_def.m_endSize.IsValid())				{ m_endSize = a_def.m_endSize; }
+			if (a_def.m_startColour.IsValid())			{ m_startColour = a_def.m_startColour; }
+			if (a_def.m_endColour.IsValid())			{ m_endColour = a_def.m_endColour; }
+			if (a_def.m_startVel.IsValid())				{ m_startVel = a_def.m_startVel; }
+			if (a_def.m_endVel.IsValid())				{ m_endVel = a_def.m_endVel; }
+		}
+
+		Range<float> m_lifeTime;
+		Range<float> m_startSize;
+		Range<float> m_endSize;
+		Range<Colour> m_startColour;
+		Range<Colour> m_endColour;
+		Range<Vector> m_startVel;
+		Range<Vector> m_endVel;
+	};
+
+	//\brief Data associated with each particle owned by an emitter
+	struct Particle
+	{
+		Particle()
+			: m_pos(0.0f, 0.0f, 0.0f)
+			, m_colour(0.0f, 0.0f, 0.0f, 0.0f)
+			, m_life(0.0f) {}
+		Vector m_pos;
+		Colour m_colour;
+		float m_life;
+	};
+
+	// Owns a vertex buffer with each vert being a particle, system is on the GPU
+	struct ParticleEmitter
+	{
+		ParticleEmitter() 
+			: m_life(0.0f)
+			, m_vertexArrayId(0)
+			, m_vertexBufferId(0)
+			, m_indexBufferId(0)
+			, m_textureId(0)
+			, m_particles(nullptr)
+			, m_indicies(nullptr)
+			, m_numParticles(0)
+			, m_particleDef()
+		{}
+
+		inline void Alloc(unsigned int a_numParticles)
+		{
+			if (m_numParticles > 0)
+			{
+				Dealloc();
+			}
+			m_numParticles = a_numParticles;
+			m_particles = new Particle[a_numParticles];
+			m_indicies = new unsigned int[a_numParticles];
+		}
+		void Dealloc()
+		{
+			m_numParticles = 0;
+			delete m_particles;
+			delete m_indicies;
+			m_particles = nullptr;
+			m_indicies = nullptr;
+		}
+		inline void Realloc(unsigned int a_numVerts)
+		{
+			Dealloc();
+			Alloc(a_numVerts);
+		}
+		void Bind();
+		void Rebind();
+		void Unbind();
+
+		float m_life;
+		unsigned int m_vertexArrayId;
+		unsigned int m_vertexBufferId;
+		unsigned int m_indexBufferId;
+		int m_textureId;
+		Particle * m_particles;
+		unsigned int* m_indicies;
+		int m_numParticles;
+		ParticleDefinition m_particleDef;
+	};
+
 	//\brief Container for sorting render models before drawing
 	struct SortedRenderModel
 	{
@@ -476,6 +595,8 @@ private:
 
 	static const int s_maxObjects[(int)RenderObjectType::Count];	///< The amount of storage amount for all types of primitives
 	static const int s_maxModelBuffers = 512;						///< Storage for vertex buffers across all layers, unique meshes share buffers
+	static const int s_maxParticleEmitters = 256;					///< Storage for VBOs that have particles in them
+	static const int s_maxParticles = 1024 * 4;						///< The number of verts per particle buffer
 	static const int s_numDebugBoxVerts = 8;
 	static const int s_numDebugSphereVerts = 96;
 	static const int s_numDebugTransformVerts = 6;
@@ -499,6 +620,8 @@ private:
 	DebugTransform * m_debugTransforms[RenderLayer::Count];			///< Debug transforms made of 3 coloured lines
 	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
 	FontChar * m_fontChars[RenderLayer::Count];						///< Characters of a display string
+	ParticleEmitter m_particleEmitters[s_maxParticleEmitters];		///< BUffer containing a vert for each particle
+	int m_numParticleEmitters;
 	int m_objectCount[RenderLayer::Count][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
 
 	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
@@ -508,6 +631,7 @@ private:
 	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage
 
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
+	Quad m_particleBuffer;											///< Single VBO for all world particles
 	VertexBuffer m_debugBoxBuffer;									///< One set of vertices for all boxes
 	VertexBuffer m_debugSphereBuffer;								///< Same concept for spheres
 	VertexBuffer m_debugTransformBuffer;							///< Three coloured lines for transforms
@@ -520,6 +644,7 @@ private:
 	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
 	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified
+	Shader * m_particleShader;										///< Shader that updates the position, scale, colour and lifetime of particles and renders them
 
 	unsigned int m_viewWidth;										///< Cache of arguments passed to init
 	unsigned int m_viewHeight;										///< Cache of arguments passed to init

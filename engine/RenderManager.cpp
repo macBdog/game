@@ -83,6 +83,48 @@ void RenderManager::VertexBuffer::Unbind()
 	glDeleteVertexArrays(1, &m_vertexArrayId);
 }
 
+void RenderManager::ParticleEmitter::Bind()
+{
+	unsigned int glErrorEnum = glGetError();
+	glGenVertexArrays(1, &m_vertexArrayId);
+	glBindVertexArray(m_vertexArrayId);
+	glGenBuffers(1, &m_vertexBufferId);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glBufferData(GL_ARRAY_BUFFER, m_numParticles * sizeof(Particle), m_particles, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);  // Particle position
+	glEnableVertexAttribArray(1);  // Particle color
+	glEnableVertexAttribArray(2);  // Life
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(Particle), 0);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(Particle), (unsigned char*)nullptr + sizeof(Vector));
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(2, 1, GL_FLOAT, false, sizeof(Particle), (unsigned char*)nullptr + sizeof(Vector) + sizeof(Colour));
+	glGenBuffers(1, &m_indexBufferId);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBufferId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_numParticles * sizeof(unsigned int), m_indicies, GL_STATIC_DRAW);
+	glErrorEnum = glGetError();
+}
+
+void RenderManager::ParticleEmitter::Rebind()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glBufferData(GL_ARRAY_BUFFER, m_numParticles * sizeof(Vertex), m_particles, GL_STATIC_DRAW);
+}
+
+void RenderManager::ParticleEmitter::Unbind()
+{
+	glDisableVertexAttribArray(0);	// Particle position
+	glDisableVertexAttribArray(1);	// Particle color
+	glDisableVertexAttribArray(2);	// Life
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &m_vertexBufferId);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &m_indexBufferId);
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &m_vertexArrayId);
+}
+
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
 	unsigned int glErrorEnum = glGetError();
@@ -221,6 +263,9 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	#include "Shaders\texture.fsh.inc"
 	#include "Shaders\lighting.vsh.inc"
 	#include "Shaders\lighting.fsh.inc"
+	#include "Shaders\particle.vsh.inc"
+	#include "Shaders\particle.fsh.inc"
+	#include "Shaders\particle.gsh.inc"
 	if (m_postShader = new Shader("post"))
 	{
 		m_postShader->Init(postVertexShader, postFragmentShader);
@@ -236,6 +281,10 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	if (m_lightingShader = new Shader("lighting"))
 	{
 		m_lightingShader->Init(lightingVertexShader, lightingFragmentShader);
+	}
+	if (m_particleShader = new Shader("particle"))
+	{
+		m_particleShader->Init(particleVertexShader, particleFragmentShader, particleGeometryShader);
 	}
 
 	glErrorEnum = glGetError();
@@ -321,10 +370,12 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 			m_colourShader != nullptr &&
 			m_textureShader != nullptr &&
 			m_lightingShader != nullptr &&
+			m_particleShader != nullptr &&
 			m_postShader->IsCompiled() &&
 			m_colourShader->IsCompiled() && 
 			m_textureShader->IsCompiled() && 
-			m_lightingShader->IsCompiled();
+			m_lightingShader->IsCompiled() &&
+			m_particleShader->IsCompiled();
 }
 
 bool RenderManager::Shutdown()
@@ -413,6 +464,23 @@ bool RenderManager::Shutdown()
 	delete[] m_sortedRenderModelPool;
 	delete[] m_sortedRenderNodePool;
 
+	// Clean up all emitters
+	for (unsigned int i = 0; i < s_maxParticleEmitters; ++i)
+	{
+		ParticleEmitter & em = m_particleEmitters[i];
+		if (em.m_particles != nullptr)
+		{
+			em.Dealloc();
+		}
+		if (em.m_vertexBufferId != 0)
+		{
+			em.Unbind();
+		}
+		em.m_numParticles = 0;
+		em.m_life = -1.0f;
+	}
+	m_numParticleEmitters = 0;
+
 	// Clean up the default shaders
 	if (m_postShader != nullptr)
 	{
@@ -429,6 +497,10 @@ bool RenderManager::Shutdown()
 	if (m_lightingShader != nullptr)
 	{
 		delete m_lightingShader;
+	}
+	if (m_particleShader != nullptr)
+	{
+		delete m_particleShader;
 	}
 
 	// Clean up the framebuffer resources
@@ -478,6 +550,21 @@ bool RenderManager::Update(float a_dt)
 {
 	m_lastRenderTime = a_dt;
 	m_renderTime += a_dt;
+
+	// Update and recycle particle systems
+	const int currentNumEmitters = m_numParticleEmitters;
+	for (int i = currentNumEmitters; i >= 0; --i)
+	{
+		ParticleEmitter & em = m_particleEmitters[i];
+		if (em.m_life <= 0.0f)
+		{
+			--m_numParticleEmitters;
+		}
+		else
+		{
+			em.m_life -= a_dt;
+		}
+	}
 
 #ifdef _RELEASE
 	return true;
@@ -1024,6 +1111,15 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			curNode = curNode->GetNext();
 		}
 
+		// Draw particles by calling their VBOs
+		for (int j = 0; j < m_numParticleEmitters; ++j)
+		{
+			ParticleEmitter & em = m_particleEmitters[j];
+			m_particleShader->UseShader(shaderData);
+			glBindVertexArray(em.m_vertexArrayId);
+			glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
+		}
+
 		// Draw font chars by calling their VBOs
 		if (pLastShader != m_textureShader && m_objectCount[i][RenderObjectType::FontChars] > 0)
 		{
@@ -1486,6 +1582,60 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& 
 	fc->m_textureId = a_texture->GetId();
 	fc->m_pos = a_pos;
 	fc->m_scale = Vector(a_size.GetX(), a_size.GetY(), is2D ? 1.0f : a_size.GetY());
+}
+
+int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime/*, const RenderManager::ParticleDefinition & a_def*/)
+{
+	if (m_numParticleEmitters >= s_maxParticleEmitters)
+	{
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Too many particle emitters, max is %d", s_maxParticleEmitters);
+		return -1;
+	}
+	if (a_numParticles <= 0)
+	{
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot create an emitter with 0 particles!");
+		return -1;
+	}
+
+	int nextEmitterId = 0;
+	for (int i = 0; i < s_maxParticleEmitters; ++i)
+	{
+		if (m_particleEmitters[i].m_particles == nullptr)
+		{
+			nextEmitterId = i;
+			break;
+		}
+	}
+	++m_numParticleEmitters;
+	ParticleEmitter & em = m_particleEmitters[nextEmitterId];
+	if (em.m_numParticles <= 0)
+	{
+		em.Alloc(a_numParticles);
+		em.Bind();
+	}
+	else if(em.m_numParticles == a_numParticles)
+	{
+		// Do nothing?
+	}
+	else
+	{
+		em.Realloc(a_numParticles);
+		em.m_numParticles = a_numParticles;
+		em.Rebind();
+	}
+	
+	em.m_life = a_lifeTime;
+	em.m_numParticles = a_numParticles;
+
+	// TODO Remove me
+	//em.m_particleDef.Set(a_def);
+	em.m_particleDef.SetDefault();
+	return nextEmitterId;
+}
+
+void RenderManager::RemoveAllParticleEmitters()
+{
+	m_numParticleEmitters = 0;
 }
 
 void RenderManager::AddDebugArrow(Vector a_start, Vector a_end, Colour a_tint)

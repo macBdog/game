@@ -83,6 +83,9 @@
       <AdditionalLibraryDirectories>.\external\SDL-1.2.15\lib\x86</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference />
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\Designer\game.exe" "$(SolutionDir)\..\eos4\bin\designer\game.exe"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

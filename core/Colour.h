@@ -36,6 +36,8 @@ public:
 	Colour operator * (float a_scale) const { return Colour(r * a_scale, g * a_scale, b * a_scale, a * a_scale); }
 	Colour operator * (const Colour & a_val) const { return Colour(r * a_val.r, g * a_val.g, b * a_val.b, a * a_val.a); }
 	bool operator == (const Colour & a_compare) const { return r == a_compare.r && g == a_compare.g && b == a_compare.b && a == a_compare.a; }
+	bool operator > (const Colour & a_compare) const { return r > a_compare.r && g > a_compare.g && b > a_compare.b && a > a_compare.a; }
+	bool operator < (const Colour & a_compare) const { return r < a_compare.r && g < a_compare.g && b < a_compare.b && a < a_compare.a; }
 	void operator += (const Colour & a_val) { r += a_val.r; g += a_val.g; b += a_val.b; a += a_val.a; }
 	void operator -= (const Colour & a_val) { r -= a_val.r; g -= a_val.g; b -= a_val.b; a -= a_val.a; }
 

@@ -103,6 +103,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="PageAllocator.h" />
     <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="Range.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

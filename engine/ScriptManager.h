@@ -109,6 +109,8 @@ private:
 	static int GetNumCPUCores(lua_State * a_luaState);
 	static int GetStorageDrives(lua_State * a_luaState);
 	static int GetDirectoryListing(lua_State * a_luaState);
+	static int GetFileBytes(lua_State * a_luaState);
+	static int CreateParticleEmitter(lua_State * a_luaState);
 
 	static int Draw3DText(lua_State * a_luaState);
 

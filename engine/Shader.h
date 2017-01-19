@@ -135,7 +135,7 @@ public:
 	Shader(const char * a_name);
 	~Shader();
 
-	bool Init(const char * a_vertexSource, const char * a_fragmentSource);
+	bool Init(const char * a_vertexSource, const char * a_fragmentSource, const char * a_geometrySource = nullptr);
 
 	//\brief Accessors and mutators
 	inline GLuint GetShader() { return m_shader; }
@@ -162,6 +162,7 @@ private:
 	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the files minus .fsh and .vsh extensions
 	GLuint m_vertexShader;							///< Program to transform vertices
 	GLuint m_fragmentShader;						///< Pixel shader
+	GLuint m_geometryShader;						///< Geometry shader
 	GLuint m_shader;								///< Linked program
 
 	Uniform<int> m_diffuseTexture;					///< Standard set of uniforms follow

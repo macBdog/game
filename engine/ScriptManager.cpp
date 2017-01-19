@@ -167,12 +167,14 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightDiffuse", SetLightDiffuse);
 		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
+		lua_register(m_globalLua, "CreateParticleEmitter", CreateParticleEmitter);
 
 		lua_register(m_globalLua, "Draw3DText", Draw3DText);
 
 		lua_register(m_globalLua, "GetNumCPUCores", GetNumCPUCores);
 		lua_register(m_globalLua, "GetStorageDrives", GetStorageDrives);
 		lua_register(m_globalLua, "GetDirectoryListing", GetDirectoryListing);
+		lua_register(m_globalLua, "GetFileBytes", GetFileBytes);
 
 		lua_register(m_globalLua, "PlaySound", PlaySoundFX);
 		lua_register(m_globalLua, "PlaySound3D", PlaySoundFX3D);
@@ -381,6 +383,9 @@ bool ScriptManager::Update(float a_dt)
 
 					// Stop any music that has been playing
 					SoundManager::Get().StopAllSoundsAndMusic();
+
+					// Remove anything with state from rendering
+					RenderManager::Get().RemoveAllParticleEmitters();
 
 					// Kick the script VM in the guts
 					Shutdown();
@@ -1468,6 +1473,61 @@ int ScriptManager::GetDirectoryListing(lua_State * a_luaState)
 		LogScriptError(a_luaState, "GetDirectoryListing", "expects 1 parameter: path of the directory to get.");
 	}
 	return 0;
+}
+
+int ScriptManager::GetFileBytes(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TSTRING);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		lua_newtable(a_luaState);
+		if (const char * filePath = lua_tostring(a_luaState, 1))
+		{
+			const int byteOffset = (int)lua_tonumber(a_luaState, 2);
+			const int byteCount = (int)lua_tonumber(a_luaState, 3);
+
+			ifstream fileToRead(filePath, ifstream::in | ifstream::binary);
+			if (fileToRead.is_open())
+			{
+				lua_createtable(a_luaState, 1, 0);
+				fileToRead.seekg(byteOffset);
+				char readChar[2] = { ' ', '\0' };
+				for (int i = 0; i < byteCount; ++i)
+				{
+					fileToRead.read(&readChar[0], 1);
+					lua_pushnumber(a_luaState, i + 1);
+					lua_pushstring(a_luaState, &readChar[0]);
+					lua_settable(a_luaState, -3);
+
+					if (!fileToRead.good())
+					{
+						break;
+					}
+				}
+				fileToRead.close();
+				return 1;
+			}
+			else
+			{
+				LogScriptError(a_luaState, "GetFileBytes", "can't open file.");
+			}
+		}
+	}
+	else
+	{
+		LogScriptError(a_luaState, "GetFileBytes", "expects 3 parameters: path of the directory to get, offset into the file to read from and the number of bytes to read.");
+	}
+	return 0;
+}
+
+int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
+{
+	RenderManager & renMan = RenderManager::Get();
+	const int emitterId = renMan.AddParticleEmitter(1000, 5, 100);
+	lua_pushnumber(a_luaState, emitterId);
+	return 1;
 }
 
 int ScriptManager::GUIGetValue(lua_State * a_luaState)
