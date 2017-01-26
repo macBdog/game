@@ -94,12 +94,15 @@ void RenderManager::ParticleEmitter::Bind()
 	glEnableVertexAttribArray(0);  // Particle position
 	glEnableVertexAttribArray(1);  // Particle color
 	glEnableVertexAttribArray(2);  // Life
+	glEnableVertexAttribArray(3);  // Velocity
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(Particle), 0);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
 	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(Particle), (unsigned char*)nullptr + sizeof(Vector));
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
 	glVertexAttribPointer(2, 1, GL_FLOAT, false, sizeof(Particle), (unsigned char*)nullptr + sizeof(Vector) + sizeof(Colour));
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId);
+	glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(Particle), (unsigned char*)nullptr + sizeof(Vector) + sizeof(Colour) + sizeof(float));
 	glGenBuffers(1, &m_indexBufferId);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_numParticles * sizeof(unsigned int), m_indicies, GL_STATIC_DRAW);
@@ -117,6 +120,7 @@ void RenderManager::ParticleEmitter::Unbind()
 	glDisableVertexAttribArray(0);	// Particle position
 	glDisableVertexAttribArray(1);	// Particle color
 	glDisableVertexAttribArray(2);	// Life
+	glDisableVertexAttribArray(3);	// Velocity
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &m_vertexBufferId);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -477,7 +481,7 @@ bool RenderManager::Shutdown()
 			em.Unbind();
 		}
 		em.m_numParticles = 0;
-		em.m_life = -1.0f;
+		em.m_lifeTime = -1.0f;
 	}
 	m_numParticleEmitters = 0;
 
@@ -556,13 +560,14 @@ bool RenderManager::Update(float a_dt)
 	for (int i = currentNumEmitters; i >= 0; --i)
 	{
 		ParticleEmitter & em = m_particleEmitters[i];
-		if (em.m_life <= 0.0f)
+		if (em.m_lifeTime > 0.0f)
 		{
-			--m_numParticleEmitters;
-		}
-		else
-		{
-			em.m_life -= a_dt;
+			const float oldLife = em.m_lifeTime;
+			em.m_lifeTime -= a_dt;
+			if (oldLife > 0.0f && em.m_lifeTime <= 0.0f)
+			{
+				--m_numParticleEmitters;
+			}
 		}
 	}
 
@@ -1110,14 +1115,19 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glDrawElements(GL_TRIANGLES, rm->m_buffer->m_numVerts, GL_UNSIGNED_INT, 0);
 			curNode = curNode->GetNext();
 		}
-
-		// Draw particles by calling their VBOs
-		for (int j = 0; j < m_numParticleEmitters; ++j)
+		
+		// Draw particles by calling their VBOs but make sure it's after all the world geo
+		if (i == RenderLayer::World)
 		{
-			ParticleEmitter & em = m_particleEmitters[j];
-			m_particleShader->UseShader(shaderData);
-			glBindVertexArray(em.m_vertexArrayId);
-			glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
+			for (int j = 0; j < m_numParticleEmitters; ++j)
+			{
+				ParticleEmitter & em = m_particleEmitters[j];
+				shaderData.m_lifeTime = em.m_lifeTime;
+				shaderData.m_time = em.m_lifeTime;
+				m_particleShader->UseShader(shaderData);
+				glBindVertexArray(em.m_vertexArrayId);
+				glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
+			}
 		}
 
 		// Draw font chars by calling their VBOs
@@ -1607,11 +1617,14 @@ int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, 
 		}
 	}
 	++m_numParticleEmitters;
+	bool bind = false;
+	bool rebind = false;
 	ParticleEmitter & em = m_particleEmitters[nextEmitterId];
 	if (em.m_numParticles <= 0)
 	{
 		em.Alloc(a_numParticles);
-		em.Bind();
+		bind = true;
+		
 	}
 	else if(em.m_numParticles == a_numParticles)
 	{
@@ -1621,15 +1634,33 @@ int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, 
 	{
 		em.Realloc(a_numParticles);
 		em.m_numParticles = a_numParticles;
-		em.Rebind();
+		rebind = true;
 	}
 	
-	em.m_life = a_lifeTime;
+	em.m_lifeTime = a_lifeTime;
 	em.m_numParticles = a_numParticles;
 
-	// TODO Remove me
+	// TODO Remove me when you figure out the problem with the particle definition
 	//em.m_particleDef.Set(a_def);
 	em.m_particleDef.SetDefault();
+
+	for (int i = 0; i < a_numParticles; ++i)
+	{
+		em.m_particles[i].m_pos = Vector(0.0f, -200.0f - (i * 0.02f), 10.0f + (i * 0.03f));
+		em.m_particles[i].m_colour = Colour(1.0f, 0.0f, 1.0f, 1.0f);
+		em.m_particles[i].m_life = m_renderTime;
+		em.m_particles[i].m_velocity = Vector(MathUtils::RandFloat(), MathUtils::RandFloat(), MathUtils::RandFloat());
+		em.m_indicies[i] = i;
+	}
+
+	if (bind)
+	{
+		em.Bind();
+	}
+	else if (rebind)
+	{
+		em.Rebind();
+	}
 	return nextEmitterId;
 }
 

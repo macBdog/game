@@ -67,6 +67,7 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, co
 		glBindAttribLocation(m_shader, 0, "ParticlePosition");
 		glBindAttribLocation(m_shader, 1, "ParticleColour");
 		glBindAttribLocation(m_shader, 2, "ParticleLife");
+		glBindAttribLocation(m_shader, 3, "ParticleVelocity");
 
 		glLinkProgram(m_shader);
 

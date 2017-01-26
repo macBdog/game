@@ -1524,10 +1524,20 @@ int ScriptManager::GetFileBytes(lua_State * a_luaState)
 
 int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
 {
-	RenderManager & renMan = RenderManager::Get();
-	const int emitterId = renMan.AddParticleEmitter(1000, 5, 100);
-	lua_pushnumber(a_luaState, emitterId);
-	return 1;
+	if (lua_gettop(a_luaState) == 3)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		const int numParticles = (int)lua_tonumber(a_luaState, 1);
+		const float emissionRate = (float)lua_tonumber(a_luaState, 2);
+		const float lifeTime = (float)lua_tonumber(a_luaState, 3);
+		RenderManager & renMan = RenderManager::Get();
+		const int emitterId = renMan.AddParticleEmitter(numParticles, emissionRate, lifeTime);
+		lua_pushnumber(a_luaState, emitterId);
+		return 1;
+	}
+	return 0;
 }
 
 int ScriptManager::GUIGetValue(lua_State * a_luaState)

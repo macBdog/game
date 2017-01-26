@@ -15,11 +15,10 @@ const char * particleFragmentShader =
 "void main()\n"
 "{ \n"
 "	float d = dot(fragment.UV, fragment.UV);\n"
-"	if (d > 1)\n"
+"	if(d > 1.0)\n"
 "	{\n"
 "		discard;\n"
 "	}\n"
-"	float a = 1 - d;\n"
-"	GBuffer1Colour = vec4(0, 0, 0, a * fragment.Colour.a * 0.1);\n"
+"	GBuffer1Colour = vec4(fragment.Colour.rgb, fragment.Colour.a * 1.0 - d);\n"
 "}\n"
 ;

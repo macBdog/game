@@ -1,3 +1,7 @@
+#Engine data files
+datapack.dtz
+datapack.dtz.tmp
+
 #OS junk files
 [Tt]humbs.db
 *.DS_Store

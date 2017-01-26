@@ -503,17 +503,20 @@ private:
 		Particle()
 			: m_pos(0.0f, 0.0f, 0.0f)
 			, m_colour(0.0f, 0.0f, 0.0f, 0.0f)
-			, m_life(0.0f) {}
+			, m_life(0.0f)
+			, m_velocity(0.0f, 0.0f, 0.0f)
+		{}
 		Vector m_pos;
 		Colour m_colour;
 		float m_life;
+		Vector m_velocity;
 	};
 
 	// Owns a vertex buffer with each vert being a particle, system is on the GPU
 	struct ParticleEmitter
 	{
 		ParticleEmitter() 
-			: m_life(0.0f)
+			: m_lifeTime(0.0f)
 			, m_vertexArrayId(0)
 			, m_vertexBufferId(0)
 			, m_indexBufferId(0)
@@ -551,7 +554,7 @@ private:
 		void Rebind();
 		void Unbind();
 
-		float m_life;
+		float m_lifeTime;
 		unsigned int m_vertexArrayId;
 		unsigned int m_vertexBufferId;
 		unsigned int m_indexBufferId;

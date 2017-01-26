@@ -120,8 +120,8 @@ public:
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
-		Vector m_materialAmbient;
-		Vector m_materialDiffuse;
+		Vector m_materialAmbient;		///< How ambient light affects the material of an object
+		Vector m_materialDiffuse;		
 		Vector m_materialSpecular;
 		Vector m_materialEmission;
 		Vector m_shaderData;			///< 3 generic floats to pass to the shader
