@@ -195,6 +195,8 @@ private:
 	static int RenderQuad(lua_State * a_luaState);
 	static int RenderTri(lua_State * a_luaState);
 
+	static void StackDump(lua_State * a_luaState);
+
 	//\brief A managed script stores info critical to the hot reloading of scripts
 	struct ManagedScript
 	{

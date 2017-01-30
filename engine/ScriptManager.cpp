@@ -1524,18 +1524,96 @@ int ScriptManager::GetFileBytes(lua_State * a_luaState)
 
 int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
 {
-	if (lua_gettop(a_luaState) == 3)
+	if (lua_gettop(a_luaState) == 7)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 5, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 7, LUA_TTABLE);
 		const int numParticles = (int)lua_tonumber(a_luaState, 1);
 		const float emissionRate = (float)lua_tonumber(a_luaState, 2);
 		const float lifeTime = (float)lua_tonumber(a_luaState, 3);
-		RenderManager & renMan = RenderManager::Get();
-		const int emitterId = renMan.AddParticleEmitter(numParticles, emissionRate, lifeTime);
+		const float posX = (float)lua_tonumber(a_luaState, 4);
+		const float posY = (float)lua_tonumber(a_luaState, 5);
+		const float posZ = (float)lua_tonumber(a_luaState, 6);
+
+		// Parse the particle definition table for any and all supplied parameters
+		ParticleDefinition pd;
+		const int maxTableLen = ParticleDefinition::s_maxProperties;
+		const int startIndex = 7;
+		int index = startIndex;
+		lua_pushnil(a_luaState);
+		while (lua_next(a_luaState, startIndex) != 0 && index < maxTableLen + startIndex)
+		{ 
+			// Declare types for each possible property
+			const char * propertyName = lua_tostring(a_luaState, -2);
+			size_t numValues = lua_rawlen(a_luaState, -1);
+			Range<float> numberVal = 0.0f;
+			Range<Vector> vectorVal(0.0f);
+			Range<Colour> colourVal(0.0f);
+
+			// Figure out which property is being defined
+			int propIndex = -1;
+			for (int i = 0; i < ParticleDefinition::s_maxProperties; ++i)
+			{
+				if (strcmp(propertyName, ParticleDefinition::s_propertyNames[i]) == 0)
+				{
+					propIndex = i;
+					break;
+				}
+			}
+			bool numberType = propIndex == 0 || propIndex == 2 || propIndex == 3;
+			bool vectorType = propIndex == 1 || propIndex == 6 || propIndex == 7;
+			bool colourType = propIndex == 4 || propIndex == 5;
+			
+			if (numberType)
+			{
+				lua_rawgeti(a_luaState, -1, 1);
+				numberVal.m_low = (float)lua_tonumber(a_luaState, -1);
+				lua_pop(a_luaState, 1);
+
+				lua_rawgeti(a_luaState, -1, 2);
+				numberVal.m_hi = (float)lua_tonumber(a_luaState, -1);
+				lua_pop(a_luaState, 1);
+			}
+			else if (vectorType)
+			{
+
+			}
+			else if (colourType)
+			{
+
+			}
+			
+			lua_pop(a_luaState, 1);
+			index++;
+
+			// Handle all the different particle properties
+			switch (propIndex)
+			{
+				case 0: pd.m_lifeTime = numberVal; break;
+				case 1: pd.m_startPos = vectorVal; break;
+				case 2: pd.m_startSize = numberVal; break;
+				case 3: pd.m_endSize = numberVal; break;
+				case 4: pd.m_startColour = colourVal; break;
+				case 5: pd.m_endColour = colourVal; break;
+				case 6: pd.m_startVel = vectorVal; break;
+				case 7:	pd.m_endVel = vectorVal; break;
+				default: break;
+			}
+		}
+
+		// Add the emitter
+		const int emitterId = RenderManager::Get().AddParticleEmitter(numParticles, emissionRate, lifeTime, pd);
 		lua_pushnumber(a_luaState, emitterId);
 		return 1;
+	}
+	else
+	{
+		LogScriptError(a_luaState, "CreateParticleEmitter", "expects 7 parameters: numParticles, emissionRate, lifeTime, posX, posY, posZ, particleDefTable.");
 	}
 	return 0;
 }
@@ -3049,4 +3127,38 @@ int ScriptManager::RenderQuad(lua_State * a_luaState)
 int ScriptManager::RenderTri(lua_State * a_luaState)
 {
 	return 0;
+}
+
+void ScriptManager::StackDump(lua_State *a_luaState)
+{
+	Log & log = Log::Get();
+	log.Write(LogLevel::Info, LogCategory::Engine, "LUA Stack follows:");
+	int top = lua_gettop(a_luaState);
+	for (int i = 1; i <= top; i++)
+	{
+		int t = lua_type(a_luaState, i);
+		switch (t)
+		{
+			case LUA_TSTRING:
+			{
+				log.Write(LogLevel::Info, LogCategory::Engine, "-%d: `%s'", i, lua_tostring(a_luaState, i));
+				break;
+			}
+			case LUA_TBOOLEAN:
+			{
+				log.Write(LogLevel::Info, LogCategory::Engine, "-%d: %s", i, lua_toboolean(a_luaState, i) ? "true" : "false");
+				break;
+			}
+			case LUA_TNUMBER:
+			{
+				log.Write(LogLevel::Info, LogCategory::Engine, "-%d: %g", i, lua_tonumber(a_luaState, i));
+				break;
+			}
+			default:
+			{
+				log.Write(LogLevel::Info, LogCategory::Engine, "-%d: %s", i, lua_typename(a_luaState, t));
+				break;
+			}
+		}
+	}
 }

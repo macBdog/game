@@ -1,5 +1,7 @@
 #pragma once
 
+#include "MathUtils.h"
+
 template <class T>
 class Range
 {
@@ -20,6 +22,11 @@ public:
 
 	inline T GetDiff() const { return m_hi - m_low; }
 	inline bool IsValid() const { return m_hi > m_low; }
+
+	T GetRandom()
+	{
+		return m_low + GetDiff() * MathUtils::RandFloat();
+	}
 
 	T m_hi;
 	T m_low;

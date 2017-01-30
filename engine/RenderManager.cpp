@@ -19,6 +19,18 @@
 
 using namespace std;	//< For fstream operations
 
+const char * ParticleDefinition::s_propertyNames[ParticleDefinition::s_maxProperties] =
+{
+	"lifeTime",
+	"startPos",
+	"startSize",
+	"endSize",
+	"startColour",
+	"endColour",
+	"startVel",
+	"endVel",
+};
+
 template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
 const float RenderManager::s_updateFreq = 1.0f;
 const float RenderManager::s_nearClipPlane = 1.0f;
@@ -1123,7 +1135,6 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			{
 				ParticleEmitter & em = m_particleEmitters[j];
 				shaderData.m_lifeTime = em.m_lifeTime;
-				shaderData.m_time = em.m_lifeTime;
 				m_particleShader->UseShader(shaderData);
 				glBindVertexArray(em.m_vertexArrayId);
 				glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
@@ -1594,7 +1605,7 @@ void RenderManager::AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& 
 	fc->m_scale = Vector(a_size.GetX(), a_size.GetY(), is2D ? 1.0f : a_size.GetY());
 }
 
-int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime/*, const RenderManager::ParticleDefinition & a_def*/)
+int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime, const ParticleDefinition & a_def)
 {
 	if (m_numParticleEmitters >= s_maxParticleEmitters)
 	{
@@ -1639,16 +1650,14 @@ int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, 
 	
 	em.m_lifeTime = a_lifeTime;
 	em.m_numParticles = a_numParticles;
-
-	// TODO Remove me when you figure out the problem with the particle definition
-	//em.m_particleDef.Set(a_def);
 	em.m_particleDef.SetDefault();
+	em.m_particleDef.Set(a_def);
 
 	for (int i = 0; i < a_numParticles; ++i)
 	{
-		em.m_particles[i].m_pos = Vector(0.0f, -200.0f - (i * 0.02f), 10.0f + (i * 0.03f));
-		em.m_particles[i].m_colour = Colour(1.0f, 0.0f, 1.0f, 1.0f);
-		em.m_particles[i].m_life = m_renderTime;
+		em.m_particles[i].m_pos = em.m_particleDef.m_startPos.GetRandom();
+		em.m_particles[i].m_colour = em.m_particleDef.m_startColour.GetRandom();
+		em.m_particles[i].m_life = 0.0f;
 		em.m_particles[i].m_velocity = Vector(MathUtils::RandFloat(), MathUtils::RandFloat(), MathUtils::RandFloat());
 		em.m_indicies[i] = i;
 	}

@@ -72,6 +72,57 @@ namespace RenderObjectType
 	};
 }
 
+//\brief Data that the user authors for each particle system
+struct ParticleDefinition
+{
+	ParticleDefinition()
+		: m_lifeTime(-1.0f)
+		, m_startPos(0.0f)
+		, m_startSize(-1.0f)
+		, m_endSize(-1.0f)
+		, m_startColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
+		, m_endColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
+		, m_startVel(Vector(0.0f, 0.0f, 0.0f))
+		, m_endVel(Vector(0.0f, 0.0f, 0.0f))
+	{}
+
+	inline void SetDefault()
+	{
+		m_lifeTime = Range<float>(0.5f, 2.0f);
+		m_startPos = Range<Vector>(Vector(0.0f), Vector(1.0f));
+		m_startSize = Range<float>(0.25f, 0.5f);
+		m_endSize = Range<float>(9.0f, 10.0f);
+		m_startColour = Range<Colour>(Colour(1.0f, 1.0f, 1.0f, 0.75f), Colour(1.0f, 1.0f, 1.0f, 1.0f));
+		m_endColour = Range<Colour>(Colour(0.0f, 1.0f, 1.0f, 1.0f));
+		m_startVel = Range<Vector>(Vector(-1.0f, -1.0f, -1.0f), Vector(1.0f, 1.0f, 1.0f));
+		m_endVel = Range<Vector>(Vector(0.0f, 0.0f, 0.0f), Vector(0.25f, 0.25f, 0.25f));
+	}
+
+	inline void Set(const ParticleDefinition & a_def)
+	{
+		if (a_def.m_lifeTime.IsValid())				{ m_lifeTime = a_def.m_lifeTime; }
+		if (a_def.m_startPos.IsValid())				{ m_startPos = a_def.m_startPos; }
+		if (a_def.m_startSize.IsValid())			{ m_startSize = a_def.m_startSize; }
+		if (a_def.m_endSize.IsValid())				{ m_endSize = a_def.m_endSize; }
+		if (a_def.m_startColour.IsValid())			{ m_startColour = a_def.m_startColour; }
+		if (a_def.m_endColour.IsValid())			{ m_endColour = a_def.m_endColour; }
+		if (a_def.m_startVel.IsValid())				{ m_startVel = a_def.m_startVel; }
+		if (a_def.m_endVel.IsValid())				{ m_endVel = a_def.m_endVel; }
+	}
+
+	static const int s_maxProperties = 8;
+	static const char * s_propertyNames[s_maxProperties];
+
+	Range<float> m_lifeTime;
+	Range<Vector> m_startPos;
+	Range<float> m_startSize;
+	Range<float> m_endSize;
+	Range<Colour> m_startColour;
+	Range<Colour> m_endColour;
+	Range<Vector> m_startVel;
+	Range<Vector> m_endVel;
+};
+
 //\brief RenderManager separates rendering from the rest of the engine by wrapping all 
 //		 calls to OpenGL with some abstract concepts like rendering quads, primitives and meshes
 class RenderManager : public Singleton<RenderManager>
@@ -208,7 +259,7 @@ public:
 	//\param a_numParticles the maximum particles that can be alive at once for this emitter
 	//\param a_emissionRate how many particles should be emitted per second
 	//\param a_lifeTime the life of the emitter
-	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime/*, const ParticleDefinition & a_def*/);
+	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime, const ParticleDefinition & a_def);
 	void RemoveAllParticleEmitters();
 
 	//\brief Add a line to the debug renderLayer
@@ -453,50 +504,6 @@ private:
 		Vector m_scale;
 	};
 
-	//\brief Data that the user authors for each particle system
-	struct ParticleDefinition
-	{
-		ParticleDefinition()
-			: m_lifeTime(-1.0f)
-			, m_startSize(-1.0f)
-			, m_endSize(-1.0f)
-			, m_startColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
-			, m_endColour(Colour(0.0f, 0.0f, 0.0f, 0.0f))
-			, m_startVel(Vector(0.0f, 0.0f, 0.0f))
-			, m_endVel(Vector(0.0f, 0.0f, 0.0f))
-		{}
-
-		inline void SetDefault()
-		{
-			m_lifeTime = Range<float>(0.5f, 2.0f);
-			m_startSize = Range<float>(0.25f, 0.5f);
-			m_endSize = Range<float>(9.0f, 10.0f);
-			m_startColour = Range<Colour>(Colour(1.0f, 1.0f, 1.0f, 0.75f), Colour(1.0f, 1.0f, 1.0f, 1.0f));
-			m_endColour = Range<Colour>(Colour(0.0f, 1.0f, 1.0f, 1.0f));
-			m_startVel = Range<Vector>(Vector(-1.0f, -1.0f, -1.0f), Vector(1.0f, 1.0f, 1.0f));
-			m_endVel = Range<Vector>(Vector(0.0f, 0.0f, 0.0f), Vector(0.25f, 0.25f, 0.25f));
-		}
-
-		inline void Set(const ParticleDefinition & a_def)
-		{
-			if (a_def.m_lifeTime.IsValid())				{ m_lifeTime = a_def.m_lifeTime; }
-			if (a_def.m_startSize.IsValid())			{ m_startSize = a_def.m_startSize; }
-			if (a_def.m_endSize.IsValid())				{ m_endSize = a_def.m_endSize; }
-			if (a_def.m_startColour.IsValid())			{ m_startColour = a_def.m_startColour; }
-			if (a_def.m_endColour.IsValid())			{ m_endColour = a_def.m_endColour; }
-			if (a_def.m_startVel.IsValid())				{ m_startVel = a_def.m_startVel; }
-			if (a_def.m_endVel.IsValid())				{ m_endVel = a_def.m_endVel; }
-		}
-
-		Range<float> m_lifeTime;
-		Range<float> m_startSize;
-		Range<float> m_endSize;
-		Range<Colour> m_startColour;
-		Range<Colour> m_endColour;
-		Range<Vector> m_startVel;
-		Range<Vector> m_endVel;
-	};
-
 	//\brief Data associated with each particle owned by an emitter
 	struct Particle
 	{
@@ -516,7 +523,8 @@ private:
 	struct ParticleEmitter
 	{
 		ParticleEmitter() 
-			: m_lifeTime(0.0f)
+			: m_birthTime(0.0f)
+			, m_lifeTime(0.0f)
 			, m_vertexArrayId(0)
 			, m_vertexBufferId(0)
 			, m_indexBufferId(0)
@@ -554,6 +562,7 @@ private:
 		void Rebind();
 		void Unbind();
 
+		float m_birthTime;
 		float m_lifeTime;
 		unsigned int m_vertexArrayId;
 		unsigned int m_vertexBufferId;
