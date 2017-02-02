@@ -73,13 +73,16 @@ SetListenerPosition(posX, posY, posZ, dirX, dirY, dirZ, velX, velY, velZ)
 StopAllSoundsAndMusic()
 emitterId = CreateParticleEmitter(numParticles, emissionRate, lifeTime, posX, posY, posZ, 
 {
-	lifeTimeMin = 10, 
-	liveTimeMax = 15,
-	startSizeMin = 1,
-	startSizeMax = 5,
-	endSizeMin = 20,
-	endSizeMax = 30,
+	lifeTime = {5, 10},
+	startPos = { {-1, -1, -1}, {1, 1, 1} },
+	startSize = {1, 10},
+	endSize = {6, 8},
+	startColour = { {0, 0.403, 0.5, 1.0}, {0, 0.413, 0.49, 1.0} },
+	endColour = { {0, 0.403, 0.5, 0.0}, {0, 0.413, 0.49, 0.0} },
+	startVel = { {-20, -20, -20}, {20, 20, 20} },
+	endVel = { {-1, -1, -1}, {1, 1, 1} },
 })
+MoveParticleEmitter(emitterId, posX, posY, posZ)
 
 Debugging
 ---------

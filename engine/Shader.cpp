@@ -65,9 +65,11 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, co
 		glAttachShader(m_shader, m_geometryShader);
 
 		glBindAttribLocation(m_shader, 0, "ParticlePosition");
-		glBindAttribLocation(m_shader, 1, "ParticleColour");
-		glBindAttribLocation(m_shader, 2, "ParticleLife");
-		glBindAttribLocation(m_shader, 3, "ParticleVelocity");
+		glBindAttribLocation(m_shader, 1, "ParticleVelocity");
+		glBindAttribLocation(m_shader, 2, "ParticleColour");
+		glBindAttribLocation(m_shader, 3, "ParticleSize");
+		glBindAttribLocation(m_shader, 4, "ParticleLifeTime");
+		glBindAttribLocation(m_shader, 5, "ParticleBirthTime");
 
 		glLinkProgram(m_shader);
 
@@ -81,6 +83,7 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, co
 		m_gBuffer6.Init(m_shader, "GBuffer6");
 		m_time.Init(m_shader, "Time");
 		m_lifeTime.Init(m_shader, "LifeTime");
+		m_birthTime.Init(m_shader, "BirthTime");
 		m_shaderData.Init(m_shader, "ShaderData");
 		m_objectMatrix.Init(m_shader, "ObjectMatrix");
 		m_viewMatrix.Init(m_shader, "ViewMatrix");
@@ -117,6 +120,7 @@ bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, co
 		m_numActiveLights.Init(m_shader, "NumActiveLights");
 		m_time.Init(m_shader, "Time");
 		m_lifeTime.Init(m_shader, "LifeTime");
+		m_birthTime.Init(m_shader, "BirthTime");
 		m_frameTime.Init(m_shader, "FrameTime");
 		m_viewWidth.Init(m_shader, "ViewWidth");
 		m_viewHeight.Init(m_shader, "ViewHeight");
@@ -232,6 +236,7 @@ void Shader::UseShader(const UniformData & a_data)
 	glUniform1i(m_numActiveLights.m_id, numActiveLights);
 	glUniform1f(m_time.m_id, a_data.m_time);
 	glUniform1f(m_lifeTime.m_id, a_data.m_lifeTime);
+	glUniform1f(m_birthTime.m_id, a_data.m_birthTime);
 	glUniform1f(m_frameTime.m_id, a_data.m_frameTime);
 	glUniform1f(m_viewWidth.m_id, a_data.m_viewWidth);
 	glUniform1f(m_viewHeight.m_id, a_data.m_viewHeight);

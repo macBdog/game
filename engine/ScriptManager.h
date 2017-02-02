@@ -111,6 +111,7 @@ private:
 	static int GetDirectoryListing(lua_State * a_luaState);
 	static int GetFileBytes(lua_State * a_luaState);
 	static int CreateParticleEmitter(lua_State * a_luaState);
+	static int MoveParticleEmitter(lua_State * a_luaState);
 
 	static int Draw3DText(lua_State * a_luaState);
 

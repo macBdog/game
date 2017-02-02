@@ -91,6 +91,7 @@ public:
 						, m_materialShininess(1024)
 						, m_time(a_time)
 						, m_lifeTime(a_lifeTime)
+						, m_birthTime(0.0f)
 						, m_frameTime(a_frameTime)
 						, m_viewWidth(a_viewWidth)
 						, m_viewHeight(a_viewHeight)
@@ -117,6 +118,7 @@ public:
 		int m_materialShininess;
 		float m_time;					///< How much time in seconds has passed since the app has started
 		float m_lifeTime;				///< How much time in seconds has passed since the object using the shader was initialised
+		float m_birthTime;				///< At what render time an object or particle emitter became active
 		float m_frameTime;				///< How much time in seconds has passed since the last frame was drawn
 		float m_viewWidth;				///< Framebuffer render resolution width
 		float m_viewHeight;				///< Framebuffer render resolution height
@@ -179,6 +181,7 @@ private:
 	Uniform<int> m_numActiveLights;
 	Uniform<float> m_time;
 	Uniform<float> m_lifeTime;
+	Uniform<float> m_birthTime;
 	Uniform<float> m_frameTime;
 	Uniform<float> m_viewWidth;
 	Uniform<float> m_viewHeight;

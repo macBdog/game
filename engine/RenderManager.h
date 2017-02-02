@@ -259,7 +259,8 @@ public:
 	//\param a_numParticles the maximum particles that can be alive at once for this emitter
 	//\param a_emissionRate how many particles should be emitted per second
 	//\param a_lifeTime the life of the emitter
-	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime, const ParticleDefinition & a_def);
+	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime, const Vector & a_emitterPos, const ParticleDefinition & a_def);
+	void SetParticleEmitterPosition(int a_emitterId, const Vector & a_newPos);
 	void RemoveAllParticleEmitters();
 
 	//\brief Add a line to the debug renderLayer
@@ -509,14 +510,18 @@ private:
 	{
 		Particle()
 			: m_pos(0.0f, 0.0f, 0.0f)
-			, m_colour(0.0f, 0.0f, 0.0f, 0.0f)
-			, m_life(0.0f)
 			, m_velocity(0.0f, 0.0f, 0.0f)
+			, m_colour(0.0f, 0.0f, 0.0f, 0.0f)
+			, m_size(0.0f)
+			, m_lifeTime(0.0f)
+			, m_birthTime(0.0f)
 		{}
 		Vector m_pos;
-		Colour m_colour;
-		float m_life;
 		Vector m_velocity;
+		Colour m_colour;
+		float m_size;
+		float m_lifeTime;
+		float m_birthTime;
 	};
 
 	// Owns a vertex buffer with each vert being a particle, system is on the GPU
@@ -529,6 +534,7 @@ private:
 			, m_vertexBufferId(0)
 			, m_indexBufferId(0)
 			, m_textureId(0)
+			, m_position(0.0f)
 			, m_particles(nullptr)
 			, m_indicies(nullptr)
 			, m_numParticles(0)
@@ -568,6 +574,7 @@ private:
 		unsigned int m_vertexBufferId;
 		unsigned int m_indexBufferId;
 		int m_textureId;
+		Vector m_position;
 		Particle * m_particles;
 		unsigned int* m_indicies;
 		int m_numParticles;

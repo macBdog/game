@@ -168,6 +168,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightSpecular", SetLightSpecular);
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
 		lua_register(m_globalLua, "CreateParticleEmitter", CreateParticleEmitter);
+		lua_register(m_globalLua, "MoveParticleEmitter", MoveParticleEmitter);
 
 		lua_register(m_globalLua, "Draw3DText", Draw3DText);
 
@@ -1569,6 +1570,7 @@ int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
 			bool vectorType = propIndex == 1 || propIndex == 6 || propIndex == 7;
 			bool colourType = propIndex == 4 || propIndex == 5;
 			
+			// Push each value from each table onto the top of the stack and pop it off when done
 			if (numberType)
 			{
 				lua_rawgeti(a_luaState, -1, 1);
@@ -1581,11 +1583,79 @@ int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
 			}
 			else if (vectorType)
 			{
+				lua_rawgeti(a_luaState, -1, 1);
+				{
+					lua_rawgeti(a_luaState, -1, 1);
+					vectorVal.m_low.SetX((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
 
+					lua_rawgeti(a_luaState, -1, 2);
+					vectorVal.m_low.SetY((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 3);
+					vectorVal.m_low.SetZ((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+				}
+				lua_pop(a_luaState, 1);
+
+				lua_rawgeti(a_luaState, -1, 2);
+				{
+					lua_rawgeti(a_luaState, -1, 1);
+					vectorVal.m_hi.SetX((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 2);
+					vectorVal.m_hi.SetY((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 3);
+					vectorVal.m_hi.SetZ((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+				}
+				lua_pop(a_luaState, 1);
 			}
 			else if (colourType)
 			{
+				lua_rawgeti(a_luaState, -1, 1);
+				{
+					lua_rawgeti(a_luaState, -1, 1);
+					colourVal.m_low.SetR((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
 
+					lua_rawgeti(a_luaState, -1, 2);
+					colourVal.m_low.SetG((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 3);
+					colourVal.m_low.SetB((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 4);
+					colourVal.m_low.SetA((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+				}
+				lua_pop(a_luaState, 1);
+
+				lua_rawgeti(a_luaState, -1, 2);
+				{
+					lua_rawgeti(a_luaState, -1, 1);
+					colourVal.m_hi.SetR((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 2);
+					colourVal.m_hi.SetG((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 3);
+					colourVal.m_hi.SetB((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+
+					lua_rawgeti(a_luaState, -1, 4);
+					colourVal.m_hi.SetA((float)lua_tonumber(a_luaState, -1));
+					lua_pop(a_luaState, 1);
+				}
+				lua_pop(a_luaState, 1);
 			}
 			
 			lua_pop(a_luaState, 1);
@@ -1607,13 +1677,35 @@ int ScriptManager::CreateParticleEmitter(lua_State * a_luaState)
 		}
 
 		// Add the emitter
-		const int emitterId = RenderManager::Get().AddParticleEmitter(numParticles, emissionRate, lifeTime, pd);
+		const int emitterId = RenderManager::Get().AddParticleEmitter(numParticles, emissionRate, lifeTime, Vector(posX, posY, posZ), pd);
 		lua_pushnumber(a_luaState, emitterId);
 		return 1;
 	}
 	else
 	{
 		LogScriptError(a_luaState, "CreateParticleEmitter", "expects 7 parameters: numParticles, emissionRate, lifeTime, posX, posY, posZ, particleDefTable.");
+	}
+	return 0;
+}
+
+int ScriptManager::MoveParticleEmitter(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+		const int emitterId = (int)lua_tonumber(a_luaState, 1);
+		const float posX = (float)lua_tonumber(a_luaState, 2);
+		const float posY = (float)lua_tonumber(a_luaState, 3);
+		const float posZ = (float)lua_tonumber(a_luaState, 4);
+		RenderManager::Get().SetParticleEmitterPosition(emitterId, Vector(posX, posY, posZ));
+		return 0;
+	}
+	else
+	{
+		LogScriptError(a_luaState, "MoveParticleEmitter", "expects 4 parameters: ID of emitter then posX, posY, posZ.");
 	}
 	return 0;
 }
