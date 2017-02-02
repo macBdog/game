@@ -244,10 +244,10 @@ int main(int argc, char *argv[])
     }
 
 	// Create an OpenGL context associated with the window.
+	SDL_GLContext glcontext = SDL_GL_CreateContext(sdlWindow);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-	SDL_GLContext glcontext = SDL_GL_CreateContext(sdlWindow);
-
+	
 	// Hide the mouse cursor
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	
