@@ -261,7 +261,8 @@ public:
 	//\param a_lifeTime the life of the emitter
 	int AddParticleEmitter(int a_numParticles, float a_emissionRate, float a_lifeTime, const Vector & a_emitterPos, const ParticleDefinition & a_def);
 	void SetParticleEmitterPosition(int a_emitterId, const Vector & a_newPos);
-	void RemoveAllParticleEmitters();
+	void DestroyParticleEmitter(int a_emitterId);
+	void DestroyAllParticleEmitters();
 
 	//\brief Add a line to the debug renderLayer
 	//\param Vector a_point1 start of the line
@@ -528,8 +529,8 @@ private:
 	struct ParticleEmitter
 	{
 		ParticleEmitter() 
-			: m_birthTime(0.0f)
-			, m_lifeTime(0.0f)
+			: m_birthTime(-1.0f)
+			, m_lifeTime(-1.0f)
 			, m_vertexArrayId(0)
 			, m_vertexBufferId(0)
 			, m_indexBufferId(0)

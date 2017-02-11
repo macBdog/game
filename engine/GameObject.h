@@ -145,6 +145,7 @@ public:
 	void SetTemplate(const char * a_templateName);
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
+	inline void MulScale(const Vector & a_newScale) { m_worldMat.MulScale(a_newScale); }
 	inline void RemoveScale() { m_worldMat.RemoveScale(); }
 	void SetRot(const Vector & a_newRot);
 	void SetRot(const Quaternion & a_rot);

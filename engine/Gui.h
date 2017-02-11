@@ -35,6 +35,9 @@ public:
 	//\param a_dt is the time since the last frame was drawn
 	bool Update(float a_dt);
 
+	//\brief Called when the script is reloaded
+	void ReloadMenus();
+
 	//\ingroup Widget lifecycle functions
 	//\brief Allocate memory for a widget and return a pointer to it
 	//return A pointer to the newly created widget if succesfull otherwise NULL

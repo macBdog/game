@@ -72,10 +72,12 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"SetPosition", SetGameObjectPosition},
 	{"GetRotation", GetGameObjectRotation},
 	{"SetRotation", SetGameObjectRotation},
+	{"SetLookAt", SetGameObjectLookAt},
 	{"SetAttachedTo", SetAttachedTo },
 	{"SetAttachedToCamera", SetAttachedToCamera },
 	{"GetScale", GetGameObjectScale},
 	{"SetScale", SetGameObjectScale},
+	{"MultiplyScale", MultiplyGameObjectScale },
 	{"ResetScale", ResetGameObjectScale},
 	{"GetLifeTime", GetGameObjectLifeTime},
 	{"SetLifeTime", SetGameObjectLifeTime},
@@ -169,6 +171,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		lua_register(m_globalLua, "SetLightPosition", SetLightPosition);
 		lua_register(m_globalLua, "CreateParticleEmitter", CreateParticleEmitter);
 		lua_register(m_globalLua, "MoveParticleEmitter", MoveParticleEmitter);
+		lua_register(m_globalLua, "DestroyParticleEmitter", DestroyParticleEmitter);
 
 		lua_register(m_globalLua, "Draw3DText", Draw3DText);
 
@@ -386,7 +389,9 @@ bool ScriptManager::Update(float a_dt)
 					SoundManager::Get().StopAllSoundsAndMusic();
 
 					// Remove anything with state from rendering
-					RenderManager::Get().RemoveAllParticleEmitters();
+					RenderManager::Get().DestroyAllParticleEmitters();
+
+					Gui::Get().ReloadMenus();
 
 					// Kick the script VM in the guts
 					Shutdown();
@@ -904,7 +909,12 @@ int ScriptManager::SetCameraRotation(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 2, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		const Vector newRot((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
-		CameraManager::Get().SetRotation(newRot);
+
+		Quaternion rotation(newRot);
+		Matrix rotMat = Matrix::Identity();
+		rotation.ApplyToMatrix(rotMat);
+		Vector newTarget = rotMat.TransformInverse(Vector(0.0f, Camera::sc_defaultCameraTargetDistance, 0.0f));
+		CameraManager::Get().SetTarget(CameraManager::Get().GetWorldPos() + newTarget);
 	}
 	else // Wrong number of parms
 	{
@@ -1710,6 +1720,22 @@ int ScriptManager::MoveParticleEmitter(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::DestroyParticleEmitter(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 1)
+	{
+		luaL_checktype(a_luaState, 1, LUA_TNUMBER);
+		const int emitterId = (int)lua_tonumber(a_luaState, 1);
+		RenderManager::Get().DestroyParticleEmitter(emitterId);
+		return 0;
+	}
+	else
+	{
+		LogScriptError(a_luaState, "DestroyParticleEmitter", "expects 1 parameters: ID of emitter.");
+	}
+	return 0;
+}
+
 int ScriptManager::GUIGetValue(lua_State * a_luaState)
 {
 	char strValue[StringUtils::s_maxCharsPerName];
@@ -2225,7 +2251,7 @@ int ScriptManager::DebugPoint(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
 		Vector pos((float)lua_tonumber(a_luaState, 1), (float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3)); 
 		Colour col((float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6), 1.0f);
-		RenderManager::Get().AddDebugSphere(pos, 0.01f, col);
+		RenderManager::Get().AddDebugSphere(pos, 1.0f, col);
 	}
 	return 0;
 }
@@ -2447,6 +2473,30 @@ int ScriptManager::SetGameObjectRotation(lua_State * a_luaState)
 	return 0;
 }
 
+int ScriptManager::SetGameObjectLookAt(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			const Vector lookAt((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+			const Vector pos = gameObj->GetPos();
+			gameObj->SetWorldMat(Matrix::LookAtRH(gameObj->GetPos(), lookAt, pos));
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "SetLookAt", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "SetLookAt", "expects 4 number parameters of the world position to look at.");
+	}
+	return 0;
+}
 
 int ScriptManager::GetGameObjectScale(lua_State * a_luaState)
 {
@@ -2492,6 +2542,30 @@ int ScriptManager::SetGameObjectScale(lua_State * a_luaState)
 	else // Wrong number of args
 	{
 		LogScriptError(a_luaState, "SetScale", "expects 3 number parameters.");
+	}
+	return 0;
+}
+
+int ScriptManager::MultiplyGameObjectScale(lua_State * a_luaState)
+{
+	if (lua_gettop(a_luaState) == 4)
+	{
+		if (GameObject * gameObj = CheckGameObject(a_luaState))
+		{
+			luaL_checktype(a_luaState, 2, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 3, LUA_TNUMBER);
+			luaL_checktype(a_luaState, 4, LUA_TNUMBER);
+			Vector newScale((float)lua_tonumber(a_luaState, 2), (float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
+			gameObj->MulScale(newScale);
+		}
+		else // Object not found, destroyed?
+		{
+			LogScriptError(a_luaState, "MultiplyScale", "could not find game object referred to.");
+		}
+	}
+	else // Wrong number of args
+	{
+		LogScriptError(a_luaState, "MultiplyScale", "expects 3 number parameters.");
 	}
 	return 0;
 }
@@ -2570,14 +2644,10 @@ int ScriptManager::SetAttachedToCamera(lua_State * a_luaState)
 				Quaternion qOffsetRot = Quaternion(offsetRot);
 
 				// Construct a new object matrix as the camera looks down the up vector
-				Matrix & cameraMat = CameraManager::Get().GetCameraMatrix();
-				Matrix newGameObjMat = Matrix::Identity();
-				newGameObjMat.SetRight(cameraMat.GetRight());
-				newGameObjMat.SetLook(cameraMat.GetUp());
-				newGameObjMat.SetUp(cameraMat.GetLook());
-				qOffsetRot.ApplyToMatrix(newGameObjMat);
+				const Matrix & cameraMat = CameraManager::Get().GetCameraMatrix();
+				Matrix newGameObjMat = Matrix::LookAtRH(Vector::Zero(), -cameraMat.GetUp(), cameraMat.GetPos());
 				offsetPos = newGameObjMat.Transform(offsetPos);
-				newGameObjMat.SetPos(cameraMat.GetPos() + offsetPos);
+				newGameObjMat.SetPos(newGameObjMat.GetPos() + offsetPos);
 				gameObj->SetWorldMat(newGameObjMat);
 			}
 			else // Object not found, destroyed?
@@ -3139,7 +3209,9 @@ int ScriptManager::PlayGameObjectAnimation(lua_State * a_luaState)
 
 int ScriptManager::GetGameObjectTransformedPos(lua_State * a_luaState)
 {
-	float x, y, z = 0.0f;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
 	if (lua_gettop(a_luaState) == 4)
 	{
 		if (GameObject * gameObj = CheckGameObject(a_luaState))

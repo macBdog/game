@@ -74,6 +74,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 		m_startupMenu = m_menus.GetHead()->GetData();
 	}
 	m_activeMenu = m_startupMenu;
+	m_activeMenu->SetActive();
 
 	// Setup the mouse cursor element if present in config file
 	m_cursor.SetActive(false);
@@ -144,6 +145,14 @@ bool Gui::Update(float a_dt)
 	}
 	
 	return true;
+}
+
+void Gui::ReloadMenus()
+{
+	UnloadMenus();
+	LoadMenus(m_guiPath, nullptr);
+	m_activeMenu = m_startupMenu;
+	m_activeMenu->SetActive();
 }
 
 Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive)

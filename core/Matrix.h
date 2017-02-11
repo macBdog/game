@@ -23,6 +23,13 @@ public:
 				f[8]=a_8;	f[9]=a_9;	f[10]=a_10; f[11]=a_11; 
 				f[12]=a_12; f[13]=a_13; f[14]=a_14; f[15]=a_15; 
 			}
+	Matrix(const Vector & a_right, const Vector & a_look, const Vector & a_up, const Vector & a_pos) : right(a_right), look(a_look), up(a_up), pos(a_pos) 
+	{
+		f[3] = 0.0f;
+		f[7] = 0.0f;
+		f[11] = 0.0f;
+		f[15] = 1.0f;
+	}
 	inline float GetValue(unsigned int a_row, unsigned int a_col) const			{ return row[a_row][a_col]; }
 	inline float GetValue(unsigned int a_index) const							{ return f[a_index]; }
 	inline float * GetValues() { return &f[0]; }
@@ -249,6 +256,17 @@ public:
 							-((a_right+a_left)/(a_right-a_left)), -((a_top+a_bottom)/(a_top-a_bottom)), -((a_zFar+a_zNear)/(a_zFar/a_zNear)), 1.0f };
 		return Matrix(vals);
 	}
+	static const Matrix LookAtRH(const Vector & a_lookFrom, const Vector & a_lookAt, const Vector & a_pos)
+	{
+		Matrix mOut;
+		Vector look = a_lookAt - a_lookFrom;
+		look.Normalise();
+		Vector right = look.Cross(Vector::Up());
+		right.Normalise();
+		Vector up = right.Cross(look);
+		up.Normalise();
+		return Matrix(right, look, up, a_pos);
+	}
 	inline Matrix Multiply(const Matrix & a_mat) const
 	{
 		Matrix mOut;
@@ -327,7 +345,16 @@ public:
 	}
 	inline Vector Transform(const Vector & a_vec)
 	{
-		 return Vector(	a_vec.GetX() * row[0][0] + a_vec.GetY() * row[0][1] + a_vec.GetZ() * row[0][2],
+		const float & x = a_vec.GetX();
+		const float & y = a_vec.GetY();
+		const float & z = a_vec.GetZ();
+		return Vector(	right.GetX() * x + look.GetX() * y + up.GetX() * z,
+						right.GetY() * x + look.GetY()  * y + up.GetY() * z,
+						right.GetZ() * x + look.GetZ() * y + up.GetZ() * z);
+	}
+	inline Vector TransformInverse(const Vector & a_vec)
+	{
+		return Vector(	a_vec.GetX() * row[0][0] + a_vec.GetY() * row[0][1] + a_vec.GetZ() * row[0][2],
 						a_vec.GetX() * row[1][0] + a_vec.GetY() * row[1][1] + a_vec.GetZ() * row[1][2],
 						a_vec.GetX() * row[2][0] + a_vec.GetY() * row[2][1] + a_vec.GetZ() * row[2][2]);
 	}

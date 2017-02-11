@@ -112,6 +112,7 @@ private:
 	static int GetFileBytes(lua_State * a_luaState);
 	static int CreateParticleEmitter(lua_State * a_luaState);
 	static int MoveParticleEmitter(lua_State * a_luaState);
+	static int DestroyParticleEmitter(lua_State * a_luaState);
 
 	static int Draw3DText(lua_State * a_luaState);
 
@@ -162,8 +163,10 @@ private:
 	static int SetGameObjectPosition(lua_State * a_luaState);
 	static int GetGameObjectRotation(lua_State * a_luaState);
 	static int SetGameObjectRotation(lua_State * a_luaState);
+	static int SetGameObjectLookAt(lua_State * a_luaState);
 	static int GetGameObjectScale(lua_State * a_luaState);
 	static int SetGameObjectScale(lua_State * a_luaState);
+	static int MultiplyGameObjectScale(lua_State * a_luaState);
 	static int ResetGameObjectScale(lua_State * a_luaState);
 	static int SetAttachedTo(lua_State * a_luaState);
 	static int SetAttachedToCamera(lua_State * a_luaState);

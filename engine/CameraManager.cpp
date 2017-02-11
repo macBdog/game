@@ -64,7 +64,7 @@ void CameraManager::Update(float a_dt)
 				Quaternion rotation(m_debugMouseLookAngleEuler);
 				Matrix rotMat = Matrix::Identity();
 				rotation.ApplyToMatrix(rotMat);
-				Vector newTarget = rotMat.Transform(Vector(0.0f, Camera::sc_defaultCameraTargetDistance, 0.0f));
+				Vector newTarget = rotMat.TransformInverse(Vector(0.0f, Camera::sc_defaultCameraTargetDistance, 0.0f));
 				m_currentCamera->SetTarget(camPos + newTarget);
 
 				m_debugOrientationInput = curInput;

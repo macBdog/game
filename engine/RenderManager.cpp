@@ -575,15 +575,16 @@ bool RenderManager::Update(float a_dt)
 	m_lastRenderTime = a_dt;
 	m_renderTime += a_dt;
 
-	// Update and recycle particle systems
-	const int currentNumEmitters = m_numParticleEmitters;
-	for (int i = currentNumEmitters; i >= 0; --i)
+	// Update and recycle particle systems from the end
+	if (m_numParticleEmitters > 0)
 	{
-		ParticleEmitter & em = m_particleEmitters[i];
-		if (em.m_birthTime > 0.0f)
+		ParticleEmitter & em = m_particleEmitters[m_numParticleEmitters - 1];
+		if (em.m_lifeTime >= 0.0f && em.m_birthTime >= 0.0f)
 		{
 			if (m_renderTime > em.m_birthTime + em.m_lifeTime)
 			{
+				em.m_birthTime = -1.0f;
+				em.m_lifeTime = -1.0f;
 				--m_numParticleEmitters;
 			}
 		}
@@ -878,17 +879,20 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	// Visualise what's in the gbuffers when editing
 	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
-		const int borderSize = 20;
-		const GLint rtSizeX = (GLint)(m_viewWidth - borderSize * (s_numRenderTargets + 1)) / s_numRenderTargets;
-		const GLint rtSizeY = (GLint)m_viewHeight / s_numRenderTargets;
-		for (int i = 0; i < s_numRenderTargets; ++i)
+		if (!DebugMenu::Get().IsDebugMenuActive())
 		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_colourBuffers[RenderStage::Scene]);
-			glDrawBuffers(1, m_mrtAttachments);
-			glReadBuffer(GL_COLOR_ATTACHMENT1 + i);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			GLint xImageStart = borderSize + (i * (rtSizeX + borderSize));
-			glBlitFramebuffer(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight, xImageStart, borderSize, xImageStart + rtSizeX, rtSizeY, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			const int borderSize = 20;
+			const GLint rtSizeX = (GLint)(m_viewWidth - borderSize * (s_numRenderTargets + 1)) / s_numRenderTargets;
+			const GLint rtSizeY = (GLint)m_viewHeight / s_numRenderTargets;
+			for (int i = 0; i < s_numRenderTargets; ++i)
+			{
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, m_colourBuffers[RenderStage::Scene]);
+				glDrawBuffers(1, m_mrtAttachments);
+				glReadBuffer(GL_COLOR_ATTACHMENT1 + i);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				GLint xImageStart = borderSize + (i * (rtSizeX + borderSize));
+				glBlitFramebuffer(0, 0, (GLint)m_viewWidth, (GLint)m_viewHeight, xImageStart, borderSize, xImageStart + rtSizeX, rtSizeY, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
 		}
 	}
 #endif
@@ -1142,13 +1146,16 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			for (int j = 0; j < m_numParticleEmitters; ++j)
 			{
 				ParticleEmitter & em = m_particleEmitters[j];
-				shaderData.m_lifeTime = em.m_lifeTime;
-				shaderData.m_birthTime = em.m_birthTime;
-				particleMat.SetPos(em.m_position);
-				shaderData.m_objectMatrix = &particleMat;
-				pLastShader->UseShader(shaderData);
-				glBindVertexArray(em.m_vertexArrayId);
-				glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
+				if (em.m_birthTime >= 0.0f && m_renderTime >= em.m_birthTime)
+				{
+					shaderData.m_lifeTime = em.m_lifeTime;
+					shaderData.m_birthTime = em.m_birthTime;
+					particleMat.SetPos(em.m_position);
+					shaderData.m_objectMatrix = &particleMat;
+					pLastShader->UseShader(shaderData);
+					glBindVertexArray(em.m_vertexArrayId);
+					glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
+				}
 			}
 		}
 		
@@ -1218,7 +1225,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 
 		// Draw transforms in the current renderLayer
 		DebugTransform * tr = m_debugTransforms[i];
-		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
+		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugTransforms]; ++j)
 		{
 			shaderData.m_objectMatrix = &tr->m_mat;
 			m_colourShader->UseShader(shaderData);
@@ -1632,7 +1639,7 @@ int RenderManager::AddParticleEmitter(int a_numParticles, float a_emissionRate, 
 	int nextEmitterId = 0;
 	for (int i = 0; i < s_maxParticleEmitters; ++i)
 	{
-		if (m_particleEmitters[i].m_lifeTime <= 0.0f)
+		if (m_particleEmitters[i].m_lifeTime < 0.0f && m_particleEmitters[i].m_birthTime < 0.0f)
 		{
 			nextEmitterId = i;
 			break;
@@ -1695,16 +1702,33 @@ void RenderManager::SetParticleEmitterPosition(int a_emitterId, const Vector & a
 	if (a_emitterId >= 0 && a_emitterId < m_numParticleEmitters)
 	{
 		ParticleEmitter & em = m_particleEmitters[a_emitterId];
-		em.m_position = a_newPos;
+		if (em.m_birthTime >= 0.0f && em.m_lifeTime >= 0.0f)
+		{
+			em.m_position = a_newPos;
+		}
 	}
 }
 
-void RenderManager::RemoveAllParticleEmitters()
+void RenderManager::DestroyParticleEmitter(int a_emitterId)
+{
+	if (a_emitterId >= 0 && a_emitterId < m_numParticleEmitters)
+	{
+		ParticleEmitter & em = m_particleEmitters[a_emitterId];
+		if (em.m_birthTime >= 0.0f && em.m_lifeTime >= 0.0f)
+		{
+			em.m_lifeTime = -1.0f;
+			em.m_birthTime = -1.0f;
+		}
+	}
+}
+
+void RenderManager::DestroyAllParticleEmitters()
 {
 	for (unsigned int i = 0; i < s_maxParticleEmitters; ++i)
 	{
 		ParticleEmitter & em = m_particleEmitters[i];
 		em.m_lifeTime = -1.0f;
+		em.m_birthTime = -1.0f;
 	}
 	m_numParticleEmitters = 0;
 }

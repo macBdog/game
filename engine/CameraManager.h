@@ -72,8 +72,9 @@ public:
 	void Update(float a_dt);
 
 	//\brief Accessors for rendering 
-	inline Matrix GetCameraMatrix() const { return m_currentCamera->GetCameraMatrix(); }
-	inline Vector GetWorldPos() const { return m_currentCamera->GetPosition(); }
+	inline const Matrix & GetCameraMatrix() const { return m_currentCamera->GetCameraMatrix(); }
+	inline const Vector & GetWorldPos() const { return m_currentCamera->GetPosition(); }
+	inline const Vector & GetTarget() const { return m_currentCamera->GetTarget(); }
 	
 	///\brief Mutators affecting the currently active camera
 	inline void SetPosition(const Vector & a_newPos) { m_currentCamera->SetPosition(a_newPos); }

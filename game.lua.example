@@ -83,6 +83,7 @@ emitterId = CreateParticleEmitter(numParticles, emissionRate, lifeTime, posX, po
 	endVel = { {-1, -1, -1}, {1, 1, 1} },
 })
 MoveParticleEmitter(emitterId, posX, posY, posZ)
+DestroyParticleEmitter(emitterId)
 
 Debugging
 ---------
@@ -123,8 +124,10 @@ x,y,z = myGameObject:GetPosition()
 myGameObject:SetPosition(x, y, z)
 x,y,z = myGameObject:GetRotation()
 myGameObject:SetRotation(x, y, z)
+myGameObject:SetLookAt(x, y, z)
 f = myGameObject:GetScale()
 myGameObject:SetScale(x, y, z)
+myGameObject:MultiplyScale(x, y, z)
 myGameObject:SetAttachedTo(anotherGameObject, offsetPosX, offsetPosY, offsetPosZ, offsetRotX, offsetRotY, offsetRotZ)
 myGameObject:SetAttachedToCamera(offsetPosX, offsetPosY, offsetPosZ, offsetRotX, offsetRotY, offsetRotZ)
 f = myGameObject:GetLifeTime()
