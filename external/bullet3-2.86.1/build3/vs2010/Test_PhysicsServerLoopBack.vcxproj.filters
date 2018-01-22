@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="test">
+      <UniqueIdentifier>{04362BB0-08CF-6A41-BE0B-3E757C712180}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\SharedMemory">
+      <UniqueIdentifier>{3C7E3D09-A5B4-D446-B500-EFF93BBCE45C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples">
+      <UniqueIdentifier>{A97664E1-A856-B942-9DBE-46D9C43AEDAD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\SharedMemory">
+      <UniqueIdentifier>{6DEBE591-637B-5A4E-899F-6728DE3B6FAF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\OpenGLWindow">
+      <UniqueIdentifier>{916F3B79-A12D-4141-A0A0-44870AC8C512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\TinyRenderer">
+      <UniqueIdentifier>{EDD00F19-C085-054B-B1B7-28B00FAF0177}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{F6BCDB17-5BF9-0D48-BF32-137DE9B2A213}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{6FD3DDD7-133A-1941-95B3-CFAAD520B5FB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\tinyxml">
+      <UniqueIdentifier>{FA1AB43A-36DA-9848-83F3-144A8C7BB67D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Wavefront">
+      <UniqueIdentifier>{10EF3818-9F64-EF4F-A55C-063699713A0C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers">
+      <UniqueIdentifier>{17D61F32-DF76-8D40-879B-7A9B7AB03BA0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportColladaDemo">
+      <UniqueIdentifier>{C23D7776-0A85-D64A-9BDD-222248C9B64F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportObjDemo">
+      <UniqueIdentifier>{8264D918-E60F-7748-A695-3343D400760A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportMJCFDemo">
+      <UniqueIdentifier>{5A31D19C-D751-4648-9453-2E1BD6238E71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportURDFDemo">
+      <UniqueIdentifier>{421765CA-3320-AA41-9A7A-0DCDB1267A1C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportMeshUtility">
+      <UniqueIdentifier>{946B37F7-D697-E94F-BAA6-A0D3430BDB69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\stb_image">
+      <UniqueIdentifier>{13C4993A-BD92-284D-B1DD-DDBA18E42D48}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\SharedMemory\IKTrajectoryHelper.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsClient.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsServer.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsServerSharedMemory.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsServerCommandProcessor.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsLoopBack.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsLoopBackC_API.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsClientSharedMemory.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PhysicsClientC_API.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\Win32SharedMemory.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\PosixSharedMemory.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\SharedMemory\TinyRendererVisualShapeConverter.h">
+      <Filter>examples\SharedMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\SimpleCamera.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3ResourcePath.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\RobotLoggingUtil.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.h">
+      <Filter>examples\ThirdPartyLibs\Wavefront</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\test\SharedMemory\test.c">
+      <Filter>test\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\IKTrajectoryHelper.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsClient.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsServer.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsServerSharedMemory.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsServerCommandProcessor.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsLoopBack.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsLoopBackC_API.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsClientSharedMemory.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PhysicsClientC_API.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\Win32SharedMemory.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\PosixSharedMemory.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SharedMemory\TinyRendererVisualShapeConverter.cpp">
+      <Filter>examples\SharedMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\SimpleCamera.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\geometry.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\model.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\tgaimage.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\our_gl.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\TinyRenderer.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3ResourcePath.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\RobotLoggingUtil.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinystr.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxml.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlerror.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlparser.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.cpp">
+      <Filter>examples\ThirdPartyLibs\Wavefront</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportColladaDemo\LoadMeshFromCollada.cpp">
+      <Filter>examples\Importers\ImportColladaDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\LoadMeshFromObj.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\Wavefront2GLInstanceGraphicsShape.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportMJCFDemo\BulletMJCFImporter.cpp">
+      <Filter>examples\Importers\ImportMJCFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\BulletUrdfImporter.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\MyMultiBodyCreator.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\URDF2Bullet.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\UrdfParser.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\urdfStringSplit.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportMeshUtility\b3ImportMeshUtility.cpp">
+      <Filter>examples\Importers\ImportMeshUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\stb_image\stb_image.cpp">
+      <Filter>examples\ThirdPartyLibs\stb_image</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{31D77DF6-D448-FE41-B296-914BAA7C606A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{F69BFCEE-0AAA-0F41-9B7D-1372D2BA8DDD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Glew">
+      <UniqueIdentifier>{861C75B5-B399-854F-ABCD-858780985AEE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\BasicDemo">
+      <UniqueIdentifier>{81B5742C-1621-CC49-89A0-6F3F6DA506D7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\StandaloneMain">
+      <UniqueIdentifier>{78B288C8-9317-274A-A341-682AD656183B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ExampleBrowser">
+      <UniqueIdentifier>{7F6C30A2-3620-2041-9BC6-905C1F08F966}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\CommonInterfaces">
+      <UniqueIdentifier>{0542B2B5-3AF5-1B48-ABBB-3473FF0EAB5A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{1C790CCF-3B78-214F-A3A5-8EBEA7660B83}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\BasicDemo\BasicExample.h">
+      <Filter>examples\BasicDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\Common2dCanvasInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonCameraInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonExampleInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGraphicsAppInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGUIHelperInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonMultiBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonParameterInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRenderInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRigidBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonWindowInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3Clock.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Glew\glew.c">
+      <Filter>examples\ThirdPartyLibs\Glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\BasicDemo\BasicExample.cpp">
+      <Filter>examples\BasicDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\StandaloneMain\main_opengl_single_example.cpp">
+      <Filter>examples\StandaloneMain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\OpenGLGuiHelper.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\GL_ShapeDrawer.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\CollisionShape2TriangleMesh.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3Clock.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#include "GL/CAPI_GLE.h"
+#include "GL/glew.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <fstream>

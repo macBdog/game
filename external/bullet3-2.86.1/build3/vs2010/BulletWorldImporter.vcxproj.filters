@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Extras">
+      <UniqueIdentifier>{F436E6E3-47F4-4242-9E60-C69E480F7B94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize">
+      <UniqueIdentifier>{4C7D32A0-3D3A-DB48-B965-E28D324E62F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize\BulletWorldImporter">
+      <UniqueIdentifier>{0A63979E-73BD-F343-B23A-C85047362E48}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Extras\Serialize\BulletWorldImporter\btBulletWorldImporter.h">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletWorldImporter\btWorldImporter.h">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Extras\Serialize\BulletWorldImporter\btBulletWorldImporter.cpp">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletWorldImporter\btWorldImporter.cpp">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

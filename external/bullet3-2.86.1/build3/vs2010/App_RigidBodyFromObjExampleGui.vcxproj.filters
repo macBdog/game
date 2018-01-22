@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{43E44E5E-F742-474E-AD1C-5536217FC1ED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{C9ABEF4F-3803-7B46-AC4E-D15F50AB039E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Glew">
+      <UniqueIdentifier>{562E0E8C-76D1-6840-96AA-71D933783422}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ExtendedTutorials">
+      <UniqueIdentifier>{A1605B41-7B0A-3B44-87C9-4D057B047BEC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\StandaloneMain">
+      <UniqueIdentifier>{E80C3627-244A-9343-90F6-FCC244D50F78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\CommonInterfaces">
+      <UniqueIdentifier>{9FDEF5F7-EB93-0A49-8722-3E1690DC89F5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ExampleBrowser">
+      <UniqueIdentifier>{FA92A34B-B0CD-8740-BFB7-682E70F1B53E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{FF4E4CB7-EF57-134C-988F-3553737EA734}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\RenderingExamples">
+      <UniqueIdentifier>{6A607EC9-69B8-BA41-B105-00275EFFA607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\MultiBody">
+      <UniqueIdentifier>{C66CC824-C838-2D42-9488-0323D856D35F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\tinyxml">
+      <UniqueIdentifier>{40E42F2D-0940-0B4F-B25F-C49B48F592FE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Wavefront">
+      <UniqueIdentifier>{DD7FCD29-3F39-3846-ACDB-2FEE31B92894}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers">
+      <UniqueIdentifier>{9F2CDD4C-121D-994F-91EE-049E781D5AD6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportColladaDemo">
+      <UniqueIdentifier>{1752D79A-56A3-A74C-B6FC-A73F8E0B024B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportObjDemo">
+      <UniqueIdentifier>{AF17DD82-202A-3344-BB64-2F9998F50029}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportURDFDemo">
+      <UniqueIdentifier>{CA586554-26BE-9344-A09A-ECB4066F841B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportMeshUtility">
+      <UniqueIdentifier>{12D60BF9-85CE-3E40-A36C-9A48B890908C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\stb_image">
+      <UniqueIdentifier>{5582AE73-26AB-4B42-B972-6E43E67C966F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\Bridge.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\Chain.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\InclinedPlane.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\MultiPendulum.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\MultipleBoxes.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\NewtonsCradle.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\NewtonsRopeCradle.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\RigidBodyFromObj.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\SimpleBox.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\SimpleCloth.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ExtendedTutorials\SimpleJoint.h">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\Common2dCanvasInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonCameraInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonExampleInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGraphicsAppInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGUIHelperInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonMultiBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonParameterInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRenderInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRigidBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonWindowInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3ResourcePath.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.h">
+      <Filter>examples\ThirdPartyLibs\Wavefront</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3Clock.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Glew\glew.c">
+      <Filter>examples\ThirdPartyLibs\Glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExtendedTutorials\RigidBodyFromObj.cpp">
+      <Filter>examples\ExtendedTutorials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\StandaloneMain\main_opengl_single_example.cpp">
+      <Filter>examples\StandaloneMain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\OpenGLGuiHelper.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\GL_ShapeDrawer.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\CollisionShape2TriangleMesh.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3ResourcePath.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\RenderingExamples\TimeSeriesCanvas.cpp">
+      <Filter>examples\RenderingExamples</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\RenderingExamples\TimeSeriesFontData.cpp">
+      <Filter>examples\RenderingExamples</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\MultiBody\InvertedPendulumPDControl.cpp">
+      <Filter>examples\MultiBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinystr.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxml.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlerror.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlparser.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.cpp">
+      <Filter>examples\ThirdPartyLibs\Wavefront</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportColladaDemo\LoadMeshFromCollada.cpp">
+      <Filter>examples\Importers\ImportColladaDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\LoadMeshFromObj.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\Wavefront2GLInstanceGraphicsShape.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\BulletUrdfImporter.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\MyMultiBodyCreator.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\URDF2Bullet.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\UrdfParser.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\urdfStringSplit.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportMeshUtility\b3ImportMeshUtility.cpp">
+      <Filter>examples\Importers\ImportMeshUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\stb_image\stb_image.cpp">
+      <Filter>examples\ThirdPartyLibs\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3Clock.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -892,7 +892,7 @@ void Widget::DrawDebugAlignment()
 	// Draw a box around the current anchor
 	DrawDebugAlignmentHandleSelectionBox(alignPos, handleSizeVec);
 	
-	/// Get position alignment applies on the parent widget
+	// Get position alignment applies on the parent widget
 	Vector2 parentAlignPos = m_alignTo->m_drawPos;
 	switch(m_pos.m_align.m_x)
 	{

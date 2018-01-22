@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{65EDF3DE-7305-1745-A5FC-D5173B89BEC2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\clew">
+      <UniqueIdentifier>{C23BE505-289F-9843-BC92-EF5F5F23213A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL">
+      <UniqueIdentifier>{D26FF9FD-3467-F44B-B7E1-196A5C227640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\BroadphaseCollision">
+      <UniqueIdentifier>{F1CED73B-D50C-1C4D-BC85-42543A8D252D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\Initialize">
+      <UniqueIdentifier>{1E6880E7-E5EA-7143-8BEB-170B4ABA90DE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\NarrowphaseCollision">
+      <UniqueIdentifier>{78355A0C-0F91-9340-AC68-035E0CBABC04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\ParallelPrimitives">
+      <UniqueIdentifier>{453A5BB1-3DAD-FF41-A5A3-1C4A4811A4E6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\Raycast">
+      <UniqueIdentifier>{4C027869-609F-5C4A-B037-0FBAF2C50B85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\RigidBody">
+      <UniqueIdentifier>{C4A7FF2D-F1D0-2641-A506-519535903B0A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\BroadphaseCollision\kernels">
+      <UniqueIdentifier>{7C22002F-FC9D-4B49-84C3-66DC65B5FF13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\NarrowphaseCollision\kernels">
+      <UniqueIdentifier>{6F74F003-113F-3340-8D44-4EA9BC2EFEE8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\ParallelPrimitives\kernels">
+      <UniqueIdentifier>{E027547F-C485-7540-80BA-702E8ABDD5F5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\Raycast\kernels">
+      <UniqueIdentifier>{4BB8B1D3-EA39-1445-89A3-7B70339A2F5D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Bullet3OpenCL\RigidBody\kernels">
+      <UniqueIdentifier>{D96DEFA5-13BC-694A-91E8-AA54E41A98F9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\clew\clew.h">
+      <Filter>src\clew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuBroadphaseInterface.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuGridBroadphase.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuParallelLinearBvh.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuParallelLinearBvhBroadphase.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuSapBroadphase.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3SapAabb.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\kernels\gridBroadphaseKernels.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\kernels\parallelLinearBvhKernels.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\kernels\sapKernels.h">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\Initialize\b3OpenCLInclude.h">
+      <Filter>src\Bullet3OpenCL\Initialize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\Initialize\b3OpenCLUtils.h">
+      <Filter>src\Bullet3OpenCL\Initialize</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3BvhInfo.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3ContactCache.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3ConvexHullContact.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3ConvexPolyhedronCL.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3GjkEpa.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3GjkPairDetector.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3OptimizedBvh.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3QuantizedBvh.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3StridingMeshInterface.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3SupportMappings.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3TriangleCallback.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3TriangleIndexVertexArray.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3VectorFloat4.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3VoronoiSimplexSolver.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\bvhTraversal.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\mprKernels.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\primitiveContacts.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\satClipHullContacts.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\satConcaveKernels.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\kernels\satKernels.h">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3BoundSearchCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3BufferInfoCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3FillCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3LauncherCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3OpenCLArray.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3PrefixScanCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3PrefixScanFloat4CL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3RadixSort32CL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\BoundSearchKernelsCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\CopyKernelsCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\FillKernelsCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\PrefixScanKernelsCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\PrefixScanKernelsFloat4CL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\kernels\RadixSort32KernelsCL.h">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\Raycast\b3GpuRaycast.h">
+      <Filter>src\Bullet3OpenCL\Raycast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\Raycast\kernels\rayCastKernels.h">
+      <Filter>src\Bullet3OpenCL\Raycast\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuConstraint4.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuGenericConstraint.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuJacobiContactSolver.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuNarrowPhase.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuNarrowPhaseInternalData.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuPgsConstraintSolver.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuPgsContactSolver.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuRigidBodyPipeline.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuRigidBodyPipelineInternalData.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuSolverBody.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuSolverConstraint.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\b3Solver.h">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\batchingKernels.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\batchingKernelsNew.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\integrateKernel.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\jointSolver.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\solveContact.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\solveFriction.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\solverSetup.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\solverSetup2.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\solverUtils.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Bullet3OpenCL\RigidBody\kernels\updateAabbsKernel.h">
+      <Filter>src\Bullet3OpenCL\RigidBody\kernels</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\clew\clew.c">
+      <Filter>src\clew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuGridBroadphase.cpp">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuParallelLinearBvh.cpp">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuParallelLinearBvhBroadphase.cpp">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\BroadphaseCollision\b3GpuSapBroadphase.cpp">
+      <Filter>src\Bullet3OpenCL\BroadphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\Initialize\b3OpenCLUtils.cpp">
+      <Filter>src\Bullet3OpenCL\Initialize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3ContactCache.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3ConvexHullContact.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3GjkEpa.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3GjkPairDetector.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3OptimizedBvh.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3QuantizedBvh.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3StridingMeshInterface.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3TriangleCallback.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3TriangleIndexVertexArray.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\NarrowphaseCollision\b3VoronoiSimplexSolver.cpp">
+      <Filter>src\Bullet3OpenCL\NarrowphaseCollision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3BoundSearchCL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3FillCL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3LauncherCL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3PrefixScanCL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3PrefixScanFloat4CL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\ParallelPrimitives\b3RadixSort32CL.cpp">
+      <Filter>src\Bullet3OpenCL\ParallelPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\Raycast\b3GpuRaycast.cpp">
+      <Filter>src\Bullet3OpenCL\Raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuGenericConstraint.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuJacobiContactSolver.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuNarrowPhase.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuPgsConstraintSolver.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuPgsContactSolver.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3GpuRigidBodyPipeline.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Bullet3OpenCL\RigidBody\b3Solver.cpp">
+      <Filter>src\Bullet3OpenCL\RigidBody</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

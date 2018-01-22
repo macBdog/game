@@ -2,7 +2,7 @@
 #define _ENGINE_PHYSICS_MANAGER
 #pragma once
 
-#include "..\external\bullet-2.82-r2704\src\LinearMath\btIDebugDraw.h"
+#include "..\external\bullet3-2.86.1\src\LinearMath\btIDebugDraw.h"
 
 #include "..\core\BitSet.h"
 #include "..\core\LinkedList.h"
@@ -128,6 +128,9 @@ public:
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
 
+	//\brief Clear the physics and collision worlds, done on script reload
+	bool RemoveAllObjects();
+
 	//\brief Apply an impulse to the centre of the physics object in a direction
 	//\param a_gameObj the object that owns the physics body to apply the force to
 	//\param a_force the direction the force should be applied
@@ -152,13 +155,15 @@ public:
 	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group
 	int GetCollisionGroupId(StringHash a_colGroupHash);
 	inline int GetCollisionGroupId(const char * a_colGroupName) { return GetCollisionGroupId(StringHash(a_colGroupName)); }
-	void ClearCollisions(GameObject * a_gameObj);
-
-protected:
 
 	//\brief Remove all entries from a game object collision list, called once a frame
 	//		 before the physics world is queried
 	//\param a_gameObj the object to affect
+	void ClearCollisions(GameObject * a_gameObj);
+
+protected:
+
+	//\brief Add a collision between objects
 	void AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB);
 
 	//\brief Accessor for game systems to query the physics world

@@ -27,7 +27,7 @@ public:
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y + z*z; }
-	float Length() const { return sqrt(LengthSquared()); }
+	float Length() const { return sqrtf(LengthSquared()); }
 	bool IsEqualZero() const { return x + y + z == 0.0f; }
 	float Dot(const Vector & a_vec) const { return x * a_vec.x + y * a_vec.y + z * a_vec.z; }
 	Vector Cross(const Vector & a_vec) const { return Vector(((y * a_vec.z) - (z * a_vec.y)),  ((z * a_vec.x) - (x * a_vec.z)), ((x * a_vec.y) - (y * a_vec.x))); }
@@ -79,7 +79,7 @@ public:
 
 	// Utility functions
 	inline const float LengthSquared() const { return x*x + y*y; }
-	inline float Length() const { return sqrt(LengthSquared()); }
+	inline float Length() const { return sqrtf(LengthSquared()); }
 	inline bool IsEqualZero() { return x == 0.0f && y == 0.0f; }
 	inline bool IsEqualZeroEpsilon(float a_epsilon = 0.0001f) { return fabsf(x) + fabsf(y) < a_epsilon * 2.0f; }
 

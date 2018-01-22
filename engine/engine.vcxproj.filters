@@ -104,16 +104,16 @@
     <ClInclude Include="SoundManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OculusRender.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OculusManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DataPack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VRManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VRRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -199,16 +199,16 @@
     <ClCompile Include="SoundManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OculusRender.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OculusManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DataPack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VRRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VRManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -243,20 +243,26 @@
     <None Include="Font\default.tga.inc">
       <Filter>Source Files\Font</Filter>
     </None>
-    <None Include="Shaders\post.fsh.inc">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Shaders\post.vsh.inc">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Shaders\particle.fsh.inc">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Shaders\particle.vsh.inc">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Shaders\post.fsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\post.vsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\particle.fsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
     <None Include="Shaders\particle.gsh.inc">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\final.fsh.inc">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\final.vsh.inc">
+      <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

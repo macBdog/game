@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -23,19 +23,21 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -51,10 +53,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>.\external\SDL2-2.0.3\include;.\external\LibOVRKernel\Src;.\external\LibOVR\Include;.\external\remotery\lib;$(IncludePath)</IncludePath>
+    <IncludePath>.\external\SDL2-2.0.7\include;.\external\remotery\lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\SDL2-2.0.3\lib\x86;.\external\bullet-2.82-r2704\lib\win32\Debug;.\external\lua-5.2.3;.\external\bullet-2.82-r2704\bin\lib\Debug;.\external\zlib-1.2.8\lib;.\Debug;.\external\LibOVR\Lib\Windows\$(Platform)\$(Configuration)\VS2010;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\external\glew-2.1.0\lib\Release\Win32;.\external\irrKlang-1.5.0\lib\Win32-visualStudio;.\external\SDL2-2.0.7\lib\x86;.\external\lua-5.2.3;.\external\bullet3-2.86.1\bin;.\external\zlib-1.2.8\lib;.\Debug;.\external\LibOVR\Lib\Windows\$(Platform)\$(Configuration)\VS2015;$(LibraryPath)</LibraryPath>
     <GenerateManifest>false</GenerateManifest>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -71,20 +73,21 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>engine.lib;Ws2_32.lib;winmm.lib;LibOVR.lib;lua52.lib;SDL2.lib;SDL2main.lib;irrKlang.lib;glu32.lib;opengl32.lib;LinearMath_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletWorldImporter_Debug.lib;BulletFileLoader_Debug.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>engine.lib;Ws2_32.lib;winmm.lib;lua52.lib;SDL2.lib;SDL2main.lib;irrKlang.lib;glu32.lib;glew32.lib;opengl32.lib;LinearMath_vs2010_debug.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;BulletWorldImporter_vs2010_debug.lib;BulletFileLoader_vs2010_debug.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>.\external\SDL-1.2.15\lib\x86</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference />
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)\Designer\game.exe" "$(SolutionDir)\..\eos4\bin\designer\game.exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,17 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="external\LibOVRKernel\Src\GL\CAPI_GLE.cpp" />
     <ClCompile Include="external\remotery\lib\Remotery.c" />
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="game.cfg" />
     <None Include="game.lua.example" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE.h" />
-    <ClInclude Include="external\LibOVRKernel\Src\GL\CAPI_GLE_GL.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{73A95780-AE4B-A740-8E11-011FF885A8DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{5922BEFB-126B-D44C-90EF-997413E15048}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Glew">
+      <UniqueIdentifier>{AA637CD8-01DF-9F4B-9CD2-FC4CF9645D9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\BasicDemo">
+      <UniqueIdentifier>{F1BB2717-821A-8245-93EB-0FB20755A2DE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\StandaloneMain">
+      <UniqueIdentifier>{1CC08149-9D8C-E54E-A917-0335632DE326}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ExampleBrowser">
+      <UniqueIdentifier>{B67A2788-696D-6C4A-B97A-2E9F5ABBE55C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\CommonInterfaces">
+      <UniqueIdentifier>{4CA259E6-DCD8-0541-8118-9CB4B6D4EAF2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\TinyRenderer">
+      <UniqueIdentifier>{E78F6093-D197-E248-A5A5-279B719544D7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{B7857171-5F30-E84E-A064-6836EF8F33E0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\BasicDemo\BasicExample.h">
+      <Filter>examples\BasicDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\Common2dCanvasInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonCameraInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonExampleInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGraphicsAppInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonGUIHelperInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonMultiBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonParameterInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRenderInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonRigidBodyBase.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\CommonInterfaces\CommonWindowInterface.h">
+      <Filter>examples\CommonInterfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3Clock.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Glew\glew.c">
+      <Filter>examples\ThirdPartyLibs\Glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\BasicDemo\BasicExample.cpp">
+      <Filter>examples\BasicDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\StandaloneMain\main_sw_tinyrenderer_single_example.cpp">
+      <Filter>examples\StandaloneMain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\OpenGLGuiHelper.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\GL_ShapeDrawer.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ExampleBrowser\CollisionShape2TriangleMesh.cpp">
+      <Filter>examples\ExampleBrowser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\geometry.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\model.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\tgaimage.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\our_gl.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\TinyRenderer\TinyRenderer.cpp">
+      <Filter>examples\TinyRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3ResourcePath.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3Clock.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

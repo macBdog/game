@@ -141,6 +141,7 @@ public:
 					, m_textureShader(nullptr)
 					, m_lightingShader(nullptr)
 					, m_particleShader(nullptr)
+					, m_finalShader(nullptr)
 					, m_fullscreenQuad()
 					, m_numParticleEmitters(0)
 					, m_debugBoxBuffer()
@@ -218,6 +219,7 @@ public:
 	inline Shader * GetColourShader() { return m_colourShader; }
 	inline Shader * GetTextureShader() { return m_textureShader; }
 	inline Shader * GetLightingShader() { return m_lightingShader; }
+	inline Shader * GetFinalShader() { return m_finalShader; }
 	inline unsigned int GetGBufferIndex(unsigned int a_id) { return m_renderTargets[a_id]; }
 
 	//\brief Drawing functions for lines
@@ -665,6 +667,7 @@ private:
 	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
 	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified
 	Shader * m_particleShader;										///< Shader that updates the position, scale, colour and lifetime of particles and renders them
+	Shader * m_finalShader;											///< Shader that draws from the diffuse texture directly to the colour buffer FragmentColour
 
 	unsigned int m_viewWidth;										///< Cache of arguments passed to init
 	unsigned int m_viewHeight;										///< Cache of arguments passed to init

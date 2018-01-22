@@ -6,6 +6,12 @@ datapack.dtz.tmp
 [Tt]humbs.db
 *.DS_Store
 
+# Visual Studio 2015 user specific files
+.vs/
+
+# Visual Studio 2015 database file
+*.VC.db
+
 #Visual Studio files
 *.[Oo]bj
 *.user

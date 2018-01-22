@@ -14,8 +14,8 @@
 #include "InputManager.h"
 #include "LuaScript.h"
 #include "ModelManager.h"
-#include "OculusManager.h"
-#include "OculusRender.h"
+#include "VRManager.h"
+#include "VRRender.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "SoundManager.h"
@@ -391,6 +391,9 @@ bool ScriptManager::Update(float a_dt)
 					// Remove anything with state from rendering
 					RenderManager::Get().DestroyAllParticleEmitters();
 
+					// Make sure there is no more simulation happening
+					PhysicsManager::Get().RemoveAllObjects();
+
 					Gui::Get().ReloadMenus();
 
 					// Kick the script VM in the guts
@@ -612,7 +615,7 @@ int ScriptManager::IsVR(lua_State * a_luaState)
 	bool keyIsDown = false;
 	if (lua_gettop(a_luaState) == 0)
 	{
-		return OculusManager::Get().IsInitialised();
+		return VRManager::Get().IsInitialised();
 	}
 	else
 	{
@@ -628,10 +631,10 @@ int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
 	Vector lookDir(0.0f);
 	if (lua_gettop(a_luaState) == 0)
 	{
-		OculusManager& ocMan = OculusManager::Get();
-		if (ocMan.IsInitialised())
+		VRManager& vrMan = VRManager::Get();
+		if (vrMan.IsInitialised())
 		{
-			lookDir = ocMan.GetOculusRender()->GetLookDir();
+			lookDir = vrMan.GetVRRender()->GetLookDir();
 		}
 	}
 	else
@@ -650,10 +653,10 @@ int ScriptManager::GetVRLookPosition(lua_State * a_luaState)
 	Vector lookDir(0.0f);
 	if (lua_gettop(a_luaState) == 0)
 	{
-		OculusManager& ocMan = OculusManager::Get();
-		if (ocMan.IsInitialised())
+		VRManager& vrMan = VRManager::Get();
+		if (vrMan.IsInitialised())
 		{
-			lookDir = ocMan.GetOculusRender()->GetLookPos();
+			lookDir = vrMan.GetVRRender()->GetLookPos();
 		}
 	}
 	else

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="test">
+      <UniqueIdentifier>{54291B7F-98D4-5B46-A7F4-F55CB9CA8947}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\InverseDynamics">
+      <UniqueIdentifier>{18B853A6-81E7-514E-8454-13BA0B37C913}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples">
+      <UniqueIdentifier>{FD558F27-8032-0F49-915D-A34B418C6A7B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{B92E626D-4675-974C-BB53-B81273EB25FE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers">
+      <UniqueIdentifier>{E9275017-AC6C-7C48-84C4-423144E78A9D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportURDFDemo">
+      <UniqueIdentifier>{8FFA5F91-13CB-4648-9581-B547B398CE2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportMeshUtility">
+      <UniqueIdentifier>{E838B0FE-6775-914E-A8AE-D47C0F6E1D3A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{8F637D76-773C-8746-A826-54208EA47F4F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\stb_image">
+      <UniqueIdentifier>{A82BEB63-E58F-E948-91A0-15C8C4C4D210}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras">
+      <UniqueIdentifier>{2D66B9E0-48F0-F744-879F-F5AEBD5E431E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize">
+      <UniqueIdentifier>{1480B135-9C89-DE49-974B-F4E7066E44E3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize\BulletWorldImporter">
+      <UniqueIdentifier>{9A99A67C-A6C6-5A49-A044-BFD54D54793F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize\BulletFileLoader">
+      <UniqueIdentifier>{DD156DB1-5CFA-DF4F-B119-F1750EF21BF6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportObjDemo">
+      <UniqueIdentifier>{2703494A-CE6E-3544-8BA9-EA3188A266A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportSTLDemo">
+      <UniqueIdentifier>{68304F42-14D3-EB4A-AEF7-BE25DB7BB8D6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Importers\ImportColladaDemo">
+      <UniqueIdentifier>{49EE3B7D-30C3-4641-BF8F-62A63C66940E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Wavefront">
+      <UniqueIdentifier>{C7795EFC-A9A4-6A40-815A-4655A65F6BAB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\tinyxml">
+      <UniqueIdentifier>{32F15055-8C52-674E-88A0-B5072BE0E5A7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\urdf">
+      <UniqueIdentifier>{5487A0E4-F45E-0642-BE66-4C9795CE4A9D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\urdf\boost_replacement">
+      <UniqueIdentifier>{141F8EE9-43DA-8F42-B693-5BFB955A60CA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Extras\Serialize\BulletWorldImporter\CMakeLists.txt">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </None>
+    <None Include="..\..\Extras\Serialize\BulletWorldImporter\premake4.lua">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </None>
+    <None Include="..\..\Extras\Serialize\BulletFileLoader\CMakeLists.txt">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </None>
+    <None Include="..\..\Extras\Serialize\BulletFileLoader\premake4.lua">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\ConvertRigidBodies2MultiBody.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\MultiBodyCreationInterface.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\MyMultiBodyCreator.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\BulletUrdfImporter.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\UrdfParser.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\URDF2Bullet.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletWorldImporter\btBulletWorldImporter.h">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletWorldImporter\btWorldImporter.h">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\bChunk.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\bCommon.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\bDefines.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\bDNA.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\bFile.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletFileLoader\btBulletFile.h">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\URDFImporterInterface.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportURDFDemo\URDFJointTypes.h">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportSTLDemo\ImportSTLSetup.h">
+      <Filter>examples\Importers\ImportSTLDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportSTLDemo\LoadMeshFromSTL.h">
+      <Filter>examples\Importers\ImportSTLDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Importers\ImportColladaDemo\ColladaGraphicsInstance.h">
+      <Filter>examples\Importers\ImportColladaDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\ThirdPartyLibs\urdf\boost_replacement\lexical_cast.h">
+      <Filter>examples\ThirdPartyLibs\urdf\boost_replacement</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\test\InverseDynamics\test_invdyn_bullet.cpp">
+      <Filter>test\InverseDynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3ResourcePath.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\MyMultiBodyCreator.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\BulletUrdfImporter.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\urdfStringSplit.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\UrdfParser.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportURDFDemo\URDF2Bullet.cpp">
+      <Filter>examples\Importers\ImportURDFDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportMeshUtility\b3ImportMeshUtility.cpp">
+      <Filter>examples\Importers\ImportMeshUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\stb_image\stb_image.cpp">
+      <Filter>examples\ThirdPartyLibs\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3Clock.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletWorldImporter\btBulletWorldImporter.cpp">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletWorldImporter\btWorldImporter.cpp">
+      <Filter>Extras\Serialize\BulletWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletFileLoader\bChunk.cpp">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletFileLoader\bDNA.cpp">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletFileLoader\bFile.cpp">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletFileLoader\btBulletFile.cpp">
+      <Filter>Extras\Serialize\BulletFileLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\Wavefront2GLInstanceGraphicsShape.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportObjDemo\LoadMeshFromObj.cpp">
+      <Filter>examples\Importers\ImportObjDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Importers\ImportColladaDemo\LoadMeshFromCollada.cpp">
+      <Filter>examples\Importers\ImportColladaDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.cpp">
+      <Filter>examples\ThirdPartyLibs\Wavefront</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinystr.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxml.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlerror.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\tinyxml\tinyxmlparser.cpp">
+      <Filter>examples\ThirdPartyLibs\tinyxml</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

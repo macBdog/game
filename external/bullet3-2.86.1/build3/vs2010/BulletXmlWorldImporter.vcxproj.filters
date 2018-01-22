@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Extras">
+      <UniqueIdentifier>{E6D95183-F0AF-4849-858D-7997C06966BA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize">
+      <UniqueIdentifier>{FA9BF8A6-E1EE-F54D-9242-2B2241B37598}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Extras\Serialize\BulletXmlWorldImporter">
+      <UniqueIdentifier>{2ADA8C49-F66D-CA46-AA97-EA34AC662CE5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Extras\Serialize\BulletXmlWorldImporter\btBulletXmlWorldImporter.h">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletXmlWorldImporter\string_split.h">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinystr.h">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinyxml.h">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\btBulletXmlWorldImporter.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\string_split.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinystr.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinyxml.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinyxmlerror.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Extras\Serialize\BulletXmlWorldImporter\tinyxmlparser.cpp">
+      <Filter>Extras\Serialize\BulletXmlWorldImporter</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

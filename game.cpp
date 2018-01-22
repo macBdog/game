@@ -22,7 +22,7 @@
 #include "engine/InputManager.h"
 #include "engine/Log.h"
 #include "engine/ModelManager.h"
-#include "engine/OculusManager.h"
+#include "engine/VRManager.h"
 #include "engine/RenderManager.h"
 #include "engine/ScriptManager.h"
 #include "engine/StringUtils.h"
@@ -199,9 +199,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Oculus Rift init must precede render device context creation
+	// VR init must precede render device context creation
 	bool useVr = gameConfig.GetBool("render", "vr");
-	OculusManager::Get().Startup(useVr);
+	VRManager::Get().Startup(useVr);
 
 	// The flags to pass to SDL_CreateWindow
 	int videoFlags = SDL_WINDOW_OPENGL;
@@ -221,16 +221,16 @@ int main(int argc, char *argv[])
 	// Override display creation for VR mode so the resoultion is correct for the hmd
 	if (useVr)
 	{
-		const OculusManager& oculusMan = OculusManager::Get();
-		if (oculusMan.IsInitialised())
+		const VRManager& vrMan = VRManager::Get();
+		if (vrMan.IsInitialised())
 		{
-			width = oculusMan.GetHmdWidth();
-			height = oculusMan.GetHmdHeight();
+			width = vrMan.GetHmdWidth();
+			height = vrMan.GetHmdHeight();
 		}
 		else
 		{
-			width = OculusManager::s_hmdDefaultResolutionWidth;
-			height = OculusManager::s_hmdDefaultResolutionHeight;
+			width = VRManager::s_hmdDefaultResolutionWidth;
+			height = VRManager::s_hmdDefaultResolutionHeight;
 		}
 	}
 
@@ -244,9 +244,9 @@ int main(int argc, char *argv[])
     }
 
 	// Create an OpenGL context associated with the window.
-	SDL_GLContext glcontext = SDL_GL_CreateContext(sdlWindow);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GLContext glcontext = SDL_GL_CreateContext(sdlWindow);
 	
 	// Hide the mouse cursor
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -261,8 +261,8 @@ int main(int argc, char *argv[])
 	// Subsystem creation and startup
 	MathUtils::InitialiseRandomNumberGenerator();
 
-	// Now the rendering device context is created, it can be passed into the Oculus rendering component
-	OculusManager::Get().StartupRendering(&windowInfo.info.win.window, useVr);
+	// Now the rendering device context is created, it can be passed into the VR rendering component
+	VRManager::Get().StartupRendering(&windowInfo.info.win.window, useVr);
 
 #ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Drawing the scene will flush the renderLayers
-		UPDATE_AND_PROFILE(OculusManager);
+		UPDATE_AND_PROFILE(VRManager);
 		UPDATE_AND_PROFILE(RenderManager);
 		
 #ifndef _RELEASE
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
 		// Only swap the buffers at the end of all the rendering passes
 		if (useVr)
 		{
-			if (!OculusManager::Get().DrawToHMD())
+			if (!VRManager::Get().DrawToHMD())
 			{
 				RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
 			}
@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
 
 	if (useVr)
 	{
-		OculusManager::Get().Shutdown();
+		VRManager::Get().Shutdown();
 	}
 
 	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.

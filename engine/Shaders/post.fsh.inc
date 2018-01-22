@@ -22,5 +22,6 @@ const char * postFragmentShader =
 "void main()\n"
 "{ \n"
 "	GBuffer1Colour = texture2D(GBuffer1, OutTexCoord) * Colour;\n"
+"	FragmentColour = GBuffer1Colour;\n"
 "}\n"
 ;

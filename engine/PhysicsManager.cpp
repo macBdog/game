@@ -546,6 +546,14 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 	return false;
 }
 
+bool PhysicsManager::RemoveAllObjects()
+{
+	// TODO: Clear and remove all coliisions first
+	//m_dynamicsWorld
+	//m_collisionWorld
+	return true;
+}
+
 bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 {
 	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != NULL)

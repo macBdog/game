@@ -222,7 +222,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				if (!strstr(fileNameBuf, ".tmp"))
 				{
 					const char * fileExt = ".tmp\0";
-					unsigned char lastChar = strlen(fileNameBuf);
+					int lastChar = (int)strlen(fileNameBuf);
 					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt) + 1);
 				}
 			}

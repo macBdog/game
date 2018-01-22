@@ -3,8 +3,7 @@
 
 #include <windows.h>
 
-#include "GL/CAPI_GLE.h"
-#include "OVR_CAPI_GL.h"
+#include "GL/glew.h"
 
 #include "../core/MathUtils.h"
 
@@ -179,6 +178,11 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
     // Really Nice Perspective Calculations
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
+
+	if (!m_vr)
+	{
+		glewInit();
+	}
 	
 	const Colour debugWhite(1.0f, 1.0f, 1.0f, 1.0f);
 	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), debugWhite, TexCoord(0.0f, 0.0f));
@@ -290,6 +294,8 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	#include "Shaders\particle.vsh.inc"
 	#include "Shaders\particle.fsh.inc"
 	#include "Shaders\particle.gsh.inc"
+	#include "Shaders\final.fsh.inc"
+	#include "Shaders\final.vsh.inc"
 	if (m_postShader = new Shader("post"))
 	{
 		m_postShader->Init(postVertexShader, postFragmentShader);
@@ -309,6 +315,10 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	if (m_particleShader = new Shader("particle"))
 	{
 		m_particleShader->Init(particleVertexShader, particleFragmentShader, particleGeometryShader);
+	}
+	if (m_finalShader = new Shader("final"))
+	{
+		m_finalShader->Init(finalVertexShader, finalFragmentShader);
 	}
 
 	glErrorEnum = glGetError();
@@ -395,11 +405,13 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 			m_textureShader != nullptr &&
 			m_lightingShader != nullptr &&
 			m_particleShader != nullptr &&
+			m_finalShader != nullptr &&
 			m_postShader->IsCompiled() &&
 			m_colourShader->IsCompiled() && 
 			m_textureShader->IsCompiled() && 
 			m_lightingShader->IsCompiled() &&
-			m_particleShader->IsCompiled();
+			m_particleShader->IsCompiled() &&
+			m_finalShader->IsCompiled();
 }
 
 bool RenderManager::Shutdown()
@@ -525,6 +537,10 @@ bool RenderManager::Shutdown()
 	if (m_particleShader != nullptr)
 	{
 		delete m_particleShader;
+	}
+	if (m_finalShader != nullptr)
+	{
+		delete m_finalShader;
 	}
 
 	// Clean up the framebuffer resources
@@ -819,6 +835,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffers[RenderStage::Scene]);		//<< Render to first stage render buffer
 	glDrawBuffers(s_numRenderTargets + 1, m_mrtAttachments);					//<< Enable drawing into all colour attachments
 	
+	// The game's shaders will write into all the MRT's called GBuffer(1-9)Colour
 	RenderScene(a_viewMatrix);
 
 	// Start rendering to the first render stage
@@ -831,7 +848,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Now render with full scene shader if specified
+	// Now render with full scene shader if specified which will compile the influence of GBuffer(1-9)Colour into FragmentColour
 	bool bUseDefaultShader = true;
 	if (Scene * pCurScene = WorldManager::Get().GetCurrentScene())
 	{
@@ -857,8 +874,8 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
 	}
 
 	RenderFramebuffer();
-
-	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding
+	
+	// Now draw framebuffer to screen, buffer index 0 breaks the existing binding 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDrawBuffers(1, m_mrtAttachments);
 
@@ -866,8 +883,7 @@ void RenderManager::DrawToScreen(Matrix & a_viewMatrix)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Render once 
-	m_textureShader->UseShader(shaderData);
+	m_finalShader->UseShader(shaderData);
 
 	// Output of the previous pass goes in the DiffuseTexture slot for the final render
 	glActiveTexture(GL_TEXTURE0);
@@ -1178,8 +1194,9 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glBindTexture(GL_TEXTURE_2D, fc->m_textureId);
 
 			pLastShader->UseShader(shaderData);
+
 			glBindVertexArray(fc->m_vertexArrayId);
-			glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_INT, 0);
 			++fc;
 		}
 		

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{7951D67E-8D45-EF49-8B09-75206615C5FC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{8413A693-A48B-974E-9287-D10365131EDD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Glew">
+      <UniqueIdentifier>{2E3D06CC-7D70-5C4B-AAEC-2C602C8F2805}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\OpenGLWindow">
+      <UniqueIdentifier>{FE124412-A5DF-6F40-8E28-5AA8C0F9FB61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\Utils">
+      <UniqueIdentifier>{B6AD7BC3-91D5-ED4F-BB23-A7873F7ED53C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{657429B1-334D-554E-8E26-881E15EA9365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\GwenOpenGLTest">
+      <UniqueIdentifier>{76E99038-D006-0044-982E-DBC9CD4C01B5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\OpenGLWindow\TwFonts.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\LoadShader.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\GLPrimitiveRenderer.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\GwenOpenGL3CoreRenderer.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\fontstash.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\opengl_fontstashcallbacks.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\Utils\b3Clock.h">
+      <Filter>examples\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\GwenOpenGLTest\UnitTest.h">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\Win32OpenGLWindow.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\OpenGLWindow\Win32Window.h">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Glew\glew.c">
+      <Filter>examples\ThirdPartyLibs\Glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\OpenSans.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\TwFonts.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\LoadShader.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\GLPrimitiveRenderer.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\fontstash.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\opengl_fontstashcallbacks.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\Utils\b3Clock.cpp">
+      <Filter>examples\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Button.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Checkbox.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\ComboBox.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\CrossSplitter.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\GroupBox.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\ImagePanel.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Label.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\ListBox.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\MenuStrip.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Numeric.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\OpenGLSample.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\PanelListPanel.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\ProgressBar.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Properties.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\RadioButton.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\ScrollControl.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\Slider.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\StatusBar.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\TabControl.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\TextBox.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\TreeControl.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\GwenOpenGLTest\UnitTest.cpp">
+      <Filter>test\GwenOpenGLTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\Win32OpenGLWindow.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\OpenGLWindow\Win32Window.cpp">
+      <Filter>examples\OpenGLWindow</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

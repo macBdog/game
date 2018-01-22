@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{631DC17F-FB4D-B14E-A99A-0FAFBC36B9DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs">
+      <UniqueIdentifier>{5DB887C6-B985-1C4D-B0F5-9441AA629B09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\ThirdPartyLibs\Glew">
+      <UniqueIdentifier>{72204836-7E2D-B54B-8D0F-271580E3E947}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\SimpleOpenGL3">
+      <UniqueIdentifier>{C0C78198-E776-244C-85DB-33FBE1C30B2A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\ThirdPartyLibs\Glew\glew.c">
+      <Filter>examples\ThirdPartyLibs\Glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\SimpleOpenGL3\main.cpp">
+      <Filter>examples\SimpleOpenGL3</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

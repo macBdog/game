@@ -1,5 +1,4 @@
-﻿#include "GL/CAPI_GLE.h"
-#include "OVR_CAPI_GL.h"
+﻿#include "GL/glew.h"
 
 #include "Shader.h"
 
