@@ -382,7 +382,7 @@ bool ScriptManager::Update(float a_dt)
 					scriptsReloaded = true;
 					curScript->m_timeStamp = curTimeStamp;
 
-					// Clean up any script-owned objects
+					// Clean up any script-owned objects including physics
 					WorldManager::Get().DestroyAllScriptOwnedObjects();
 
 					// Stop any music that has been playing
@@ -390,9 +390,6 @@ bool ScriptManager::Update(float a_dt)
 
 					// Remove anything with state from rendering
 					RenderManager::Get().DestroyAllParticleEmitters();
-
-					// Make sure there is no more simulation happening
-					PhysicsManager::Get().RemoveAllObjects();
 
 					Gui::Get().ReloadMenus();
 

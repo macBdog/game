@@ -392,21 +392,42 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		// Assign the physics object to the game object
 		if (collisionShape != NULL && collisionObject != NULL)
 		{
-			if (PhysicsObject * newObj = new PhysicsObject())
+			// Only create a new physics object if one has not been created for this game object
+			bool newPhys = false;
+			PhysicsObject * phys = a_gameObj->GetPhysics();
+			if (phys == nullptr)
+			{
+				newPhys = true;
+				phys = new PhysicsObject();
+			}
+			if (phys != nullptr)
 			{
 				btMatrix3x3 basis;
 				basis.setIdentity();
 				collisionObject->getWorldTransform().setBasis(basis);
 				collisionObject->setCollisionShape(collisionShape);
 
-				newObj->AddCollisionObject(collisionObject);
-				newObj->AddCollisionShape(collisionShape);
+				phys->AddCollisionObject(collisionObject);
+				phys->AddCollisionShape(collisionShape);
 
-				if (fileLoader != NULL)
+				if (fileLoader != nullptr && phys->GetFileLoader() == nullptr)
 				{
-					newObj->SetFileLoader(fileLoader);
+					phys->SetFileLoader(fileLoader);
 				}
-				a_gameObj->SetPhysics(newObj);
+				else
+				{
+					// Should not be adding multiple file loaders
+					if (fileLoader != nullptr && phys->GetFileLoader() != nullptr && fileLoader != phys->GetFileLoader())
+					{
+						Log::Get().WriteEngineErrorNoParams("Leaking physics file loaders!");
+					}
+				}
+
+				// Assign if new
+				if (newPhys)
+				{
+					a_gameObj->SetPhysics(phys);
+				}
 			}
 		}
 
@@ -544,14 +565,6 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		}
 	}
 	return false;
-}
-
-bool PhysicsManager::RemoveAllObjects()
-{
-	// TODO: Clear and remove all coliisions first
-	//m_dynamicsWorld
-	//m_collisionWorld
-	return true;
 }
 
 bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)

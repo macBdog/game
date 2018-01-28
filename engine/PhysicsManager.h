@@ -128,9 +128,6 @@ public:
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
 
-	//\brief Clear the physics and collision worlds, done on script reload
-	bool RemoveAllObjects();
-
 	//\brief Apply an impulse to the centre of the physics object in a direction
 	//\param a_gameObj the object that owns the physics body to apply the force to
 	//\param a_force the direction the force should be applied
