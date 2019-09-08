@@ -1560,9 +1560,18 @@ void RenderManager::AddModel(RenderLayer::Enum a_renderLayer, Model * a_model, M
 		r->m_shader = a_shader;
 		r->m_lifeTime = a_lifeTime;
 		r->m_shaderData = a_shaderData;
-		r->m_diffuseTexId = diffuseTex->GetId();
-		r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
-		r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		if (diffuseTex == nullptr)
+		{
+			r->m_diffuseTexId = -1;
+			r->m_normalTexId = normalTex == nullptr ? -1 : normalTex->GetId();
+			r->m_specularTexId = specularTex == nullptr ? -1 : specularTex->GetId();
+		}
+		else
+		{
+			r->m_diffuseTexId = diffuseTex->GetId();
+			r->m_normalTexId = normalTex == nullptr ? diffuseTex->GetId() : normalTex->GetId();
+			r->m_specularTexId = specularTex == nullptr ? diffuseTex->GetId() : specularTex->GetId();
+		}
 		
 		// Alias model data
 		if (!modelMat)
