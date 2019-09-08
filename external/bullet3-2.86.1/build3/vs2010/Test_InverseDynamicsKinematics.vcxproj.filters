@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="test">
-      <UniqueIdentifier>{056666FC-FADB-9340-9CD4-DD746320D1F4}</UniqueIdentifier>
+      <UniqueIdentifier>{6A437CEC-DE96-AC44-A892-448DAD60EFB6}</UniqueIdentifier>
     </Filter>
     <Filter Include="test\InverseDynamics">
-      <UniqueIdentifier>{5E6D81C2-8CA5-AE4A-A36C-E845AF851526}</UniqueIdentifier>
+      <UniqueIdentifier>{1D3355E7-63E9-AD4D-8B42-5AC8A69775A0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

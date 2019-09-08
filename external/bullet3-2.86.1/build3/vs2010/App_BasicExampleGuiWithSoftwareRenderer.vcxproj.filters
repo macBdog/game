@@ -2,31 +2,31 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{73A95780-AE4B-A740-8E11-011FF885A8DF}</UniqueIdentifier>
+      <UniqueIdentifier>{38B3FDAD-EFCB-0746-9641-43650A56BFEC}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs">
-      <UniqueIdentifier>{5922BEFB-126B-D44C-90EF-997413E15048}</UniqueIdentifier>
+      <UniqueIdentifier>{1ACCEC50-EC61-CA4C-A607-59FFDA840898}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs\Glew">
-      <UniqueIdentifier>{AA637CD8-01DF-9F4B-9CD2-FC4CF9645D9B}</UniqueIdentifier>
+      <UniqueIdentifier>{39FE822D-31A5-8D40-8D24-81B697DA2A66}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\BasicDemo">
-      <UniqueIdentifier>{F1BB2717-821A-8245-93EB-0FB20755A2DE}</UniqueIdentifier>
+      <UniqueIdentifier>{78C05A26-A185-BB49-8B5D-CA90B94FCA1C}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\StandaloneMain">
-      <UniqueIdentifier>{1CC08149-9D8C-E54E-A917-0335632DE326}</UniqueIdentifier>
+      <UniqueIdentifier>{C65D230C-6490-BA45-BE00-B90D3A110E71}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ExampleBrowser">
-      <UniqueIdentifier>{B67A2788-696D-6C4A-B97A-2E9F5ABBE55C}</UniqueIdentifier>
+      <UniqueIdentifier>{67228A40-2F1F-3449-BC97-FBA179F3E55E}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\CommonInterfaces">
-      <UniqueIdentifier>{4CA259E6-DCD8-0541-8118-9CB4B6D4EAF2}</UniqueIdentifier>
+      <UniqueIdentifier>{C548D88D-C43B-1C43-9DFB-09670537A853}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\TinyRenderer">
-      <UniqueIdentifier>{E78F6093-D197-E248-A5A5-279B719544D7}</UniqueIdentifier>
+      <UniqueIdentifier>{12BD16BA-B3EF-F344-A6FE-96DC0FE5466D}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\Utils">
-      <UniqueIdentifier>{B7857171-5F30-E84E-A064-6836EF8F33E0}</UniqueIdentifier>
+      <UniqueIdentifier>{D23D8399-79F8-8947-9AD3-54060645FE87}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

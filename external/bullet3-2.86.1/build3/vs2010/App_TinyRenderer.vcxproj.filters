@@ -2,19 +2,19 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{CEAF55A0-20C0-FF46-8C34-E9F9C38808CC}</UniqueIdentifier>
+      <UniqueIdentifier>{443FAC23-79AA-AC40-BF95-771849A886A2}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs">
-      <UniqueIdentifier>{8D544E56-792D-8047-9CA9-1F65C98C3ABD}</UniqueIdentifier>
+      <UniqueIdentifier>{D12D5991-D78C-3244-947C-4C5E4ADD1662}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs\Glew">
-      <UniqueIdentifier>{E069F2F3-A653-754E-BCF7-9A940183BBE6}</UniqueIdentifier>
+      <UniqueIdentifier>{D47FF46F-85DB-1E4B-BB92-7817B0E67478}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\TinyRenderer">
-      <UniqueIdentifier>{34E6E464-8F5B-A14D-A6B9-510CC9450DF7}</UniqueIdentifier>
+      <UniqueIdentifier>{7E3B591F-7BC7-D14E-A567-4AC76F565FF6}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\Utils">
-      <UniqueIdentifier>{51514D78-DC0D-884C-B0F2-1949331AE21F}</UniqueIdentifier>
+      <UniqueIdentifier>{00DB9C21-9289-CA4E-9869-D1B0D00AC6BA}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

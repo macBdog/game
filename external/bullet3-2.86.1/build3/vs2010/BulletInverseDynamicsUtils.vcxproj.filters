@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Extras">
-      <UniqueIdentifier>{ACFCCC05-6908-6B4C-ACC6-1EA77122AA5C}</UniqueIdentifier>
+      <UniqueIdentifier>{CDEDFD13-4889-B548-8E16-8263EE722672}</UniqueIdentifier>
     </Filter>
     <Filter Include="Extras\InverseDynamics">
-      <UniqueIdentifier>{739AD034-F76C-624A-85F8-A2E8625F09D3}</UniqueIdentifier>
+      <UniqueIdentifier>{263F2AA5-FFD2-9141-9F98-2D9D0E98F1C9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

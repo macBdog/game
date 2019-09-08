@@ -2,28 +2,28 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{B8AA4FD4-D934-7844-BE0A-E676F2C0068C}</UniqueIdentifier>
+      <UniqueIdentifier>{63FE7D44-1AFB-B641-B33A-185C6015BAAC}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\BasicDemo">
-      <UniqueIdentifier>{49612493-4D16-0846-A082-B03CBE29F82C}</UniqueIdentifier>
+      <UniqueIdentifier>{A67179F7-F8BB-2844-86BB-E21EF23F3BC5}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\StandaloneMain">
-      <UniqueIdentifier>{4DEFEA2E-1D59-8B40-A4CB-A2A4F3806A85}</UniqueIdentifier>
+      <UniqueIdentifier>{AFB2340B-7320-1A46-9794-4BFF605DF35B}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ExampleBrowser">
-      <UniqueIdentifier>{249822AF-3C56-894D-BD55-24D85952F330}</UniqueIdentifier>
+      <UniqueIdentifier>{E25A7662-EC83-0649-9DAD-4FBA7FE2CD6F}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\CommonInterfaces">
-      <UniqueIdentifier>{87217CA5-D2D4-1349-B7EE-724A45250E05}</UniqueIdentifier>
+      <UniqueIdentifier>{A9A65452-D1B3-0447-8E2B-F9BE06B0D1F3}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\OpenGLWindow">
-      <UniqueIdentifier>{654A574F-F99A-AB4F-BC41-DB25C018E2CE}</UniqueIdentifier>
+      <UniqueIdentifier>{2C49FC0C-FBE1-9048-B8AA-197470A1E275}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\TinyRenderer">
-      <UniqueIdentifier>{A7601BA2-9B3A-804C-A499-FA674CB9E88E}</UniqueIdentifier>
+      <UniqueIdentifier>{9D931416-E8B2-0943-B242-A521BE21321F}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\Utils">
-      <UniqueIdentifier>{2F1D4271-71E4-EF44-BF9A-411B5377E6A9}</UniqueIdentifier>
+      <UniqueIdentifier>{BD878875-ECD6-B245-95C7-CF0A6E8BE024}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Extras">
-      <UniqueIdentifier>{0A7EBB64-A531-7C46-BCB4-F350EB4B1155}</UniqueIdentifier>
+      <UniqueIdentifier>{7345A42D-4D28-8C44-86D6-7566A3A8AB70}</UniqueIdentifier>
     </Filter>
     <Filter Include="Extras\HACD">
-      <UniqueIdentifier>{C1D4ABF2-8568-2D4A-BCE9-28E37E940819}</UniqueIdentifier>
+      <UniqueIdentifier>{F47BC91D-8E24-624D-9DFE-4F93E2E9D8E3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

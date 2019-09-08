@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="test">
-      <UniqueIdentifier>{690A231C-BFE6-1141-8AB9-7FB81E16BF94}</UniqueIdentifier>
+      <UniqueIdentifier>{145B0331-2822-5542-B51D-34DCCDA0F15A}</UniqueIdentifier>
     </Filter>
     <Filter Include="test\gtest-1.7.0">
-      <UniqueIdentifier>{3686C34F-2035-2C4A-83D8-A9297515C19D}</UniqueIdentifier>
+      <UniqueIdentifier>{6ACE35B3-8481-1340-A7B3-DA2618472724}</UniqueIdentifier>
     </Filter>
     <Filter Include="test\gtest-1.7.0\src">
-      <UniqueIdentifier>{EF2D3B3C-BA75-F748-876C-DF7615C6C734}</UniqueIdentifier>
+      <UniqueIdentifier>{63B046D2-A5CE-B04A-9D18-D932EC9C0664}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
-      <UniqueIdentifier>{F12CF2BE-8613-8A41-85DB-83D2700BDB31}</UniqueIdentifier>
+      <UniqueIdentifier>{D3974FF5-75A8-564D-983B-37CD506A54A0}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\BulletSoftBody">
-      <UniqueIdentifier>{83865DA9-C7F6-0841-874C-D5A57088783C}</UniqueIdentifier>
+      <UniqueIdentifier>{E1D830E0-FF8F-8A4F-A0AE-C3B28F9EE3C6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

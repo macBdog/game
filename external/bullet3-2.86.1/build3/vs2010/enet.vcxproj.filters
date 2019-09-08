@@ -2,19 +2,19 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{61783987-509C-A341-BD90-B3DB71E9E184}</UniqueIdentifier>
+      <UniqueIdentifier>{2A534B83-3600-6348-8C45-CF6859F00854}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs">
-      <UniqueIdentifier>{F3C36C8C-B5D7-3848-9979-635A2350BCB7}</UniqueIdentifier>
+      <UniqueIdentifier>{3D48E994-4655-B54E-8ECD-8AB12E11E97B}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs\enet">
-      <UniqueIdentifier>{1DB32332-C669-6048-9E46-5B2383F70A20}</UniqueIdentifier>
+      <UniqueIdentifier>{6BAA9647-7959-2347-BE2A-21BC69F6203A}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs\enet\include">
-      <UniqueIdentifier>{8B2D358B-392B-8B4F-BE6F-1D3D044E2F9F}</UniqueIdentifier>
+      <UniqueIdentifier>{7D380416-1D69-C947-9B2C-46143BE34398}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\ThirdPartyLibs\enet\include\enet">
-      <UniqueIdentifier>{8F9D08A9-5DD5-3B4E-9A6F-9CE2D99AAE34}</UniqueIdentifier>
+      <UniqueIdentifier>{CE95549C-823D-D943-BBC1-75FC480CA2DC}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

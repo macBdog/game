@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
@@ -19,9 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{45227C5D-86D4-5A4A-B0F8-0E6938448180}</ProjectGuid>
+    <ProjectGuid>{9ED49B82-4EA0-C04F-AFD8-8B91EDEB39BA}</ProjectGuid>
     <RootNamespace>LinearMath</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -220,7 +221,7 @@
     <ClInclude Include="..\..\src\LinearMath\btGeometryUtil.h" />
     <ClInclude Include="..\..\src\LinearMath\btGrahamScan2dConvexHull.h" />
     <ClInclude Include="..\..\src\LinearMath\btHashMap.h" />
-    <ClInclude Include="..\..\src\LinearMath\btIDebugDraw.h" />
+    <ClInclude Include="..\..\src\LinearMath\btidebugdraw.h" />
     <ClInclude Include="..\..\src\LinearMath\btList.h" />
     <ClInclude Include="..\..\src\LinearMath\btMatrix3x3.h" />
     <ClInclude Include="..\..\src\LinearMath\btMatrixX.h" />

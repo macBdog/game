@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{CCFA0696-7A92-2C42-A220-F8FC5020BA25}</UniqueIdentifier>
+      <UniqueIdentifier>{F414A3DC-FF47-924D-85EB-A50F2FF863B8}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\BasicDemo">
-      <UniqueIdentifier>{E8D76633-6024-3E44-888C-D1DAD56BD2F0}</UniqueIdentifier>
+      <UniqueIdentifier>{01A82409-08C2-B245-9BDA-1636FD9A20A4}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\CommonInterfaces">
-      <UniqueIdentifier>{C398CE16-4332-B949-9786-8AF8CCB50260}</UniqueIdentifier>
+      <UniqueIdentifier>{48894BF5-4283-554F-B669-AFF80E90BF30}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

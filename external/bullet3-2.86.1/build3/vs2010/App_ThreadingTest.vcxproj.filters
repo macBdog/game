@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="examples">
-      <UniqueIdentifier>{BEF75845-2F60-4D47-9096-BFF761530660}</UniqueIdentifier>
+      <UniqueIdentifier>{81B87AD2-2411-0B4C-A228-2D2C760DDB44}</UniqueIdentifier>
     </Filter>
     <Filter Include="examples\MultiThreading">
-      <UniqueIdentifier>{964649FE-C112-2C4E-B72D-972B7DFCC17A}</UniqueIdentifier>
+      <UniqueIdentifier>{E3DBD802-152E-5449-B1BC-29BFEB110149}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
