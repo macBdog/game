@@ -80,6 +80,11 @@ void SoundManager::SetListenerPosition(const Vector & a_position, const Vector &
 
 bool SoundManager::PlaySoundFX(const char * a_soundName) const
 {
+	if (m_mute)
+	{
+		return false;
+	}
+
 	if (m_engine)
 	{
 		// Check if the sound name needs the path added
@@ -104,6 +109,11 @@ bool SoundManager::PlaySoundFX(const char * a_soundName) const
 
 bool SoundManager::PlaySoundFX3D(const char * a_soundName, const Vector & a_position) const
 {
+	if (m_mute)
+	{
+		return false;
+	}
+
 	if (m_engine)
 	{
 		// Check if the sound name needs the path added
@@ -130,6 +140,11 @@ bool SoundManager::PlaySoundFX3D(const char * a_soundName, const Vector & a_posi
 
 bool SoundManager::PlayMusic(const char * a_musicName)
 {
+	if (m_mute)
+	{
+		return false;
+	}
+
 	if (m_engine)
 	{
 		// Check if the music name needs the path added

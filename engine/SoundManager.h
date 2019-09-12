@@ -22,6 +22,7 @@ public:
 		: m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
 		, m_engine(NULL)
+		, m_mute(true)
 		{ 
 			m_soundPath[0] = '\0'; 
 		}
@@ -65,6 +66,7 @@ private:
 	char m_soundPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to sounds 
 	float m_updateFreq;											///< How often the manager should check for changes to sound
 	float m_updateTimer;										///< If we are due for a scan and update of sound
+	bool m_mute;												///< Don't make a noise, mobody move, nobody get hurt
 	irrklang::ISoundEngine * m_engine;							///< Pointer to engine to play the sounds
 };
 

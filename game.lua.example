@@ -268,7 +268,9 @@ Other Notes
 -----------
 
 Blender export settings: Apply modifiers, Include edges, Write normals, Include UVs, Write Materials, Triangulate Faces, Objects as OBJ, Objects as OBJ Groups, Y Forward, Z Up
-Use only dynamic physics type
+
+Physics: Use only dynamic physics type with convex hulls for complex shapes.
+
 Python script to export bullet collision (must run while Blender Game is running and while Blender has write access as administrator):
 
 import PhysicsConstraints;
