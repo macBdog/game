@@ -240,6 +240,7 @@ void PhysicsManager::Update(float a_dt)
 		}
 #endif
 	}
+
 	m_collisionWorld->performDiscreteCollisionDetection();
 
 	// Get all collisions between objects
@@ -279,10 +280,10 @@ void PhysicsManager::Update(float a_dt)
 			AddCollision(gameObjB, gameObjA);
 			
 			// TODO Add more information to collisions
-			for (int j=0;j<numContacts;j++)
+			for (int j=0; j < numContacts; j++)
 			{
 				btManifoldPoint& pt = contactManifold->getContactPoint(j);
-				if (pt.getDistance()<0.f)
+				if (pt.getDistance() < 0.f)
 				{
 					const btVector3& ptA = pt.getPositionWorldOnA();
 					const btVector3& ptB = pt.getPositionWorldOnB();

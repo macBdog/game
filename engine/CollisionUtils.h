@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../core/Vector.h"
+#include "../core/Quaternion.h"
 
 namespace CollisionUtils
 {
@@ -51,6 +52,34 @@ namespace CollisionUtils
 	//\param a_sphereRadius is the size of the sphere
 	//\return true if the point is on or inside the box
 	extern bool IntersectPointSphere(Vector a_point, Vector a_spherePos, float a_sphereRadius);
+
+	//\brief Intersection between two spheres
+	//\param a_bodyPos The position of a sphere in worldspace
+	//\param a_bodyRadius The size of the sphere from centre to extent
+	//\a_collisionPosition_OUT Output parameter of the worldspace position of the collision if there is one	
+	//\a_collisionNormal_OUT Output parameter of the normalized direction of the collision if there is one
+	//\return true if the two supplied spheres are touching and the a_normal_OUT was modified
+	extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT);
+
+	//\brief Intersection between two boxes non axis aligned
+	//\param a_boxPos The position of a box in worldspace
+	//\param a_boxSize The size of the box in all three axis
+	//\param a_boxRot THe orientation of the box
+	//\a_collisionPosition_OUT Output parameter of the worldspace position of the collision if there is one	
+	//\a_collisionNormal_OUT Output parameter of the normalized direction of the collision if there is one
+	//\return true if the two supplied spheres are touching and the a_normal_OUT was modified
+	extern bool IntersectBoxes(const Vector & a_boxAPos, const Vector & a_boxASize, const Quaternion & a_boxARot, const Vector & a_boxBPos, const Vector & a_boxBSize, const Quaternion & a_boxBRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT);
+
+	//\brief Intersection between a box and a sphere
+	//\param a_spherePos The position of a sphere in worldspace
+	//\param a_sphereRadius The size of the sphere from centre to extent
+	//\param a_boxPos The position of a box in worldspace
+	//\param a_boxSize The size of the box in all three axis
+	//\param a_boxRot THe orientation of the box
+	//\a_collisionPosition_OUT Output parameter of the worldspace position of the collision if there is one	
+	//\a_collisionNormal_OUT Output parameter of the normalized direction of the collision if there is one
+	//\return true if the two supplied spheres are touching and the a_normal_OUT was modified
+	extern bool IntersectBoxSphere(const Vector & a_spherePos, float a_sphereRadius, const Vector & a_boxPos, const Vector & a_boxSize, const Quaternion & a_boxRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT);
 }
 
 #endif /* _ENGINE_COLLISION_UTILS_H_ */

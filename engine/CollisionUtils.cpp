@@ -174,3 +174,22 @@ extern bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_sphere
 {
 	return (a_point - a_spherePos).LengthSquared() <= (a_sphereRadius * a_sphereRadius);
 }
+
+extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+{
+	// TODO
+	return false;
+}
+
+extern bool IntersectBoxes(const Vector & a_boxAPos, const Vector & a_boxASize, const Quaternion & a_boxARot, const Vector & a_boxBPos, const Vector & a_boxBSize, const Quaternion & a_boxBRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+{
+	// TODO
+	return false;
+}
+
+extern bool IntersectBoxSphere(const Vector & a_spherePos, float a_sphereRadius, const Vector & a_boxPos, const Vector & a_boxSize, const Quaternion & a_boxRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+{
+	// TODO
+	return false;
+}
+
