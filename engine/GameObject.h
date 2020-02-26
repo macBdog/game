@@ -132,6 +132,7 @@ public:
 	inline StringHash GetClipGroup() const { return m_clipGroup; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
+	inline bool IsClipping() const { return m_clipping; }
 	inline int GetScriptReference() const { return m_scriptRef; }
 	inline PhysicsObject * GetPhysics() const { return m_physics; }
 	Quaternion GetRot() const;

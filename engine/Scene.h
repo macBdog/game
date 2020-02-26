@@ -61,7 +61,7 @@ public:
 	}
 
 	//\brief Adding and removing objects from the scene
-	GameObject * AddObject(unsigned int a_objectId);
+	GameObject * AddObject();
 	void RemoveAllObjects(bool a_destroyScriptOwned);
 	void RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings);
 	void Reset();

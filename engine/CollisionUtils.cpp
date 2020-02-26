@@ -175,9 +175,23 @@ extern bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_sphere
 	return (a_point - a_spherePos).LengthSquared() <= (a_sphereRadius * a_sphereRadius);
 }
 
-extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float a_bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
 {
-	// TODO
+	Vector betweenSpheres = a_bodyAPos - a_bodyBPos;
+	float distBetween = betweenSpheres.Length();
+	if (distBetween <= a_bodyARadius + a_bodyBRadius && distBetween >= fabs(a_bodyARadius - a_bodyBRadius))
+	{
+		betweenSpheres.Normalise();
+		a_collisionNormal_OUT = betweenSpheres;
+
+		// Get the circle that defines the intersection between the spheres, could stop here
+		float centreOfIntersection = 1.0f / 2.0f + (a_bodyARadius * a_bodyARadius - a_bodyBRadius * a_bodyBRadius) / (2 * distBetween * distBetween);
+		float radiusOfIntersection = sqrt(a_bodyARadius*a_bodyARadius - centreOfIntersection * centreOfIntersection * distBetween * distBetween);
+
+		// Or go on to find an arbitrary but coplanar point on this cicle. 
+		a_collisionPos_OUT = centreOfIntersection;
+		return true;
+	}
 	return false;
 }
 

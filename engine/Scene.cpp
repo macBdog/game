@@ -223,21 +223,11 @@ bool Scene::InitFromConfig()
 	return true;
 }
 
-GameObject * Scene::AddObject(unsigned int a_objectId)
+GameObject * Scene::AddObject()
 {
 	// Scene objects are stored contiguously in object ID order
 	GameObject * newGameObject = m_objects.Add();
 	return newGameObject;
-}
-
-bool Scene::RemoveObject(unsigned int a_objectId)
-{
-	if (GameObject * gameObj = m_objects.Get(a_objectId))
-	{
-		gameObj->Shutdown();
-		return true;
-	}
-	return false;
 }
 
 bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular)

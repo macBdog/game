@@ -186,7 +186,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	}
 
 	// Add a new game object to the scene
-	GameObject * newGameObject = sceneToAddObjectTo->AddObject(m_totalGameObjects);
+	GameObject * newGameObject = sceneToAddObjectTo->AddObject();
 	ObjectLookup * lookup = m_objectLookup.Add(m_totalGameObjects);
 	lookup->m_scene = sceneToAddObjectTo;
 	lookup->m_storageId = sceneToAddObjectTo->GetNumObjects() - 1;
@@ -363,8 +363,8 @@ bool WorldManager::DestroyObject(unsigned int a_objectId, bool a_destroyScriptBi
 			ScriptManager::Get().DestroyObjectScriptBindings(obj);
 		}
 
-		// Remove from scene
-		return m_currentScene->RemoveObject(a_objectId);
+		// Remove itself from any scenes
+		return obj->Shutdown();
 	}
 	
 	return false; 

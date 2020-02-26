@@ -256,13 +256,13 @@ void PhysicsManager::Update(float a_dt)
 		int numContacts = contactManifold->getNumContacts();
 		if (numContacts > 0 && gameObjA != NULL && gameObjB != NULL)
 		{
-			if (gameObjA->IsSleeping())
+			if (gameObjA->IsSleeping() || !gameObjA->IsClipping())
 			{
 				ClearCollisions(gameObjA);
 				continue;
 			}
 
-			if (gameObjB->IsSleeping())
+			if (gameObjB->IsSleeping() || !gameObjB->IsClipping())
 			{
 				ClearCollisions(gameObjB);
 				continue;
@@ -302,6 +302,14 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 
 	if (a_gameObj == NULL)
 	{
+		return false;
+	}
+
+	// Do not execute this twice on the same object
+	PhysicsObject * phys = a_gameObj->GetPhysics();
+	if (phys != nullptr && !phys->GetCollisionObjects().IsEmpty())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Game, "Game object %s cannot be added to the collision world twice!", a_gameObj->GetName());
 		return false;
 	}
 
@@ -395,7 +403,6 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		{
 			// Only create a new physics object if one has not been created for this game object
 			bool newPhys = false;
-			PhysicsObject * phys = a_gameObj->GetPhysics();
 			if (phys == nullptr)
 			{
 				newPhys = true;
