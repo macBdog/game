@@ -19,9 +19,41 @@ public:
 	//\brief Bit manipulation functions
 	//\param a_bitNo is the number of the bit to change
 	inline void Set(unsigned int a_bitNo) { m_bits |= (1 << a_bitNo); }
+	inline void SetRaw(unsigned int a_int) { m_bits = a_int; }
 	inline void Clear(unsigned int a_bitNo) { m_bits &= ~(1 << a_bitNo); }
 	inline void Flip(unsigned int a_bitNo) { m_bits ^= (1 << a_bitNo); }
 	inline void ClearAll() { m_bits = 0x0u; }
+
+	// Slow reverse by adding each bit, with lookahead optimization
+	void ReverseSlow()
+	{
+		unsigned int rBit = 0;
+		unsigned int partial = m_bits;
+		const unsigned int nB = sizeof(unsigned int) * 8;
+		for (unsigned int i = 0; i < nB; ++i)
+		{
+			const int rPos = nB - 1 - i;
+			if (((1 << i) & m_bits) != 0x0u)
+			{
+				rBit |= (1 << rPos);
+			}
+
+			// Early out for common case of small numbers having unset lefts
+			partial &= ~(1 << i);
+			if ((partial | 0x0u) == 0x0u)
+			{
+				break;
+			}
+		}
+		m_bits = rBit;
+	}
+
+	// Fast O(1) reverse using a lookup table
+	void Reverse()
+	{
+		// TODO - concept is to generate 8bit chunks of each dword with a bit in every pos
+		ReverseSlow();
+	}
 
 	//\brief Bit testing functions
 	//\param a_bitNo is the number of the bit to test
@@ -46,7 +78,6 @@ public:
 	//\brief A bit faster than the previous method as it will stop early due to the while loop
 	inline unsigned int GetBitCountSlow() const
 	{
-
 		int n=0;
 		unsigned bCopy = m_bits;
         while (bCopy)
