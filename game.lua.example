@@ -276,4 +276,12 @@ Python script to export bullet collision (must run while Blender Game is running
 import PhysicsConstraints;
 PhysicsConstraints.exportBulletFile("c:/block_terrain1.bullet")
 
+Debug menu
+----------
+TAB to show
+- slow time
+= fast time
+SHIFT mouselook
+WSAD fly around
+
 ]]

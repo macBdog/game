@@ -447,6 +447,7 @@ private:
 		DebugSphere() : m_pos(0.0f), m_scale(0.0f) {}
 		Vector m_pos;
 		Vector m_scale;
+		Vector m_colour;
 	};
 
 	struct DebugTransform

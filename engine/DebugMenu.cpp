@@ -12,6 +12,7 @@
 #include "TextureManager.h"
 #include "Widget.h"
 #include "WorldManager.h"
+#include "PhysicsManager.h"
 
 #include "DebugMenu.h"
 
@@ -324,54 +325,54 @@ void DebugMenu::Update(float a_dt)
 			}
 		}
 	}
-
-
-	if (m_editType == EditType::Light && m_lightToEdit != NULL)
+	else if (m_lightToEdit != nullptr)
 	{
-		if (!IsDebugMenuActive())
+		if (m_editType == EditType::Light)
 		{
-			if (inMan.IsKeyDepressed(SDLK_x))
+			if (!IsDebugMenuActive())
 			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
+				if (inMan.IsKeyDepressed(SDLK_x))
 				{
-					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(moveAmount * 16.0f, 0.0f, 0.0f)));
-					m_lightToEdit->m_dir *= moveAmount;
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(moveAmount * 16.0f, 0.0f, 0.0f)));
+						m_lightToEdit->m_dir *= moveAmount;
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
-				else
+				else if (inMan.IsKeyDepressed(SDLK_y))
 				{
-					m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, moveAmount * 16.0f, 0.0f)));
+						m_lightToEdit->m_dir *= moveAmount;
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
-				m_dirtyFlags.Set(DirtyFlag::Scene);
-			} 
-			else if (inMan.IsKeyDepressed(SDLK_y))
-			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
+				else if (inMan.IsKeyDepressed(SDLK_z))
 				{
-					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, moveAmount * 16.0f, 0.0f)));
-					m_lightToEdit->m_dir *= moveAmount;
+					if (inMan.IsKeyDepressed(SDLK_LALT))
+					{
+						const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, 0.0f, moveAmount * 16.0f)));
+						m_lightToEdit->m_dir *= moveAmount;
+					}
+					else
+					{
+						m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
+					}
+					m_dirtyFlags.Set(DirtyFlag::Scene);
 				}
-				else
-				{
-					m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
-				}
-				m_dirtyFlags.Set(DirtyFlag::Scene);				
 			}
-			else if (inMan.IsKeyDepressed(SDLK_z))
+			switch (m_editMode)
 			{
-				if (inMan.IsKeyDepressed(SDLK_LALT))
-				{
-					const Quaternion moveAmount(MathUtils::Deg2Rad(Vector(0.0f, 0.0f, moveAmount * 16.0f)));
-					m_lightToEdit->m_dir *= moveAmount;
-				}
-				else
-				{
-					m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
-				}
-				m_dirtyFlags.Set(DirtyFlag::Scene);
-			}
-		}
-		switch (m_editMode)
-		{
 			case EditMode::Ambient:
 			{
 				const Vector2 colourVec = Vector2::Vector2Zero() - mousePos;
@@ -397,6 +398,7 @@ void DebugMenu::Update(float a_dt)
 				break;
 			}
 			default: break;
+			}
 		}
 	}
 
@@ -838,7 +840,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		// Translate by mouse position for picking
 		Vector mouseOffset3D = camMat.GetInverse().Transform(Vector(mousePos.GetX() * 0.1f, mousePos.GetY() * 0.05f, 0.0f));
 		Vector pickStart = camPos + mouseOffset3D;
-		Vector pickEnd = camMat.GetInverse().Transform(Vector(0.0f, 0.0, -pickDepth)) + (mouseOffset3D * 1000.0f);
+		Vector pickEnd = camMat.GetInverse().Transform(Vector(0.0f, 0.0, pickDepth)) + (mouseOffset3D * 1000.0f);
 
 		// Do picking with all the game objects in the scene
 		if (Scene * curScene = WorldManager::Get().GetCurrentScene())
@@ -1188,7 +1190,7 @@ void DebugMenu::Draw()
 	}
 
 	// Draw selection box around lights
-	if (m_lightToEdit != NULL)
+	if (m_lightToEdit != nullptr)
 	{
 		renMan.AddDebugSphere(m_lightToEdit->m_pos, Light::s_lightDrawSize + extraSelectionSize, sc_colourRed);
 	}
@@ -1248,6 +1250,13 @@ void DebugMenu::Draw()
 		renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[i], mousePos+sc_vectorCursor[i+1], sc_colourGreen);
 	}
 	renMan.AddLine2D(RenderLayer::Debug2D, mousePos+sc_vectorCursor[3], mousePos+sc_vectorCursor[0], sc_colourGreen);
+
+	// Draw some consumer perf stats
+	const int numObjects = WorldManager::Get().GetCurrentScene()->GetNumObjects();
+	const int numPhysics = PhysicsManager::Get().GetNumManifolds();
+	char statBuf[256];
+	sprintf(statBuf, "GameObjects: %d\nPhysics: %d\n", numObjects, numPhysics);
+	fontMan.DrawDebugString2D(statBuf, Vector2(-0.85f, 0.75f), sc_colourGreen);
 #endif
 }
 

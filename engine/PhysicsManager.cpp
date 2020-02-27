@@ -674,6 +674,11 @@ void PhysicsManager::ClearCollisions(GameObject * a_gameObj)
 	}
 }
 
+int PhysicsManager::GetNumManifolds()
+{ 
+	return m_collisionWorld->getDispatcher()->getNumManifolds(); 
+}
+
 void PhysicsManager::AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB)
 {
 	if (a_gameObjA == NULL || a_gameObjB == NULL)

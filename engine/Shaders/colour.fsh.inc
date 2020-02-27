@@ -1,6 +1,7 @@
 const char * colourFragmentShader = 
 "#version 400\n"
 "in vec4 Colour;\n"
+"uniform vec3 MaterialAmbient; \n"
 "layout(location = 0) out vec4 FragmentColour;\n"
 "layout(location = 1) out vec4 GBuffer1Colour;\n"
 "layout(location = 2) out vec4 GBuffer2Colour;\n"
@@ -10,6 +11,6 @@ const char * colourFragmentShader =
 "layout(location = 6) out vec4 GBuffer6Colour;\n"
 "void main()\n"
 "{ \n"
-"	FragmentColour = Colour;\n"
-"	GBuffer1Colour = Colour;\n"
+"	FragmentColour = Colour * vec4(MaterialAmbient, 1.0);\n"
+"	GBuffer1Colour = Colour * vec4(MaterialAmbient, 1.0);\n"
 "}\n";

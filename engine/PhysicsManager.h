@@ -158,6 +158,9 @@ public:
 	//\param a_gameObj the object to affect
 	void ClearCollisions(GameObject * a_gameObj);
 
+	//\brief Report on the load on the physics system, used by the debug menu
+	int GetNumManifolds();
+
 protected:
 
 	//\brief Add a collision between objects

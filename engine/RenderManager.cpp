@@ -1232,12 +1232,13 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		Matrix debugSphereMat = Matrix::Identity();
 		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
 		{
-			debugSphereMat.SetPos(b->m_pos);
+			debugSphereMat.SetPos(s->m_pos);
 			shaderData.m_objectMatrix = &debugSphereMat;
+			shaderData.m_materialAmbient = s->m_colour;
 			m_colourShader->UseShader(shaderData);
 			glBindVertexArray(m_debugSphereBuffer.m_vertexArrayId);
 			glDrawElements(GL_LINE_LOOP, s_numDebugSphereVerts, GL_UNSIGNED_INT, 0);
-			++b;
+			++s;
 		}
 
 		// Draw transforms in the current renderLayer
@@ -1807,10 +1808,11 @@ void RenderManager::AddDebugSphere(const Vector & a_worldPos, const float & a_ra
 		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Too many DebugSphere primitives added for renderLayer %d, max is %d", (int)RenderObjectType::DebugSpheres, s_maxObjects[(int)RenderObjectType::DebugSpheres]);
 		return;
 	}
-	DebugBox * t = m_debugBoxes[RenderLayer::Debug3D];
+	DebugSphere * t = m_debugSpheres[RenderLayer::Debug3D];
 	t += m_objectCount[RenderLayer::Debug3D][RenderObjectType::DebugSpheres]++;
 	t->m_pos = a_worldPos;
 	t->m_scale = Vector(a_radius);
+	t->m_colour = Vector(a_colour.GetValues());
 #endif
 }
 

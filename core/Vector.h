@@ -14,6 +14,7 @@ public:
 	Vector() { x = 0; y = 0; z = 0; }
 	Vector(float a_val) { x = a_val; y = a_val; z = a_val; }
 	Vector(float a_x, float a_y, float a_z) { x = a_x; y = a_y; z = a_z; }
+	Vector(float * a_values) { x = a_values[0]; y = a_values[1]; z = a_values[2]; }
 
 	// Mutators
 	inline void SetX(float a_x) { x = a_x; }

@@ -128,7 +128,7 @@ extern bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lin
 		Vector closestPoint = a_lineStart + (lineSeg*proj);
 		distanceToSphereSq = (closestPoint - a_spherePos).LengthSquared(); 
 	}
-	return distanceToSphereSq <= a_sphereRadius;
+	return distanceToSphereSq <= sphRadSq;
 }
 
 extern bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const Vector & a_boxPos, const Vector & a_boxDimensions)
