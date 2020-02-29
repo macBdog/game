@@ -43,6 +43,8 @@ public:
 	bool FadeOutMusic();
 	bool FadeInMusic();
 
+	inline int GetNumMusicPlaying() { return m_music.GetLength(); }
+
 private:
 
 	//\brief Storage for a pointer to a sound interface and a name so the sound can be changed later

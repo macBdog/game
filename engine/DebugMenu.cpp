@@ -13,6 +13,7 @@
 #include "Widget.h"
 #include "WorldManager.h"
 #include "PhysicsManager.h"
+#include "SoundManager.h"
 
 #include "DebugMenu.h"
 
@@ -1254,8 +1255,10 @@ void DebugMenu::Draw()
 	// Draw some consumer perf stats
 	const int numObjects = WorldManager::Get().GetCurrentScene()->GetNumObjects();
 	const int numPhysics = PhysicsManager::Get().GetNumManifolds();
+	const int numDrawCalls = RenderManager::Get().GetDrawCallCount();
+	const int numMusic = SoundManager::Get().GetNumMusicPlaying();
 	char statBuf[256];
-	sprintf(statBuf, "GameObjects: %d\nPhysics: %d\n", numObjects, numPhysics);
+	sprintf(statBuf, "GameObjects: %d\nPhysics: %d\nDraw: %d\nMusic: %d\n", numObjects, numPhysics, numDrawCalls, numMusic);
 	fontMan.DrawDebugString2D(statBuf, Vector2(-0.85f, 0.75f), sc_colourGreen);
 #endif
 }

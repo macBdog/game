@@ -299,6 +299,9 @@ public:
 	void UnManageShader(GameObject * a_gameObject);
 	void UnManageShader(Scene * a_scene);
 
+	//\brief Get the number of non-debug menu draw calls happening. Only valid after drawing and before update
+	inline int GetDrawCallCount() { return m_drawCallCounter; }
+
 	//\brief Helper function to setup a new shader based on the contents of files and the global preamble
 	//\param a_shaderToCreate_OUT is pointer to a shader that will be allocated
 	//\param a_shaderFileName pointer to a cstring containing the path to the shaders with .fsh and .vsh extensions assumed
@@ -689,6 +692,7 @@ private:
 
 	float m_updateFreq;												///< How often the render manager should check for changes to shaders
 	float m_updateTimer;											///< If we are due for a scan and update of shaders
+	int m_drawCallCounter;											///< Consumed by the debug menu, set during drawing, cleared during update
 };
 
 #endif // _ENGINE_RENDER_MANAGER

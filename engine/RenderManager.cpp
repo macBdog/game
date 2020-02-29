@@ -38,11 +38,11 @@ const float RenderManager::s_fovAngleY = 55.0f;
 float RenderManager::s_renderDepth2D = -1.0f;
 const int RenderManager::s_maxObjects[(int)RenderObjectType::Count] =
 {
-	 256, // Tri
-	 256, // Quad
-	 256, // Line
-	 256, // DebugBox
-	 256, // DebugSphere
+	 512, // Tri
+	 512, // Quad
+	 512, // Line
+	 512, // DebugBox
+	 512, // DebugSphere
 	 1024, // DebugTransform
 	 1024, // Model
 	 8096 // FontChar
@@ -590,6 +590,7 @@ bool RenderManager::Update(float a_dt)
 {
 	m_lastRenderTime = a_dt;
 	m_renderTime += a_dt;
+	m_drawCallCounter = 0;
 
 	// Update and recycle particle systems from the end
 	if (m_numParticleEmitters > 0)
@@ -1076,10 +1077,11 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glBindVertexArray(t->m_vertexArrayId);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
-			t++;
+			++t;
+			++m_drawCallCounter;
 		}
 
-		// Submit the quad
+		// Submit the quads
 		Quad * q = m_quads[i];
 		shaderData.m_objectMatrix = &m_shaderIdentityMat;
 		for (int j = 0; j < m_objectCount[i][RenderObjectType::Quads]; ++j)
@@ -1106,7 +1108,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glBindVertexArray(q->m_vertexArrayId);
 			glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0);
 			
-			q++;
+			++q;
+			++m_drawCallCounter;
 		}
 		
 		// Generate sorted list of models
@@ -1152,6 +1155,8 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 			glBindVertexArray(rm->m_buffer->m_vertexArrayId);
 			glDrawElements(GL_TRIANGLES, rm->m_buffer->m_numVerts, GL_UNSIGNED_INT, 0);
 			curNode = curNode->GetNext();
+
+			++m_drawCallCounter;
 		}
 		
 		// Draw particles by calling their VBOs but make sure it's after all the world geo
@@ -1172,6 +1177,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 					glBindVertexArray(em.m_vertexArrayId);
 					glDrawElements(GL_POINTS, em.m_numParticles, GL_UNSIGNED_INT, 0);
 				}
+				++m_drawCallCounter;
 			}
 		}
 		
