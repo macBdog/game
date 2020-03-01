@@ -122,8 +122,7 @@ void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const 
 
 	// Add message to write once list
 	unsigned int msgHash = StringHash::GenerateCRC(a_message, false);
-	unsigned int unused;
-	if (!m_writeOnceList.Get(msgHash, unused))
+	if (!m_writeOnceList.Get(msgHash, nullptr))
 	{
 		m_writeOnceList.Insert(msgHash, msgHash);
 
