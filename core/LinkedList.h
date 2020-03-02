@@ -2,6 +2,8 @@
 #define _CORE_LINKED_LIST_
 #pragma once
 
+#include <functional>
+
 template <class T>
 class LinkedListNode
 {
@@ -139,6 +141,34 @@ public:
 		{
 			m_head = 0;
 			m_tail = 0;
+		}
+	}
+
+	//\brief Convenience function for iterative common case
+	inline void Foreach(std::function<void(LinkedListNode<T> *)> a_callback)
+	{
+		auto next = GetHead();
+		while (next != nullptr)
+		{
+			auto cur = next;
+			next = cur->GetNext();
+
+			a_callback(cur);
+		}
+	}
+
+	//\brief Convenience function for iteractive common case
+	inline void ForeachAndDelete(std::function<void(LinkedListNode<T> *)> a_callback)
+	{
+		auto next = GetHead();
+		while (next != nullptr)
+		{
+			auto cur = next;
+			next = cur->GetNext();
+			
+			a_callback(cur);
+			delete cur->GetData();
+			delete cur;
 		}
 	}
 	

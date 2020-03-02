@@ -94,17 +94,10 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 
 bool FontManager::Shutdown()
 {
-	FontListNode * next = m_fonts.GetHead();
-	while(next != nullptr)
+	m_fonts.ForeachAndDelete([&](auto * cur)
 	{
-		// Cache off next pointer
-		FontListNode * cur = next;
-		next = cur->GetNext();
-
 		m_fonts.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
+	});
 
 	return true;
 }

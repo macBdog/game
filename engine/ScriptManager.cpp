@@ -313,18 +313,11 @@ bool ScriptManager::Shutdown()
 	}
 
 	// And any managed scripts
-	ManagedScriptNode * next = m_managedScripts.GetHead();
-	while (next != nullptr)
+	m_managedScripts.ForeachAndDelete([&](auto cur)
 	{
-		// Cache off next pointer
-		ManagedScriptNode * cur = next;
-		next = cur->GetNext();
-
 		m_managedScripts.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
-
+	});
+	
 	return true;
 }
 

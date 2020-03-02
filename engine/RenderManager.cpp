@@ -558,31 +558,17 @@ bool RenderManager::Shutdown()
 	}
 
 	// And any managed shaders
-	ManagedShaderNode * next = m_managedShaders.GetHead();
-	while (next != nullptr)
+	m_managedShaders.ForeachAndDelete([&](auto cur)
 	{
-		// Cache off next pointer
-		ManagedShaderNode * cur = next;
-		next = cur->GetNext();
-
 		m_managedShaders.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
+	});
 
 	// And finally the shaders
-	auto nextShader = m_shaders.GetHead();
-	while (nextShader != nullptr)
+	m_shaders.ForeachAndDelete([&](auto cur)
 	{
-		// Cache off next pointer
-		auto cur = nextShader;
-		nextShader = cur->GetNext();
-
-		Shader* curShader = cur->GetData();
 		m_shaders.Remove(cur);
-		delete curShader;
-		delete cur;
-	}
+	});
+	
 	return true;
 }
 

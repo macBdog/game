@@ -20,18 +20,10 @@ const Colour Log::s_logDisplayColour[LogLevel::Count]=
 
 bool Log::Shutdown()
 {
-	LogDisplayNode * next = m_displayList.GetHead();
-	while(next != nullptr)
+	m_displayList.ForeachAndDelete([&](auto cur)
 	{
-		// Cache off next pointer
-		LogDisplayNode * cur = next;
-		next = cur->GetNext();
-
 		m_displayList.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
-
+	});
 	return true;
 }
 

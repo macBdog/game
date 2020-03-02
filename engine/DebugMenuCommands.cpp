@@ -170,20 +170,12 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetLightFunction(this, &DebugMenuCommandRegistry::DeleteLight);
 }
 
-
 void DebugMenuCommandRegistry::Shutdown()
 {
-	auto cur = m_commands.GetHead();
-	while (cur != nullptr)
-	{
-		auto next = cur->GetNext();
+	m_commands.ForeachAndDelete([](auto * cur)
+	{ 
 		Gui::Get().DestroyWidget(cur->GetData()->GetWidget());
-
-		delete cur->GetData();
-		delete cur;
-
-		cur = next;
-	}
+	});
 }
 
 bool DebugMenuCommandRegistry::IsActive() const

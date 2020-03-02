@@ -35,18 +35,11 @@ bool InputManager::Startup(bool a_fullScreen)
 bool InputManager::Shutdown()
 {
 	// Clean up any registered events
-	InputEventNode * next = m_events.GetHead();
-	while(next != nullptr)
+	m_events.ForeachAndDelete([&](auto cur)
 	{
-		// Cache off next pointer
-		InputEventNode * cur = next;
-		next = cur->GetNext();
-
 		m_events.Remove(cur);
-		delete cur->GetData();
-		delete cur;
-	}
-
+	});
+	
 	// Close gamepads down
 	int connectedPads = SDL_NumJoysticks();
 	for (int i = 0; i < s_maxGamepads; ++i)
