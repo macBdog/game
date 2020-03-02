@@ -8,7 +8,7 @@
 
 #include "WorldManager.h"
 
-template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
+template<> WorldManager * Singleton<WorldManager>::s_instance = nullptr;
 
 bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath, const DataPack * a_dataPack)
 {
@@ -23,7 +23,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
 	strncpy(m_scenePath, a_scenePath, sizeof(char) * strlen(a_scenePath) + 1);
 	
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Populate a list of scene files
 		DataPack::EntryList sceneEntries;
@@ -32,7 +32,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 
 		// Load each scene in the data pack
 		bool loadSuccess = true;
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			GameFile sceneFile;
 			if (sceneFile.Load(curNode->GetData()))
@@ -49,7 +49,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 						if (newScene->IsBeginLoaded())
 						{
 							// Set current scene to the first loaded scene
-							if (m_currentScene == NULL)
+							if (m_currentScene == nullptr)
 							{
 								m_currentScene = newScene;
 							}
@@ -76,7 +76,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 
 		// Load each scene in the directory
 		FileManager::FileListNode * curNode = sceneFiles.GetHead();
-		while(curNode != NULL)
+		while(curNode != nullptr)
 		{
 			char fullPath[StringUtils::s_maxCharsPerLine];
 			sprintf(fullPath, "%s%s", a_scenePath, curNode->GetData()->m_name);
@@ -98,7 +98,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 					if (newScene->IsBeginLoaded())
 					{
 						// Set current scene to the first loaded scene
-						if (m_currentScene == NULL)
+						if (m_currentScene == nullptr)
 						{
 							m_currentScene = newScene;
 						}
@@ -138,7 +138,7 @@ bool WorldManager::Shutdown()
 {
 	// Cleanup memory allocated for scene objects
 	SceneNode * next = m_scenes.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		// Cache off next pointer
 		SceneNode * cur = next;
@@ -150,7 +150,7 @@ bool WorldManager::Shutdown()
 	}
 
 	// Clear the current scene as it's data has been cleared
-	m_currentScene = NULL;
+	m_currentScene = nullptr;
 
 	return true;
 }
@@ -158,7 +158,7 @@ bool WorldManager::Shutdown()
 bool WorldManager::Update(float a_dt)
 {
 	// Only update the active scene
-	if (m_currentScene != NULL)
+	if (m_currentScene != nullptr)
 	{
 		return m_currentScene->Update(a_dt);
 	}
@@ -168,8 +168,8 @@ bool WorldManager::Update(float a_dt)
 GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_scene)
 {
 	// Check there is a valid scene to add the object to
-	Scene * sceneToAddObjectTo = NULL;
-	if (a_scene == NULL)
+	Scene * sceneToAddObjectTo = nullptr;
+	if (a_scene == nullptr)
 	{
 		sceneToAddObjectTo = m_currentScene;
 	}
@@ -179,10 +179,10 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 	}
 
 	// Early out if no scene
-	if (sceneToAddObjectTo == NULL)
+	if (sceneToAddObjectTo == nullptr)
 	{
 		Log::Get().WriteEngineErrorNoParams("Cannot create an object, there is no scene to add it to!");
-		return NULL;
+		return nullptr;
 	}
 
 	// Add a new game object to the scene
@@ -207,7 +207,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				if (!templateFile.Load(templateEntry))
 				{
 					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s from datapack", a_templatePath);
-					return NULL;
+					return nullptr;
 				}
 			}
 		}
@@ -235,7 +235,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 			if (!templateFile.Load(fileNameBuf))
 			{
 				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load template file %s", a_templatePath);
-				return NULL;
+				return nullptr;
 			}
 		}
 
@@ -265,17 +265,17 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				bool hasCollision = false;
 				if (GameFile::Property * clipType = object->FindProperty("clipType"))
 				{
-					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Sphere);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Box);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Mesh);
@@ -339,7 +339,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 			else // Can't find the first object
 			{
 				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to find a root gameObject node for template file %s", a_templatePath);
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
@@ -375,7 +375,7 @@ void WorldManager::DestroyAllObjects(bool a_destroyScriptOwned)
 	// Iterate through all scenes and destroy objects
 	m_totalGameObjects = 0;
 	SceneNode * next = m_scenes.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		next->GetData()->RemoveAllObjects(a_destroyScriptOwned);
 		next = next->GetNext();
@@ -387,7 +387,7 @@ void WorldManager::DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings)
 	// Iterate through all scenes and destroy objects
 	m_totalGameObjects = 0;
 	SceneNode * next = m_scenes.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		next->GetData()->RemoveAllScriptOwnedObjects(a_destroyScriptBindings);
 		next = next->GetNext();
@@ -403,13 +403,13 @@ GameObject * WorldManager::GetGameObject(unsigned int a_objectId)
 	}
 
 	// Failure case
-	return NULL;
+	return nullptr;
 }
 
 Scene * WorldManager::GetScene(const char * a_sceneName)
 {
 	SceneNode * next = m_scenes.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		Scene * curScene = next->GetData();
 		if (strcmp(a_sceneName, curScene->GetName()) == 0)
@@ -419,7 +419,7 @@ Scene * WorldManager::GetScene(const char * a_sceneName)
 		next = next->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void WorldManager::SetCurrentScene(const char * a_sceneName)
@@ -457,7 +457,7 @@ GameObject * WorldManager::GetGameObject(const char * a_objName)
 	else // Look through each scene for the target object
 	{
 		SceneNode * next = m_scenes.GetHead();
-		while(next != NULL)
+		while(next != nullptr)
 		{
 			if (GameObject * foundObject = next->GetData()->GetSceneObject(a_objName))
 			{
@@ -468,5 +468,5 @@ GameObject * WorldManager::GetGameObject(const char * a_objName)
 	}
 
 	// Failure case
-	return NULL;
+	return nullptr;
 }

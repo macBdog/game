@@ -20,8 +20,8 @@ public:
 
 	//\ No work done in the constructor, only Init
 	ScriptManager(float a_updateFreq = s_updateFreq) 
-		: m_globalLua(NULL)
-		, m_gameLua(NULL)
+		: m_globalLua(nullptr)
+		, m_gameLua(nullptr)
 		, m_lastFrameDelta(0.0f)
 		, m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)

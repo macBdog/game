@@ -20,8 +20,8 @@ public:
 
 	// Constructor just for initialisation list
 	Gui() 
-		: m_activeMenu(NULL)
-		, m_startupMenu(NULL)
+		: m_activeMenu(nullptr)
+		, m_startupMenu(nullptr)
 	{ m_guiPath[0] = '\0'; }
 
 	// Destructor cleans up all allocations
@@ -40,7 +40,7 @@ public:
 
 	//\ingroup Widget lifecycle functions
 	//\brief Allocate memory for a widget and return a pointer to it
-	//return A pointer to the newly created widget if succesfull otherwise NULL
+	//return A pointer to the newly created widget if succesfull otherwise nullptr
 	Widget * CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive = true);
 	Widget * CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, bool a_startActive = true);
 	Widget * FindWidget(const char * a_widgetName);

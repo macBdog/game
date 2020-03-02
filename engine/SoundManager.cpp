@@ -6,7 +6,7 @@
 
 #include "SoundManager.h"
 
-template<> SoundManager * Singleton<SoundManager>::s_instance = NULL;
+template<> SoundManager * Singleton<SoundManager>::s_instance = nullptr;
 const float SoundManager::s_updateFreq = 1.0f;
 
 bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack)
@@ -17,7 +17,7 @@ bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack
 		// Cache off path and look for sounds to load
 		strncpy(m_soundPath, a_soundPath, sizeof(char) * strlen(a_soundPath) + 1);
 
-		if (a_dataPack != NULL && a_dataPack->IsLoaded())
+		if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 		{
 			// Populate a list of sounds
 			DataPack::EntryList soundEntries;
@@ -26,7 +26,7 @@ bool SoundManager::Startup(const char * a_soundPath, const DataPack * a_dataPack
 
 			// Load each font in the pack
 			bool loadSuccess = true;
-			while (curNode != NULL)
+			while (curNode != nullptr)
 			{
 				DataPackEntry * curData = curNode->GetData();
 				m_engine->addSoundSourceFromMemory(curData->m_data, curData->m_size, curData->m_path, false);
@@ -52,10 +52,10 @@ bool SoundManager::Shutdown()
 	StopAllSoundsAndMusic();
 
 	// Shutdown the engine that plays the sound
-	if (m_engine != NULL)
+	if (m_engine != nullptr)
 	{
 		m_engine->drop();
-		m_engine = NULL;
+		m_engine = nullptr;
 		return true;
 	}
 
@@ -182,7 +182,7 @@ bool SoundManager::SetMusicVolume(const char * a_musicName, float a_newVolume)
 {
 	// Look through all playing music and try to set the volume
 	SoundNode * cur = m_music.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		// Found our sound
 		PlayingSoundInfo * curInfo = cur->GetData();
@@ -205,7 +205,7 @@ bool SoundManager::StopMusic(const char * a_musicName)
 {
 	// Look through all playing music and try to stop
 	SoundNode * cur = m_music.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		// Found our sound
 		PlayingSoundInfo * curInfo = cur->GetData();
@@ -233,7 +233,7 @@ void SoundManager::StopAllSoundsAndMusic()
 
 		// Clean up music handles
 		SoundNode * next = m_music.GetHead();
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			// Cache off next pointer
 			SoundNode * cur = next;
@@ -243,7 +243,7 @@ void SoundManager::StopAllSoundsAndMusic()
 			if (irrklang::ISound * soundHandle = cur->GetData()->m_handle)
 			{
 				soundHandle->drop();
-				cur->GetData()->m_handle = NULL;
+				cur->GetData()->m_handle = nullptr;
 			}
 
 			m_music.Remove(cur);

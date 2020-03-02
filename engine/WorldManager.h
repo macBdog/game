@@ -24,7 +24,7 @@ public:
 	//\brief Ctor calls through to startup
 	WorldManager() 
 		: m_totalGameObjects(0)
-		, m_currentScene(NULL) { m_templatePath[0] = '\0'; m_scenePath[0] = '\0'; }
+		, m_currentScene(nullptr) { m_templatePath[0] = '\0'; m_scenePath[0] = '\0'; }
 	~WorldManager() { Shutdown(); }
 
 	//\brief Initialise memory pools on startup, cleanup worlds objects on shutdown
@@ -40,9 +40,9 @@ public:
 
 	//\brief Create and object from an optional game file template
 	//\param a_templatePath Pointer to a cstring with an optional game file to create from
-	//\param a_scene a pointer to the scene to add the object to, will try the current if NULL
-	//\return A pointer to the newly created game object of NULL for failure
-	GameObject * CreateObject(const char * a_templatePath = NULL, Scene * a_scene = NULL);
+	//\param a_scene a pointer to the scene to add the object to, will try the current if nullptr
+	//\return A pointer to the newly created game object of nullptr for failure
+	GameObject * CreateObject(const char * a_templatePath = nullptr, Scene * a_scene = nullptr);
 	
 	//\brief Remove a created object from the world
 	//\param a_destroyScriptBindings true if the script management bindings should be killed
@@ -82,7 +82,7 @@ private:
 	//\brief An object lookup maps a globally unique ID to a scene and object storage ID for that scene
 	struct ObjectLookup
 	{
-		ObjectLookup() : m_scene(NULL), m_storageId(0) {}
+		ObjectLookup() : m_scene(nullptr), m_storageId(0) {}
 		Scene * m_scene;			///< The scene that stores the object
 		unsigned int m_storageId;	///< The position in the scene's storage array of the object
 	};

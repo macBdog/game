@@ -13,14 +13,14 @@ class Delegate
 public:
 	
 	// Default constructor so delegate can be initialised without arguments
-	Delegate() : m_callback(NULL) {}
+	Delegate() : m_callback(nullptr) {}
 
 	// Setup the delegate to call the correct method on the object
 	template <typename TObj, typename TMethod>
 	inline void SetCallback(TObj * a_object, TMethod a_method)
 	{
 		// This can only happen once as the callback is not reference counted
-		if (m_callback == NULL)
+		if (m_callback == nullptr)
 		{
 			m_callback = new Callback<TReturnType, TParam, TObj, TMethod>(a_object, a_method);
 		}
@@ -29,11 +29,11 @@ public:
 	// Clear the callback
 	inline void ClearCallback()
 	{
-		m_callback = NULL;
+		m_callback = nullptr;
 	}
 
 	//\brief Test if the delegate has been set up
-	inline bool IsSet() { return m_callback != NULL; }
+	inline bool IsSet() { return m_callback != nullptr; }
 	
 	// Cleanup allocation
 	~Delegate()

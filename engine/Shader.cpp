@@ -16,7 +16,7 @@ Shader::Shader(const char * a_name)
 , m_geometryShader(0)
 , m_shader(0)
 {
-	if (a_name != NULL || a_name[0] != '\0')
+	if (a_name != nullptr || a_name[0] != '\0')
 	{
 		// Set data
 		m_name[0] = '\0';
@@ -39,7 +39,7 @@ Shader::~Shader()
 
 bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, const char * a_geometrySource)
 {
-	if (m_name == NULL || a_vertexSource == NULL || a_fragmentSource == NULL ||
+	if (m_name == nullptr || a_vertexSource == nullptr || a_fragmentSource == nullptr ||
 		m_name[0] == '\0' || a_vertexSource[0] == '\0' || a_fragmentSource[0] == '\0')
 	{
 		return false;
@@ -142,7 +142,7 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
     GLint compiled;
 	const char ** pSrc = (const char **)&a_src;
 	GLuint shader = glCreateShader(type);
-	glShaderSource(shader, 1, pSrc, NULL);
+	glShaderSource(shader, 1, pSrc, nullptr);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     
@@ -152,7 +152,7 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
 		Log & log = Log::Get();
 		GLint logErrorLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logErrorLength);
-		char * compileError = NULL;
+		char * compileError = nullptr;
         if (compileError = (char *)malloc(logErrorLength))
 		{
 			glGetShaderInfoLog(shader, logErrorLength, &logErrorLength, compileError);

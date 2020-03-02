@@ -5,14 +5,14 @@
 void GameFile::Unload()
 {
 	// Iterate through all objects and delete inclusive of properties
-	LinkedListNode<Object> * nextObject = m_objects.GetHead();
-	while(nextObject != NULL)
+	auto nextObject = m_objects.GetHead();
+	while(nextObject != nullptr)
 	{
-		LinkedListNode<Property> * nextProperty = nextObject->GetData()->m_properties.GetHead();	
-		while(nextProperty != NULL)
+		auto * nextProperty = nextObject->GetData()->m_properties.GetHead();	
+		while(nextProperty != nullptr)
 		{
 			// Cache off the working node so we can delete it and its data
-			LinkedListNode<Property> * curProperty = nextProperty;
+			auto * curProperty = nextProperty;
 			nextProperty = nextProperty->GetNext();
 
 			nextObject->GetData()->m_properties.Remove(curProperty);
@@ -21,7 +21,7 @@ void GameFile::Unload()
 		}
 
 		// Cache off working node as above
-		LinkedListNode<Object> * curObject = nextObject;
+		auto * curObject = nextObject;
 		nextObject = nextObject->GetNext();
 
 		m_objects.Remove(curObject);
@@ -40,8 +40,8 @@ bool GameFile::Write(const char * a_filePath)
 	if (fileOutput.is_open())
 	{
 		// Output each object and it's properties
-		LinkedListNode<Object> * cur = m_objects.GetHead();
-		while(cur != NULL)
+		auto * cur = m_objects.GetHead();
+		while(cur != nullptr)
 		{
 			cur->GetData()->Serialise(fileOutput);	
 			cur = cur->GetNext();
@@ -148,7 +148,7 @@ GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_par
 	newObject->GetData()->m_name = StringHash(a_objectName);
 
 	// Top level object
-	if (a_parent == NULL)
+	if (a_parent == nullptr)
 	{
 		m_objects.Insert(newObject);
 	}
@@ -176,7 +176,7 @@ GameFile::Object * GameFile::FindObject(const char * a_name) const
 {
 	// Iterate through all objects in this file looking for a name match
 	LinkedListNode<Object> * cur = m_objects.GetHead();
-	while(cur != NULL)
+	while(cur != nullptr)
 	{
 		// Quit out of the loop if found
 		if (cur->GetData()->m_name == StringHash::GenerateCRC(a_name))
@@ -186,14 +186,14 @@ GameFile::Object * GameFile::FindObject(const char * a_name) const
 		cur = cur->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 GameFile::Property * GameFile::Object::FindProperty(const char * a_propertyName) const
 {
 	// Iterate through all objects in the parent's property list till a name match is found
 	LinkedListNode<Property> * cur = m_properties.GetHead();
-	while(cur != NULL)
+	while(cur != nullptr)
 	{
 		// Quit out of the loop if found
 		if (cur->GetData()->m_name == StringHash::GenerateCRC(a_propertyName))
@@ -204,14 +204,14 @@ GameFile::Property * GameFile::Object::FindProperty(const char * a_propertyName)
 	}
 
 	// Not found
-	return NULL;
+	return nullptr;
 }
 
 GameFile::Object * GameFile::Object::FindObject(const char * a_objectName) const
 {
 	// Walk the hierachy to find the targeted object
 	LinkedListNode<Object> * curChild = m_children.GetHead();
-	while (curChild != NULL)
+	while (curChild != nullptr)
 	{
 		Object * curObject = curChild->GetData();
 		if (curObject->m_name == StringHash::GenerateCRC(a_objectName))
@@ -222,5 +222,5 @@ GameFile::Object * GameFile::Object::FindObject(const char * a_objectName) const
 	}
 
 	// Not found
-	return NULL;
+	return nullptr;
 }

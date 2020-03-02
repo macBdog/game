@@ -74,8 +74,8 @@ public:
 	inline bool IsDebugMenuActive() const 
 	{ 
 		return	m_commands.IsActive() ||
-				(m_resourceSelect != NULL && m_resourceSelect->IsActive()) ||
-				(m_textInput != NULL && m_textInput->IsActive());
+				(m_resourceSelect != nullptr && m_resourceSelect->IsActive()) ||
+				(m_textInput != nullptr && m_textInput->IsActive());
 	}
 
 	//\brief If sim dt and game dt should advance
@@ -88,14 +88,14 @@ public:
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
 	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
-	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = NULL);
+	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = nullptr);
 
 	//\brief Show the resource selection dialog to enable a font to be chosen
 	void ShowFontSelect();
 
 	//\brief Show the text input dialog to enable something to be named
 	//\param a_startingText An optional pointer to a c string with the text that should be displayed
-	void ShowTextInput(const char * a_startingText = NULL);
+	void ShowTextInput(const char * a_startingText = nullptr);
 
 	//\\brief Show a widget with a colour spectrum that can be clicked to choose a colour
 	void ShowColourPicker();

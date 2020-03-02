@@ -4,7 +4,7 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 
-template<> TextureManager * Singleton<TextureManager>::s_instance = NULL;
+template<> TextureManager * Singleton<TextureManager>::s_instance = nullptr;
 
 const unsigned int TextureManager::s_texurePoolSize[TextureCategory::Count] = 
 {
@@ -20,7 +20,7 @@ const float TextureManager::s_updateFreq = 1.0f;
 TextureManager::TextureManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
-	, m_dataPack(NULL)
+	, m_dataPack(nullptr)
 {
 	m_texturePath[0] = '\0';
 	m_filterMode = TextureFilter::Invalid;
@@ -108,8 +108,8 @@ bool TextureManager::Update(float a_dt)
 		for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 		{
 			// Each texture in the category gets tested
-			ManagedTexture * curTex = NULL;
-			while ( m_textureMap[i].GetNext(curTex) && curTex != NULL)
+			ManagedTexture * curTex = nullptr;
+			while ( m_textureMap[i].GetNext(curTex) && curTex != nullptr)
 			{
 				FileManager::Timestamp curTimeStamp;
 				if (FileManager::Get().GetFileTimeStamp(curTex->m_path, curTimeStamp))
@@ -133,14 +133,14 @@ bool TextureManager::Update(float a_dt)
 Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
-	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
+	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
 	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
 	if (!strstr(a_tgaPath, pathQualifier))
 	{
 		// Strip out any leading slashes
 		const char * filenameOnly = strstr(a_tgaPath, "\\");
-		if (filenameOnly != NULL)
+		if (filenameOnly != nullptr)
 		{
 			sprintf(fileNameBuf, "%s%s", m_texturePath, filenameOnly);
 		} 
@@ -163,7 +163,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 	if (loadedCat != TextureCategory::None)
 	{
 		// Just returned the cached copy
-		ManagedTexture * foundTex = NULL;
+		ManagedTexture * foundTex = nullptr;
 		m_textureMap[loadedCat].Get(texId, foundTex);
 		return &foundTex->m_texture;
 	}
@@ -190,13 +190,13 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 				else
 				{
 					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
-					return NULL;
+					return nullptr;
 				}
 			}
 			else
 			{
 				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
-				return NULL;
+				return nullptr;
 			}
 		}
 		else
@@ -212,16 +212,16 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 			else
 			{
 				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileNameBuf);
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
 	else // Report the error
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture allocation failed for %s", fileNameBuf);
-		return NULL;
+		return nullptr;
 	}
-   return NULL;
+   return nullptr;
 }
 
 TextureCategory::Enum TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)
@@ -229,7 +229,7 @@ TextureCategory::Enum TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash
 	// Look through each category for the target texture
 	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
 	{
-		ManagedTexture * foundTex = NULL;
+		ManagedTexture * foundTex = nullptr;
 		if (m_textureMap[i].Get(a_tgaPathHash, foundTex))
 		{
 			return (TextureCategory::Enum)i;

@@ -102,8 +102,10 @@ void DebugMenuCommandRegistry::Startup()
 	m_btnLightRoot = DebugMenuCommand::CreateButton("Change Light", gui.GetDebugRoot(), sc_colourRed);
 
 	// Create root of the create menu that appears if no objects are selected
-	DebugMenuCommand * lastCreatedCommand = NULL;
-	lastCreatedCommand = Create("Create Widget",			m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple, EditType::None);
+	DebugMenuCommand * lastCreatedCommand = nullptr;
+	auto newDebugObj = [this, &lastCreatedCommand](const char * a_name) { lastCreatedCommand = Create(a_name, m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple, EditType::None); };
+
+	newDebugObj("Create Widget");
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
 	lastCreatedCommand = Create("Create GameObject",		m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourGreen, EditType::None);
 	lastCreatedCommand->SetGameObjectFunction(this, &DebugMenuCommandRegistry::CreateGameObject);
@@ -113,7 +115,8 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateDataPack);
 	lastCreatedCommand = Create("Show/Hide Physics", m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::None);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ShowHidePhysicsWorld);
-	
+
+
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ChangeWidgetAlignment);
@@ -170,10 +173,10 @@ void DebugMenuCommandRegistry::Startup()
 
 void DebugMenuCommandRegistry::Shutdown()
 {
-	CommandNode * cur = m_commands.GetHead();
-	while (cur != NULL)
+	auto cur = m_commands.GetHead();
+	while (cur != nullptr)
 	{
-		CommandNode * next = cur->GetNext();
+		auto next = cur->GetNext();
 		Gui::Get().DestroyWidget(cur->GetData()->GetWidget());
 
 		delete cur->GetData();
@@ -223,7 +226,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
 	SetMenuAlignment(&menuAlign);
 
 	// Commands that affect widgets
-	if (a_selectedWidget != NULL)
+	if (a_selectedWidget != nullptr)
 	{
 		ShowWidgetCommands();
 		retVal.m_success = true;
@@ -231,7 +234,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
 	}
 
 	// Commands that affect game objects
-	if (a_selectedGameObject != NULL)
+	if (a_selectedGameObject != nullptr)
 	{
 		ShowGameObjectCommands();
 		retVal.m_success = true;
@@ -239,7 +242,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
 	}
 
 	// Commands that affect lights
-	if (a_selectedLight != NULL)
+	if (a_selectedLight != nullptr)
 	{
 		ShowLightCommands();
 		retVal.m_success = true;
@@ -247,7 +250,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
 	}
 
 	// Check for showing a root level debug command
-	if (a_selectedWidget == NULL && a_selectedGameObject == NULL)
+	if (a_selectedWidget == nullptr && a_selectedGameObject == nullptr)
 	{
 		ShowRootCommands();
 		retVal.m_success = true;
@@ -435,12 +438,12 @@ DebugCommandReturnData DebugMenuCommandRegistry::CreateWidget(Widget * a_widget)
 
 	// Parent is the active menu
 	Gui & gui = Gui::Get();
-	Widget * parentWidget = a_widget != NULL ? a_widget : gui.GetActiveMenu();
+	Widget * parentWidget = a_widget != nullptr ? a_widget : gui.GetActiveMenu();
 	Widget * newWidget = gui.CreateWidget(curItem, parentWidget);
 	newWidget->SetOffset(InputManager::Get().GetMousePosRelative());
 		
 	Hide();
-	retVal.m_success = newWidget != NULL;
+	retVal.m_success = newWidget != nullptr;
 	retVal.m_dirtyFlag = DirtyFlag::GUI;
 	return retVal;
 }
@@ -571,7 +574,7 @@ DebugCommandReturnData DebugMenuCommandRegistry::DeleteWidget(Widget * a_widget)
 	DebugCommandReturnData retVal;
 	retVal.m_clearSelection = true;
 	retVal.m_dirtyFlag = DirtyFlag::GUI;
-	retVal.m_success = a_widget == NULL;
+	retVal.m_success = a_widget == nullptr;
 	return retVal;
 }
 

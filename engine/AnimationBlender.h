@@ -56,7 +56,7 @@ private:
 			, m_frameRateRecip(0.0f)
 			, m_lastFrame(0.0f)
 			, m_name()
-			, m_data(NULL) { }
+			, m_data(nullptr) { }
 		bool m_active;				///< If an animation is currently playing
 		float m_influence;			///< How much weight the animation has
 		int m_curFrame;				///< How far through the animation

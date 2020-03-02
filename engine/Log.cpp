@@ -2,7 +2,7 @@
 
 #include "Log.h"
 
-template<> Log * Singleton<Log>::s_instance = NULL;
+template<> Log * Singleton<Log>::s_instance = nullptr;
 
 const float	Log::s_logDisplayTime[LogLevel::Count] =
 {
@@ -21,7 +21,7 @@ const Colour Log::s_logDisplayColour[LogLevel::Count]=
 bool Log::Shutdown()
 {
 	LogDisplayNode * next = m_displayList.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		// Cache off next pointer
 		LogDisplayNode * cur = next;
@@ -45,8 +45,8 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
     char categoryBuf[128];
 	levelBuf[0] = '\0';
 	categoryBuf[0] = '\0';
-	char * formatString = NULL;
-	char * finalString = NULL;
+	char * formatString = nullptr;
+	char * finalString = nullptr;
 
 	// Create a preformatted error string
 	PrependLogDetails(a_level, a_category, &levelBuf[0]);
@@ -60,7 +60,7 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
 	int finalStringSize = _vscprintf(a_message, formatArgs);
 	formatString = (char *)malloc(sizeof(char) * finalStringSize + 1);
 	finalString = (char *)malloc(sizeof(char) * finalStringSize + strlen(errorString) + 8);
-	if (finalString != NULL && formatString != NULL)
+	if (finalString != nullptr && formatString != nullptr)
 	{
 		vsprintf(formatString, a_message, formatArgs);
 		sprintf(finalString, "%s %s\n", errorString, formatString);
@@ -104,11 +104,11 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
 	}
 
 	// Free memory for error strings
-	if (formatString != NULL)
+	if (formatString != nullptr)
 	{
 		free(formatString);
 	}
-	if (finalString != NULL)
+	if (finalString != nullptr)
 	{
 		free(finalString);
 	}
@@ -121,10 +121,11 @@ void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const 
 #endif
 
 	// Add message to write once list
+	void * tempVal = nullptr;
 	unsigned int msgHash = StringHash::GenerateCRC(a_message, false);
-	if (!m_writeOnceList.Get(msgHash, nullptr))
+	if (!m_writeOnceList.Get(msgHash, tempVal))
 	{
-		m_writeOnceList.Insert(msgHash, msgHash);
+		m_writeOnceList.Insert(msgHash, tempVal);
 
 		char levelBuf[128];
 		char categoryBuf[128];
@@ -172,7 +173,7 @@ void Log::Update(float a_dt)
 	LogDisplayNode * curEntry = m_displayList.GetHead();
 	float logDisplayPosY = 1.0f;
 	int logEntryCount = 0;
-	while(curEntry != NULL)
+	while(curEntry != nullptr)
 	{
 		LogDisplayEntry * logEntry = curEntry->GetData();
 		LogDisplayNode * toDelete = curEntry;
@@ -202,7 +203,7 @@ void Log::ClearRendering()
 {
 	// Delete all display entries
 	LogDisplayNode * curEntry = m_displayList.GetHead();
-	while(curEntry != NULL)
+	while(curEntry != nullptr)
 	{
 		LogDisplayEntry * logEntry = curEntry->GetData();
 		LogDisplayNode * toDelete = curEntry;

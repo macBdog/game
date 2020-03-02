@@ -13,7 +13,7 @@
 
 using namespace std;	//< For fstream operations
 
-template<> DataPack * Singleton<DataPack>::s_instance = NULL;
+template<> DataPack * Singleton<DataPack>::s_instance = nullptr;
 
 const char * DataPack::s_defaultDataPackPath = "datapack.dtz";	///< Name of the pack to write and read if not specified
 
@@ -21,7 +21,7 @@ void DataPack::Unload()
 {
 	// Clean up any entries in the manifest
 	EntryNode * next = m_manifest.GetHead();
-	while (next != NULL)
+	while (next != nullptr)
 	{
 		// Cache off next pointer
 		EntryNode * cur = next;
@@ -137,15 +137,15 @@ bool DataPack::AddFolder(const char * a_path, const char * a_fileExtensions)
 	if (a_fileExtensions && a_fileExtensions[0] != '\0')
 	{
 		// Support a list of extension types
-		if (strstr(a_fileExtensions, ",") != NULL)
+		if (strstr(a_fileExtensions, ",") != nullptr)
 		{
 			char extensionsTokenized[StringUtils::s_maxCharsPerName];
 			strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
 			char * listTok = strtok(&extensionsTokenized[0], delimeter);
-			while(listTok != NULL)
+			while(listTok != nullptr)
 			{
 				filesAdded = AddAllFilesInFolder(a_path, listTok);
-				listTok = strtok(NULL, delimeter);
+				listTok = strtok(nullptr, delimeter);
 			}
 		}
 		else
@@ -166,7 +166,7 @@ bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExten
 	// Add all files of correct path
 	int numFilesAdded = 0;
 	FileManager::FileListNode * curNode = filesToPack.GetHead();
-	while(curNode != NULL)
+	while(curNode != nullptr)
 	{
 		// Get a fresh timestamp on the animation file
 		char fullPath[StringUtils::s_maxCharsPerLine];
@@ -191,7 +191,7 @@ bool DataPack::Serialize(const char * a_path) const
 	// First compute the complete size of all resources in the pack
 	size_t packSize = 0;
 	EntryNode * cur = m_manifest.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
 		packSize += curEntry->m_size;
@@ -210,7 +210,7 @@ bool DataPack::Serialize(const char * a_path) const
 
 		// Write each file in the manifest
 		EntryNode * cur = m_manifest.GetHead();
-		while (cur != NULL)
+		while (cur != nullptr)
 		{
 			DataPackEntry * curEntry = cur->GetData();
 
@@ -271,7 +271,7 @@ DataPackEntry * DataPack::GetEntry(const char * a_path) const
 {
 	// Write each file in the manifest
 	EntryNode * cur = m_manifest.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
 		if (strcmp(curEntry->m_path, a_path) == 0)
@@ -280,22 +280,22 @@ DataPackEntry * DataPack::GetEntry(const char * a_path) const
 		}
 		cur = cur->GetNext();
 	}
-	return NULL;
+	return nullptr;
 }
 
 void DataPack::GetAllEntries(const char * a_fileExtensions, EntryList & a_entries_OUT) const
 {
 	// Support a list of extension types
 	const char * delimeter = ",";
-	if (strstr(a_fileExtensions, ",") != NULL)
+	if (strstr(a_fileExtensions, ",") != nullptr)
 	{
 		char extensionsTokenized[StringUtils::s_maxCharsPerName];
 		strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
 		char * listTok = strtok(&extensionsTokenized[0], delimeter);
-		while (listTok != NULL)
+		while (listTok != nullptr)
 		{
 			AddEntriesToExternalList(listTok, a_entries_OUT);
-			listTok = strtok(NULL, delimeter);
+			listTok = strtok(nullptr, delimeter);
 		}
 	}
 	else
@@ -308,7 +308,7 @@ void DataPack::CleanupEntryList(EntryList & a_entries_OUT) const
 {
 	// Delete the nodes, all data is owned by the datapack
 	EntryNode * next = a_entries_OUT.GetHead();
-	while (next != NULL)
+	while (next != nullptr)
 	{
 		// Cache off next pointer
 		EntryNode * cur = next;
@@ -322,7 +322,7 @@ void DataPack::CleanupEntryList(EntryList & a_entries_OUT) const
 bool DataPack::HasFile(const char * a_path) const
 {
 	EntryNode * cur = m_manifest.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		const DataPackEntry * curEntry = cur->GetData();
 		if (strcmp(curEntry->m_path, a_path) == 0)
@@ -342,7 +342,7 @@ void DataPack::SetRelativePath(const char * a_relativePath)
 void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const
 {
 	EntryNode * cur = m_manifest.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
 		if (strstr(curEntry->m_path, a_fileExtension) != 0)
@@ -359,7 +359,7 @@ void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList 
 void DataPack::AddEntryToExternalList(const char * a_filePath, EntryList & a_entries_OUT) const
 {
 	EntryNode * cur = m_manifest.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
 		if (strcmp(curEntry->m_path, a_filePath) == 0)

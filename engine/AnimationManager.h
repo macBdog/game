@@ -39,7 +39,7 @@ public:
 	AnimationManager(float a_updateFreq = s_updateFreq) 
 		: m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
-		, m_data(NULL)
+		, m_data()
 		{ m_animPath[0] = '\0'; }
 	~AnimationManager() { Shutdown(); }
 
@@ -73,7 +73,7 @@ private:
 			: m_timeStamp()
 			, m_numKeys(0)
 			, m_name(a_animName)
-			, m_data(NULL)
+			, m_data(nullptr)
 		{
 			m_path[0] = '\0';
 		}
@@ -81,7 +81,7 @@ private:
 			: m_timeStamp(a_timeStamp)	
 			, m_numKeys(0)
 			, m_name(a_animName)
-			, m_data(NULL)
+			, m_data(nullptr)
 		{ 
 			strncpy(&m_path[0], a_animPath, StringUtils::s_maxCharsPerLine);
 		}
@@ -165,7 +165,7 @@ private:
 				int animLength = 0;
 				const int numChannels = 3;
 				const int numComponents = 3;
-				KeyComp * activeKey = NULL;
+				KeyComp * activeKey = nullptr;
 				int numKeys[numChannels][numComponents];
 				LinearAllocator<KeyComp> * inputKeys[numChannels][numComponents];
 				for (int i = 0; i < numChannels; ++i)
@@ -173,7 +173,7 @@ private:
 					for (int j = 0; j < numComponents; ++j)
 					{
 						numKeys[i][j] = 0;
-						inputKeys[i][j] = NULL;
+						inputKeys[i][j] = nullptr;
 					}
 				}
 
@@ -181,10 +181,10 @@ private:
 					strstr(line, "Current: "))
 				{
 					const char * takeName = StringUtils::ExtractField(line, ":", 1);
-					if (strlen(takeName) != NULL)
+					if (strlen(takeName) > 0)
 					{
 						// Read till the channels start
-						while (a_input.good() && strstr(line, "Channel:") == NULL)
+						while (a_input.good() && strstr(line, "Channel:") == nullptr)
 						{
 							a_input.getline(line, maxAnimFileLineChars);
 							lineCount++;
@@ -215,7 +215,7 @@ private:
 
 								// Allocate for the data to be read
 								numKeys[chanCount][compCount] = keyCount;
-								if (inputKeys[chanCount][compCount] == NULL)
+								if (inputKeys[chanCount][compCount] == nullptr)
 								{
 									inputKeys[chanCount][compCount] = new LinearAllocator<KeyComp>();
 									inputKeys[chanCount][compCount]->Init(sizeof(KeyComp) * keyCount);
@@ -277,7 +277,7 @@ private:
 
 						// Compile the keys and components into a stream of frames
 						int totalFrameCount = 0;
-						KeyFrame * firstFrame = NULL;
+						KeyFrame * firstFrame = nullptr;
 						KeyComp * currentKeyComp[numChannels][numComponents];
 						for (int i = 0; i < numChannels; ++i)
 						{
@@ -315,7 +315,7 @@ private:
 								KeyFrame * newKey = m_data.Allocate(sizeof(KeyFrame));
 								*newKey = curKey;
 								++totalFrameCount;
-								if (firstFrame == NULL)
+								if (firstFrame == nullptr)
 								{
 									firstFrame = newKey;
 								}
@@ -342,7 +342,7 @@ private:
 						}
 
 						// Add the new managed animation to the list
-						ManagedAnim * manAnim = NULL;
+						ManagedAnim * manAnim = nullptr;
 						if (DataPack::Get().IsLoaded())
 						{
 							manAnim = new ManagedAnim(a_animName);
@@ -355,13 +355,13 @@ private:
 							FileManager::Get().GetFileTimeStamp(animPath, curTimeStamp);
 							manAnim = new ManagedAnim(animPath, a_animName, curTimeStamp);
 						}
-						if (manAnim != NULL)
+						if (manAnim != nullptr)
 						{
 							manAnim->m_numKeys = totalFrameCount;
 							manAnim->m_data = firstFrame;
 							manAnim->m_frameRate = fileFrameRate;
 							ManagedAnimNode * manAnimNode = new ManagedAnimNode();
-							if (manAnim != NULL && manAnimNode != NULL)
+							if (manAnim != nullptr && manAnimNode != nullptr)
 							{
 								manAnimNode->SetData(manAnim);
 								m_anims.Insert(manAnimNode);
@@ -386,7 +386,7 @@ private:
 		// Update frame rate on all managed anims
 		int numAddedAnims = 0;
 		ManagedAnimNode * curNode = addedAnims.GetHead();
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			curNode->GetData()->m_frameRate = fileFrameRate;
 			curNode = curNode->GetNext();

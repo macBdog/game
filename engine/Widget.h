@@ -174,8 +174,8 @@ public:
 		, m_colour(sc_colourWhite)
 		, m_showTextCursor(false)
 		, m_active(true)
-		, m_texture(NULL)
-		, m_alignTo(NULL)
+		, m_texture(nullptr)
+		, m_alignTo(nullptr)
 		, m_children()
 		, m_debugRender(false)
 		, m_alwaysRender(false)
@@ -202,7 +202,7 @@ public:
 			: m_size()
 			, m_pos()
 			, m_colour(sc_colourWhite)
-			, m_name(NULL)
+			, m_name(nullptr)
 			, m_fontNameHash(0)
 			, m_fontSize(0.0f)
 			, m_selectFlags(SelectionFlags::Rollover) {}
@@ -249,7 +249,7 @@ public:
 	bool RemoveChildren();
 
 	//\brief Property accessors to return the head of the sibling or child widgets
-	//\return The sibling or child widget or NULL if not set
+	//\return The sibling or child widget or nullptr if not set
 	inline WidgetNode * GetChildren() { return m_children.GetHead(); }
 	inline bool HasChildren() { return m_children.GetLength() > 0; }
 	Widget * Find(const char * a_name);
@@ -322,16 +322,16 @@ public:
 	inline float GetFontSize() const { return m_fontSize; }
 	inline Colour GetColour() const { return m_colour; }
 	inline Widget * GetAlignTo() const { return m_alignTo; }
-	inline bool HasAlignTo() const { return m_alignTo != NULL || m_alignToName[0] != '\0'; }
+	inline bool HasAlignTo() const { return m_alignTo != nullptr || m_alignToName[0] != '\0'; }
 	inline const char * GetScriptFuncName() { return m_scriptFuncName; }
 
 	//\brief Execute the callback if defined
 	void Activate();
 
 	//\brief Write the widget and all properties to a file stream
-	//\param a_outputStream is a pointer to an output stream to write to, will create one if NULL
+	//\param a_outputStream is a pointer to an output stream to write to, will create one if nullptr
 	//\param a_indentCount is an optional number of tab character to prefix each line with
-	void Serialise(std::ofstream * a_outputStream = NULL, unsigned int a_indentCount = 0);
+	void Serialise(std::ofstream * a_outputStream = nullptr, unsigned int a_indentCount = 0);
 
 	// Templated function so any part of the engine or game can be a widget action listener
 	template <class TObj, typename TMethod>

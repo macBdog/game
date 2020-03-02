@@ -3,34 +3,42 @@
 #pragma once
 
 //\brief Unordered hash node class to be used with HashMap
-template <class K, class T>
+template <typename K, typename T>
 class HashNode
 {
 public:
-	HashNode(const K & a_key, T * a_object)
-		: m_object(a_object)
-		, m_next(nullptr)
-	{
-		m_key = GetHash();
-	}
+	HashNode()
+		: m_next(nullptr) {}
 
-	bool IsValid() { return m_object != nullptr; }
+	HashNode(const K & a_key, T & a_object)
+		: m_key(a_key)
+		, m_object(a_object)
+		, m_next(nullptr) {}
 
 private:
 
-	unsigned int m_key;
-	T * m_object;
-	HashNode * m_next;
+	template <typename K, typename T> friend class HashMap;
+
+	K m_key;					// Index into the bucket
+	T m_object;					// Storage for object type
+	HashNode * m_next;			// In the case of collisions, each node is a singly linked list forward
+};
+
+// Default hash function assuming unique keys supplied, collision free is impossible esp over small data
+template <typename K>
+struct KeyHash 
+{
+	unsigned int GetHash(K a_key, unsigned int a_tableSize) const { return a_key % a_tableSize; }
 };
 
 //\brief Unordered map class with simple hash functions for string types resolving to uints.
 //		 Utilises separate chaining with list head cells for collision management.
-template <class K, class T>
+template <typename K, typename T>
 class HashMap
 {
 public:
 
-	explicit HashMap() 
+	HashMap() 
 		: m_tableSize(s_defaultTableSize)
 		, m_length(0)
 	{
@@ -52,28 +60,55 @@ public:
 
 	bool Contains(K a_key)
 	{
-		HashNode t<K, T>(a_key, nullptr);
-		HashNode c<K, T> = m_map[t.m_key];
-		return c.IsValid();
+		unsigned int rawKey = KeyHash<K>().GetHash(a_key, m_tableSize);
+		HashNode<K, T> * found = m_map[rawKey];
+		return found != nullptr;
 	}
 
 	//\brief Retrieve an element in the map
 	//\param a_key the identifier for the item to look for
 	//\param a_value_OUT is a ref to and itme to populate if found
 	//\return true if the item was found and a_value_OUT will be modified
-	bool Get(K a_key, T & a_value_OUT)  
+	bool Get(K a_key, T & a_value_OUT)
 	{
+		unsigned int rawKey = KeyHash<K>().GetHash(a_key, m_tableSize);
+		HashNode<K, T> * found = m_map[rawKey];
+		if (found != nullptr)
+		{
+			a_value_OUT = found->m_object;
+			auto * next = found->m_next;
+			while (next != nullptr)
+			{
+				a_value_OUT = next->m_object;
+				next = next->m_next;
+			}
+
+			return true;
+		}
 		return false;
 	}
 
 	//\brief Add an element to the map
 	//\param a_key the unique way to identify the object
 	//\param a_data the object to insert
-	void Insert(K a_key, T a_data) 
+	void Insert(K a_key, T & a_data) 
 	{
-		HashNode<K, T> toInsert(a_key, a_data);
-		unsigned int rawKey = toInsert.m_key;
-		m_map[rawKey].Insert(toInsert); 
+		HashNode<K, T> * newNode = new HashNode<K, T>(a_key, a_data);
+		unsigned int rawKey = KeyHash<K>().GetHash(a_key, m_tableSize);
+		HashNode<K, T> * tNode = m_map[rawKey];
+		if (tNode != nullptr)
+		{
+			auto * next = tNode->m_next;
+			while (next != nullptr)
+			{
+				next = next->m_next;
+			}
+			next->m_next = newNode;
+		}
+		else
+		{
+			m_map[rawKey] = newNode;
+		}
 	}
 
 	//\brief Iterator like functionality
@@ -84,7 +119,7 @@ public:
 		{
 			return false;
 		}
-
+		// TODO
 		return false;	
 	}
 
@@ -93,43 +128,29 @@ private:
 	bool Allocate()
 	{
 		// Zero initialise the complete table so that IsValid calls will always fail to empty buckets
-		HashNode<K, T> tempNode;
-		m_map = (HashNode<K, T>*)malloc(m_tableSize); // TODO correct size of node/table
-		memset(m_map, 0, m_tableSize); // TODO correct size of node/table
+		m_map = new HashNode<K, T> * [m_tableSize]();
 		return m_map != nullptr;
 	}
 
 	bool Deallocate()
 	{
-		free(m_map);
-		m_map = nullptr;
+		if (m_map != nullptr)
+		{
+			delete[] m_map;
+			m_map = nullptr;
+			return true;
+		}
+		return false;
 	}
 
-	// Default hash function assuming unique keys supplied, collision free is impossible esp over small data
-	unsigned int GetHash(const K a_key) { return m_key % m_tableSize; }
-
-	static const size_t s_defaultTableSize = 512;
-	static const int s_maxStringHash32bit = 9; // TODO Move the StringHash guts into the HashMap to replace this hacky hash stuff
+	static const size_t s_defaultTableSize = 512;	
 
 	int m_length;									///< How many objects are inserted into the map
 	int m_tableSize;								///< Number of bytes allocated to hold the complete table
-	HashNode<K, T> * m_map;							///< Chunk of memory pointing to the objects in the map ordered by key
+	HashNode<K, T> ** m_map;						///< Chunk of memory pointing to the objects in the map ordered by key
+	KeyHash<K> m_hashFunc;									///< Pointer to struct for hashing
 };
 
-// String function assumes uniqueness in 9 letters sampled from string over length
-template<>
-unsigned int HashMap<const char *, class T>::GetHash(const char * a_key)
-{
-	const int strSize = strlen(a_key);
-	const unsigned int numChars = strSize < HashMap::s_maxStringHash32bit ? strSize : s_maxStringHash32bit;
-	unsigned int key = 0;
-	int strPos = 0;
-	for (unsigned int i = 0; i < numChars; ++i)
-	{
-		key += (int)a_key[strPos] * (int)pow(10, i);
-		++strPos;
-	}
-	return key % m_tableSize;
-}
+static const int s_maxStringHash32bit = 9;		// TODO Move the StringHash guts into the HashMap to replace this hacky hash stuff
 
 #endif //_CORE_HASH_MAP

@@ -7,7 +7,7 @@
 
 #include "FileManager.h"
 
-template<> FileManager * Singleton<FileManager>::s_instance = NULL;
+template<> FileManager * Singleton<FileManager>::s_instance = nullptr;
 
 #if _WIN32
 bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
@@ -16,7 +16,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	
 	// Check there is actually a path supplied
-	if (a_path == NULL || !a_path[0])
+	if (a_path == nullptr || !a_path[0])
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
@@ -102,7 +102,7 @@ bool FileManager::CheckFilePath(const char * a_filePath)
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	
 	// Check there is actually a path supplied
-	if (a_filePath == NULL || !a_filePath[0])
+	if (a_filePath == nullptr || !a_filePath[0])
 	{
 		return false;
 	}
@@ -153,7 +153,7 @@ void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 {
 	// Iterate through all objects in this file and clean up memory
 	FileListNode * next = a_fileList_OUT.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		// Cache off next pointer
 		FileListNode * cur = next;
@@ -169,7 +169,7 @@ void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
 {
 	// Check there is actually a path supplied
-	if (a_path == NULL || !a_path[0])
+	if (a_path == nullptr || !a_path[0])
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
@@ -181,7 +181,7 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 	{
 		SYSTEMTIME times, stLocal;
 		FileTimeToSystemTime(&lpFileInformation.ftLastWriteTime, &times);
-		SystemTimeToTzSpecificLocalTime(NULL, &times, &stLocal);
+		SystemTimeToTzSpecificLocalTime(nullptr, &times, &stLocal);
 
 		a_timestamp_OUT.m_totalDays = stLocal.wYear*365 + stLocal.wMonth*31 + stLocal.wDay;
 		a_timestamp_OUT.m_totalSeconds = stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;

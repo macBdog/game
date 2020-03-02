@@ -17,7 +17,7 @@
 
 #include "DebugMenu.h"
 
-template<> DebugMenu * Singleton<DebugMenu>::s_instance = NULL;
+template<> DebugMenu * Singleton<DebugMenu>::s_instance = nullptr;
 
 const float DebugMenu::sc_gameTimeScaleFast = 3.0f;		// Value of game time scale in fast mode
 const float DebugMenu::sc_gameTimeScaleSlow = 0.1f;		// Value of game time scale in slow mode
@@ -55,7 +55,7 @@ DebugMenu::DebugMenu()
 {
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
-		m_scriptDebugWidgets[i] = NULL;
+		m_scriptDebugWidgets[i] = nullptr;
 	}
 
 	if (!Startup())
@@ -225,7 +225,7 @@ void DebugMenu::Update(float a_dt)
 	const Vector2 mousePos = inMan.GetMousePosRelative();
 	const Vector2 amountToMove = (inMan.GetMousePosRelative() - m_lastMousePosRelative) * 10.0f;
 	const float moveAmount = amountToMove.GetX() + amountToMove.GetY();
-	if (m_editType == EditType::Widget && m_widgetToEdit != NULL)
+	if (m_editType == EditType::Widget && m_widgetToEdit != nullptr)
 	{
 		switch (m_editMode)
 		{
@@ -263,7 +263,7 @@ void DebugMenu::Update(float a_dt)
 			default: break;
 		}
 	}
-	else if (m_gameObjectToEdit != NULL)
+	else if (m_gameObjectToEdit != nullptr)
 	{
 		if (m_editType == EditType::GameObject)
 		{
@@ -465,12 +465,12 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 			case EditType::Widget: 
 			{
 				// Early out for no widget selected
-				if (m_widgetToEdit == NULL) { break; }
+				if (m_widgetToEdit == nullptr) { break; }
 
 				// Setting a texture on a widget
 				if (m_editMode == EditMode::Texture)
 				{
-					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
+					if (newResource != nullptr && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
 						char tgaBuf[StringUtils::s_maxCharsPerLine];
 						sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), newResource);
@@ -478,7 +478,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 					}
 					else // Clear the texture
 					{
-						m_widgetToEdit->SetTexture(NULL);
+						m_widgetToEdit->SetTexture(nullptr);
 					}
 					m_dirtyFlags.Set(DirtyFlag::GUI);
 				}
@@ -497,7 +497,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_editMode == EditMode::Template)
 				{
 					// Create new object
-					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
+					if (newResource != nullptr && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
 						if (GameObject * newGameObj = worldMan.CreateObject(newResource))
 						{
@@ -521,12 +521,12 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				}
 
 				// Early out for no object
-				if (m_gameObjectToEdit == NULL) { break; }
+				if (m_gameObjectToEdit == nullptr) { break; }
 
 				// Setting a model on a game object
 				if (m_editMode == EditMode::Model)
 				{
-					if (newResource != NULL && newResource[0] != '\0' && strlen(newResource)  > 0)
+					if (newResource != nullptr && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
 						char objBuf[StringUtils::s_maxCharsPerLine];
 						sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
@@ -540,7 +540,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 					} 
 					else // Clear the model
 					{
-						m_gameObjectToEdit->SetModel(NULL);
+						m_gameObjectToEdit->SetModel(nullptr);
 					}
 				}
 				break;
@@ -565,7 +565,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 			if (m_editMode == EditMode::Name)
 			{
 				// Editing the name of a widget
-				if (m_widgetToEdit != NULL)
+				if (m_widgetToEdit != nullptr)
 				{
 					m_widgetToEdit->SetName(m_textInputField->GetText());
 					m_dirtyFlags.Set(DirtyFlag::GUI);
@@ -574,7 +574,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 			else if (m_editMode == EditMode::Text)
 			{
 				// Editing the text of a widget
-				if (m_widgetToEdit != NULL)
+				if (m_widgetToEdit != nullptr)
 				{
 					m_widgetToEdit->SetText(m_textInputField->GetText());
 					m_dirtyFlags.Set(DirtyFlag::GUI);
@@ -586,7 +586,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 			// Editing the name of an object
 			if (m_editMode == EditMode::Name)
 			{
-				if (m_gameObjectToEdit != NULL)
+				if (m_gameObjectToEdit != nullptr)
 				{
 					m_gameObjectToEdit->SetName(m_textInputField->GetText());
 					m_dirtyFlags.Set(DirtyFlag::Scene);
@@ -595,7 +595,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 			else if (m_editMode == EditMode::SaveTemplate)
 			{
 				// Editing the template of an object
-				if (m_gameObjectToEdit != NULL)
+				if (m_gameObjectToEdit != nullptr)
 				{
 					char templateString[StringUtils::s_maxCharsPerName];
 					if (strstr(m_textInputField->GetText(), ".tmp"))
@@ -636,9 +636,9 @@ bool DebugMenu::OnActivate(bool a_active)
 	}
 
 	// If there is both a widget and object selected then we are in an error state
-	if (m_widgetToEdit != NULL && m_gameObjectToEdit != NULL)
+	if (m_widgetToEdit != nullptr && m_gameObjectToEdit != nullptr)
 	{
-		m_gameObjectToEdit = NULL;
+		m_gameObjectToEdit = nullptr;
 	}
 
 	// Let the commands handle what to do
@@ -683,13 +683,13 @@ bool DebugMenu::OnSelect(bool a_active)
 		}
 
 		// If the command required a resource to be selected
-		if (retVal.m_resourceSelectPath != NULL)
+		if (retVal.m_resourceSelectPath != nullptr)
 		{
 			ShowResourceSelect(retVal.m_resourceSelectPath, retVal.m_resourceSelectExtension);
 		}
 
 		// If the command requires some input of text
-		if (retVal.m_textEditString != NULL)
+		if (retVal.m_textEditString != nullptr)
 		{
 			ShowTextInput(retVal.m_textEditString);
 		}
@@ -709,13 +709,13 @@ bool DebugMenu::OnSelect(bool a_active)
 		// If the command cleared the selection of items
 		if (retVal.m_clearSelection)
 		{
-			if (m_widgetToEdit != NULL)
+			if (m_widgetToEdit != nullptr)
 			{
 				m_widgetToEdit->ClearSelection();
 			}
-			m_widgetToEdit = NULL;
-			m_gameObjectToEdit = NULL;
-			m_lightToEdit = NULL;
+			m_widgetToEdit = nullptr;
+			m_gameObjectToEdit = nullptr;
+			m_lightToEdit = nullptr;
 		}
 		return retVal.m_success;
 	}
@@ -741,7 +741,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	if (m_editType == EditType::Widget && m_editMode == EditMode::Alignment)
 	{
 		// Handle change to alignment
-		if (m_widgetToEdit != NULL)
+		if (m_widgetToEdit != nullptr)
 		{
 			Vector2 handlePos;
 			AlignX::Enum selectionX = AlignX::Count;
@@ -768,7 +768,7 @@ bool DebugMenu::OnSelect(bool a_active)
 				m_editType = EditType::None;
 				m_editMode = EditMode::None;
 				m_widgetToEdit->ClearSelection();
-				m_widgetToEdit = NULL;
+				m_widgetToEdit = nullptr;
 			}
 		}
 		return false;
@@ -777,12 +777,12 @@ bool DebugMenu::OnSelect(bool a_active)
 	// Cancel previous selection
 	if (!IsDebugMenuActive() && m_editMode == EditMode::None)
 	{
-		if (m_widgetToEdit != NULL)
+		if (m_widgetToEdit != nullptr)
 		{
 			m_editType = EditType::None;
 			m_editMode = EditMode::None;
 			m_widgetToEdit->ClearSelection();
-			m_widgetToEdit = NULL;
+			m_widgetToEdit = nullptr;
 		}
 	}
 
@@ -792,7 +792,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		// Handle widget selection when changing alignment parent
 		if (m_editType == EditType::Widget && 
 			m_editMode == EditMode::AlignmentParent &&
-			m_widgetToEdit != NULL &&
+			m_widgetToEdit != nullptr &&
 			m_widgetToEdit != newSelectedWidget)
 		{
 			m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
@@ -801,15 +801,15 @@ bool DebugMenu::OnSelect(bool a_active)
 		}
 
 		// Clear selection of old widget
-		if (m_widgetToEdit != NULL && m_widgetToEdit != newSelectedWidget)
+		if (m_widgetToEdit != nullptr && m_widgetToEdit != newSelectedWidget)
 		{
 			m_widgetToEdit->ClearSelection();
 		}
 		m_editType = EditType::Widget;
 		m_widgetToEdit = newSelectedWidget;
 		m_widgetToEdit->SetSelection(SelectionFlags::EditSelected);
-		m_gameObjectToEdit = NULL;
-		m_lightToEdit = NULL;
+		m_gameObjectToEdit = nullptr;
+		m_lightToEdit = nullptr;
 	}
 	else // Cancel selections
 	{
@@ -818,17 +818,17 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			HideColourPicker();
 		}
-		if (m_widgetToEdit != NULL)
+		if (m_widgetToEdit != nullptr)
 		{
 			m_editType = EditType::None;
 			m_editMode = EditMode::None;
 			m_widgetToEdit->ClearSelection();
-			m_widgetToEdit = NULL;
+			m_widgetToEdit = nullptr;
 		}
 	}
 
 	// If we don't already have a widget
-	if (m_widgetToEdit == NULL)
+	if (m_widgetToEdit == nullptr)
 	{
 		// Picking point is the mouse cursor transformed to 3D space in cam direction
 		bool selectedObject = false;
@@ -848,11 +848,11 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			// Pick an arbitrary object (would have to sort to get the closest)
 			GameObject * foundObject = curScene->GetSceneObject(pickStart, pickEnd);
-			if (foundObject != NULL)
+			if (foundObject != nullptr)
 			{
 				m_gameObjectToEdit = foundObject;
-				m_widgetToEdit = NULL;
-				m_lightToEdit = NULL;
+				m_widgetToEdit = nullptr;
+				m_lightToEdit = nullptr;
 				m_editType = EditType::GameObject;
 				selectedObject = true;
 			}
@@ -864,11 +864,11 @@ bool DebugMenu::OnSelect(bool a_active)
 			if (Scene * curScene = WorldManager::Get().GetCurrentScene())
 			{
 				Light * foundLight = curScene->GetLight(pickStart, pickEnd);
-				if (foundLight != NULL)
+				if (foundLight != nullptr)
 				{
 					m_lightToEdit = foundLight;
-					m_gameObjectToEdit = NULL;
-					m_widgetToEdit = NULL;
+					m_gameObjectToEdit = nullptr;
+					m_widgetToEdit = nullptr;
 					m_editType = EditType::Light;
 					m_editMode = EditMode::None;
 					selectedObject = true;
@@ -879,9 +879,9 @@ bool DebugMenu::OnSelect(bool a_active)
 		// Couldn't find anything, clear selection flags
 		if (!selectedObject)
 		{
-			m_widgetToEdit = NULL;
-			m_gameObjectToEdit = NULL;
-			m_lightToEdit = NULL;
+			m_widgetToEdit = nullptr;
+			m_gameObjectToEdit = nullptr;
+			m_lightToEdit = nullptr;
 			m_editType = EditType::None;
 			m_editMode = EditMode::None;
 		}
@@ -889,7 +889,7 @@ bool DebugMenu::OnSelect(bool a_active)
 	}
 
 	// Cancel all menu display
-	if (m_gameObjectToEdit == NULL && m_widgetToEdit == NULL)
+	if (m_gameObjectToEdit == nullptr && m_widgetToEdit == nullptr)
 	{
 		m_commands.Hide();
 	}
@@ -1013,7 +1013,7 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 
 	// Add each resource file in the directory
 	FileManager::FileListNode * curNode = resourceFiles.GetHead();
-	while(curNode != NULL)
+	while(curNode != nullptr)
 	{
 		m_resourceSelectList->AddListItem(curNode->GetData()->m_name);
 
@@ -1090,7 +1090,7 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	m_btnTextInputCancel->SetOffset(buttonPos);
 
 	// Show the starting text if reqd
-	if (a_startingText != NULL)
+	if (a_startingText != nullptr)
 	{
 		m_textInputField->SetText(a_startingText);
 	}
@@ -1098,7 +1098,7 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 
 void DebugMenu::ShowColourPicker()
 {
-	if (m_colourPicker != NULL)
+	if (m_colourPicker != nullptr)
 	{
 		m_colourPicker->SetActive();
 	}
@@ -1109,7 +1109,7 @@ bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_p
 	Gui & gui = Gui::Get();
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
-		if (m_scriptDebugWidgets[i] != NULL && !m_scriptDebugWidgets[i]->IsActive())
+		if (m_scriptDebugWidgets[i] != nullptr && !m_scriptDebugWidgets[i]->IsActive())
 		{
 			m_scriptDebugWidgets[i]->SetText(a_text);
 			m_scriptDebugWidgets[i]->SetActive(true);
@@ -1171,7 +1171,7 @@ void DebugMenu::Draw()
 
 	// Draw selection box around objects - slightly larger than clip size so there is no z fighting
 	const float extraSelectionSize = 0.025f;
-	if (m_gameObjectToEdit != NULL)
+	if (m_gameObjectToEdit != nullptr)
 	{
 		switch (m_gameObjectToEdit->GetClipType())
 		{
@@ -1197,14 +1197,14 @@ void DebugMenu::Draw()
 	}
 	
 	// Draw selected widget alignment
-	if (m_editMode == EditMode::Alignment && m_widgetToEdit != NULL)
+	if (m_editMode == EditMode::Alignment && m_widgetToEdit != nullptr)
 	{
 		m_widgetToEdit->DrawDebugAlignment();
 	}
 
 	// Draw magnitude of size editing
 	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
-	if (m_widgetToEdit != NULL && m_editMode == EditMode::FontSize)
+	if (m_widgetToEdit != nullptr && m_editMode == EditMode::FontSize)
 	{
 		char sizeBuf[16];
 		sprintf(sizeBuf, "%f", m_widgetToEdit->GetFontSize());
@@ -1213,7 +1213,7 @@ void DebugMenu::Draw()
 	}
 
 	// Draw colour editing widget
-	if (m_widgetToEdit != NULL && m_editMode == EditMode::Colour)
+	if (m_widgetToEdit != nullptr && m_editMode == EditMode::Colour)
 	{
 		char colourBuf[64];
 		const Colour widgetColour = m_widgetToEdit->GetColour();
@@ -1223,7 +1223,7 @@ void DebugMenu::Draw()
 	}
 
 	// Draw light editing widget
-	if (m_lightToEdit != NULL && m_editType == EditType::Light && m_editMode != EditMode::None)
+	if (m_lightToEdit != nullptr && m_editType == EditType::Light && m_editMode != EditMode::None)
 	{
 		Colour colourVal(0.0f);
 		switch (m_editMode)
@@ -1268,7 +1268,7 @@ void DebugMenu::PostRender()
 	// Clear the debug widgets, script will have to add text next frame for them
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
-		if (m_scriptDebugWidgets[i] != NULL)
+		if (m_scriptDebugWidgets[i] != nullptr)
 		{
 			m_scriptDebugWidgets[i]->SetActive(false);
 			m_scriptDebugWidgets[i]->SetText("");
@@ -1294,7 +1294,7 @@ void DebugMenu::HideTextInput()
 
 void DebugMenu::HideColourPicker()
 {
-	if (m_colourPicker != NULL)
+	if (m_colourPicker != nullptr)
 	{
 		m_colourPicker->SetActive(false);
 	}

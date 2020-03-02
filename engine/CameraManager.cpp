@@ -10,7 +10,7 @@ const float Camera::sc_defaultCameraSpeed = 32.0f;
 const float Camera::sc_defaultCameraRotSpeed = 64.0f;
 const float Camera::sc_defaultCameraTargetDistance = 10.0f;
 
-template<> CameraManager * Singleton<CameraManager>::s_instance = NULL;
+template<> CameraManager * Singleton<CameraManager>::s_instance = nullptr;
 
 void CameraManager::Update(float a_dt)
 {

@@ -52,7 +52,7 @@ public:
 
 	//\brief Get the symbol for a loaded font name
 	//\param pointer to a cstring of the font name to retreieve
-	//\return pointer to a StringHash or NULL for failure
+	//\return pointer to a StringHash or nullptr for failure
 	StringHash * GetLoadedFontName(const char * a_fontName);
 	const char * GetLoadedFontName(unsigned int a_fontNameHash);
 	const char * GetLoadedFontNameForId(int m_fontId);
@@ -87,7 +87,7 @@ private:
 	struct Font
 	{
 		Font() 
-			: m_texture(NULL)
+			: m_texture(nullptr)
 			, m_numChars(0)
 			, m_sizeX(0)
 			, m_sizeY(0)

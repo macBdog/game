@@ -7,7 +7,7 @@
 
 #include "VRManager.h"
 
-template<> VRManager * Singleton<VRManager>::s_instance = NULL;
+template<> VRManager * Singleton<VRManager>::s_instance = nullptr;
 
 void VRManager::Startup(bool a_useVr)
 {
@@ -15,7 +15,7 @@ void VRManager::Startup(bool a_useVr)
 	{
 		// Setup the oculus render, will be used to initialise GL context in both HMD and traditional render state
 		m_vrRender = new VRRender();
-		if (m_vrRender == NULL)
+		if (m_vrRender == nullptr)
 		{
 			Log::Get().WriteEngineErrorNoParams("Cannot create Oculus render component!");
 			return;

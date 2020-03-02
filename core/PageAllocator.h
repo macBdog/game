@@ -16,7 +16,7 @@ public:
 		: m_size(0)
 		, m_itemSize(0)
 		, m_maxItems(0)
-		, m_memory(NULL)
+		, m_memory(nullptr)
 	{ }
 
 	inline bool Init(size_t a_itemSize, unsigned int a_maxItems)
@@ -28,29 +28,29 @@ public:
 #ifndef _RELEASE
 		memset(m_memory, 0, m_size);
 #endif
-		return m_memory != NULL;
+		return m_memory != nullptr;
 	}
 
 	inline T * Add(unsigned int a_index)
 	{
-		assert(m_memory != NULL);
+		assert(m_memory != nullptr);
 		if (a_index >= 0 && a_index < m_maxItems)
 		{
 			// Offset into block of memory is garbage, call placement new
 			T * newObject = new (m_memory + a_index) T();
 			return newObject;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	inline T * Get(unsigned int a_index)
 	{
-		assert(m_memory != NULL);
+		assert(m_memory != nullptr);
 		if (a_index >= 0 && a_index < m_maxItems)
 		{
 			return m_memory + a_index;
 		}
-		return NULL;
+		return nullptr;
 	}
 	
 	~Page()
@@ -102,12 +102,12 @@ public:
 
 		// Try to add to current page, otherwise setup a new page and add to that
 		void * newAlloc = m_pages[m_numPages-1].Add(pagePos);
-		if (newAlloc == NULL)
+		if (newAlloc == nullptr)
 		{
 			m_pages[m_numPages++].Init(m_itemSize, m_itemsPerPage);
 			newAlloc = m_pages[m_numPages-1].Add(pagePos);
 		}
-		assert(newAlloc != NULL);
+		assert(newAlloc != nullptr);
 		++m_count;
 		return (T*)newAlloc;
 	}

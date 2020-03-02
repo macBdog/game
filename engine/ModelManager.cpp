@@ -4,7 +4,7 @@
 
 #include "ModelManager.h"
 
-template<> ModelManager * Singleton<ModelManager>::s_instance = NULL;
+template<> ModelManager * Singleton<ModelManager>::s_instance = nullptr;
 
 const unsigned int ModelManager::s_modelPoolSize = 65536;			// 64k for managed model info
 const unsigned int ModelManager::s_loadingVertPoolSize = 65536;		// 64k verts for temporary loading of model vertices
@@ -18,7 +18,7 @@ const float ModelManager::s_updateFreq = 1.0f;
 ModelManager::ModelManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
-	, m_dataPack(NULL)
+	, m_dataPack(nullptr)
 {
 	m_modelPath[0] = '\0';
 }
@@ -44,7 +44,7 @@ bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
 	// Cache off the model path for non qualified addressing of models
 	strncpy(m_modelPath, a_modelPath, sizeof(char) * strlen(a_modelPath) + 1);
 
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Cache off the datapack path for loading models from pack
 		m_dataPack = a_dataPack;
@@ -56,9 +56,9 @@ bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
 
 		// Load each model in the pack
 		bool loadSuccess = true;
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
-			loadSuccess &= GetModel(curNode->GetData()->m_path) != NULL;
+			loadSuccess &= GetModel(curNode->GetData()->m_path) != nullptr;
 			curNode = curNode->GetNext();
 		}
 
@@ -105,8 +105,8 @@ bool ModelManager::Update(float a_dt)
 		bool modelReloaded = false;
 
 		// Each model in the pool gets tested
-		ManagedModel * curModel = NULL;
-		while (m_modelMap.GetNext(curModel) && curModel != NULL)
+		ManagedModel * curModel = nullptr;
+		while (m_modelMap.GetNext(curModel) && curModel != nullptr)
 		{
 			FileManager::Timestamp curModelTimestamp;
 			FileManager::Timestamp curMaterialTimestamp;
@@ -149,8 +149,8 @@ bool ModelManager::ReloadModelsWithTexture(Texture * a_texture)
 	bool modelReloaded = false;
 
 	// Each model in the pool gets tested
-	ManagedModel * curModel = NULL;
-	while (m_modelMap.GetNext(curModel) && curModel != NULL)
+	ManagedModel * curModel = nullptr;
+	while (m_modelMap.GetNext(curModel) && curModel != nullptr)
 	{
 		bool modelNeedsReload = false;
 		const int numObjects = curModel->m_model.GetNumObjects();
@@ -187,7 +187,7 @@ bool ModelManager::ReloadModelsWithTexture(Texture * a_texture)
 Model * ModelManager::GetModel(const char * a_modelPath)
 {
 	// Model paths are either fully qualified or relative to the config model dir
-	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
+	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
 	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
 	if (!strstr(a_modelPath, pathQualifier))
@@ -207,7 +207,7 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	if (IsModelLoaded(modelId))
 	{
 		// Just returned the cached copy
-		ManagedModel * foundModel = NULL;
+		ManagedModel * foundModel = nullptr;
 		m_modelMap.Get(modelId, foundModel);
 		return &foundModel->m_model;
 	}
@@ -265,21 +265,21 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 			//delete newModel;
 			m_modelPool.DeAllocate(sizeof(ManagedModel));
 			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Model load failed for %s", fileNameBuf);
-			return NULL;
+			return nullptr;
 		}
 	}
 	else // Report the error
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Model allocation failed for %s, fileNameBuf");
-		return NULL;
+		return nullptr;
 	}
-   return NULL;
+   return nullptr;
 }
 
 bool ModelManager::IsModelLoaded(unsigned int a_modelPathHash)
 {
 	// Look through map for the target model
-	ManagedModel * foundModel = NULL;
+	ManagedModel * foundModel = nullptr;
 	if (m_modelMap.Get(a_modelPathHash, foundModel))
 	{
 		return true;

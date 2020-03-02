@@ -57,7 +57,7 @@ public:
 		// Initialise values from graphics API on construction
 		bool Init(GLuint a_sourceShader, const char * a_name, bool a_output = false)
 		{
-			if (a_name != NULL && a_name[0] != '\0')
+			if (a_name != nullptr && a_name[0] != '\0')
 			{
 				strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
 				m_id = glGetUniformLocation(a_sourceShader, m_name);

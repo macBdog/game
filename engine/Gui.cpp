@@ -13,7 +13,7 @@
 
 #include "Gui.h"
 
-template<> Gui * Singleton<Gui>::s_instance = NULL;
+template<> Gui * Singleton<Gui>::s_instance = nullptr;
 
 bool Gui::s_cursorBlink = false;
 float Gui::s_cursorBlinkTimer = 0.0f;
@@ -29,7 +29,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 	char fileName[StringUtils::s_maxCharsPerLine];
 	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
 
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		if (DataPackEntry * guiConfig = a_dataPack->GetEntry(fileName))
 		{
@@ -68,7 +68,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 	}
 
 	// Default the active menu
-	if (m_startupMenu == NULL)
+	if (m_startupMenu == nullptr)
 	{
 		Log::Get().WriteGameErrorNoParams("No menu found with beginLoaded set to true, defaulting to the first menu loaded!");
 		m_startupMenu = m_menus.GetHead()->GetData();
@@ -118,7 +118,7 @@ bool Gui::Update(float a_dt)
 	Widget::s_selectedColourValue = sin(s_widgetPulseTimer);
 
 	// Draw all elements of the active menu
-	if (m_activeMenu != NULL)
+	if (m_activeMenu != nullptr)
 	{
 		m_activeMenu->Draw();
 	}
@@ -158,10 +158,10 @@ void Gui::ReloadMenus()
 Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive)
 {
 	// Check for a valid parent
-	if (a_parent == NULL) 
+	if (a_parent == nullptr) 
 	{	
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Widget creation failed due to an invalid parent.");
-		return NULL;
+		return nullptr;
 	}
 
 	// Copy properties over to the managed element
@@ -186,10 +186,10 @@ Widget * Gui::CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, b
 Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, bool a_startActive)
 {
 	// Check for a valid parent
-	if (a_parent == NULL) 
+	if (a_parent == nullptr) 
 	{	
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Widget creation from file failed due to an invalid parent.");
-		return NULL;
+		return nullptr;
 	}
 
 	// Get properties from the file that correspond to widget definitions
@@ -278,23 +278,23 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		}
 		return newWidget;
 	}
-	return NULL;
+	return nullptr;
 }
 
 Widget * Gui::FindWidget(const char * a_widgetName)
 {
 	// Search the active menu first
-	Widget * foundWidget = NULL;
-	if (m_activeMenu != NULL)
+	Widget * foundWidget = nullptr;
+	if (m_activeMenu != nullptr)
 	{
 		foundWidget = m_activeMenu->Find(a_widgetName);
 	}
 
 	// Search through all menus if not found
-	if (foundWidget == NULL)
+	if (foundWidget == nullptr)
 	{
 		MenuListNode * cur = m_menus.GetHead();
-		while(cur != NULL && foundWidget == NULL)
+		while(cur != nullptr && foundWidget == nullptr)
 		{
 			foundWidget = cur->GetData()->Find(a_widgetName);
 			cur = cur->GetNext();
@@ -307,13 +307,13 @@ Widget * Gui::FindWidget(const char * a_widgetName)
 Widget * Gui::FindSelectedWidget()
 {
 	// Only search the active menu, nothing outside of active can be selected
-	Widget * foundWidget = NULL;
-	if (m_activeMenu != NULL)
+	Widget * foundWidget = nullptr;
+	if (m_activeMenu != nullptr)
 	{
 		return m_activeMenu->FindSelected();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void Gui::DestroyWidget(Widget * a_widget)
@@ -335,10 +335,10 @@ void Gui::DestroyWidget(Widget * a_widget)
 		a_widget->RemoveChildren();
 
 		// Remove any align to references or references in parent lists, menus should be the ultimate parent of any widget
-		MenuListNode * removed = NULL;
+		MenuListNode * removed = nullptr;
 		bool removedFromChild = false;
-		MenuListNode * cur = m_menus.GetHead();
-		while (cur != NULL)
+		auto cur = m_menus.GetHead();
+		while (cur != nullptr)
 		{
 			MenuListNode * next = cur->GetNext();
 			Widget * curParent = cur->GetData();
@@ -358,7 +358,7 @@ void Gui::DestroyWidget(Widget * a_widget)
 		}
 		
 		// Nothing else should be hanging on to this, get rid of it
-		if (removed != NULL)
+		if (removed != nullptr)
 		{
 			m_menus.RemoveDelete(removed);
 		}
@@ -380,7 +380,7 @@ bool Gui::MouseInputHandler(bool active)
 	// The mouse was clicked, check if any elements were rolled over
 	bool activated = m_debugRoot.DoActivation();
 
-	if (m_activeMenu != NULL)
+	if (m_activeMenu != nullptr)
 	{
 		activated &= m_activeMenu->DoActivation();
 	}
@@ -391,16 +391,16 @@ bool Gui::MouseInputHandler(bool active)
 Widget * Gui::GetActiveWidget()
 {
 	// Early out if there is no active menu
-	if (m_activeMenu == NULL)
+	if (m_activeMenu == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Iterate through all children of the active menu
-	Widget * selected = NULL;
+	Widget * selected = nullptr;
 	DebugMenu & dbgMen = DebugMenu::Get();
 	Widget::WidgetNode * curChild = m_activeMenu->GetChildren();
-	while (curChild != NULL)
+	while (curChild != nullptr)
 	{	
 		// If we are in editing mode process editing selections
 		if (dbgMen.IsDebugMenuEnabled())
@@ -428,7 +428,7 @@ Widget * Gui::GetActiveWidget()
 bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 {
 	// Load the menu file
-	Widget * createdMenu = NULL;
+	Widget * createdMenu = nullptr;
 	if (a_menuFile.IsLoaded())
 	{
 		// Create a new widget and copy properties from file
@@ -438,7 +438,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 			{
 				createdMenu = new Widget();
 				createdMenu->SetName(a_menuFile.GetString("menu", "name"));
-				if (a_dataPack == NULL || !a_dataPack->IsLoaded())
+				if (a_dataPack == nullptr || !a_dataPack->IsLoaded())
 				{
 					char menuFilePath[StringUtils::s_maxCharsPerLine];
 					sprintf(menuFilePath, "%s%s.mnu", m_guiPath, createdMenu->GetName());
@@ -451,8 +451,8 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 				createdMenu->SetDrawPos(Vector2(-1.0, 1.0));
 
 				// Load child elements of the menu
-				LinkedListNode<GameFile::Object> * childWidget = menuObject->GetChildren();
-				while (childWidget != NULL)
+				auto childWidget = menuObject->GetChildren();
+				while (childWidget != nullptr)
 				{
 					GameFile::Object * curObject = childWidget->GetData();
 					Widget * newChild = CreateWidget(curObject, createdMenu);
@@ -473,7 +473,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 			}
 
 			// Set the active menu to the last menu with the begin loaded property
-			if (createdMenu != NULL && menuObject->FindProperty("beginLoaded"))
+			if (createdMenu != nullptr && menuObject->FindProperty("beginLoaded"))
 			{
 				if (menuObject->FindProperty("beginLoaded")->GetBool())
 				{
@@ -494,7 +494,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 {
 	bool loadSuccess = true;
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		DataPack::EntryList menuEntries;
 		a_dataPack->GetAllEntries(".mnu", menuEntries);
@@ -502,7 +502,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 
 		// Load each menu in the list
 		bool loadSuccess = true;
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			GameFile menuFile(curNode->GetData());
 			loadSuccess &= LoadMenu(menuFile, a_dataPack);
@@ -521,7 +521,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 
 		// Load each menu in the directory
 		FileManager::FileListNode * curNode = menuFiles.GetHead();
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			char fullPath[StringUtils::s_maxCharsPerLine];
 			sprintf(fullPath, "%s%s", a_guiPath, curNode->GetData()->m_name);
@@ -540,7 +540,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 bool Gui::UnloadMenus()
 {
 	MenuListNode * cur = m_menus.GetHead();
-	while(cur != NULL)
+	while(cur != nullptr)
 	{
 		// Cache off next pointer
 		MenuListNode * next = cur->GetNext();
@@ -560,7 +560,7 @@ void Gui::UpdateSelection()
 	m_debugRoot.UpdateSelection(m_cursor.GetPos());
 	
 	// Any children of the active menu will be updated
-	if (!DebugMenu::Get().IsDebugMenuActive() && m_activeMenu != NULL)
+	if (!DebugMenu::Get().IsDebugMenuActive() && m_activeMenu != nullptr)
 	{
 		m_activeMenu->UpdateSelection(m_cursor.GetPos());
 	}

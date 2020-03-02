@@ -49,7 +49,7 @@ public:
 	struct Property
 	{
 		Property()
-			: m_data(NULL) { }
+			: m_data(nullptr) { }
 
 		//\brief Property type casting unsafe versions
 		inline const char * GetString() const
@@ -70,7 +70,7 @@ public:
 		inline bool GetBool() const
 		{
 			const char * vecString = (const char *)m_data;
-			return strstr(vecString, "true") != NULL;
+			return strstr(vecString, "true") != nullptr;
 		}
 
 		inline Colour GetColour() const
@@ -157,7 +157,7 @@ public:
 
 			// Iterate through all properties in the list
 			LinkedListNode<Property> * cur = m_properties.GetHead();
-			while(cur != NULL)
+			while(cur != nullptr)
 			{
 				cur->GetData()->Serialise(a_stream, a_indentLevel);
 				cur = cur->GetNext();
@@ -165,7 +165,7 @@ public:
 
 			// Now the children of this child
 			LinkedListNode<Object> * curChild = m_children.GetHead();
-			while (curChild != NULL)
+			while (curChild != nullptr)
 			{
 				curChild->GetData()->Serialise(a_stream, a_indentLevel);
 				curChild = curChild->GetNext();
@@ -234,18 +234,18 @@ public:
 	//\brief Add an object that has properties
 	//\param a_objectName is the literal declared on the line preceeding the open bracket
 	//\param a_parent is the object's parent in the case of nested objects
-	Object * AddObject(const char * a_objectName, Object * a_parent = NULL);
+	Object * AddObject(const char * a_objectName, Object * a_parent = nullptr);
 
 	//\brief Add a property with a parent object
 	//\param a_parentObject is a pointer to another Object of the same file that will be linked to the new property
 	//\param a_propertyName is a pointer to a cstring containing the name of the property to add
 	//\param a_value is the string version of the value to add, other data types will be cast from string
-	//\return A pointer to the property that was added or NULL if the operation was unsuccesfull
+	//\return A pointer to the property that was added or nullptr if the operation was unsuccesfull
 	Property * AddProperty(GameFile::Object * a_parentObject, const char * a_propertyName, const char * a_value);
 
 	//\brief Helper function to find an object by name
 	//\param a_name is the pointer to a c string of the name
-	//\return A pointer to the object data or NULL if there was no object found by name
+	//\return A pointer to the object data or nullptr if there was no object found by name
 	Object * FindObject(const char * a_name) const;
 
 private:
@@ -309,7 +309,7 @@ private:
 	//\brief Recursive function to read an object definition with any child objects
 	//\return the number of lines read
 	template <typename TInputData>
-	unsigned int ReadObjectAndProperties(const char * a_objectName, TInputData & a_stream, Object * a_parent = NULL)
+	unsigned int ReadObjectAndProperties(const char * a_objectName, TInputData & a_stream, Object * a_parent = nullptr)
 	{
 		char line[StringUtils::s_maxCharsPerLine];
 		memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);

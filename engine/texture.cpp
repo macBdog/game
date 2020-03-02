@@ -27,7 +27,7 @@ static const GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};
 bool Texture::LoadTGAFromFile(const char * a_tgaFilePath, bool a_useLinearFilter)
 {
 	// Early out for no file case
-	if (a_tgaFilePath == NULL)
+	if (a_tgaFilePath == nullptr)
 	{
 		return false;
 	}
@@ -62,16 +62,16 @@ bool Texture::LoadTGAFromFile(const char * a_tgaFilePath, bool a_useLinearFilter
 bool Texture::LoadTGAFromMemory(void * a_texture, size_t a_textureSize, bool a_useLinearFilter)
 {
 	// Early out for no pointer
-	if (a_texture == NULL || a_textureSize <= 0)
+	if (a_texture == nullptr || a_textureSize <= 0)
 	{
 		return false;
 	}
 
 	// Load texture data into memory and check if successful
 	int x, y, bpp;
-	GLubyte * textureData = NULL;
+	GLubyte * textureData = nullptr;
 	textureData = loadTGAFromMemory(a_texture, a_textureSize, x, y, bpp, textureData);
-	if (textureData == NULL) 
+	if (textureData == nullptr) 
 	{ 
 		return false;
 	}
@@ -91,10 +91,10 @@ bool Texture::LoadFromMemoryAndFree(int a_width, int a_height, int a_bpp, void *
 	const int bypp = ((a_bpp) >> 3);
 	const int textureSize = a_width * a_height * bypp;
 	GLubyte * textureData = (GLubyte *)a_textureData;
-	if (textureData == NULL)
+	if (textureData == nullptr)
 	{
 		printf("Malloc failed in texture load from blank\n");
-		return NULL;
+		return nullptr;
 	}
 
 	return GenerateTexture(a_width, a_height, a_bpp, a_useLinearFilter, textureData);
@@ -211,7 +211,7 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
 		}
         default:
 		{
-			return (NULL);
+			return (nullptr);
 		}
     }
 
@@ -237,15 +237,15 @@ GLubyte * Texture::loadTGAFromMemory(void * a_texture, size_t a_textureSize, int
 	if (!((a_x != 0) && !(a_x & (a_x - 1))) || !((a_y != 0) && !(a_y & (a_y - 1))))
 	{
 		printf("Can't load non power of two dimension texture\n");
-		return NULL;
+		return nullptr;
 	}
 
     output = (GLubyte *)malloc(size);
     
-	if (output == NULL) 
+	if (output == nullptr) 
 	{
         printf("Malloc failed in texture read\n");
-        return NULL;
+        return nullptr;
     }
 	
     // Determine TGA version (new or old)

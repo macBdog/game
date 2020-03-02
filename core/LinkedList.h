@@ -119,7 +119,7 @@ public:
 		// Update operating cursor
 		if (m_cursor == a_node)
 		{
-			m_cursor = a_node->m_prev != NULL ? a_node->m_prev : a_node->m_next;
+			m_cursor = a_node->m_prev != nullptr ? a_node->m_prev : a_node->m_next;
 		}
 
 		// Remove node by linking neighbours to each other
@@ -145,9 +145,9 @@ public:
 	//\brief Iterative search
 	inline LinkedListNode<T> * Find(T * a_data)
 	{
-		LinkedListNode<T> * foundNode = NULL;
+		LinkedListNode<T> * foundNode = nullptr;
 		LinkedListNode<T> * curNode = m_head;
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			if (curNode->GetData() == a_data)
 			{

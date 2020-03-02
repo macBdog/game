@@ -15,7 +15,7 @@ struct DataPackEntry
 {
 	DataPackEntry()
 		: m_size(0)
-		, m_data(NULL)
+		, m_data(nullptr)
 		, m_readOffset(-1)
 	{
 		m_path[0] = '\0';
@@ -35,7 +35,7 @@ struct DataPackEntry
 	{ 
 		return	m_size > 0 && 
 				m_readOffset < (int)m_size && 
-				m_data != NULL && 
+				m_data != nullptr && 
 				m_path[0] != '\0'; 
 	}
 	inline bool getline(char * a_buffer_OUT, int a_numCharsMax) 
@@ -144,7 +144,7 @@ public:
 	inline bool HasFilesToWrite() const { return m_manifest.GetLength() > 0; }
 
 	//\brief Extract an entry from the manifest, usually for reading the resource data from
-	//\return NULL if not found
+	//\return nullptr if not found
 	DataPackEntry * GetEntry(const char * a_path) const;
 	void GetAllEntries(const char * a_fileExtensions, EntryList & a_entries_OUT) const;
 	void CleanupEntryList(EntryList & a_entries_OUT) const;

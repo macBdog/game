@@ -32,9 +32,9 @@ public:
 		, m_specular(0.5f)
 		, m_emission(0.0f)
 		, m_shininess(512)
-		, m_diffuseTex(NULL)
-		, m_normalTex(NULL)
-		, m_specularTex(NULL) { m_name[0] = '\0'; }
+		, m_diffuseTex(nullptr)
+		, m_normalTex(nullptr)
+		, m_specularTex(nullptr) { m_name[0] = '\0'; }
 
 	//\brief Load values and resources for a material matching a name from an mtl file
 	//\param a_materialFileName pointer to a c string containing the file to load, adjacent to the model file itself
@@ -97,7 +97,7 @@ private:
 					sscanf(line, "newmtl %s", &m_name);
 
 					// Set flag so we load the next map specific in the material as the diffuse map
-					foundTargetMaterial = strstr(m_name, a_materialName) != NULL;
+					foundTargetMaterial = strstr(m_name, a_materialName) != nullptr;
 					continue;
 				}
 				else if (foundTargetMaterial)
@@ -109,7 +109,7 @@ private:
 					{
 						char tempMatName[StringUtils::s_maxCharsPerLine];
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-						if (strstr(line, "\\") == NULL)
+						if (strstr(line, "\\") == nullptr)
 						{
 							sscanf(line, "map_Kd %s", &tempMatName);
 						}
@@ -124,7 +124,7 @@ private:
 					{
 						char tempMatName[StringUtils::s_maxCharsPerLine];
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-						if (strstr(line, "\\") == NULL)
+						if (strstr(line, "\\") == nullptr)
 						{
 							sscanf(line, "map_Bump %s", &tempMatName);
 						}
@@ -139,7 +139,7 @@ private:
 					{
 						char tempMatName[StringUtils::s_maxCharsPerLine];
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-						if (strstr(line, "\\") == NULL)
+						if (strstr(line, "\\") == nullptr)
 						{
 							sscanf(line, "map_Ks %s", &tempMatName);
 						}
@@ -212,11 +212,11 @@ class Object
 public:
 
 	Object()
-		: m_material(NULL)
+		: m_material(nullptr)
 		, m_vertexBufferId(-1)
-		, m_verts(NULL)
-		, m_normals(NULL)
-		, m_uvs(NULL)
+		, m_verts(nullptr)
+		, m_normals(nullptr)
+		, m_uvs(nullptr)
 		, m_numVertices(0) { m_name[0] = '\0'; }
 
 	inline const char * GetName() { return m_name; }
@@ -317,7 +317,7 @@ private:
 
 	//\brief Load function will work with either datapack entry or input stream
 	template <typename TInputData>
-	bool LoadData(TInputData & a_input, ModelDataPool & a_modelDataPool, const char * a_modelFilePath, DataPack * a_dataPack = NULL)
+	bool LoadData(TInputData & a_input, ModelDataPool & a_modelDataPool, const char * a_modelFilePath, DataPack * a_dataPack = nullptr)
 	{
 		// Storage for model file reading progress
 		char line[StringUtils::s_maxCharsPerLine];
@@ -329,7 +329,7 @@ private:
 		StringUtils::TrimFileNameFromPath(materialFilePath);
 
 		// Read one object at a time
-		Object * currentObject = NULL;
+		Object * currentObject = nullptr;
 		ios::streampos lastReadOffset = 0;
 		ios::streampos currentObjectOffset = 0;
 		ObjectReadPass::Enum objectReadPass = ObjectReadPass::CountFaces;
@@ -340,9 +340,9 @@ private:
 		unsigned int objectVertOffset = 0;
 		unsigned int objectNormOffset = 0;
 		unsigned int objectUvOffset = 0;
-		Vector * objectVerts = NULL;
-		Vector * objectNormals = NULL;
-		TexCoord * objectUvs = NULL;
+		Vector * objectVerts = nullptr;
+		Vector * objectNormals = nullptr;
+		TexCoord * objectUvs = nullptr;
 
 		// Open the file and parse each line 
 		if (a_input.is_open())
@@ -380,14 +380,14 @@ private:
 				}
 
 				// A nameless object has begun
-				if (currentObject == NULL && (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u'))
+				if (currentObject == nullptr && (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u'))
 				{
 					currentObject = new Object();
 					currentObject->SetName("");
 					currentObjectOffset = lastReadOffset;
 				}
 
-				if (currentObject != NULL)
+				if (currentObject != nullptr)
 				{
 					while (line[0] == 'v' || line[0] == 'f' || line[0] == 'g' || line[0] == 's' || line[0] == 'm' || line[0] == 'u')
 					{
@@ -404,7 +404,7 @@ private:
 							{
 								Material * newMaterial = a_modelDataPool.m_materialPool.Allocate(sizeof(Material), true);
 								bool materialLoaded = false;
-								if (a_dataPack != NULL && a_dataPack->IsLoaded())
+								if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 								{
 									if (DataPackEntry * packedMaterial = a_dataPack->GetEntry(materialFilePath))
 									{
@@ -445,7 +445,7 @@ private:
 							else if (line[0] == 'f' && line[1] == ' ')
 							{
 								// Check for no texture map
-								if (strstr(line, "\\\\") != NULL)
+								if (strstr(line, "\\\\") != nullptr)
 								{
 									Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot load model %s with no uv or normal exported per face", a_modelFilePath);
 									a_input.close();
@@ -592,7 +592,7 @@ private:
 					if (objectReadPass == ObjectReadPass::PatchFaces)
 					{
 						unsigned int numObjectVertices = 0;
-						if (objectVerts != NULL && objectNormals != NULL && objectUvs != NULL)
+						if (objectVerts != nullptr && objectNormals != nullptr && objectUvs != nullptr)
 						{
 							// Create an alias to the loading memory pools so the data can be accessed randomly
 							Vector * verts = a_modelDataPool.m_vertPool.GetHead();
@@ -647,7 +647,7 @@ private:
 						m_objects.Insert(newObject);
 
 						// Reset object reading state
-						currentObject = NULL;
+						currentObject = nullptr;
 						currentObjectOffset = 0;
 						objectReadPass = ObjectReadPass::CountFaces;
 						objectVertOffset += numVerts;
@@ -657,9 +657,9 @@ private:
 						numVerts = 0;
 						numUvs = 0;
 						numFaces = 0;
-						objectVerts = NULL;
-						objectNormals = NULL;
-						objectUvs = NULL;
+						objectVerts = nullptr;
+						objectNormals = nullptr;
+						objectUvs = nullptr;
 
 						// Setup the next object to be read
 						if (line[0] == 'o')

@@ -41,15 +41,15 @@ void GameObject::SetTemplateProperties()
 			}
 			if (GameFile::Property * clipType = object->FindProperty("clipType"))
 			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
 				{
 					SetClipType(ClipType::Sphere);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
 				{
 					SetClipType(ClipType::Box);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
 				{
 					SetClipType(ClipType::Mesh);
 					SetPhysicsMesh(clipType->GetString());
@@ -121,7 +121,7 @@ bool GameObject::Update(float a_dt)
 	}
 
 	// Become active if ready
-	if (m_state == GameObjectState::Loading && m_model != NULL)
+	if (m_state == GameObjectState::Loading && m_model != nullptr)
 	{
 		m_state = GameObjectState::Active;
 	}
@@ -130,13 +130,13 @@ bool GameObject::Update(float a_dt)
 	m_lifeTime += a_dt;
 	
 	// Update animation
-	if (m_blender != NULL)
+	if (m_blender != nullptr)
 	{	
 		m_blender->Update(a_dt);
 	}
 
 	// Update physics world
-	if (m_physics != NULL)
+	if (m_physics != nullptr)
 	{
 		PhysicsManager::Get().UpdateGameObject(this);
 	}
@@ -154,7 +154,7 @@ bool GameObject::Draw()
 		Vector finalPos = m_worldMat.GetPos() + m_localMat.GetPos();
 		m_finalMat = m_worldMat.Multiply(m_localMat);
 		m_finalMat.SetPos(finalPos);
-		if (m_visible && m_model != NULL && m_model->IsLoaded())
+		if (m_visible && m_model != nullptr && m_model->IsLoaded())
 		{
 			rMan.AddModel(RenderLayer::World, m_model, &m_finalMat, m_shader, m_shaderData, m_lifeTime);
 		}
@@ -208,7 +208,7 @@ bool GameObject::Draw()
 bool GameObject::Shutdown() 
 {
 	// Empty collision list and remove from physics simulation
-	if (m_physics != NULL)
+	if (m_physics != nullptr)
 	{
 		PhysicsManager & physMan = PhysicsManager::Get();
 		physMan.ClearCollisions(this);
@@ -216,7 +216,7 @@ bool GameObject::Shutdown()
 	}
 
 	// Remove references to managed resources
-	if (m_shader != NULL)
+	if (m_shader != nullptr)
 	{
 		RenderManager::Get().UnManageShader(this);
 	}
@@ -344,7 +344,7 @@ bool GameObject::CollidesWith(Vector a_lineStart, Vector a_lineEnd)
 
 void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 {
-	if (a_parent != NULL)
+	if (a_parent != nullptr)
 	{
 		// Get string versions of numeric values
 		char vecBuf[StringUtils::s_maxCharsPerName];
@@ -391,7 +391,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			{
 				outputFile->AddProperty(fileObject, "clipGroup", m_clipGroup.GetCString());
 			}
-			if (m_shader != NULL)
+			if (m_shader != nullptr)
 			{
 				// Make sure the shader is not a default engine shader
 				if (m_shader != RenderManager::Get().GetLightingShader() &&
@@ -400,7 +400,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 					outputFile->AddProperty(fileObject, "shader", m_shader->GetName());
 				}
 			}
-			if (m_model != NULL)
+			if (m_model != nullptr)
 			{
 				outputFile->AddProperty(fileObject, "model", m_model->GetName());
 			}
@@ -408,7 +408,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		
 		// Serialise any children of this child
 		GameObject * child = m_child;
-		while (child != NULL)
+		while (child != nullptr)
 		{
 			child->Serialise(outputFile, fileObject);
 			child = child->GetChild();
@@ -420,7 +420,7 @@ void GameObject::SerialiseTemplate()
 {
 	GameFile * templateFile = new GameFile();
 	GameFile::Object * templateObj = templateFile->AddObject("gameObject");
-	if (m_model != NULL)
+	if (m_model != nullptr)
 	{
 		templateFile->AddProperty(templateObj, "model", m_model->GetName());
 	}
@@ -444,7 +444,7 @@ void GameObject::SerialiseTemplate()
 	{
 		templateFile->AddProperty(templateObj, "clipGroup", m_clipGroup.GetCString());
 	}
-	if (m_shader != NULL)
+	if (m_shader != nullptr)
 	{
 		if (m_shader != RenderManager::Get().GetLightingShader() &&
 			m_shader != RenderManager::Get().GetColourShader())

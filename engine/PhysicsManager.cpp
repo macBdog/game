@@ -9,14 +9,14 @@
 
 #include "PhysicsManager.h"
 
-template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = NULL;
+template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = nullptr;
 
 PhysicsObject::~PhysicsObject()
 {
 	// Clean up physics if present
 	if (!m_rigidBodies.IsEmpty())
 	{
-		LinkedListNode<btRigidBody> * curRigidBodyNode = m_rigidBodies.GetHead();
+		auto curRigidBodyNode = m_rigidBodies.GetHead();
 		while (curRigidBodyNode)
 		{
 			btRigidBody * rigidBody = curRigidBodyNode->GetData();
@@ -26,7 +26,7 @@ PhysicsObject::~PhysicsObject()
 			}
 			delete rigidBody->getMotionState();
 			delete rigidBody;
-			LinkedListNode<btRigidBody> * nextNode = curRigidBodyNode->GetNext();
+			auto nextNode = curRigidBodyNode->GetNext();
 			m_rigidBodies.RemoveDelete(curRigidBodyNode);
 			curRigidBodyNode = nextNode;
 		}
@@ -35,7 +35,7 @@ PhysicsObject::~PhysicsObject()
 	// And collision objects
 	if (!m_collisionObjects.IsEmpty())
 	{
-		LinkedListNode<btCollisionObject> * curObjectNode = m_collisionObjects.GetHead();
+		auto curObjectNode = m_collisionObjects.GetHead();
 		while (curObjectNode)
 		{
 			btCollisionObject * collisionObject = curObjectNode->GetData();
@@ -44,7 +44,7 @@ PhysicsObject::~PhysicsObject()
 				colWorld->removeCollisionObject(collisionObject);
 			}
 			delete collisionObject;
-			LinkedListNode<btCollisionObject> * nextNode = curObjectNode->GetNext();
+			auto nextNode = curObjectNode->GetNext();
 			m_collisionObjects.RemoveDelete(curObjectNode);
 			curObjectNode = nextNode;
 		}
@@ -56,10 +56,10 @@ PhysicsObject::~PhysicsObject()
 		m_fileLoader->deleteAllData();
 		delete m_fileLoader;
 
-		LinkedListNode<btCollisionShape> * curShapeNode = m_collisionShapes.GetHead();
+		auto curShapeNode = m_collisionShapes.GetHead();
 		while (curShapeNode)
 		{
-			LinkedListNode<btCollisionShape> * nextNode = curShapeNode->GetNext();
+			auto nextNode = curShapeNode->GetNext();
 			m_collisionShapes.RemoveDelete(curShapeNode);
 			curShapeNode = nextNode;
 		}
@@ -68,12 +68,12 @@ PhysicsObject::~PhysicsObject()
 	{
 		if (!m_collisionShapes.IsEmpty())
 		{
-			LinkedListNode<btCollisionShape> * curShapeNode = m_collisionShapes.GetHead();
+			auto curShapeNode = m_collisionShapes.GetHead();
 			while (curShapeNode)
 			{
 				btCollisionShape * collisionObject = curShapeNode->GetData();
 				delete collisionObject;
-				LinkedListNode<btCollisionShape> * nextNode = curShapeNode->GetNext();
+				auto nextNode = curShapeNode->GetNext();
 				m_collisionShapes.RemoveDelete(curShapeNode);
 				curShapeNode = nextNode;
 			}
@@ -84,12 +84,12 @@ PhysicsObject::~PhysicsObject()
 bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack)
 {
 	// Cache off path to bullet files
-	if (a_meshPath != NULL && a_meshPath[0] != '\0')
+	if (a_meshPath != nullptr && a_meshPath[0] != '\0')
 	{
 		strncpy(m_meshPath, a_meshPath, sizeof(char) * strlen(a_meshPath) + 1);
 	}
 
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Cache off the datapack path for loading models from pack
 		m_dataPack = a_dataPack;
@@ -136,7 +136,7 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 				{
 					// If the collision filter is a single entry
 					const char * curFilters = filterProp->GetString();
-					if (strstr(curFilters, ",") == NULL)
+					if (strstr(curFilters, ",") == nullptr)
 					{
 						int colFilterInListId = GetCollisionGroupId(curFilters);
 						if (colFilterInListId > 0)
@@ -193,18 +193,18 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 #endif
 	}
 
-	return m_dynamicsWorld != NULL || m_collisionWorld != NULL;
+	return m_dynamicsWorld != nullptr || m_collisionWorld != nullptr;
 }
 
 bool PhysicsManager::Shutdown()
 {
-	if (m_dynamicsWorld == NULL && m_collisionWorld == NULL)
+	if (m_dynamicsWorld == nullptr && m_collisionWorld == nullptr)
 	{
 		return false;
 	}
 
 	// Clean up world
-	if (m_dynamicsWorld != NULL)
+	if (m_dynamicsWorld != nullptr)
 	{
 		delete m_dynamicsWorld;
 	}
@@ -223,12 +223,12 @@ bool PhysicsManager::Shutdown()
 
 void PhysicsManager::Update(float a_dt)
 {
-	if (m_dynamicsWorld == NULL && m_collisionWorld == NULL)
+	if (m_dynamicsWorld == nullptr && m_collisionWorld == nullptr)
 	{
 		return;
 	}
 
-	if (m_dynamicsWorld != NULL)
+	if (m_dynamicsWorld != nullptr)
 	{
 		m_dynamicsWorld->stepSimulation(a_dt, 10);
 
@@ -254,7 +254,7 @@ void PhysicsManager::Update(float a_dt)
 		GameObject * gameObjB = (GameObject*)obB->getUserPointer();
 
 		int numContacts = contactManifold->getNumContacts();
-		if (numContacts > 0 && gameObjA != NULL && gameObjB != NULL)
+		if (numContacts > 0 && gameObjA != nullptr && gameObjB != nullptr)
 		{
 			if (gameObjA->IsSleeping() || !gameObjA->IsClipping())
 			{
@@ -298,9 +298,9 @@ void PhysicsManager::Update(float a_dt)
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 {
-	bool readFromDataPack = m_dataPack != NULL && m_dataPack->IsLoaded();
+	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 
-	if (a_gameObj == NULL)
+	if (a_gameObj == nullptr)
 	{
 		return false;
 	}
@@ -314,7 +314,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	}
 
 	PhysicsObject::CollisionShapeList collisionShapes;
-	btBulletWorldImporter * fileLoader = NULL;
+	btBulletWorldImporter * fileLoader = nullptr;
 	
 	switch (a_gameObj->GetClipType())
 	{
@@ -389,7 +389,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 	}
 
 	PhysicsObject::CollisionObjectList collisionObjects;
-	LinkedListNode<btCollisionShape> * curShapeNode = collisionShapes.GetHead();
+	auto curShapeNode = collisionShapes.GetHead();
 	while (curShapeNode)
 	{
 		btCollisionShape * collisionShape = curShapeNode->GetData();
@@ -399,7 +399,7 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		collisionObjects.InsertNew(collisionObject);
 
 		// Assign the physics object to the game object
-		if (collisionShape != NULL && collisionObject != NULL)
+		if (collisionShape != nullptr && collisionObject != nullptr)
 		{
 			// Only create a new physics object if one has not been created for this game object
 			bool newPhys = false;
@@ -458,19 +458,19 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		curShapeNode = curShapeNode->GetNext();
 	}
 
-	return a_gameObj->GetPhysics() != NULL;
+	return a_gameObj->GetPhysics() != nullptr;
 }
 
 bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 {
-	if (a_gameObj == NULL || a_gameObj->GetPhysics() == NULL || m_dynamicsWorld == NULL)
+	if (a_gameObj == nullptr || a_gameObj->GetPhysics() == nullptr || m_dynamicsWorld == nullptr)
 	{
 		return false;
 	}
 
 	PhysicsObject * phys = a_gameObj->GetPhysics();
 	PhysicsObject::CollisionShapeList collisionShapes = phys->GetCollisionShapes();
-	LinkedListNode<btCollisionShape> * curShapeNode = collisionShapes.GetHead();
+	auto curShapeNode = collisionShapes.GetHead();
 	while (curShapeNode)
 	{
 		// Setup motion state and construction info for game object shape
@@ -502,7 +502,7 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 
 void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 {
-	if (a_gameObj == NULL)
+	if (a_gameObj == nullptr)
 	{
 		return;
 	}
@@ -513,7 +513,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 	{
 		// Get the origin and rotational information from the first rigid body in the physics world
 		PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
-		LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+		auto curRigidBodyNode = rigidBodies.GetHead();
 		btRigidBody * rigidBody = curRigidBodyNode->GetData();
 		btTransform rbTrans = rigidBody->getWorldTransform();
 		btQuaternion rbRot = rbTrans.getRotation();
@@ -528,7 +528,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 
 		// Set it on all the collision objects
 		PhysicsObject::CollisionObjectList collisionObjects = phys->GetCollisionObjects();
-		LinkedListNode<btCollisionObject> * curObjectNode = collisionObjects.GetHead();
+		auto curObjectNode = collisionObjects.GetHead();
 		while (curObjectNode)
 		{
 			btCollisionObject * collisionObject = curObjectNode->GetData();
@@ -546,7 +546,7 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 
 		// Set it on all the physics and collision
 		PhysicsObject::CollisionObjectList collisionObjects = phys->GetCollisionObjects();
-		LinkedListNode<btCollisionObject> * curObjectNode = collisionObjects.GetHead();
+		auto curObjectNode = collisionObjects.GetHead();
 		while (curObjectNode)
 		{
 			btCollisionObject * collisionObject = curObjectNode->GetData();
@@ -561,14 +561,14 @@ void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
 
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 {
-	if (a_gameObj != NULL)
+	if (a_gameObj != nullptr)
 	{
 		PhysicsObject * phys = a_gameObj->GetPhysics();
-		if (phys != NULL)
+		if (phys != nullptr)
 		{
 			ClearCollisions(a_gameObj);
 			delete phys;
-			a_gameObj->SetPhysics(NULL);
+			a_gameObj->SetPhysics(nullptr);
 			return true;
 		}
 	}
@@ -577,14 +577,14 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 
 bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 {
-	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != NULL)
+	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != nullptr)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
 			if (phys->HasRigidBody())
 			{
 				PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
-				LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+				auto curRigidBodyNode = rigidBodies.GetHead();
 				while (curRigidBodyNode)
 				{
 					btRigidBody * rigidBody = curRigidBodyNode->GetData();
@@ -602,14 +602,14 @@ bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 Vector PhysicsManager::GetVelocity(GameObject * a_gameObj)
 {
 	Vector vel(0.0f);
-	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != NULL)
+	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != nullptr)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
 			if (phys->HasRigidBody())
 			{
 				PhysicsObject::RigidBodyList rigidBodies = phys->GetRigidBodies();
-				LinkedListNode<btRigidBody> * curRigidBodyNode = rigidBodies.GetHead();
+				auto curRigidBodyNode = rigidBodies.GetHead();
 				while (curRigidBodyNode)
 				{
 					btRigidBody * rigidBody = curRigidBodyNode->GetData();
@@ -662,11 +662,11 @@ void PhysicsManager::ClearCollisions(GameObject * a_gameObj)
 {
 	// Iterate through all objects in this file and clean up memory
 	GameObject::CollisionList * colList = a_gameObj->GetCollisions();
-	GameObject::Collider * cur = colList->GetHead();
-	while(cur != NULL)
+	auto cur = colList->GetHead();
+	while(cur != nullptr)
 	{
 		// Cache off next pointer and remove and deallocate memory
-		GameObject::Collider * next = cur->GetNext();
+		auto next = cur->GetNext();
 		colList->Remove(cur);
 		delete cur;
 
@@ -681,7 +681,7 @@ int PhysicsManager::GetNumManifolds()
 
 void PhysicsManager::AddCollision(GameObject * a_gameObjA, GameObject * a_gameObjB)
 {
-	if (a_gameObjA == NULL || a_gameObjB == NULL)
+	if (a_gameObjA == nullptr || a_gameObjB == nullptr)
 	{
 		return;
 	}

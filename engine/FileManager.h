@@ -79,7 +79,7 @@ public:
 	//\param a_filePath cString of the path to enumerate
 	//\param a_fileList_OUT the list of FileInfo to add to
 	//\param a_fileSubstring optionally exclude all files without this substring in the path
-	bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = NULL);
+	bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = nullptr);
 	bool CheckFilePath(const char * a_filePath);
 	void CleanupFileList(FileList & a_fileList_OUT);
 
@@ -92,7 +92,7 @@ public:
 	{
 		unsigned int numFiles = 0;
 		FileListNode * next = a_fileList.GetHead();
-		while(next != NULL)
+		while(next != nullptr)
 		{
 			FileInfo * curFile = next->GetData();
 			if (curFile->m_isDir)
@@ -121,7 +121,7 @@ public:
 	//\param a_fileList_OUT the list of FileInfo to add to
 	//\param a_fileSubstring optionally exclude all files without this substring in the path
 	template <typename TObj, typename TMethod>
-	inline bool FillManagedFileList(TObj * a_callerObject, TMethod a_callback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = NULL)
+	inline bool FillManagedFileList(TObj * a_callerObject, TMethod a_callback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = nullptr)
 	{
 		// Add an event to the list of items to be processed
 		// TODO memory management! Kill std new with a rusty fork

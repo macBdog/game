@@ -30,7 +30,7 @@ const char * ParticleDefinition::s_propertyNames[ParticleDefinition::s_maxProper
 	"endVel",
 };
 
-template<> RenderManager * Singleton<RenderManager>::s_instance = NULL;
+template<> RenderManager * Singleton<RenderManager>::s_instance = nullptr;
 const float RenderManager::s_updateFreq = 1.0f;
 const float RenderManager::s_nearClipPlane = 1.0f;
 const float RenderManager::s_farClipPlane = 1000.0f;
@@ -324,13 +324,13 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	glErrorEnum = glGetError();
 
 	// Cache off the shader path
-	if (a_shaderPath != NULL && a_shaderPath[0] != '\0')
+	if (a_shaderPath != nullptr && a_shaderPath[0] != '\0')
 	{
 		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
 	}
 
 	// Load all shaders from the datapack if specifiied
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Construct paths for both shader file names
 		char shaderNameBuf[StringUtils::s_maxCharsPerName];
@@ -340,12 +340,12 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		DataPack::EntryList shaderEntries;
 		a_dataPack->GetAllEntries(".vsh", shaderEntries);
 		DataPack::EntryNode * curNode = shaderEntries.GetHead();
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			DataPackEntry * curEntry = curNode->GetData();
 			sprintf(shaderNameBuf, "%s", StringUtils::ExtractFileNameFromPath(curEntry->m_path));
 			const char * shaderNameEnd = strstr(shaderNameBuf, ".");
-			if (shaderNameEnd != NULL)
+			if (shaderNameEnd != nullptr)
 			{
 				const int shaderNameLen = strlen(shaderNameBuf) - strlen(shaderNameEnd);
 				shaderNameBuf[shaderNameLen] = '\0';
@@ -357,7 +357,7 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 				// Now look for the fragment shader matching the vertex
 				strncpy(fragShaderPathBuf, curEntry->m_path, strlen(curEntry->m_path) + 1);
 				char * extension = strstr(fragShaderPathBuf, ".vsh");
-				if (extension != NULL)
+				if (extension != nullptr)
 				{
 					const int extensionPos = strlen(fragShaderPathBuf) - strlen(extension);
 					fragShaderPathBuf[extensionPos + 1] = 'f';
@@ -366,7 +366,7 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 				{
 					char * vertexSource = (char *)malloc((curEntry->m_size + 1) * sizeof(char));
 					char * fragmentSource = (char *)malloc((fragmentNode->m_size + 1) * sizeof(char));
-					if (vertexSource != NULL && fragmentSource != NULL)
+					if (vertexSource != nullptr && fragmentSource != nullptr)
 					{
 						memcpy(vertexSource, curEntry->m_data, curEntry->m_size);
 						memcpy(fragmentSource, fragmentNode->m_data, fragmentNode->m_size);
@@ -380,7 +380,7 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 
 				if (shaderLoadSuccess)
 				{
-					LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+					auto shaderNode = new LinkedListNode<Shader>();
 					shaderNode->SetData(pNewShader);
 					m_shaders.Insert(shaderNode);
 				}
@@ -559,7 +559,7 @@ bool RenderManager::Shutdown()
 
 	// And any managed shaders
 	ManagedShaderNode * next = m_managedShaders.GetHead();
-	while (next != NULL)
+	while (next != nullptr)
 	{
 		// Cache off next pointer
 		ManagedShaderNode * cur = next;
@@ -571,11 +571,11 @@ bool RenderManager::Shutdown()
 	}
 
 	// And finally the shaders
-	LinkedListNode<Shader> * nextShader = m_shaders.GetHead();
-	while (nextShader != NULL)
+	auto nextShader = m_shaders.GetHead();
+	while (nextShader != nullptr)
 	{
 		// Cache off next pointer
-		LinkedListNode<Shader> * cur = nextShader;
+		auto cur = nextShader;
 		nextShader = cur->GetNext();
 
 		Shader* curShader = cur->GetData();
@@ -629,7 +629,7 @@ bool RenderManager::Update(float a_dt)
 
 		// Test all shaders for modification
 		ManagedShaderNode * next = m_managedShaders.GetHead();
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			bool curFragShaderReloaded = false;
 			bool curVertShaderReloaded = false;
@@ -637,10 +637,10 @@ bool RenderManager::Update(float a_dt)
 			FileManager::Timestamp curTimeStampVert;
 			ManagedShader * curManShader = next->GetData();
 			char fullShaderPath[StringUtils::s_maxCharsPerLine];
-			Shader * pShader = curManShader->m_shaderObject != NULL ? curManShader->m_shaderObject->GetShader() : curManShader->m_shaderScene->GetShader();
+			Shader * pShader = curManShader->m_shaderObject != nullptr ? curManShader->m_shaderObject->GetShader() : curManShader->m_shaderScene->GetShader();
 			
 			// Game object or scene owning this shader has passed on to the other world
-			if (pShader == NULL)
+			if (pShader == nullptr)
 			{
 				// Cache off next node
 				ManagedShaderNode * actualNext = next->GetNext();
@@ -679,25 +679,25 @@ bool RenderManager::Update(float a_dt)
 						if (InitShaderFromFile(*pReloadedShader))
 						{
 							// Reassign shader to source object
-							if (curManShader->m_shaderObject != NULL)
+							if (curManShader->m_shaderObject != nullptr)
 							{
 								curManShader->m_shaderObject->SetShader(pReloadedShader);
 							}
-							else if (curManShader->m_shaderScene != NULL)
+							else if (curManShader->m_shaderScene != nullptr)
 							{
 								curManShader->m_shaderScene->SetShader(pReloadedShader);
 							}
 
 							// Reassign the shader for any other managed objects that shared the reloaded shader
 							ManagedShaderNode * sharedShader = m_managedShaders.GetHead();
-							while (sharedShader != NULL)
+							while (sharedShader != nullptr)
 							{
 								// First check for game object owning shader
-								Shader * existingShader = NULL;
-								if (sharedShader->GetData()->m_shaderObject != NULL)
+								Shader * existingShader = nullptr;
+								if (sharedShader->GetData()->m_shaderObject != nullptr)
 								{
 									existingShader = sharedShader->GetData()->m_shaderObject->GetShader();
-									if (existingShader != NULL && existingShader == pShader)
+									if (existingShader != nullptr && existingShader == pShader)
 									{
 										sharedShader->GetData()->m_shaderObject->SetShader(pReloadedShader);
 										
@@ -713,10 +713,10 @@ bool RenderManager::Update(float a_dt)
 									}
 								}
 								// Now check for scene owning shader
-								else if (sharedShader->GetData()->m_shaderScene != NULL)
+								else if (sharedShader->GetData()->m_shaderScene != nullptr)
 								{
 									existingShader = sharedShader->GetData()->m_shaderScene->GetShader();
-									if (existingShader != NULL && existingShader == pShader)
+									if (existingShader != nullptr && existingShader == pShader)
 									{
 										sharedShader->GetData()->m_shaderScene->SetShader(pReloadedShader);
 
@@ -1127,12 +1127,12 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		}
 
 		// Draw models by calling their VBOs
-		Shader * pLastModelShader = NULL;	
+		Shader * pLastModelShader = nullptr;	
 		SortedRenderNode * curNode = modelSort.GetHead();
 		while (curNode != nullptr)
 		{
 			RenderModel * rm = m_models[i] + curNode->GetData()->m_id;
-			pLastModelShader = rm->m_shader == NULL ? m_textureShader : rm->m_shader;
+			pLastModelShader = rm->m_shader == nullptr ? m_textureShader : rm->m_shader;
 			shaderData.m_projectionMatrix = &a_perspectiveMat;
 			shaderData.m_viewMatrix = &a_viewMatrix;
 			shaderData.m_objectMatrix = rm->m_mat;
@@ -1340,7 +1340,7 @@ void RenderManager::AddQuad2D(RenderLayer::Enum a_renderLayer, Vector2 * a_verts
 	}
 
 	// Warn about no texture
-	if (a_renderLayer != RenderLayer::Debug2D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug2D && a_tex == nullptr)
 	{
 		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Quad submitted without a texture");
 	}
@@ -1417,7 +1417,7 @@ void RenderManager::AddQuad3D(RenderLayer::Enum a_renderLayer, Vector * a_verts,
 	}
 
 	// Warn about no texture
-	if (a_renderLayer != RenderLayer::Debug2D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug2D && a_tex == nullptr)
 	{
 		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "3D Quad submitted without a texture");
 	}
@@ -1466,7 +1466,7 @@ void RenderManager::AddTri(RenderLayer::Enum a_renderLayer, Vector a_point1, Vec
 	}
 
 	// Warn about no texture
-	if (a_renderLayer != RenderLayer::Debug3D && a_tex == NULL)
+	if (a_renderLayer != RenderLayer::Debug3D && a_tex == nullptr)
 	{
 		Log::Get().WriteOnce(LogLevel::Warning, LogCategory::Engine, "Tri submitted without a texture");
 	}
@@ -1858,7 +1858,7 @@ void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shade
 	{
 		if (RenderManager::InitShaderFromFile(*pNewShader))
 		{
-			LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+			auto shaderNode = new LinkedListNode<Shader>();
 			shaderNode->SetData(pNewShader);
 			a_gameObject->SetShader(pNewShader);
 			m_shaders.Insert(shaderNode);
@@ -1867,14 +1867,14 @@ void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shade
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with game object %s", a_shaderName, a_gameObject->GetName());
 			delete pNewShader;
-			a_gameObject->SetShader(NULL);
+			a_gameObject->SetShader(nullptr);
 		}
 	}
 
 	// TODO Check this object is not already managed
 
 	// Link shader in list to game object for management
-	if (a_gameObject != NULL)
+	if (a_gameObject != nullptr)
 	{
 		if (ManagedShader * pManShader = new ManagedShader())
 		{	
@@ -1896,7 +1896,7 @@ void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 	{
 		if (RenderManager::InitShaderFromFile(*pNewShader))
 		{
-			LinkedListNode<Shader> * shaderNode = new LinkedListNode<Shader>();
+			auto shaderNode = new LinkedListNode<Shader>();
 			shaderNode->SetData(pNewShader);
 			a_scene->SetShader(pNewShader);
 			m_shaders.Insert(shaderNode);
@@ -1905,14 +1905,14 @@ void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with scene %s", a_shaderName, a_scene->GetName());
 			delete pNewShader;
-			a_scene->SetShader(NULL);
+			a_scene->SetShader(nullptr);
 		}
 	}
 
 	// TODO Check this scene is not already managed
 
 	// Link shader in list to scene for management
-	if (a_scene != NULL)
+	if (a_scene != nullptr)
 	{
 		if (ManagedShader * pManShader = new ManagedShader())
 		{	
@@ -1924,10 +1924,10 @@ void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 
 void RenderManager::UnManageShader(GameObject * a_gameObject)
 {
-	if (a_gameObject != NULL)
+	if (a_gameObject != nullptr)
 	{
 		ManagedShaderNode * next = m_managedShaders.GetHead();
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			if (next->GetData()->m_shaderObject == a_gameObject)
 			{
@@ -1946,10 +1946,10 @@ void RenderManager::UnManageShader(GameObject * a_gameObject)
 
 void RenderManager::UnManageShader(Scene * a_scene)
 {
-	if (a_scene != NULL)
+	if (a_scene != nullptr)
 	{
 		ManagedShaderNode * next = m_managedShaders.GetHead();
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			if (next->GetData()->m_shaderScene == a_scene)
 			{
@@ -1970,8 +1970,8 @@ bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 {
 	struct stat fileInfo;
 	unsigned int numChars = 0;
-	char * vertexSource = NULL;
-	char * fragmentSource = NULL;
+	char * vertexSource = nullptr;
+	char * fragmentSource = nullptr;
 	char fullShaderPath[StringUtils::s_maxCharsPerLine];
 	char fileLine[StringUtils::s_maxCharsPerLine];
 	
@@ -2044,7 +2044,7 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 {
 	const int vertShaderSize = strlen(a_vertShaderSrc);
 	const int fragShaderSize = strlen(a_fragShaderSrc);
-	if (a_vertShaderSrc == NULL || a_fragShaderSrc == NULL || vertShaderSize <= 0 || fragShaderSize <= 0)
+	if (a_vertShaderSrc == nullptr || a_fragShaderSrc == nullptr || vertShaderSize <= 0 || fragShaderSize <= 0)
 	{
 		return false;
 	}
@@ -2053,8 +2053,8 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 	#include "Shaders\global.fsh.inc"
 	#include "Shaders\global.vsh.inc"
 
-	char * vertexSource = NULL;
-	char * fragmentSource = NULL;
+	char * vertexSource = nullptr;
+	char * fragmentSource = nullptr;
 	size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
 	size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
 	if (vertexSource = (char *)malloc((globalVertexSize + vertShaderSize + 2) * sizeof(char)))
@@ -2083,7 +2083,7 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 		fragmentSource[numChars] = '\0';
 	}
 
-	if (vertexSource == NULL || fragmentSource == NULL)
+	if (vertexSource == nullptr || fragmentSource == nullptr)
 	{
 		free(vertexSource);
 		free(fragmentSource);
@@ -2101,8 +2101,8 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 	if (a_newManShader)
 	{
 		// Expecting a game object OR scene with a valid shader already set
-		Shader * pShader = a_newManShader->m_shaderObject != NULL ? a_newManShader->m_shaderObject->GetShader() : a_newManShader->m_shaderScene->GetShader();
-		if (pShader == NULL)
+		Shader * pShader = a_newManShader->m_shaderObject != nullptr ? a_newManShader->m_shaderObject->GetShader() : a_newManShader->m_shaderScene->GetShader();
+		if (pShader == nullptr)
 		{
 			Log::Get().WriteEngineErrorNoParams("AddManagedShader called without a valid shader assigned to an object or scene");
 			return;
@@ -2131,8 +2131,8 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 Shader * RenderManager::GetShader(const char * a_shaderName)
 {
 	// Iterate through all shaders looking for the named program
-	LinkedListNode<Shader> * next = m_shaders.GetHead();
-	while (next != NULL)
+	auto next = m_shaders.GetHead();
+	while (next != nullptr)
 	{
 		if (strcmp(next->GetData()->GetName(), a_shaderName) == 0)
 		{
@@ -2141,5 +2141,5 @@ Shader * RenderManager::GetShader(const char * a_shaderName)
 		next = next->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }

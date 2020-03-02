@@ -21,7 +21,7 @@ public:
 	SoundManager(float a_updateFreq = s_updateFreq) 
 		: m_updateFreq(a_updateFreq)
 		, m_updateTimer(0.0f)
-		, m_engine(NULL)
+		, m_engine(nullptr)
 		, m_mute(true)
 		{ 
 			m_soundPath[0] = '\0'; 
@@ -50,7 +50,7 @@ private:
 	//\brief Storage for a pointer to a sound interface and a name so the sound can be changed later
 	struct PlayingSoundInfo
 	{
-		PlayingSoundInfo() : m_handle(NULL)
+		PlayingSoundInfo() : m_handle(nullptr)
 		{
 			m_name[0] = '\0';
 		}

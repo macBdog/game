@@ -33,6 +33,16 @@
 
 int main(int argc, char *argv[])
 {
+	int x = 20;
+	int y = 40;
+	int * p1 = &x;
+	int * p2 = &y;
+	int ** pl = new int * [2];
+
+	pl[0] = p1;
+	pl[1] = p2;
+	
+
 	// Single parameter to the executable is the main config file
 	bool useRelativePaths = false;
 	char titleConfigFilePath[StringUtils::s_maxCharsPerLine];

@@ -36,11 +36,11 @@ float Widget::s_selectedColourValue = 0.0f;	///< Value to attenuate a selected w
 Widget::~Widget()
 {
 	// Delete list items owned by this widget
-	LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
-	while(nextItem != NULL)
+	auto nextItem = m_listItems.GetHead();
+	while(nextItem != nullptr)
 	{
 		// Cache off working node
-		LinkedListNode<StringHash> * curItem = nextItem;
+		auto curItem = nextItem;
 		nextItem = nextItem->GetNext();
 
 		m_listItems.Remove(curItem);
@@ -57,7 +57,7 @@ void Widget::Draw()
 		// Derive position based on alignment to parent
 		Vector2 drawPos = m_pos.GetVector();
 		UpdateAlignTo();
-		if (m_alignTo != NULL)
+		if (m_alignTo != nullptr)
 		{
 			drawPos = GetPositionRelative(m_alignTo);
 		}
@@ -105,7 +105,7 @@ void Widget::Draw()
 		}
 
 		// Draw the quad in various states of activation
-		if (m_texture != NULL)
+		if (m_texture != nullptr)
 		{
 			if (m_scissorRect.IsEqualZeroEpsilon())
 			{
@@ -177,24 +177,24 @@ void Widget::Draw()
 		}
 
 		// Draw any list items
-		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+		auto nextItem = m_listItems.GetHead();
 		Vector2 listDisplayPos = Vector2(drawPos.GetX() + fontDisplaySize, drawPos.GetY() - fontDisplaySize);
 		Vector2 itemDisplayPos(listDisplayPos);
 		unsigned int numItems = 0;
-		while(nextItem != NULL)
+		while(nextItem != nullptr)
 		{
 			// If this is the selected item then draw the highlight bar behind the item
 			if (numItems == m_selectedListItemId)
 			{
 				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
 				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
-				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, NULL, TextureOrientation::Normal, selectColour - sc_rolloverColour);
+				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, nullptr, TextureOrientation::Normal, selectColour - sc_rolloverColour);
 			}
 			else if (numItems == m_rolloverListItemId)
 			{
 				Vector2 hLightPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
 				Vector2 hLightSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
-				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, NULL, TextureOrientation::Normal, selectColour - sc_selectedColour);
+				rMan.AddQuad2D(renderLayer, hLightPos, hLightSize, nullptr, TextureOrientation::Normal, selectColour - sc_selectedColour);
 			}
 
 			// Now draw the item text
@@ -208,7 +208,7 @@ void Widget::Draw()
 
 	// Draw any child widgets
 	WidgetNode * curWidget = m_children.GetHead();
-	while (curWidget != NULL)
+	while (curWidget != nullptr)
 	{
 		curWidget->GetData()->Draw();
 		curWidget = curWidget->GetNext();
@@ -226,7 +226,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 
 	// Derive position based on alignment to parent
 	Vector2 drawPos = m_pos.GetVector();
-	if (m_alignTo != NULL)
+	if (m_alignTo != nullptr)
 	{
 		drawPos = GetPositionRelative(m_alignTo);
 	}
@@ -265,10 +265,10 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 	if (m_selection > SelectionFlags::None)
 	{
 		const float fontDisplaySize = 0.07f;
-		LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
+		auto nextItem = m_listItems.GetHead();
 		Vector2 listDisplayPos = Vector2(drawPos.GetX() + fontDisplaySize, drawPos.GetY() - fontDisplaySize);
 		unsigned int numItems = 0;
-		while(nextItem != NULL)
+		while(nextItem != nullptr)
 		{
 			Vector2 testPos(listDisplayPos.GetX(), listDisplayPos.GetY() - (fontDisplaySize * numItems));
 			Vector2 testSize(m_size.GetVector().GetX() - fontDisplaySize, fontDisplaySize);
@@ -286,7 +286,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 
 	// Update selection on any child widgets
 	WidgetNode * curWidget = m_children.GetHead();
-	while (curWidget != NULL)
+	while (curWidget != nullptr)
 	{
 		curWidget->GetData()->UpdateSelection(a_pos);
 		curWidget = curWidget->GetNext();
@@ -321,7 +321,7 @@ bool Widget::DoActivation()
 	
 	// Activate any child widgets
 	WidgetNode * curWidget = m_children.GetHead();
-	while (curWidget != NULL)
+	while (curWidget != nullptr)
 	{
 		activated &= curWidget->GetData()->DoActivation();
 		curWidget = curWidget->GetNext();
@@ -345,7 +345,7 @@ bool Widget::RemoveChild(Widget * a_child)
 {
 	// This will not handle align references or parent lists, just child relationships!
 	WidgetNode * cur = m_children.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		WidgetNode * next = cur->GetNext();
 		if (cur->GetData() == a_child)
@@ -362,7 +362,7 @@ bool Widget::RemoveChildren()
 {
 	// This will not handle align references or parent lists, just child relationships!
 	WidgetNode * cur = m_children.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		WidgetNode * next = cur->GetNext();
 		if (cur->GetData()->m_children.GetLength() > 0)
@@ -386,13 +386,13 @@ Widget * Widget::Find(const char * a_name)
 
 	if (m_children.IsEmpty())
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Exhaustive search through child and siblings to find selected widget
-	Widget * foundWidget = NULL;
+	Widget * foundWidget = nullptr;
 	WidgetNode * curWidget = m_children.GetHead();
-	while (curWidget != NULL && foundWidget == NULL)
+	while (curWidget != nullptr && foundWidget == nullptr)
 	{
 		if (strcmp(curWidget->GetData()->GetName(), a_name) == 0)
 		{
@@ -419,12 +419,12 @@ Widget * Widget::FindSelected()
 
 	if (m_children.IsEmpty())
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Exhaustive search through child and siblings to find selected widget
 	WidgetNode * curWidget = m_children.GetHead();
-	while (curWidget != NULL)
+	while (curWidget != nullptr)
 	{
 		if (curWidget->GetData()->IsSelected())
 		{
@@ -441,13 +441,13 @@ Widget * Widget::FindSelected()
 		// Keep searching the widget list
 		curWidget = curWidget->GetNext();
 	}
-	return NULL;
+	return nullptr;
 }
 
 bool Widget::RemoveAlignmentTo(Widget * a_alignedTo)
 {
 	bool cleared = false;
-	if (a_alignedTo == NULL)
+	if (a_alignedTo == nullptr)
 	{
 		return false;
 	}
@@ -466,7 +466,7 @@ bool Widget::RemoveAlignmentTo(Widget * a_alignedTo)
 
 	// Exhaustive search through children to clear alignment to a widget
 	WidgetNode * cur = m_children.GetHead();
-	while (cur != NULL)
+	while (cur != nullptr)
 	{
 		Widget * curWidget = cur->GetData();
 		if (curWidget->m_alignTo == a_alignedTo)
@@ -486,7 +486,7 @@ bool Widget::RemoveAlignmentTo(Widget * a_alignedTo)
 
 bool Widget::RemoveFromChildren(Widget * a_child)
 {
-	if (a_child == NULL)
+	if (a_child == nullptr)
 	{
 		return false;
 	}
@@ -499,7 +499,7 @@ bool Widget::RemoveFromChildren(Widget * a_child)
 	// Early out after the first removal but better to be exhaustive
 	bool removed = RemoveChild(a_child);
 	WidgetNode * cur = m_children.GetHead();
-	while (cur != NULL && !removed)
+	while (cur != nullptr && !removed)
 	{
 		Widget * curWidget = cur->GetData();
 		if (curWidget->RemoveChild(a_child))
@@ -533,7 +533,7 @@ void Widget::SetAlignTo(const char * a_alignWidgetName)
 
 void Widget::ClearAlignTo()
 {
-	m_alignTo = NULL;
+	m_alignTo = nullptr;
 	m_alignToName[0] = '\0';
 }
 
@@ -541,8 +541,8 @@ void Widget::UpdateAlignTo()
 {
 	// Lookup the align to widget if the name is set but the pointer isn't OR
 	// if the name and the pointer mismatch
-	if ( (m_alignTo == NULL && m_alignToName[0] != '\0') || 
-		 (m_alignTo != NULL && m_alignToName[0] != '\0' && strcmp(m_alignTo->GetName(), m_alignToName) != 0))
+	if ( (m_alignTo == nullptr && m_alignToName[0] != '\0') || 
+		 (m_alignTo != nullptr && m_alignToName[0] != '\0' && strcmp(m_alignTo->GetName(), m_alignToName) != 0))
 	{
 		m_alignTo = Gui::Get().FindWidget(m_alignToName);
 	}
@@ -572,7 +572,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 	char outBuf[StringUtils::s_maxCharsPerName];
 
 	// If this is a recursive call the output stream will be already set up
-	if (a_outputStream != NULL)
+	if (a_outputStream != nullptr)
 	{
 		// Generate the correct tab amount
 		char tabs[StringUtils::s_maxCharsPerName];
@@ -625,7 +625,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 		m_pos.GetAlignmentAnchor().GetStringY(outBuf);
 		menuStream << tabs << StringUtils::s_charTab << "alignAnchorY: "	<< outBuf	<< StringUtils::s_charLineEnd;
 
-		if (m_texture != NULL)
+		if (m_texture != nullptr)
 		{
 			menuStream << tabs << StringUtils::s_charTab << "texture: " << m_texture->GetFileName() << StringUtils::s_charLineEnd;
 		}
@@ -639,7 +639,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 
 		// Serialise any children of this child
 		WidgetNode * curChild = m_children.GetHead();
-		while (curChild != NULL)
+		while (curChild != nullptr)
 		{
 			curChild->GetData()->Serialise(a_outputStream, ++a_indentCount);
 			curChild = curChild->GetNext();
@@ -666,7 +666,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 
 			// Write out any children of this child
 			WidgetNode * curChild = m_children.GetHead();
-			while (curChild != NULL)
+			while (curChild != nullptr)
 			{
 				curChild->GetData()->Serialise(&menuOutput, 1);
 				curChild = curChild->GetNext();
@@ -682,7 +682,7 @@ void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCoun
 void Widget::AddListItem(const char * a_newItemName)
 {
 	// Allocate a new node and set data
-	if (LinkedListNode<StringHash> * newListItem = new LinkedListNode<StringHash>())
+	if (auto newListItem = new LinkedListNode<StringHash>())
 	{
 		newListItem->SetData(new StringHash(a_newItemName));
 		m_listItems.Insert(newListItem);
@@ -691,8 +691,8 @@ void Widget::AddListItem(const char * a_newItemName)
 
 void Widget::RemoveListItem(const char * a_existingItemName)
 {
-	LinkedListNode<StringHash> * cur = m_listItems.GetHead();
-	while(cur != NULL)
+	auto cur = m_listItems.GetHead();
+	while(cur != nullptr)
 	{
 		// Remove item and quit out of the loop if found
 		if (cur->GetData()->GetHash() == StringHash::GenerateCRC(a_existingItemName))
@@ -707,11 +707,11 @@ void Widget::RemoveListItem(const char * a_existingItemName)
 
 void Widget::ClearListItems()
 {
-	LinkedListNode<StringHash> * nextItem = m_listItems.GetHead();
-	while(nextItem != NULL)
+	auto nextItem = m_listItems.GetHead();
+	while(nextItem != nullptr)
 	{
 		// Remove all items by caching off the current pointer
-		LinkedListNode<StringHash> * curItem = nextItem;
+		auto curItem = nextItem;
 		nextItem = nextItem->GetNext();
 
 		m_listItems.Remove(curItem);
@@ -725,12 +725,12 @@ const char * Widget::GetListItem(unsigned int a_itemId)
 	if (a_itemId >= m_listItems.GetLength())
 	{
 		Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Trying to get an invalid list item %d from widget called %s.", a_itemId, m_name);
-		return NULL;
+		return nullptr;
 	}
 
 	unsigned int numItems = 0;
-	LinkedListNode<StringHash> * cur = m_listItems.GetHead();
-	while(cur != NULL)
+	auto cur = m_listItems.GetHead();
+	while(cur != nullptr)
 	{
 		// Remove item and quit out of the loop if found
 		if (numItems == a_itemId)
@@ -742,7 +742,7 @@ const char * Widget::GetListItem(unsigned int a_itemId)
 		++numItems;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 Vector2 Widget::GetPositionRelative(Widget * a_alignParent)

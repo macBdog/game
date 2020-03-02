@@ -3,7 +3,7 @@
 #include "Log.h"
 #include "RenderManager.h"
 
-template<> InputManager * Singleton<InputManager>::s_instance = NULL;
+template<> InputManager * Singleton<InputManager>::s_instance = nullptr;
 
 const float InputManager::s_gamePadCheckTime = 2.0f;	///< Timer to check for new plugged in gamepads
 
@@ -36,7 +36,7 @@ bool InputManager::Shutdown()
 {
 	// Clean up any registered events
 	InputEventNode * next = m_events.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		// Cache off next pointer
 		InputEventNode * cur = next;
@@ -55,7 +55,7 @@ bool InputManager::Shutdown()
 		{
 			SDL_JoystickClose(m_gamepads[i]);
 		}
-		m_gamepads[i] = NULL;
+		m_gamepads[i] = nullptr;
 	}
 
 	return true;
@@ -79,7 +79,7 @@ bool InputManager::Update(float a_dt)
 			m_numGamepads = numGamePads;
 			for (int i = 0; i < m_numGamepads; ++i)
 			{
-				if (m_gamepads[i] == NULL)
+				if (m_gamepads[i] == nullptr)
 				{
 					if (m_gamepads[i] = SDL_JoystickOpen(i))
 					{
@@ -308,7 +308,7 @@ bool InputManager::ProcessMouseUp(MouseButton::Enum a_button)
 
 	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
-	while(curEvent != NULL)
+	while(curEvent != nullptr)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
@@ -361,7 +361,7 @@ bool InputManager::ProcessKeyUp(SDL_Keycode a_key)
 
 	bool foundEvent = false;
 	InputEventNode * curEvent = m_events.GetHead();
-	while(curEvent != NULL)
+	while(curEvent != nullptr)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();
@@ -424,7 +424,7 @@ bool InputManager::ProcessKeyDown(SDL_Keycode a_key)
 	}
 
 	InputEventNode * curEvent = m_events.GetHead();
-	while(curEvent != NULL)
+	while(curEvent != nullptr)
 	{
 		// Check the details of the event
 		InputEvent * ev = curEvent->GetData();

@@ -8,7 +8,7 @@
 
 #include "Scene.h"
 
-template<> WorldManager * Singleton<WorldManager>::s_instance = NULL;
+template<> WorldManager * Singleton<WorldManager>::s_instance = nullptr;
 
 const float Scene::s_updateFreq = 1.0f;								///< How often the scene should check it's config on disk for updates
 
@@ -83,7 +83,7 @@ bool Scene::InitFromConfig()
 			{
 				int numLights = 0;
 				LinkedListNode<GameFile::Object> * nextLight = lightingObj->GetChildren();
-				while (nextLight != NULL)
+				while (nextLight != nullptr)
 				{
 					// Check there aren't more lights than we support
 					if (numLights >= Shader::s_maxLights)
@@ -125,7 +125,7 @@ bool Scene::InitFromConfig()
 
 		// Load child game objects of the scene
 		LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
-		while (childGameObject != NULL)
+		while (childGameObject != nullptr)
 		{
 			// Children of the scene file can be lighting or game objects, make sure we only create game objects
 			if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
@@ -134,7 +134,7 @@ bool Scene::InitFromConfig()
 				continue;
 			}
 
-			const char * templateName = NULL;
+			const char * templateName = nullptr;
 			GameFile::Object * childObj = childGameObject->GetData();
 			if (GameFile::Property * prop = childObj->FindProperty("template"))
 			{
@@ -145,7 +145,7 @@ bool Scene::InitFromConfig()
 			GameObject * newObject = WorldManager::Get().CreateObject(templateName, this);
 
 			// Override any templated values
-			if (templateName != NULL)
+			if (templateName != nullptr)
 			{
 				newObject->SetTemplate(templateName);
 			}
@@ -164,15 +164,15 @@ bool Scene::InitFromConfig()
 			}
 			if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
 			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != NULL)
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Sphere);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != NULL)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Box);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != NULL)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Mesh);
 					newObject->SetPhysicsMesh(clipType->GetString());
@@ -280,7 +280,7 @@ GameObject * Scene::GetSceneObject(unsigned int a_storageId)
 	{
 		return m_objects.Get(a_storageId);
 	}
-	return NULL;
+	return nullptr;
 }
 
 GameObject * Scene::GetSceneObject(const char * a_objName)
@@ -297,7 +297,7 @@ GameObject * Scene::GetSceneObject(const char * a_objName)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 GameObject * Scene::GetSceneObject(Vector a_worldPos)
@@ -314,7 +314,7 @@ GameObject * Scene::GetSceneObject(Vector a_worldPos)
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
@@ -331,7 +331,7 @@ GameObject * Scene::GetSceneObject(Vector a_lineStart, Vector a_lineEnd)
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 Light * Scene::GetLightAtPos(Vector a_worldPos)
@@ -345,7 +345,7 @@ Light * Scene::GetLightAtPos(Vector a_worldPos)
 			return curLight;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
@@ -359,7 +359,7 @@ Light * Scene::GetLight(Vector a_lineStart, Vector a_lineEnd)
 			return curLight;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Scene::RemoveAllObjects(bool a_destroyScriptOwned)
@@ -465,7 +465,7 @@ void Scene::Serialise()
 	sceneFile->AddProperty(sceneObject, "beginLoaded", StringUtils::BoolToString(m_beginLoaded));
 
 	// Optional properties of the scene
-	if (m_shader != NULL) 
+	if (m_shader != nullptr) 
 	{
 		sceneFile->AddProperty(sceneObject, "shader", m_shader->GetName());
 	}

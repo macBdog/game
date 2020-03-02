@@ -6,11 +6,11 @@
 const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
 {
 	// Early out for bad string or no delim
-	if (a_buffer == NULL || 
+	if (a_buffer == nullptr || 
 		strlen(a_buffer) == 0 || 
 		!strstr(a_buffer, a_delim))
 	{
-		return NULL;
+		return nullptr;
 	}
    
     // Ignore all delims before the fields
@@ -20,8 +20,8 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
     }
     
     // Maintain pointers to the start and end of the buffer
-	const char * ptrStart = NULL;
-    const char * ptrEnd = NULL;
+	const char * ptrStart = nullptr;
+    const char * ptrEnd = nullptr;
     unsigned int i = 0;
     ptrStart = ptrEnd = a_buffer;
     
@@ -35,7 +35,7 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
 		for (i=0; i<a_fieldIndex; i++) 
 		{
 			ptrEnd = strstr(ptrStart, a_delim);
-            if (ptrEnd==NULL) 
+            if (ptrEnd==nullptr) 
 			{
 				break;
 			}
@@ -45,12 +45,12 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
  
 		if (*ptrStart=='\0' || a_fieldIndex > i) 
 		{
-			return NULL;
+			return nullptr;
 		} 
 		else 
 		{
 			ptrEnd = strstr(ptrStart, a_delim);
-            if (ptrEnd==NULL) 
+            if (ptrEnd==nullptr) 
 			{
 				ptrEnd = strchr(ptrStart, '\0');
 			}
@@ -59,12 +59,12 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
  
 	// No instance of delim, early out
     if (ptrStart==ptrEnd) {
-		return NULL;
+		return nullptr;
     }
             
     // Allocate memory for the new buffer and return
     char * retBuf = (char*)malloc(sizeof(char)*(ptrEnd-ptrStart)+1);
-	if (retBuf != NULL)
+	if (retBuf != nullptr)
 	{
 		// Copy chars from the buffer and terminate the string
 		memcpy(retBuf, ptrStart, (sizeof(char)*(ptrEnd-ptrStart)));
@@ -75,24 +75,24 @@ const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim
 	}
 
 	// Failure case
-	return NULL;
+	return nullptr;
 }
 
 const char * StringUtils::ExtractPropertyName(const char *a_buffer, const char *a_delim)
 {
 	// Early out for bad string or no delim
 	const char * delimLoc = strstr(a_buffer, a_delim);
-	if (a_buffer == NULL || 
+	if (a_buffer == nullptr || 
 		strlen(a_buffer) == 0 || 
-		delimLoc == NULL)
+		delimLoc == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
    
     // Alloc a new string and return it
 	unsigned int propLength = delimLoc - a_buffer;
 	char * retBuf = (char*)malloc(sizeof(char)*propLength+1);
-	if (retBuf != NULL)
+	if (retBuf != nullptr)
 	{
 		// Copy all chars up to delim and null terminate
 		memset(retBuf, 0, sizeof(char) * propLength);
@@ -102,18 +102,18 @@ const char * StringUtils::ExtractPropertyName(const char *a_buffer, const char *
     }
 	
 	// Failure case
-	return NULL;
+	return nullptr;
 }
 
 const char * StringUtils::ExtractValue(const char *a_buffer, const char *a_delim)
 {
 	// Early out for bad string or no delim
 	const char * delimLoc = strstr(a_buffer, a_delim);
-	if (a_buffer == NULL || 
+	if (a_buffer == nullptr || 
 		strlen(a_buffer) == 0 || 
-		delimLoc == NULL)
+		delimLoc == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
    
 	// Return everything after the delimeter
@@ -134,7 +134,7 @@ const char * StringUtils::ExtractFileNameFromPath(const char * a_buffer)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void StringUtils::TrimFileNameFromPath(char * a_buffer_OUT)
@@ -159,13 +159,13 @@ void StringUtils::TrimFileNameFromPath(char * a_buffer_OUT)
 const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes) 
 {
 	// Iterate through the string and remove bad characters
-	if (a_buffer != NULL)
+	if (a_buffer != nullptr)
 	{
 		const unsigned int stringLength = strlen(a_buffer);
 
 		 // Allocate memory for the new buffer
 		char * retBuf = (char*)malloc(sizeof(char)*stringLength+1);
-		if (retBuf != NULL)
+		if (retBuf != nullptr)
 		{
 			// Copy chars from the buffer and terminate the string
 			unsigned int nonNullChars = 0;
@@ -191,7 +191,7 @@ const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const char * StringUtils::ReadLine(FILE *a_filePointer) 
@@ -231,7 +231,7 @@ extern unsigned char StringUtils::ConvertToLower(unsigned char a_char)
 extern unsigned int StringUtils::CountCharacters(const char * a_string, const char & a_searchChar)
 {
 	// Early out for bad input
-	if (a_string == NULL || a_string[0] == '\0')
+	if (a_string == nullptr || a_string[0] == '\0')
 	{
 		return 0;
 	}

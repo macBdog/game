@@ -64,7 +64,7 @@ public:
 		// Init gamepad pointers
 		for (int i = 0; i < s_maxGamepads; ++i)
 		{
-			m_gamepads[i] = NULL;
+			m_gamepads[i] = nullptr;
 			memset(&m_depressedGamepadButtons[i], 0, sizeof(bool) * s_maxGamepadButtons);
 		}
 	}
@@ -108,7 +108,7 @@ public:
 	//\ingroup Gamepad functions
 	//\brief Get the number of connected gamepads
 	inline int GetNumGamePads() { return m_numGamepads; }
-	inline bool IsGamePadConnected(int a_gamepadId) { return m_gamepads[a_gamepadId] != NULL; }
+	inline bool IsGamePadConnected(int a_gamepadId) { return m_gamepads[a_gamepadId] != nullptr; }
 	inline bool IsGamePadButtonDepressed(int a_gamepadId, int a_buttonId)
 	{
 		return a_gamepadId < s_maxGamepads && a_buttonId < s_maxGamepadButtons ? m_depressedGamepadButtons[a_gamepadId][a_buttonId] : false;
@@ -116,7 +116,7 @@ public:
 	inline float GetGamePadAxis(int a_gamepadId, int a_axisId)
 	{
 		float axisVal = 0.0f;
-		if (m_gamepads[a_gamepadId] != NULL)
+		if (m_gamepads[a_gamepadId] != nullptr)
 		{
 			axisVal = (float)(SDL_JoystickGetAxis(m_gamepads[a_gamepadId], a_axisId)) / 32768.0f;
 		}
@@ -230,7 +230,7 @@ private:
 	//\brief Helper function to iterate list of events and find first matching event
 	//\param a_type the type of event that is being searched for
 	//\param a_src the matching input key or button to search for
-	//\return a pointer to an input event or NULL if no event found
+	//\return a pointer to an input event or nullptr if no event found
 	InputEvent * GetFirstEvent(InputType::Enum a_type, InputSource a_src);
 
 	//\brief Helper function to iterate list of events and find all matching events

@@ -27,7 +27,7 @@ public:
 
 	static T& Get()
 	{
-		if (s_instance == NULL)
+		if (s_instance == nullptr)
 		{
 			s_instance = new(T); 
 		}
@@ -44,7 +44,7 @@ protected:
 		if (s_instance)
 		{
 			delete s_instance;
-			s_instance = NULL;
+			s_instance = nullptr;
 		}
 	}
 

@@ -9,7 +9,7 @@
 
 #include "AnimationManager.h"
 
-template<> AnimationManager * Singleton<AnimationManager>::s_instance = NULL;
+template<> AnimationManager * Singleton<AnimationManager>::s_instance = nullptr;
 
 const unsigned int AnimationManager::s_animPoolSize = 67108864;					///< How much memory is assigned for all game animations
 const float AnimationManager::s_updateFreq = 1.0f;								///< How often the animation manager should check for updates to disk resources
@@ -25,7 +25,7 @@ bool AnimationManager::Startup(const char * a_animPath, const DataPack * a_dataP
 	strncpy(m_animPath, a_animPath, sizeof(char) * strlen(a_animPath) + 1);
 
 	bool loadSuccess = true;
-	if (a_dataPack != NULL && a_dataPack->IsLoaded())
+	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Populate a list of animations
 		DataPack::EntryList animEntries;
@@ -34,7 +34,7 @@ bool AnimationManager::Startup(const char * a_animPath, const DataPack * a_dataP
 
 		// Load each font in the pack
 		
-		while (curNode != NULL)
+		while (curNode != nullptr)
 		{
 			loadSuccess &= LoadAnimations(curNode->GetData()) > 0;
 			curNode = curNode->GetNext();
@@ -52,7 +52,7 @@ bool AnimationManager::Startup(const char * a_animPath, const DataPack * a_dataP
 
 		// Add all the animations for each file in the directory
 		FileManager::FileListNode * curNode = animFiles.GetHead();
-		while(curNode != NULL)
+		while(curNode != nullptr)
 		{
 			// Get a fresh timestamp on the animation file
 			char fullPath[StringUtils::s_maxCharsPerLine];
@@ -75,7 +75,7 @@ bool AnimationManager::Shutdown()
 {
 	// Clean up any managed animations
 	ManagedAnimNode * next = m_anims.GetHead();
-	while (next != NULL)
+	while (next != nullptr)
 	{
 		// Cache off next pointer
 		ManagedAnimNode * cur = next;
@@ -114,7 +114,7 @@ bool AnimationManager::Update(float a_dt)
 		int reloadedAnims = 0;
 		m_updateTimer = 0.0f;
 		ManagedAnimNode * next = m_anims.GetHead();
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			// Get a fresh timestampt and test it against the stored timestamp
 			FileManager::Timestamp curTimeStamp;
@@ -137,9 +137,9 @@ bool AnimationManager::Update(float a_dt)
 bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & a_animName)
 {
 	// Find the animation
-	ManagedAnim * foundAnim = NULL;
+	ManagedAnim * foundAnim = nullptr;
 	ManagedAnimNode * curAnim = m_anims.GetHead();
-	while (curAnim != NULL)
+	while (curAnim != nullptr)
 	{
 		if (curAnim->GetData()->m_name == a_animName)
 		{
@@ -169,7 +169,7 @@ bool AnimationManager::PlayAnimation(GameObject * a_gameObj, const StringHash & 
 int AnimationManager::LoadAnimations(const char * a_fbxPath)
 {
 	// Early out for no file case
-	if (a_fbxPath == NULL)
+	if (a_fbxPath == nullptr)
 	{
 		return false;
 	}
@@ -177,7 +177,7 @@ int AnimationManager::LoadAnimations(const char * a_fbxPath)
 	// Anim name is the filename missing the extension because Blender's exporter only exports one take per file
 	char animNameBuf[StringUtils::s_maxCharsPerName];
 	strncpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_fbxPath), StringUtils::s_maxCharsPerName);
-	if (strstr(&animNameBuf[0], ".fbx") != NULL)
+	if (strstr(&animNameBuf[0], ".fbx") != nullptr)
 	{
 		animNameBuf[strlen(animNameBuf) - 4] = '\0';
 	}
@@ -189,7 +189,7 @@ int AnimationManager::LoadAnimations(const char * a_fbxPath)
 int AnimationManager::LoadAnimations(DataPackEntry * a_packedModel)
 {
 	// Early out for no pack
-	if (a_packedModel == NULL)
+	if (a_packedModel == nullptr)
 	{
 		return false;
 	}
@@ -197,7 +197,7 @@ int AnimationManager::LoadAnimations(DataPackEntry * a_packedModel)
 	// Anim name is the data pack path missing the extension because Blender's exporter only exports one take per file
 	char animNameBuf[StringUtils::s_maxCharsPerName];
 	strncpy(&animNameBuf[0], StringUtils::ExtractFileNameFromPath(a_packedModel->m_path), StringUtils::s_maxCharsPerName);
-	if (strstr(&animNameBuf[0], ".fbx") != NULL)
+	if (strstr(&animNameBuf[0], ".fbx") != nullptr)
 	{
 		animNameBuf[strlen(animNameBuf) - 4] = '\0';
 	}

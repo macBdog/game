@@ -11,9 +11,9 @@ public:
 	
 	//\brief Setup the size and offset tracking and allocate the memory
 	LinearAllocator(size_t a_maxSizeBytes)
-		: m_memory(NULL)
-		, m_memoryEnd(NULL)
-		, m_memoryPtr(NULL)
+		: m_memory(nullptr)
+		, m_memoryEnd(nullptr)
+		, m_memoryPtr(nullptr)
 		, m_memorySize(0)
 		, m_maxEnd(0)
 	{ 
@@ -26,9 +26,9 @@ public:
 
 	//\brief Default constructor provided to allow array initialisers
 	LinearAllocator()
-		: m_memory(NULL)
-		, m_memoryEnd(NULL)
-		, m_memoryPtr(NULL)
+		: m_memory(nullptr)
+		, m_memoryEnd(nullptr)
+		, m_memoryPtr(nullptr)
 		, m_memorySize(0)
 		, m_maxEnd(0)
 	{ }
@@ -49,7 +49,7 @@ public:
 			m_memorySize = a_maxSizeBytes;
 			m_maxEnd = a_maxSizeBytes + (size_t) m_memory;
 			
-			return m_memory != NULL;
+			return m_memory != nullptr;
 		}
 		else
 		{
@@ -60,12 +60,12 @@ public:
 	//\brief Proper usage of the allocator will call done to clean up
 	inline void Done()
 	{
-		if (m_memory != NULL)
+		if (m_memory != nullptr)
 		{
 			free(m_memory);
-			m_memory = NULL;
-			m_memoryEnd = NULL;
-			m_memoryPtr = NULL;
+			m_memory = nullptr;
+			m_memoryEnd = nullptr;
+			m_memoryPtr = nullptr;
 			m_memorySize = 0;
 			m_maxEnd = 0;
 		}
@@ -74,7 +74,7 @@ public:
 	//\brief Unallocate everything and ready for use again, memory is not freed
 	inline void Reset()
 	{
-		if (m_memory != NULL)
+		if (m_memory != nullptr)
 		{
 			m_memoryEnd = m_memory;
 			m_memoryPtr = m_memory;
@@ -92,7 +92,7 @@ public:
 			if (newMemoryEnd > m_maxEnd)
 			{
 				// Bad allocation
-				return NULL;
+				return nullptr;
 			}
 			else
 			{
@@ -113,7 +113,7 @@ public:
 		}
 
 		// Out of memory or allocator not large enough
-		return NULL;
+		return nullptr;
 	}
 
 	//\brief DeAlloc a block from the contiguous memory, care should be taken to pair this with an alloc

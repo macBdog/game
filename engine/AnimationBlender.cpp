@@ -34,7 +34,7 @@ void AnimationBlender::ApplyKeyToWorld(const Vector & a_pos, const Vector & a_ro
 
 bool AnimationBlender::Update(float a_dt)
 {
-	if (m_gameObject == NULL)
+	if (m_gameObject == nullptr)
 	{
 		return false;
 	}

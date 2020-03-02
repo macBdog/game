@@ -15,7 +15,7 @@ struct Light;
 //\brief Space saving macros for command functions that hide or show different options
 #define DEBUG_COMMANDS_LOOP_BEGIN									\
 	CommandNode * curNode = m_commands.GetHead();					\
-	while (curNode != NULL)											\
+	while (curNode != nullptr)											\
 	{																\
 		DebugMenuCommand * debugCommand = curNode->GetData();		\
 		Widget * debugWidget = debugCommand->GetWidget();	
@@ -97,9 +97,9 @@ struct DebugCommandReturnData
 		: m_editMode(EditMode::None)
 		, m_editType(EditType::None)
 		, m_dirtyFlag(DirtyFlag::None)
-		, m_textEditString(NULL)
-		, m_resourceSelectPath(NULL)
-		, m_resourceSelectExtension(NULL)
+		, m_textEditString(nullptr)
+		, m_resourceSelectPath(nullptr)
+		, m_resourceSelectExtension(nullptr)
 		, m_clearSelection(false)
 		, m_success(false)
 		{ }
@@ -170,10 +170,10 @@ class DebugMenuCommandRegistry
 public:
 
 	DebugMenuCommandRegistry()
-		: m_btnCreateRoot(NULL)
-		, m_btnWidgetRoot(NULL)
-		, m_btnGameObjectRoot(NULL)	
-		, m_btnLightRoot(NULL)
+		: m_btnCreateRoot(nullptr)
+		, m_btnWidgetRoot(nullptr)
+		, m_btnGameObjectRoot(nullptr)	
+		, m_btnLightRoot(nullptr)
 	{ 
 		m_textEditString[0] = '\0';
 		m_resourceSelectPath[0] = '\0';

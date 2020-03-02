@@ -84,32 +84,32 @@ public:
 
 	//\brief Get an object by it's ID
 	//\param a_objectId is the ID of the object to get
-	//\return a pointer a game object if one exists with that name, otherwise NULL
+	//\return a pointer a game object if one exists with that name, otherwise nullptr
 	GameObject * GetSceneObject(unsigned int a_objectId);
 
 	//\brief Get an object by name
 	//\param a_objName is the string name of object to get
-	//\return a pointer a game object if one exists with that name, otherwise NULL
+	//\return a pointer a game object if one exists with that name, otherwise nullptr
 	GameObject * GetSceneObject(const char * a_objName);
 	
 	//\brief Get the first object in the scene that intersects with a point in worldspace
 	//\param a vector of the point to check agains
-	//\return a pointer to a game object or NULL if no hits
+	//\return a pointer to a game object or nullptr if no hits
 	GameObject * GetSceneObject(Vector a_worldPos);
 
 	//\brief Get the first object in the scene that intersects with a line segment
 	//\param a_lineStart the start of the line segment to check against
-	//\return a pointer to a game object or NULL if no hits
+	//\return a pointer to a game object or nullptr if no hits
 	GameObject * GetSceneObject(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Get the first light in the scene that envelops a world position
 	//\param a world pos vector near the light
-	//\return a pointer to the light or NULL if no light
+	//\return a pointer to the light or nullptr if no light
 	Light * GetLightAtPos(Vector a_worldPos);
 
 	//\brief Get the first light in the scene that intersects with a line segment
 	//\param a world pos vector near the light
-	//\return a pointer to the light or NULL if no light
+	//\return a pointer to the light or nullptr if no light
 	Light * GetLight(Vector a_lineStart, Vector a_lineEnd);
 
 	//\brief Update all the objects in the scene

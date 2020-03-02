@@ -12,7 +12,7 @@
 
 using namespace std;	//< For fstream operations
 
-template<> FontManager * Singleton<FontManager>::s_instance = NULL;
+template<> FontManager * Singleton<FontManager>::s_instance = nullptr;
 
 const float FontManager::s_debugFontSize2D = 1.25f;
 const float FontManager::s_debugFontSize3D = 10.0f;
@@ -20,7 +20,7 @@ const float FontManager::s_debugFontSize3D = 10.0f;
 bool FontManager::Startup(const char * a_fontPath)
 {
 	// Sanity check on input arg
-	if (a_fontPath == NULL || a_fontPath[0] == 0)
+	if (a_fontPath == nullptr || a_fontPath[0] == 0)
 	{
 		return false;
 	}
@@ -41,7 +41,7 @@ bool FontManager::Startup(const char * a_fontPath)
 
 	// Load each font in the directory
 	bool loadSuccess = true;
-	while(curNode != NULL)
+	while(curNode != nullptr)
 	{
 		// File stream for font config file
 		sprintf(fontFilePath, "%s%s", m_fontPath, curNode->GetData()->m_name);
@@ -59,7 +59,7 @@ bool FontManager::Startup(const char * a_fontPath)
 bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 {
 	// Sanity check on input arg
-	if (a_dataPack == NULL)
+	if (a_dataPack == nullptr)
 	{
 		return false;
 	}
@@ -80,7 +80,7 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 
 	// Load each font in the pack
 	bool loadSuccess = true;
-	while (curNode != NULL)
+	while (curNode != nullptr)
 	{
 		loadSuccess &= LoadFont<DataPackEntry>(*curNode->GetData());
 		curNode = curNode->GetNext();
@@ -95,7 +95,7 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 bool FontManager::Shutdown()
 {
 	FontListNode * next = m_fonts.GetHead();
-	while(next != NULL)
+	while(next != nullptr)
 	{
 		// Cache off next pointer
 		FontListNode * cur = next;
@@ -128,7 +128,7 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 	RenderManager & renderMan = RenderManager::Get();
 	const float viewAspect = renderMan.GetViewAspect();
 	const char newLine = 10;
-	while(curFont != NULL)
+	while(curFont != nullptr)
 	{
 		if (curFont->GetData()->m_fontName == a_fontNameHash)
 		{
@@ -200,7 +200,7 @@ bool FontManager::MeasureString2D(const char * a_string, unsigned int a_fontName
 	RenderManager & renderMan = RenderManager::Get();
 	const float viewAspect = renderMan.GetViewAspect();
 	const char newLine = 10;
-	while(curFont != NULL)
+	while(curFont != nullptr)
 	{
 		if (curFont->GetData()->m_fontName == a_fontNameHash)
 		{
@@ -282,7 +282,7 @@ bool FontManager::DrawDebugString3D(const char * a_string, Vector a_pos, Colour 
 StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
 {
 	FontListNode * curFont = m_fonts.GetHead();
-	while(curFont != NULL)
+	while(curFont != nullptr)
 	{
 		if (curFont->GetData()->m_fontName == StringHash(a_fontName))
 		{
@@ -291,13 +291,13 @@ StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
 		curFont = curFont->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const char * FontManager::GetLoadedFontName(unsigned int a_fontNameHash)
 {
 	FontListNode * curFont = m_fonts.GetHead();
-	while(curFont != NULL)
+	while(curFont != nullptr)
 	{
 		if (StringHash(curFont->GetData()->m_fontName) == a_fontNameHash)
 		{
@@ -306,14 +306,14 @@ const char * FontManager::GetLoadedFontName(unsigned int a_fontNameHash)
 		curFont = curFont->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const char * FontManager::GetLoadedFontNameForId(int a_fontId)
 {
 	int fontCount = 0;
 	FontListNode * curFont = m_fonts.GetHead();
-	while(curFont != NULL)
+	while(curFont != nullptr)
 	{
 		if (fontCount++ == a_fontId)
 		{
@@ -322,7 +322,7 @@ const char * FontManager::GetLoadedFontNameForId(int a_fontId)
 		curFont = curFont->GetNext();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 StringHash * FontManager::GetDebugFontName()
@@ -334,7 +334,7 @@ StringHash * FontManager::GetDebugFontName()
 	else // No fonts loaded
 	{
 		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Cannot find a debug font to draw with! Only hope now is reading stdout!");
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -366,12 +366,12 @@ bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
 	const char * delimeter = "\n";
 	const int fontStringSize = strlen(a_fontDefinition);
 	char * mutableFont = (char *)malloc(sizeof(char) * fontStringSize + 1);
-	if (mutableFont != NULL)
+	if (mutableFont != nullptr)
 	{
 		memcpy(mutableFont, a_fontDefinition, sizeof(char) * fontStringSize);
 		char * line = strtok(mutableFont, delimeter);
 		int lineCount = 0;
-		while (line != NULL)
+		while (line != nullptr)
 		{
 			if (lineCount == 0)	// info face="fontname" etc
 			{
@@ -419,11 +419,11 @@ bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
 					newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
 					newFont->m_chars[charId].m_texCoord = TexCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
 
-					line = strtok(NULL, delimeter);
+					line = strtok(nullptr, delimeter);
 				}
 				break;
 			}
-			line = strtok(NULL, delimeter);
+			line = strtok(nullptr, delimeter);
 			++lineCount;
 		}	
 

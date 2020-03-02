@@ -60,12 +60,12 @@ public:
 	//\brief Creation and destruction
 	GameObject()
 		: m_id(0)
-		, m_child(NULL)
-		, m_next(NULL)
-		, m_model(NULL)
-		, m_shader(NULL)
-		, m_physics(NULL)
-		, m_blender(NULL)
+		, m_child(nullptr)
+		, m_next(nullptr)
+		, m_model(nullptr)
+		, m_shader(nullptr)
+		, m_physics(nullptr)
+		, m_blender(nullptr)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
 		, m_physicsMass(0.0f)
@@ -85,7 +85,7 @@ public:
 			m_physicsMesh[0] = '\0';
 		}
 
-	~GameObject() { assert(m_physics == NULL); }
+	~GameObject() { assert(m_physics == nullptr); }
 
 	//\brief Lifecycle functionality inherited by children
 	bool Startup() { return true; }
@@ -111,7 +111,7 @@ public:
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
 	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
-	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != NULL && a_meshName[0] != '\0') { strncpy(m_physicsMesh, a_meshName, StringUtils::s_maxCharsPerName); } }
+	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != nullptr && a_meshName[0] != '\0') { strncpy(m_physicsMesh, a_meshName, StringUtils::s_maxCharsPerName); } }
 
 	inline unsigned int GetId() const { return m_id; }
 	inline const char * GetName() const { return m_name; }
@@ -172,7 +172,7 @@ public:
 	bool CollidesWith(Vector a_lineStart, Vector a_lineEnd);
 
 	//\ingroup Animation
-	inline bool HasAnimationBlender() { return m_blender != NULL; }
+	inline bool HasAnimationBlender() { return m_blender != nullptr; }
 	inline AnimationBlender * GetAnimationBlender() { return m_blender; }
 	inline void SetAnimationBlender(AnimationBlender * a_newBlender) { m_blender = a_newBlender; }
 

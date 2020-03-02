@@ -24,7 +24,7 @@
 
 #include "ScriptManager.h"
 
-template<> ScriptManager * Singleton<ScriptManager>::s_instance = NULL;
+template<> ScriptManager * Singleton<ScriptManager>::s_instance = nullptr;
 
 const float ScriptManager::s_updateFreq = 1.0f;								///< How often the script manager should check for updates to scripts
 const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
@@ -51,14 +51,14 @@ const luaL_Reg ScriptManager::s_guiFuncs[] = {
 	{"GetMouseScreenPosition", GUIGetMouseScreenPosition},
 	{"GetMouseDirection", GUIGetMouseDirection},
 	{"SetMousePosition", GUISetMousePosition},
-	{NULL, NULL}
+	{nullptr, nullptr}
 };
 
 // Registration of game object functions
 const luaL_Reg ScriptManager::s_gameObjectFuncs[] = {
 	{"Create", CreateGameObject},
 	{"Get", GetGameObject},
-	{NULL, NULL}
+	{nullptr, nullptr}
 };
 
 // Registration of game object class member functions
@@ -102,7 +102,7 @@ const luaL_Reg ScriptManager::s_gameObjectMethods[] = {
 	{"PlayAnimation", PlayGameObjectAnimation},
 	{"GetTransformedPos", GetGameObjectTransformedPos},
 	{"Destroy", DestroyGameObject},
-	{NULL, NULL}
+	{nullptr, nullptr}
 };
 
 // Registration of render functions
@@ -111,13 +111,13 @@ const luaL_Reg ScriptManager::s_renderFuncs[] = {
 	{ "SetShaderData", RenderSetShaderData },
 	{ "Quad", RenderQuad },
 	{ "Tri", RenderTri },
-	{ NULL, NULL }
+	{ nullptr, nullptr }
 };
 
 bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPack)
 {
 	// As this method is called when scripts reload, make sure the global state is dead
-	if (m_globalLua != NULL || m_managedScripts.GetLength() > 0)
+	if (m_globalLua != nullptr || m_managedScripts.GetLength() > 0)
 	{
 		Shutdown();
 	}
@@ -136,7 +136,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		luaL_requiref(m_globalLua, "debug", luaopen_debug, 1);
 
 		// Register C++ functions made accessible to LUA
-		if (a_dataPack != NULL)
+		if (a_dataPack != nullptr)
 		{
 			lua_register(m_globalLua, "require", DataPackRequire);
 		}
@@ -240,7 +240,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 
 		// Load the main script from disk or the data pack
 		m_gameLua = lua_newthread(m_globalLua);
-		const bool readFromDataPack = a_dataPack != NULL && a_dataPack->IsLoaded();
+		const bool readFromDataPack = a_dataPack != nullptr && a_dataPack->IsLoaded();
 		if (readFromDataPack)
 		{
 			if (DataPackEntry * mainScriptEntry = a_dataPack->GetEntry(gameScriptPath))
@@ -254,7 +254,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		}
 
 		// Kick it off and wait for a yield
-		int yieldResult = lua_resume(m_gameLua, NULL, 0);
+		int yieldResult = lua_resume(m_gameLua, nullptr, 0);
 		if (yieldResult != LUA_YIELD)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
@@ -275,7 +275,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 
 			// Add each script in the directory
 			FileManager::FileListNode * curNode = scriptFiles.GetHead();
-			while(curNode != NULL)
+			while(curNode != nullptr)
 			{
 				// Get a fresh timestamp on the new script
 				char fullPath[StringUtils::s_maxCharsPerLine];
@@ -286,7 +286,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 				// Add managed script to the list
 				ManagedScript * manScript = new ManagedScript(fullPath, curTimeStamp);
 				ManagedScriptNode * manScriptNode = new ManagedScriptNode();
-				if (manScript != NULL && manScriptNode != NULL)
+				if (manScript != nullptr && manScriptNode != nullptr)
 				{
 					manScriptNode->SetData(manScript);
 					m_managedScripts.Insert(manScriptNode);
@@ -299,22 +299,22 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		}
 	}
 
-	return m_globalLua != NULL;
+	return m_globalLua != nullptr;
 }
 
 bool ScriptManager::Shutdown()
 {
 	// Clean up global lua object which will clean up the game thread
-	if (m_globalLua != NULL)
+	if (m_globalLua != nullptr)
 	{
 		lua_close(m_globalLua);
-		m_globalLua = NULL;
-		m_gameLua = NULL;
+		m_globalLua = nullptr;
+		m_gameLua = nullptr;
 	}
 
 	// And any managed scripts
 	ManagedScriptNode * next = m_managedScripts.GetHead();
-	while (next != NULL)
+	while (next != nullptr)
 	{
 		// Cache off next pointer
 		ManagedScriptNode * cur = next;
@@ -335,9 +335,9 @@ bool ScriptManager::Update(float a_dt)
 
 #ifdef _RELEASE
 	// Call back to LUA main thread
-	if (m_gameLua != NULL)
+	if (m_gameLua != nullptr)
 	{
-		lua_resume(m_gameLua, NULL, 0);
+		lua_resume(m_gameLua, nullptr, 0);
 		return true;
 	}
 #endif
@@ -357,11 +357,11 @@ bool ScriptManager::Update(float a_dt)
 		if (m_managedScripts.GetLength() == 0)
 		{
 			// There are no scripts to manage, we must have bailed out while starting up, try again
-			Startup(m_scriptPath, NULL);
+			Startup(m_scriptPath, nullptr);
 		}
 		else
 		{
-			while (next != NULL)
+			while (next != nullptr)
 			{
 				// Get a fresh timestamp and test it against the stored timestamp
 				FileManager::Timestamp curTimeStamp;
@@ -395,7 +395,7 @@ bool ScriptManager::Update(float a_dt)
 
 					// Kick the script VM in the guts
 					Shutdown();
-					Startup(m_scriptPath, NULL);
+					Startup(m_scriptPath, nullptr);
 					return true;
 				}
 
@@ -417,9 +417,9 @@ bool ScriptManager::Update(float a_dt)
 	}
 
 	// Call back to LUA main thread
-	if (m_gameLua != NULL)
+	if (m_gameLua != nullptr)
 	{
-		int yieldResult = lua_resume(m_gameLua, NULL, 0);
+		int yieldResult = lua_resume(m_gameLua, nullptr, 0);
 		if (yieldResult != LUA_YIELD)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Fatal script error: %s\n", lua_tostring(m_gameLua, -1));
@@ -493,7 +493,7 @@ GameObject * ScriptManager::CheckGameObject(lua_State * a_luaState, unsigned int
 
 int ScriptManager::CreateGameObject(lua_State * a_luaState)
 {
-	if (a_luaState == NULL)
+	if (a_luaState == nullptr)
 	{
 		return -1;
 	}
@@ -508,7 +508,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	const char * templateName = luaL_checkstring(a_luaState, 2);
 	char templatePath[StringUtils::s_maxCharsPerName];
 	templatePath[0] = '\n';
-	if (strstr(templateName, ".tmp") == NULL)
+	if (strstr(templateName, ".tmp") == nullptr)
 	{
 		sprintf(templatePath, "%s.tmp", templateName);
 	}
@@ -519,7 +519,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 
 	// Get the scene to add to if specified
 	WorldManager & worldMan = WorldManager::Get();
-	Scene * sceneToAddTo = NULL;
+	Scene * sceneToAddTo = nullptr;
 	if (numArgs == 3)
 	{
 		const char * sceneName = luaL_checkstring(a_luaState, 3);
@@ -552,7 +552,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 
 int ScriptManager::GetGameObject(lua_State * a_luaState)
 {
-	if (a_luaState == NULL)
+	if (a_luaState == nullptr)
 	{
 		return -1;
 	}
@@ -567,10 +567,10 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 	}  
 
 	// Get the object by name or ID
-	GameObject * gameObj = NULL;
+	GameObject * gameObj = nullptr;
 	size_t stringLen  = 0;
 	const char * objName = luaL_checklstring(a_luaState, 2, &stringLen);
-	if (objName != NULL)
+	if (objName != nullptr)
 	{
 		gameObj = WorldManager::Get().GetGameObject(objName);
 	}
@@ -579,7 +579,7 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 		gameObj = WorldManager::Get().GetGameObject((unsigned int)lua_tonumber(a_luaState, 1));
 	}
 
-	if (gameObj != NULL)
+	if (gameObj != nullptr)
 	{
 		// Allocate memory for an push userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
@@ -1060,7 +1060,7 @@ int ScriptManager::NewScene(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * sceneName = lua_tostring(a_luaState, 1);
-		if (sceneName != NULL)
+		if (sceneName != nullptr)
 		{
 			WorldManager::Get().SetNewScene(sceneName);
 			return 0;
@@ -1079,7 +1079,7 @@ int ScriptManager::PlaySoundFX(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * soundName = lua_tostring(a_luaState, 1);
-		if (soundName != NULL)
+		if (soundName != nullptr)
 		{
 			SoundManager::Get().PlaySoundFX(soundName);
 			return 0;
@@ -1101,7 +1101,7 @@ int ScriptManager::PlaySoundFX3D(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
 		const char * soundName = lua_tostring(a_luaState, 1);
-		if (soundName != NULL)
+		if (soundName != nullptr)
 		{
 			float x = (float)lua_tonumber(a_luaState, 2);
 			float y = (float)lua_tonumber(a_luaState, 3);
@@ -1123,7 +1123,7 @@ int ScriptManager::PlayMusic(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * musicName = lua_tostring(a_luaState, 1);
-		if (musicName != NULL)
+		if (musicName != nullptr)
 		{
 			SoundManager::Get().PlayMusic(musicName);
 			return 0;
@@ -1142,7 +1142,7 @@ int ScriptManager::StopMusic(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * musicName = lua_tostring(a_luaState, 1);
-		if (musicName != NULL)
+		if (musicName != nullptr)
 		{
 			SoundManager::Get().StopMusic(musicName);
 			return 0;
@@ -1165,7 +1165,7 @@ int ScriptManager::SetMusicVolume(lua_State * a_luaState)
 		float newVolume = (float)lua_tonumber(a_luaState, 2);
 		if (newVolume >= 0.0f && newVolume <= 1.0f)
 		{
-			if (musicName != NULL)
+			if (musicName != nullptr)
 			{
 				SoundManager::Get().SetMusicVolume(musicName, newVolume);
 				return 0;
@@ -1231,7 +1231,7 @@ int ScriptManager::SetScene(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * sceneName = lua_tostring(a_luaState, 1);
-		if (sceneName != NULL)
+		if (sceneName != nullptr)
 		{
 			WorldManager::Get().SetCurrentScene(sceneName);
 			return 0;
@@ -1456,7 +1456,7 @@ int ScriptManager::GetDirectoryListing(lua_State * a_luaState)
 			FileManager::FileList allFiles;
 			fileMan.FillFileList(filePath, allFiles);
 			FileManager::FileListNode * curNode = allFiles.GetHead();
-			while (curNode != NULL)
+			while (curNode != nullptr)
 			{	
 				FileManager::FileInfo * fileInfo = curNode->GetData();
 				lua_pushnumber(a_luaState, fileCount++);
@@ -1768,7 +1768,7 @@ int ScriptManager::GUISetValue(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
 		const char * newText = lua_tostring(a_luaState, 3);
-		if (guiName != NULL && newText != NULL)
+		if (guiName != nullptr && newText != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1794,7 +1794,7 @@ int ScriptManager::GUISetFont(lua_State* a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
 		const char * newFontName = lua_tostring(a_luaState, 3);
-		if (guiName != NULL && newFontName != NULL)
+		if (guiName != nullptr && newFontName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1820,7 +1820,7 @@ int ScriptManager::GUISetFontSize(lua_State* a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		const char * guiName = lua_tostring(a_luaState, 2);
 		const float newFontSize = (float)lua_tonumber(a_luaState, 3);
-		if (guiName != NULL && newFontSize > 0.0f)
+		if (guiName != nullptr && newFontSize > 0.0f)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1849,7 +1849,7 @@ int ScriptManager::GUISetColour(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 6, LUA_TNUMBER);
 		const char * guiName = lua_tostring(a_luaState, 2);
 		Colour newColour((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4), (float)lua_tonumber(a_luaState, 5), (float)lua_tonumber(a_luaState, 6));
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1876,7 +1876,7 @@ int ScriptManager::GUISetSize(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
 		const char * guiName = lua_tostring(a_luaState, 2);
 		Vector2 newSize((float)lua_tonumber(a_luaState, 3), (float)lua_tonumber(a_luaState, 4));
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1903,7 +1903,7 @@ int ScriptManager::GUISetScissor(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TNUMBER);
 		luaL_checktype(a_luaState, 4, LUA_TNUMBER);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1929,7 +1929,7 @@ int ScriptManager::GUISetTexture(lua_State * a_luaState)
 		luaL_checktype(a_luaState, 3, LUA_TSTRING);		
 		const char * guiName = lua_tostring(a_luaState, 2);
 		const char * textureName = lua_tostring(a_luaState, 3);
-		if (guiName != NULL && textureName != NULL)
+		if (guiName != nullptr && textureName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1956,7 +1956,7 @@ int ScriptManager::GUIShowWidget(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -1981,7 +1981,7 @@ int ScriptManager::GUIHideWidget(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -2005,7 +2005,7 @@ int ScriptManager::GUIActivateWidget(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -2040,7 +2040,7 @@ int ScriptManager::GUISetSelectedWidget(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -2064,7 +2064,7 @@ int ScriptManager::GUISetActiveMenu(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
 		const char * guiName = lua_tostring(a_luaState, 2);
-		if (guiName != NULL)
+		if (guiName != nullptr)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
@@ -2161,7 +2161,7 @@ int ScriptManager::DataPackRequire(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * scriptPath = lua_tostring(a_luaState, 1);
-		if (scriptPath != NULL && scriptPath[0] != '\0')
+		if (scriptPath != nullptr && scriptPath[0] != '\0')
 		{
 			char scriptName[StringUtils::s_maxCharsPerLine];
 			ScriptManager & scriptMan = ScriptManager::Get();
@@ -2190,7 +2190,7 @@ int ScriptManager::DebugPrint(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * debugText = lua_tostring(a_luaState, 1);
-		if (debugText != NULL && debugText != NULL)
+		if (debugText != nullptr && debugText != nullptr)
 		{
 			DebugMenu::Get().ShowScriptDebugText(debugText);
 		}
@@ -2209,7 +2209,7 @@ int ScriptManager::DebugLog(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * debugText = lua_tostring(a_luaState, 1);
-		if (debugText != NULL && debugText != NULL)
+		if (debugText != nullptr && debugText != nullptr)
 		{
 			Log::Get().Write(LogLevel::Info, LogCategory::Game, debugText);
 		}
@@ -3151,7 +3151,7 @@ int ScriptManager::GetGameObjectCollisions(lua_State * a_luaState)
 			int numCollisions = 0;
 			GameObject::CollisionList * colList = gameObj->GetCollisions();
 			GameObject::Collider * curCol = colList->GetHead();
-			while (curCol != NULL)
+			while (curCol != nullptr)
 			{
 				// Push the key for a table entry
 				lua_pushnumber(a_luaState, ++numCollisions);

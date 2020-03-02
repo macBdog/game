@@ -12,7 +12,7 @@ using namespace std;	// For iostream resources
 bool Model::Load(const char * a_modelFilePath, ModelDataPool & a_modelData)
 {
 	// Early out for no file case
-	if (a_modelFilePath == NULL)
+	if (a_modelFilePath == nullptr)
 	{
 		return false;
 	}
@@ -41,7 +41,7 @@ bool Model::Load(DataPackEntry * a_packedModel, ModelDataPool & a_modelDataPool,
 bool Model::Unload()
 {
 	ObjectNode * curObjectNode = m_objects.GetHead();
-	while (curObjectNode != NULL)
+	while (curObjectNode != nullptr)
 	{
 		// Deallocate memory allocated during mode load
 		Object * curObject = curObjectNode->GetData();
@@ -50,9 +50,9 @@ bool Model::Unload()
 		free(curObject->GetNormals());
 		free(curObject->GetUvs());
 
-		curObject->SetVertices(NULL);
-		curObject->SetNormals(NULL);
-		curObject->SetUvs(NULL);
+		curObject->SetVertices(nullptr);
+		curObject->SetNormals(nullptr);
+		curObject->SetUvs(nullptr);
 
 		// Deallocate memory for the object storage in the model list
 		ObjectNode * next = curObjectNode->GetNext();
@@ -67,7 +67,7 @@ bool Model::Unload()
 bool Material::Load(const char * a_materialFileName, const char * a_materialName)
 {
 	// Early out for no file case
-	if (a_materialFileName == NULL)
+	if (a_materialFileName == nullptr)
 	{
 		return false;
 	}
@@ -78,7 +78,7 @@ bool Material::Load(const char * a_materialFileName, const char * a_materialName
 
 bool Material::Load(DataPackEntry * a_packedMaterial, const char * a_materialName)
 {
-	if (a_packedMaterial != NULL)
+	if (a_packedMaterial != nullptr)
 	{
 		return LoadData<DataPackEntry>(*a_packedMaterial, a_materialName);
 	}
