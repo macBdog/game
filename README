@@ -1,7 +1,7 @@
 WHAT IS THE CURRENT SHORT TERM GOAL: OpenVR support, not just Oculus Rift.
-TASK QUEUE: Consumer stats on debug menu - object count, collision manifolds, draw calls etc. Decent colour picker. Write an easy-to-read and fast hashmap to rid the codebase of std*.
+TASK QUEUE: Decent colour picker.
 
-BUGS: On LUA reload, local variables are not all reset, this is killing iteration time.
+BUGS: Debug menu picking is screwy.
 
 What is this project?
 

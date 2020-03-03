@@ -194,15 +194,10 @@ void Log::Update(float a_dt)
 void Log::ClearRendering()
 {
 	// Delete all display entries
-	LogDisplayNode * curEntry = m_displayList.GetHead();
-	while(curEntry != nullptr)
+	m_displayList.ForeachAndDelete([&](auto curEntry)
 	{
 		LogDisplayEntry * logEntry = curEntry->GetData();
 		LogDisplayNode * toDelete = curEntry;
-		curEntry = curEntry->GetNext();
-
-		delete logEntry;
 		m_displayList.Remove(toDelete);
-		delete toDelete;
-	}
+	});
 }

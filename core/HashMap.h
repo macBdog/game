@@ -2,6 +2,8 @@
 #define _CORE_HASH_MAP_
 #pragma once
 
+#include "Iterator.h"
+
 //\brief Unordered hash node class to be used with HashMap
 template <typename K, typename T>
 class HashNode
@@ -38,8 +40,22 @@ class HashMap
 {
 public:
 
+	HashMap(const HashMap & a_moveFrom)
+	{
+
+	}
+
+	HashMap(HashMap && a_moveFrom)
+		: m_map(a_moveFrom.m_map)
+		, m_tableSize(a_moveFrom.m_tableSize)
+		, m_length(a_moveFrom.m_length)
+	{
+		a_moveFrom.m_map = nullptr;
+	}
+
 	HashMap() 
-		: m_tableSize(s_defaultTableSize)
+		: m_map(nullptr)
+		, m_tableSize(s_defaultTableSize)
 		, m_length(0)
 	{
 		Allocate();
@@ -111,15 +127,20 @@ public:
 		}
 	}
 
-	//\brief Iterator like functionality
-	bool GetNext(T & a_value_OUT)
+	//\brief Iterator like functionality for collections that need value matching and single element walks
+	Iterator<HashNode<K, T>> GetIterator() { return Iterator<HashNode<K, T>>(m_map[0]); }	
+	bool GetNext(Iterator<HashNode<K, T>> & a_it, T & a_value_OUT)
 	{
 		// Early out for no objects
 		if (m_length == 0)
 		{
 			return false;
 		}
-		// TODO
+		while (a_it.Resolve() != nullptr)
+		{
+			a_it.Inc();
+			a_value_OUT = (*a_it).m_object;
+		}
 		return false;	
 	}
 

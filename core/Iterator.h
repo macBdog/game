@@ -2,6 +2,7 @@
 #define _CORE_ITERATOR_
 #pragma once
 
+//\brief A bit useless
 template <class T>
 class Iterator
 {
@@ -18,8 +19,8 @@ public:
 	inline T * operator->() { return Resolve(); } 
 	inline const T * operator->() const { return Resolve(); } 
 
-	inline void Inc() { m_cursor = m_cursor->m_next; }
-	inline void Dec() { m_cursor = m_cursor->m_prev; }
+	inline void Inc() { ++m_cursor; }
+	inline void Dec() { --m_cursor; }
 	inline T * Resolve() { return m_cursor; }
 
 private:

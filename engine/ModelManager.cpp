@@ -106,7 +106,8 @@ bool ModelManager::Update(float a_dt)
 
 		// Each model in the pool gets tested
 		ManagedModel * curModel = nullptr;
-		while (m_modelMap.GetNext(curModel) && curModel != nullptr)
+		auto modelMapIt = m_modelMap.GetIterator();
+		while (m_modelMap.GetNext(modelMapIt, curModel) && curModel != nullptr)
 		{
 			FileManager::Timestamp curModelTimestamp;
 			FileManager::Timestamp curMaterialTimestamp;
@@ -150,7 +151,8 @@ bool ModelManager::ReloadModelsWithTexture(Texture * a_texture)
 
 	// Each model in the pool gets tested
 	ManagedModel * curModel = nullptr;
-	while (m_modelMap.GetNext(curModel) && curModel != nullptr)
+	auto modelIterator = m_modelMap.GetIterator();
+	while (m_modelMap.GetNext(modelIterator, curModel) && curModel != nullptr)
 	{
 		bool modelNeedsReload = false;
 		const int numObjects = curModel->m_model.GetNumObjects();

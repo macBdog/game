@@ -109,7 +109,8 @@ bool TextureManager::Update(float a_dt)
 		{
 			// Each texture in the category gets tested
 			ManagedTexture * curTex = nullptr;
-			while ( m_textureMap[i].GetNext(curTex) && curTex != nullptr)
+			auto textureIterator = m_textureMap[i].GetIterator();
+			while (m_textureMap[i].GetNext(textureIterator, curTex) && curTex != nullptr)
 			{
 				FileManager::Timestamp curTimeStamp;
 				if (FileManager::Get().GetFileTimeStamp(curTex->m_path, curTimeStamp))
