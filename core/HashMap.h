@@ -125,23 +125,32 @@ public:
 		{
 			m_map[rawKey] = newNode;
 		}
+		++m_length;
 	}
 
 	//\brief Iterator like functionality for collections that need value matching and single element walks
-	Iterator<HashNode<K, T>> GetIterator() { return Iterator<HashNode<K, T>>(m_map[0]); }	
-	bool GetNext(Iterator<HashNode<K, T>> & a_it, T & a_value_OUT)
+	unsigned int GetIterator() { return 0; }	
+	bool GetNext(unsigned int & a_it, T & a_value_OUT)
 	{
 		// Early out for no objects
 		if (m_length == 0)
 		{
 			return false;
 		}
-		while (a_it.Resolve() != nullptr)
-		{
-			a_it.Inc();
-			a_value_OUT = (*a_it).m_object;
+		if (a_it > m_tableSize - 1)
+		{ 
+			return false;
 		}
-		return false;	
+		// TODO This iteration will skip the openly addressed nodes, need to keep minor and major accounting in Iterator
+		while (m_map[a_it++] == nullptr)
+		{
+			if (a_it > m_tableSize - 1)
+			{
+				return false;
+			}
+		}
+		a_value_OUT = m_map[a_it - 1]->m_object;
+		return true;	
 	}
 
 private:
@@ -150,6 +159,7 @@ private:
 	{
 		// Zero initialise the complete table so that IsValid calls will always fail to empty buckets
 		m_map = new HashNode<K, T> * [m_tableSize]();
+		m_length = 0;
 		return m_map != nullptr;
 	}
 
@@ -159,6 +169,7 @@ private:
 		{
 			delete[] m_map;
 			m_map = nullptr;
+			m_length = 0;
 			return true;
 		}
 		return false;
@@ -166,9 +177,9 @@ private:
 
 	static const size_t s_defaultTableSize = 512;	
 
-	int m_length;									///< How many objects are inserted into the map
-	int m_tableSize;								///< Number of bytes allocated to hold the complete table
-	HashNode<K, T> ** m_map;						///< Chunk of memory pointing to the objects in the map ordered by key
+	unsigned int m_length;									///< How many objects are inserted into the map
+	unsigned int m_tableSize;								///< Number of bytes allocated to hold the complete table
+	HashNode<K, T> ** m_map;								///< Chunk of memory pointing to the objects in the map ordered by key
 	KeyHash<K> m_hashFunc;									///< Pointer to struct for hashing
 };
 

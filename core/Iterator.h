@@ -24,7 +24,6 @@ public:
 	inline T * Resolve() { return m_cursor; }
 
 private:
-
 	T * m_cursor;
 };
 

@@ -9,7 +9,7 @@
 
 #include "DebugMenuCommands.h"
 
-DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour, EditType::Enum a_parentMenu)
+DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour, EditType a_parentMenu)
 : m_gameObjectFunction()
 , m_widgetFunction()
 , m_alignment(DebugMenuCommandAlign::Below)
@@ -19,14 +19,14 @@ DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colou
 	m_widget = CreateButton(a_name, a_parent, a_colour);
 }
 
-void DebugMenuCommand::SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign::Enum a_alignment)
+void DebugMenuCommand::SetAlignment(Widget * a_alignedTo, DebugMenuCommandAlign a_alignment)
 {
 	m_widget->SetAlignTo(a_alignedTo);
 	m_alignment = a_alignment;
 	SetWidgetAlignment(m_alignment);
 }
 
-void DebugMenuCommand::SetWidgetAlignment(DebugMenuCommandAlign::Enum a_alignment)
+void DebugMenuCommand::SetWidgetAlignment(DebugMenuCommandAlign a_alignment)
 {
 	switch (a_alignment)
 	{
@@ -82,7 +82,7 @@ Widget * DebugMenuCommand::CreateButton(const char * a_name, Widget * a_parent, 
 	return retWidget;
 }
 
-DebugMenuCommand * DebugMenuCommandRegistry::Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign::Enum a_align, Colour a_colour, EditType::Enum a_parentMenu)
+DebugMenuCommand * DebugMenuCommandRegistry::Create(const char * a_name, Widget * a_parent, Widget * a_alignTo, DebugMenuCommandAlign a_align, Colour a_colour, EditType a_parentMenu)
 {
 	DebugMenuCommand * newCommand = new DebugMenuCommand(a_name, a_parent, a_colour, a_parentMenu);	
 	newCommand->SetAlignment(a_alignTo, a_align);

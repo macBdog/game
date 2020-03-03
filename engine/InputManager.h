@@ -13,19 +13,16 @@
 
 //\brief Input manager defines its own constants for input events in case there are input
 //		 requirements outside of SDL
-namespace InputType
+enum class InputType : int
 {
-	enum Enum
-	{
-		None = -1,
-		KeyDown,			// A keyboard key was depressed
-		KeyUp,				// A keyboard key was released
-		MouseDown,			// Mouse button depressed
-		MouseUp,			// Mouse button released
-		MouseMotion,		// Mouse moved to some coord
-		Count,
-	};
-}
+	None = -1,
+	KeyDown,			// A keyboard key was depressed
+	KeyUp,				// A keyboard key was released
+	MouseDown,			// Mouse button depressed
+	MouseUp,			// Mouse button released
+	MouseMotion,		// Mouse moved to some coord
+	Count,
+};
 
 //\brief Easy to use mouse button constants, independant from SDLs numbered buttons
 namespace MouseButton
@@ -129,7 +126,7 @@ public:
 	//\param a_type defaults to mouse up but can be changed to to down or motion
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
 	template <typename TObj, typename TMethod>
-	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, MouseButton::Enum a_button, InputType::Enum a_type = InputType::MouseUp, bool a_oneShot = false)
+	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, MouseButton::Enum a_button, InputType a_type = InputType::MouseUp, bool a_oneShot = false)
 	{
 		// Add an event to the list of items to be processed
 		// TODO memory management! Kill std new with a rusty fork
@@ -151,7 +148,7 @@ public:
 	//\param a_type defaults to mouse up but can be changed to to down or motion
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
 	template <typename TObj, typename TMethod>
-	void RegisterKeyCallback(TObj * a_callerObject, TMethod a_callback, SDL_Keycode a_key, InputType::Enum a_type = InputType::KeyDown, bool a_oneShot = false)
+	void RegisterKeyCallback(TObj * a_callerObject, TMethod a_callback, SDL_Keycode a_key, InputType a_type = InputType::KeyDown, bool a_oneShot = false)
 	{
 		// Add an event to the list of items to be processed
 		InputEventNode * newInputNode = new InputEventNode();
@@ -170,7 +167,7 @@ public:
 	//\param a_callback is the object that contains the member function to call back
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
 	template <typename TObj, typename TMethod>
-	void RegisterAlphaKeyCallback(TObj * a_callerObject, TMethod a_callback, InputType::Enum a_type = InputType::KeyDown, bool a_oneShot = false)
+	void RegisterAlphaKeyCallback(TObj * a_callerObject, TMethod a_callback, InputType a_type = InputType::KeyDown, bool a_oneShot = false)
 	{
 		// Set data for the new global event
 		if (a_type == InputType::KeyDown)
@@ -209,7 +206,7 @@ private:
 
 		InputSource m_src;					///< What event happened
 		Delegate<bool, bool> m_delegate;	///< Pointer to object to call when it happens
-		InputType::Enum	m_type;				///< What type of event to respond to
+		InputType	m_type;				///< What type of event to respond to
 		bool		m_oneShot;				///< If the event should only be responded to once
 	};
 
@@ -231,14 +228,14 @@ private:
 	//\param a_type the type of event that is being searched for
 	//\param a_src the matching input key or button to search for
 	//\return a pointer to an input event or nullptr if no event found
-	InputEvent * GetFirstEvent(InputType::Enum a_type, InputSource a_src);
+	InputEvent * GetFirstEvent(InputType a_type, InputSource a_src);
 
 	//\brief Helper function to iterate list of events and find all matching events
 	//\param a_type the type of event that is being searched for
 	//\param a_src the matching input key or button to search for
 	//\param a_events_OUT is a ref to an event list to be populated by this function
 	//\return true if at least one event was found
-	bool GetEvents(InputType::Enum a_type, InputSource a_src, InputEventList & a_events_OUT);
+	bool GetEvents(InputType a_type, InputSource a_src, InputEventList & a_events_OUT);
 
 	static const int s_maxDepressedKeys = 8;								///< How many keys can be held on the keyboard at once
 	static const int s_maxGamepads = 8;										///< How many gamepads can be connected and playing a game

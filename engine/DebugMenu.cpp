@@ -232,14 +232,14 @@ void DebugMenu::Update(float a_dt)
 			case EditMode::Pos:
 			{	
 				m_widgetToEdit->SetOffset(mousePos);
-				m_dirtyFlags.Set(DirtyFlag::GUI);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				break;
 			}
 			case EditMode::Shape:	
 			{
 				m_widgetToEdit->SetSize(Vector2(mousePos.GetX() - m_widgetToEdit->GetPos().GetX(),
 												m_widgetToEdit->GetPos().GetY() - mousePos.GetY()));
-				m_dirtyFlags.Set(DirtyFlag::GUI);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				break;
 			}
 			case EditMode::FontSize:
@@ -273,7 +273,7 @@ void DebugMenu::Update(float a_dt)
 				if (inMan.IsKeyDepressed(SDLK_x))			m_gameObjectToEdit->SetClipOffset(curPos + Vector(moveAmount, 0.0f, 0.0f));		
 				else if (inMan.IsKeyDepressed(SDLK_y))		m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, moveAmount, 0.0f));
 				else if (inMan.IsKeyDepressed(SDLK_z))		m_gameObjectToEdit->SetClipOffset(curPos + Vector(0.0f, 0.0f, moveAmount));
-				m_dirtyFlags.Set(DirtyFlag::Scene);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 			}
 			else if (m_editMode == EditMode::ClipSize)
 			{
@@ -281,7 +281,7 @@ void DebugMenu::Update(float a_dt)
 				if (inMan.IsKeyDepressed(SDLK_x))			m_gameObjectToEdit->SetClipSize(curSize + Vector(moveAmount, 0.0f, 0.0f));
 				else if (inMan.IsKeyDepressed(SDLK_y))		m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, moveAmount, 0.0f));
 				else if (inMan.IsKeyDepressed(SDLK_z))		m_gameObjectToEdit->SetClipSize(curSize + Vector(0.0f, 0.0f, moveAmount));
-				m_dirtyFlags.Set(DirtyFlag::Scene);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 			}
 			else if (!IsDebugMenuActive())
 			{
@@ -297,7 +297,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_gameObjectToEdit->SetPos(curPos + Vector(moveAmount, 0.0f, 0.0f));
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				} 
 				else if (inMan.IsKeyDepressed(SDLK_y))
 				{
@@ -309,7 +309,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_gameObjectToEdit->SetPos(curPos + Vector(0.0f, moveAmount, 0.0f));
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);				
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 				else if (inMan.IsKeyDepressed(SDLK_z))
 				{
@@ -321,7 +321,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_gameObjectToEdit->SetPos(curPos + Vector(0.0f, 0.0f, moveAmount));
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 			}
 		}
@@ -343,7 +343,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_lightToEdit->m_pos += Vector(moveAmount, 0.0f, 0.0f);
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 				else if (inMan.IsKeyDepressed(SDLK_y))
 				{
@@ -356,7 +356,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_lightToEdit->m_pos += Vector(0.0f, moveAmount, 0.0f);
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 				else if (inMan.IsKeyDepressed(SDLK_z))
 				{
@@ -369,7 +369,7 @@ void DebugMenu::Update(float a_dt)
 					{
 						m_lightToEdit->m_pos += Vector(0.0f, 0.0f, moveAmount);
 					}
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 			}
 			switch (m_editMode)
@@ -414,10 +414,10 @@ bool DebugMenu::SaveChanges()
 {
 	// Save resources to disk if dirty
 	bool changesSaved = false;
-	for (unsigned int i = 0; i < DirtyFlag::Count; ++i)
+	for (unsigned int i = 0; i < static_cast<unsigned int>(DirtyFlag::Count); ++i)
 	{
-		DirtyFlag::Enum curFlag = (DirtyFlag::Enum)i;
-		if (m_dirtyFlags.IsBitSet(curFlag))
+		DirtyFlag curFlag = (DirtyFlag)i;
+		if (m_dirtyFlags.IsBitSet(static_cast<unsigned int>(curFlag)))
 		{
 			// Handle each flag type
 			switch (curFlag)
@@ -438,7 +438,7 @@ bool DebugMenu::SaveChanges()
 				}
 				default: break;
 			}
-			m_dirtyFlags.Clear(curFlag);
+			m_dirtyFlags.Clear(static_cast<unsigned int>(curFlag));
 		}
 	}
 
@@ -480,7 +480,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 					{
 						m_widgetToEdit->SetTexture(nullptr);
 					}
-					m_dirtyFlags.Set(DirtyFlag::GUI);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				}
 				else if (m_editMode == EditMode::Font)
 				{
@@ -511,7 +511,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 							}
 							m_gameObjectToEdit = newGameObj;
 					
-							m_dirtyFlags.Set(DirtyFlag::Scene);
+							m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 						}
 						else
 						{
@@ -535,7 +535,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 						if (Model * newModel = ModelManager::Get().GetModel(objBuf))
 						{
 							m_gameObjectToEdit->SetModel(newModel);
-							m_dirtyFlags.Set(DirtyFlag::Scene);
+							m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 						}
 					} 
 					else // Clear the model
@@ -568,7 +568,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_widgetToEdit != nullptr)
 				{
 					m_widgetToEdit->SetName(m_textInputField->GetText());
-					m_dirtyFlags.Set(DirtyFlag::GUI);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				}
 			}
 			else if (m_editMode == EditMode::Text)
@@ -577,7 +577,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_widgetToEdit != nullptr)
 				{
 					m_widgetToEdit->SetText(m_textInputField->GetText());
-					m_dirtyFlags.Set(DirtyFlag::GUI);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				}
 			}
 		}
@@ -589,7 +589,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_gameObjectToEdit != nullptr)
 				{
 					m_gameObjectToEdit->SetName(m_textInputField->GetText());
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 			}
 			else if (m_editMode == EditMode::SaveTemplate)
@@ -607,7 +607,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 						sprintf(templateString, "%s.tmp", m_textInputField->GetText());
 					}
 					m_gameObjectToEdit->SetTemplate(templateString);
-					m_dirtyFlags.Set(DirtyFlag::Scene);
+					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 			}
 		}
@@ -679,7 +679,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		// If the command touched a resource that needs writing
 		if (retVal.m_dirtyFlag > DirtyFlag::None)
 		{
-			m_dirtyFlags.Set(retVal.m_dirtyFlag);
+			m_dirtyFlags.Set(static_cast<unsigned int>(retVal.m_dirtyFlag));
 		}
 
 		// If the command required a resource to be selected
@@ -728,7 +728,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		m_editMode = EditMode::None;
 
 		// Changed a property, save the file
-		m_dirtyFlags.Set(DirtyFlag::GUI);
+		m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 	}
 
 	// Don't play around with widget selection while a menu is up
@@ -751,14 +751,14 @@ bool DebugMenu::OnSelect(bool a_active)
 			{
 				m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
 				m_widgetToEdit->SetAlignmentAnchor(selectionX, selectionY);
-				m_dirtyFlags.Set(DirtyFlag::GUI);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				setAlignment = true;
 			}
 			if (m_widgetToEdit->GetAlignTo()->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
 			{
 				m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
 				m_widgetToEdit->SetAlignment(selectionX, selectionY);
-				m_dirtyFlags.Set(DirtyFlag::GUI);
+				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				setAlignment = true;
 			}
 
@@ -797,7 +797,7 @@ bool DebugMenu::OnSelect(bool a_active)
 		{
 			m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
 			m_widgetToEdit->SetAlignTo(newSelectedWidget);
-			m_dirtyFlags.Set(DirtyFlag::GUI);
+			m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 		}
 
 		// Clear selection of old widget

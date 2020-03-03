@@ -133,8 +133,8 @@ private:
 	Texture m_colourPickerTexture;					///< Texture to be displayed when the user is picking a colour
 	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
 	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
-	EditType::Enum m_editType;						///< What type of object we are editing 
-	EditMode::Enum m_editMode;						///< If we are in a modal editing mode, which mode are we in
+	EditType m_editType;						///< What type of object we are editing 
+	EditMode m_editMode;						///< If we are in a modal editing mode, which mode are we in
 	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
 	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
 	Light * m_lightToEdit;							///< If a light has been selected to edit, this will be set
