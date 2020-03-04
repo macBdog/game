@@ -1,5 +1,3 @@
-#ifndef _CORE_HASH_MAP_
-#define _CORE_HASH_MAP_
 #pragma once
 
 #include "Iterator.h"
@@ -129,27 +127,43 @@ public:
 	}
 
 	//\brief Iterator like functionality for collections that need value matching and single element walks
-	unsigned int GetIterator() { return 0; }	
-	bool GetNext(unsigned int & a_it, T & a_value_OUT)
+	Iterator<HashNode<K,T>> GetIterator() 
+	{ 
+		Iterator<HashNode<K, T>> it = Iterator<HashNode<K, T>>(m_map[0]);
+		return it;
+	}
+	bool GetNext(Iterator<HashNode<K, T>> & a_it, T & a_value_OUT)
 	{
 		// Early out for no objects
 		if (m_length == 0)
 		{
 			return false;
 		}
-		if (a_it > m_tableSize - 1)
+
+		// And for overrun
+		if (a_it.GetCount() > m_tableSize - 1)
 		{ 
 			return false;
 		}
-		// TODO This iteration will skip the openly addressed nodes, need to keep minor and major accounting in Iterator
-		while (m_map[a_it++] == nullptr)
+
+		// Check for openly addressed nodes
+		if (a_it.GetObject() != nullptr && a_it.GetObject()->m_next != nullptr)
 		{
-			if (a_it > m_tableSize - 1)
+			a_it.SetObject(a_it.GetObject()->m_next);
+			a_value_OUT = a_it.GetObject()->m_object;
+			return true;
+		}
+		a_it.Inc();
+		while (m_map[a_it.GetCount()] == nullptr)
+		{
+			a_it.Inc();
+			if (a_it.GetCount() > m_tableSize - 1)
 			{
 				return false;
 			}
 		}
-		a_value_OUT = m_map[a_it - 1]->m_object;
+		a_it.SetObject(m_map[a_it.GetCount()]);
+		a_value_OUT = m_map[a_it.GetCount()]->m_object;
 		return true;	
 	}
 
@@ -184,5 +198,3 @@ private:
 };
 
 static const int s_maxStringHash32bit = 9;		// TODO Move the StringHash guts into the HashMap to replace this hacky hash stuff
-
-#endif //_CORE_HASH_MAP
