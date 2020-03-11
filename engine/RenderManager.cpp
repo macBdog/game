@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include <windows.h>
 
 #include "GL/glew.h"
@@ -1224,6 +1223,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		Matrix debugSphereMat = Matrix::Identity();
 		for (int j = 0; j < m_objectCount[i][RenderObjectType::DebugSpheres]; ++j)
 		{
+			debugSphereMat.SetScale(s->m_scale);
 			debugSphereMat.SetPos(s->m_pos);
 			shaderData.m_objectMatrix = &debugSphereMat;
 			shaderData.m_materialAmbient = s->m_colour;

@@ -431,19 +431,22 @@ bool Scene::Update(float a_dt)
 	}
 	else
 	{
-		m_updateTimer = 0.0f;
-		FileManager::Timestamp curTimeStamp;
-		FileManager::Get().GetFileTimeStamp(m_filePath, curTimeStamp);
-		if (curTimeStamp > m_timeStamp)
+		if (m_filePath[0] != '\0')
 		{
-			Reset();
-
-			if (m_sourceFile.Load(m_filePath))
+			m_updateTimer = 0.0f;
+			FileManager::Timestamp curTimeStamp;
+			FileManager::Get().GetFileTimeStamp(m_filePath, curTimeStamp);
+			if (curTimeStamp > m_timeStamp)
 			{
-				InitFromConfig();
+				Reset();
+
+				if (m_sourceFile.Load(m_filePath))
+				{
+					InitFromConfig();
+				}
+				ScriptManager::Get().ReloadScripts();
+				ResetFileDateStamp();
 			}
-			ScriptManager::Get().ReloadScripts();
-			ResetFileDateStamp();
 		}
 	}
 #endif

@@ -271,7 +271,10 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 			// Scan all the scripts in the dir for changes to trigger a reload
 			FileManager & fileMan = FileManager::Get();
 			FileManager::FileList scriptFiles;
-			fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua");
+			if (!fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua"))
+			{
+				m_scriptPath[0] = '\0';
+			}
 
 			// Add each script in the directory
 			FileManager::FileListNode * curNode = scriptFiles.GetHead();
@@ -346,8 +349,9 @@ bool ScriptManager::Update(float a_dt)
 		bool scriptsReloaded = false;
 
 		// Test all scripts for modification
+		FileManager & fileMan = FileManager::Get();
 		ManagedScriptNode * next = m_managedScripts.GetHead();
-		if (m_managedScripts.GetLength() == 0)
+		if (m_managedScripts.GetLength() == 0 && strlen(m_scriptPath) > 0 && fileMan.CheckFilePath(m_scriptPath))
 		{
 			// There are no scripts to manage, we must have bailed out while starting up, try again
 			Startup(m_scriptPath, nullptr);
@@ -359,7 +363,7 @@ bool ScriptManager::Update(float a_dt)
 				// Get a fresh timestamp and test it against the stored timestamp
 				FileManager::Timestamp curTimeStamp;
 				ManagedScript * curScript = next->GetData();
-				FileManager::Get().GetFileTimeStamp(curScript->m_path, curTimeStamp);
+				fileMan.GetFileTimeStamp(curScript->m_path, curTimeStamp);
 				if (curTimeStamp > curScript->m_timeStamp || m_forceReloadScripts)
 				{
 					if (m_forceReloadScripts)
@@ -1447,7 +1451,11 @@ int ScriptManager::GetDirectoryListing(lua_State * a_luaState)
 			int fileCount = 1;
 			FileManager & fileMan = FileManager::Get();
 			FileManager::FileList allFiles;
-			fileMan.FillFileList(filePath, allFiles);
+			if (!fileMan.FillFileList(filePath, allFiles))
+			{
+				LogScriptError(a_luaState, "GetDirectoryListing", "invalid path requested.");
+				return 0;
+			}
 			FileManager::FileListNode * curNode = allFiles.GetHead();
 			while (curNode != nullptr)
 			{	

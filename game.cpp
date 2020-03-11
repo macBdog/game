@@ -100,8 +100,7 @@ int main(int argc, char *argv[])
 	GameFile titleConfigFile(titleConfigFilePath);
 	if (!titleConfigFile.IsLoaded())
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath);
-		return 1;
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath);	
 	}
 
 	// Setup relative pathing if defined
@@ -175,8 +174,6 @@ int main(int argc, char *argv[])
 	if (!gameConfig.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", gameConfigPath);
-		Sleep(10000);
-		return 1;
 	}
 
 	// Add all resources to the datapack so all files are written if the user hits the create datapack debug menu button
@@ -375,6 +372,7 @@ int main(int argc, char *argv[])
 		UPDATE_AND_PROFILE(ModelManager);
 		UPDATE_AND_PROFILE(PhysicsManager);
 		UPDATE_AND_PROFILE(ScriptManager);
+
 		UPDATE_AND_PROFILE(WorldManager);
 		UPDATE_AND_PROFILE(SoundManager);
 		
@@ -440,6 +438,7 @@ int main(int argc, char *argv[])
 		lastFrameTimeSec = lastFrameTime / 1000.0f;
 		if (fps > 1.0f) { lastFps = frameCount; frameCount = 0; fps = 0.0f; } else { ++frameCount;	fps+=lastFrameTimeSec; }
     }
+
 
 	PROFILE_SHUTDOWN
 
