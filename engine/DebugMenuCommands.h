@@ -158,10 +158,6 @@ class DebugMenuCommandRegistry
 public:
 
 	DebugMenuCommandRegistry()
-		: m_btnCreateRoot(nullptr)
-		, m_btnWidgetRoot(nullptr)
-		, m_btnGameObjectRoot(nullptr)	
-		, m_btnLightRoot(nullptr)
 	{ 
 		m_textEditString[0] = '\0';
 		m_resourceSelectPath[0] = '\0';
@@ -239,11 +235,11 @@ private:
 	char m_resourceSelectPath[StringUtils::s_maxCharsPerLine];
 	char m_resourceSelectExtension[4];
 
-	Widget * m_btnCreateRoot;						///< Pointer to a widget that is created on startup for the first sub menu
-	Widget * m_btnWidgetRoot;						///< Pointer to a widget that is created on startup for functions related to widgets
-	Widget * m_btnGameObjectRoot;					///< Pointer to a widget that is created on startup for functions related to game objects
-	Widget * m_btnLightRoot;						///< Pointer to a widget that is created on startup for functions related to lighting and lights
-	CommandList m_commands;							///< List of commands that can be executed
+	Widget* m_btnCreateRoot{ nullptr };				///< Pointer to a widget that is created on startup for the first sub menu
+	Widget* m_btnWidgetRoot{ nullptr };				///< Pointer to a widget that is created on startup for functions related to widgets
+	Widget* m_btnGameObjectRoot{ nullptr };			///< Pointer to a widget that is created on startup for functions related to game objects
+	Widget* m_btnLightRoot{ nullptr };				///< Pointer to a widget that is created on startup for functions related to lighting and lights
+	CommandList m_commands{};						///< List of commands that can be executed
 };
 
 #endif //_ENGINE_DEBUG_MENU_COMMANDS_

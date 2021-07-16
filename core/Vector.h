@@ -49,8 +49,8 @@ public:
 	Vector operator / (const Vector & a_val) const { return Vector(x / a_val.x, y / a_val.y, z / a_val.z); }
 	Vector operator / (const float & a_scale) const { return Vector(x / a_scale, y / a_scale, z / a_scale); }
 	bool operator == (const Vector & a_compare) const { return x == a_compare.x && y == a_compare.y && z == a_compare.z; }
-	bool operator > (const Vector & a_compare) const { return x > a_compare.x && y > a_compare.y && z > a_compare.z && z > a_compare.z; }
-	bool operator < (const Vector & a_compare) const { return x < a_compare.x && y < a_compare.y && z < a_compare.z && z < a_compare.z; }
+	bool operator > (const Vector & a_compare) const { return x > a_compare.x && y > a_compare.y && z > a_compare.z; }
+	bool operator < (const Vector & a_compare) const { return x < a_compare.x && y < a_compare.y && z < a_compare.z; }
 	void operator += (const Vector & a_val) { x += a_val.x; y += a_val.y; z += a_val.z; }
 	void operator -= (const Vector & a_val) { x -= a_val.x; y -= a_val.y; z -= a_val.z; }
 	void operator *= (const Vector & a_val) { x *= a_val.x; y *= a_val.y; z *= a_val.z; }

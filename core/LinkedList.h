@@ -24,13 +24,13 @@ public:
 	{}
 
 	// Data accessor
-	inline T * GetData() { return m_data; }
+	inline T * GetData() const { return m_data; }
 	inline void SetData(T * a_data) { m_data = a_data; }
 
 	// Neighbour accessors
-	inline LinkedListNode * GetNext() { return m_next; }
-	inline LinkedListNode * GetPrev() { return m_prev; }
-	inline bool IsLinked() { return m_next != 0 || m_prev != 0; }
+	inline LinkedListNode * GetNext() const { return m_next; }
+	inline LinkedListNode * GetPrev() const { return m_prev; }
+	inline bool IsLinked() const { return m_next != 0 || m_prev != 0; }
 
 private:
 
@@ -38,8 +38,8 @@ private:
 	T * m_data;
 
 	// Links to neighbour data
-	LinkedListNode * m_next;
-	LinkedListNode * m_prev;
+	LinkedListNode* m_next { nullptr };
+	LinkedListNode* m_prev { nullptr };
 
 	// Allows list and iterators to access neighbours without function calls
 	template <class T> friend class LinkedList;

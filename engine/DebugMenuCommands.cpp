@@ -103,7 +103,7 @@ void DebugMenuCommandRegistry::Startup()
 
 	// Create root of the create menu that appears if no objects are selected
 	DebugMenuCommand * lastCreatedCommand = nullptr;
-	auto newDebugObj = [this, &lastCreatedCommand](const char * a_name) { lastCreatedCommand = Create(a_name, m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple, EditType::None); };
+	auto newDebugObj = [&](const char * a_name) { lastCreatedCommand = Create(a_name, m_btnCreateRoot, m_btnCreateRoot, DebugMenuCommandAlign::Right, sc_colourPurple, EditType::None); };
 
 	newDebugObj("Create Widget");
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateWidget);
@@ -115,7 +115,6 @@ void DebugMenuCommandRegistry::Startup()
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::CreateDataPack);
 	lastCreatedCommand = Create("Show/Hide Physics", m_btnCreateRoot, lastCreatedCommand->GetWidget(), DebugMenuCommandAlign::Below, sc_colourPurple, EditType::None);
 	lastCreatedCommand->SetWidgetFunction(this, &DebugMenuCommandRegistry::ShowHidePhysicsWorld);
-
 
 	// Change 2D objects
 	lastCreatedCommand = Create("Alignment",				m_btnWidgetRoot, m_btnWidgetRoot, DebugMenuCommandAlign::Right, sc_colourBlue, EditType::Widget);

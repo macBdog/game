@@ -22,8 +22,9 @@ public:
 		, m_low(a_val)
 	{}
 
-	inline T GetDiff() const { return m_hi - m_low; }
 	inline bool IsValid() const { return m_hi > m_low; }
+	inline T GetDiff() const { return m_hi - m_low; }
+	inline T GetMedian() const { return m_low + (GetDiff() * / 2.0)}
 
 	T GetRandom()
 	{
