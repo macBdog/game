@@ -1,21 +1,27 @@
-WHAT IS THE CURRENT SHORT TERM GOAL: OpenVR support, not just Oculus Rift.
-TASK QUEUE: Decent colour picker.
+# GAME
+_Great name..._
 
-BUGS: Debug menu picking is screwy.
-
-What is this project?
+## What is this project?
 
 1. A lightweight, simple framework for gamejamming indie 2D and 3D PC and VR games.
 2. Well organised and easy to read and understand.
 3. Focused on making games quicker to develop by using only in-engine tools and hotloading.
 
-What isn't this project?
+## What isn't this project?
 
 1. A commercial or otherwise noteworthy game "engine".
 2. Jam packed with the latest rendering techniques.
 3. Specialised for any one particular type of game.
 
-Technology Choices:
+## What is under construction? 
+1. OpenVR support, not just Oculus Rift.
+2. Decent colour picker for debug menu.
+3. Remove bulletPhysics dependancy and Roll-Your-Own!
+
+## What is broken? 
+1. Debug menu picking in world-space is screwy.
+
+## Technology Choices:
 
 * libSDL for IO
 * OpenGL w/ GLSL 4.0 for rendering
@@ -26,18 +32,19 @@ Technology Choices:
 * Remotery for profiling
 * For everything else, the choice is Roll-Your-Own because dependancies suck and this is a coding for fun and learning project.
 
-Organisation:
+### Organisation:
+There are 3 VS 2019 projects:
 
-core/     
+`core/`
 Code for atomic data structures, collections and containers. Anything that exists here does not need to include any other file in the solution, generally. Most of the code here should be declaritive, not procedural (very little .cpp expected).
 
-engine/
+`engine/`
 Functions required by the engine to perform the basic tasks of running a game - processing inputs, rendering things to the screen, loading resources and the like. Nothing feature specific to reside here.
 
-./
+`./`
 Game specific functionality. Code here is glue that links engine features to perform compound tasks like controlling an AI agent or responding to player actions.
 
-Keys:
+### Keys:
 
 TAB - Switch to in game editor (the rest of the keys only work inside the editor)
 Esc - Release the mouse
@@ -47,10 +54,10 @@ w, a, s, d - Move debug camera in worldspace, shift modifier for rotation
 x, y, z - Hold to reposition object, alt modifier rotates
 p - toggle script updates
 F5 - reload all scripts
-Profiling available by opening up external/Remotery/vis.html
+Realtime profiling available by opening up `external/Remotery/vis.html`
 
 Style:
-
+```
 #include <cstandardthings>
 
 #include <librarythings>
@@ -79,15 +86,16 @@ bool Style::WhatIsYourStyle(bool a_tellMeNow, float & a_howManyTimes_OUT)
   return !a_tellMeNow && a_howManyTimes_OUT > s_howManyTimesThreshold;
 }
   
-For variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
+// For variable names, here is a neat and easy trick that grants instant identification of a variable's intention and scope.
 m_variable for a member 
 a_variable for an argument
-s_variable for a static and usually const data member
+s_variable for a static and usually const/constexpr data member
 variable for locally scoped.
 
-To be explicit about mutable arguments passed into a method by reference, the following convention is useful
+// To be explicit about mutable arguments passed into a method by reference, the following convention is useful
 a_variable_OUT
 
+```
 Other Notes:
 
 In 3D the Z axis is UP, 1 unit is 1 metre
