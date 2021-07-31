@@ -1254,7 +1254,7 @@ void DebugMenu::Draw()
 
 	// Draw some consumer perf stats
 	const int numObjects = WorldManager::Get().GetCurrentScene()->GetNumObjects();
-	const int numPhysics = PhysicsManager::Get().GetNumManifolds();
+	const int numPhysics = 0;
 	const int numDrawCalls = RenderManager::Get().GetDrawCallCount();
 	const int numMusic = SoundManager::Get().GetNumMusicPlaying();
 	char statBuf[256];

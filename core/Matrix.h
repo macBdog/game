@@ -258,7 +258,6 @@ public:
 	}
 	static const Matrix LookAtRH(const Vector & a_lookFrom, const Vector & a_lookAt, const Vector & a_pos)
 	{
-		Matrix mOut;
 		Vector look = a_lookAt - a_lookFrom;
 		look.Normalise();
 		Vector right = look.Cross(Vector::Up());
@@ -269,52 +268,52 @@ public:
 	}
 	inline Matrix Multiply(const Matrix & a_mat) const
 	{
-		Matrix mOut;
+		Matrix out;
 		for (unsigned int r = 0; r < 4; ++r)
 		{
 			for (unsigned int c = 0; c < 4; ++c)
 			{
-				mOut.row[r][c] = 0.0f;
+				out.row[r][c] = 0.0f;
 				for (unsigned int i = 0; i < 4; ++i) 
 				{
-					mOut.row[r][c] += row[r][i] * a_mat.row[i][c];
+					out.row[r][c] += row[r][i] * a_mat.row[i][c];
 				}
 			}
 		}
 
-		return mOut;
+		return out;
 	}
 	inline Matrix Add(const Matrix & a_mat, bool a_addW = false) const
 	{
-		Matrix mOut;
+		Matrix out;
 		for (int i = 0; i < 16; ++i)
 		{
-			mOut.f[i] = a_mat.f[i] + f[i];
+			out.f[i] = a_mat.f[i] + f[i];
 		}
 		if (!a_addW)
 		{
-			mOut.row[0][3] = row[0][3];
-			mOut.row[1][3] = row[1][3];
-			mOut.row[2][3] = row[2][3];
-			mOut.row[3][3] = row[3][3];
+			out.row[0][3] = row[0][3];
+			out.row[1][3] = row[1][3];
+			out.row[2][3] = row[2][3];
+			out.row[3][3] = row[3][3];
 		}
-		return mOut;
+		return out;
 	}
 	inline Matrix Sub(const Matrix & a_mat, bool a_subW = false) const
 	{
-		Matrix mOut;
+		Matrix out;
 		for (int i = 0; i < 16; ++i)
 		{
-			mOut.f[i] = a_mat.f[i] - f[i];
+			out.f[i] = a_mat.f[i] - f[i];
 		}
 		if (!a_subW)
 		{
-			mOut.row[0][3] = row[0][3];
-			mOut.row[1][3] = row[1][3];
-			mOut.row[2][3] = row[2][3];
-			mOut.row[3][3] = row[3][3];
+			out.row[0][3] = row[0][3];
+			out.row[1][3] = row[1][3];
+			out.row[2][3] = row[2][3];
+			out.row[3][3] = row[3][3];
 		}
-		return mOut;
+		return out;
 	}
 	inline static Matrix GetRotateX(float a_angleRadians)
 	{
@@ -403,7 +402,7 @@ private:
 	//\brief Union provided for different styles of access
 	union 
 	{
-		float f[16];
+		float f[16]{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 		float row[4][4];
 		struct
 		{

@@ -11,7 +11,7 @@ class Vector
 public:
 
 	// Constructors
-	Vector() { x = 0; y = 0; z = 0; }
+	Vector() = default;
 	Vector(float a_val) { x = a_val; y = a_val; z = a_val; }
 	Vector(float a_x, float a_y, float a_z) { x = a_x; y = a_y; z = a_z; }
 	Vector(float * a_values) { x = a_values[0]; y = a_values[1]; z = a_values[2]; }
@@ -54,9 +54,9 @@ public:
 	void operator += (const Vector & a_val) { x += a_val.x; y += a_val.y; z += a_val.z; }
 	void operator -= (const Vector & a_val) { x -= a_val.x; y -= a_val.y; z -= a_val.z; }
 	void operator *= (const Vector & a_val) { x *= a_val.x; y *= a_val.y; z *= a_val.z; }
-	
+
 private:
-	float x, y, z;
+	float x, y, z{ 0.0f };
 };
 
 //\brief Simple 2 component vector class

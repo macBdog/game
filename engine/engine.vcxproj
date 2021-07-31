@@ -54,14 +54,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\external\glew-2.1.0\include;..\external\remotery\lib;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.7\include;..\external\bullet3-2.86.1\src;..\external\bullet3-2.86.1\Extras\Serialize\BulletWorldImporter;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\glew-2.1.0\include;..\external\remotery\lib;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.7\include;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.3\include;..\external\bullet-2.82-r2704\src;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\bullet-2.82-r2704\Extras\Serialize\BulletWorldImporter;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.3\include;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Designer|Win32'">
-    <IncludePath>..\external\glew-2.1.0\include;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.7\include;..\external\bullet3-2.86.1\src;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\bullet3-2.86.1\Extras\Serialize\BulletWorldImporter;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\external\glew-2.1.0\include;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.7\include;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
