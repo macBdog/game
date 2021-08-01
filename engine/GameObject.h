@@ -200,10 +200,10 @@ private:
 	Vector					m_clipVolumeSize;							///< Dimensions of the clipping volume for culling and picking
 	Vector					m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
 	bool					m_clipping{ false };						///< If collision is enabled
-	float					m_physicsMass{ 0.0f };						///< Mass of the object being simulated
-	float					m_physicsElasticity{ 0.0f };				///< How much force is retained from collisions
-	Vector					m_physicsLinearDrag{ 0.0f };				///< How much linear inertia is lost per time step
-	Vector					m_physicsAngularDrag{ 0.0f };				///< How much rotational torque is lost per time step
+	float					m_physicsMass{ 1.0f };						///< Mass of the object being simulated
+	float					m_physicsElasticity{ 1.0f };				///< How much force is retained from collisions
+	Vector					m_physicsLinearDrag{ 1.0f };				///< How much linear inertia is lost per time step
+	Vector					m_physicsAngularDrag{ 1.0f };				///< How much rotational torque is lost per time step
 	bool					m_visible{ true };							///< If the game object's model should be added to the render list
 	StringHash				m_clipGroup;								///< What group the object belongs to and can collide with
 	Matrix					m_worldMat;									///< Position and orientation in the world

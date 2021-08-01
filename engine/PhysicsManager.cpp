@@ -179,13 +179,14 @@ void PhysicsManager::UpdatePhysicsWorld(const float& a_dt)
 		auto physObj = curPhys.get();
 		auto gameObj = physObj->m_gameObject;
 		const float mass = gameObj->GetPhysicsMass();
+		const Vector lDrag = gameObj->GetPhysicsLinearDrag();
 		if (m_type == PhysicsIntegrationType::Euler)
 		{
 			// Semi-implicit euler
-			physObj->m_force = g;
-			physObj->m_acc = physObj->m_force / mass;
+			physObj->m_acc = (physObj->m_force + g) / mass;
 			physObj->m_vel += physObj->m_acc * p_dt;
 			physObj->m_pos += physObj->m_vel * p_dt;
+			physObj->m_force -= lDrag * p_dt;
 		}
 		else if (m_type == PhysicsIntegrationType::Verlet)
 		{
@@ -310,7 +311,7 @@ bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
-			
+			phys->AddForce(a_force);
 			return true;
 		}
 	}
