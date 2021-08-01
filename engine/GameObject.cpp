@@ -14,13 +14,12 @@
 using namespace std;	//< For fstream operations
 
 // String literals for the clip types
-const char * GameObject::s_clipTypeStrings[ClipType::Count] = 
+const char * GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Count)] = 
 {
 	"none",
 	"axisbox",
 	"sphere",
 	"box",
-	".bullet",
 };
 
 void GameObject::SetTemplateProperties()
@@ -41,18 +40,17 @@ void GameObject::SetTemplateProperties()
 			}
 			if (GameFile::Property * clipType = object->FindProperty("clipType"))
 			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
 				{
 					SetClipType(ClipType::Sphere);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
 				{
 					SetClipType(ClipType::Box);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
 				{
 					SetClipType(ClipType::Mesh);
-					SetPhysicsMesh(clipType->GetString());
 				}
 			}
 			if (GameFile::Property * clipSize = object->FindProperty("clipSize"))
@@ -70,9 +68,22 @@ void GameObject::SetTemplateProperties()
 				// First try to find if the shader is already loaded
 				rMan.ManageShader(this, shader->GetString());
 			}
-			if (GameFile::Property * massProp = object->FindProperty("physicsMass"))
-			{
+			// Physics
+			if (GameFile::Property* massProp = object->FindProperty("physicsMass"))
+			{			
 				SetPhysicsMass(massProp->GetFloat());
+			}
+			if (GameFile::Property* elasticProp = object->FindProperty("physicsElasticity"))
+			{
+				SetPhysicsElasticity(elasticProp->GetFloat());
+			}
+			if (GameFile::Property* linearDragProp = object->FindProperty("physicsLinearDrag"))
+			{
+				SetPhysicsLinearDrag(linearDragProp->GetVector());
+			}
+			if (GameFile::Property* angularDragProp = object->FindProperty("physicsAngularDrag"))
+			{
+				SetPhysicsAngularDrag(angularDragProp->GetVector());
 			}
 		}
 	}
@@ -133,12 +144,6 @@ bool GameObject::Update(float a_dt)
 	if (m_blender != nullptr)
 	{	
 		m_blender->Update(a_dt);
-	}
-
-	// Update physics world
-	if (m_physics != nullptr)
-	{
-		PhysicsManager::Get().UpdateGameObject(this);
 	}
 
 	return true;
@@ -293,7 +298,7 @@ bool GameObject::CollidesWith(GameObject * a_colObj)
 	// TODO: This is SUPER branchy code, change clip type to a bit set and re-do
 
 	// Clip each type against type
-	ClipType::Enum colClip = a_colObj->GetClipType();
+	ClipType colClip = a_colObj->GetClipType();
 	if (m_clipType == ClipType::Sphere && colClip == ClipType::Sphere)
 	{
 		return false; /* TODO: CollisionUtils::IntersectSphereSphere(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
@@ -372,14 +377,10 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		{
 			if (m_clipType != ClipType::None)
 			{
-				// Triangle mesh type clipping
-				if (m_clipType == ClipType::Mesh) 
+				// Primitive type clipping
+				if (m_clipType != ClipType::Mesh) 
 				{
-					outputFile->AddProperty(fileObject, "clipType", m_physicsMesh);
-				}
-				else // Primitive type clipping
-				{
-					outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[m_clipType]);
+					outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[static_cast<int>(m_clipType)]);
 					char vecBuf[StringUtils::s_maxCharsPerName];
 					m_clipVolumeSize.GetString(vecBuf);
 					outputFile->AddProperty(fileObject, "clipSize", vecBuf);
@@ -391,6 +392,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			{
 				outputFile->AddProperty(fileObject, "clipGroup", m_clipGroup.GetCString());
 			}
+			// TODO! Add physics properties for serialisation
 			if (m_shader != nullptr)
 			{
 				// Make sure the shader is not a default engine shader
@@ -426,13 +428,9 @@ void GameObject::SerialiseTemplate()
 	}
 	if (m_clipType != ClipType::None)
 	{
-		if (m_clipType == ClipType::Mesh)
+		if (m_clipType != ClipType::Mesh)
 		{
-			templateFile->AddProperty(templateObj, "clipType", m_physicsMesh);
-		}
-		else
-		{
-			templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[m_clipType]);
+			templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[static_cast<int>(m_clipType)]);
 			char vecBuf[StringUtils::s_maxCharsPerName];
 			m_clipVolumeSize.GetString(vecBuf);
 			templateFile->AddProperty(templateObj, "clipSize", vecBuf);
@@ -444,6 +442,8 @@ void GameObject::SerialiseTemplate()
 	{
 		templateFile->AddProperty(templateObj, "clipGroup", m_clipGroup.GetCString());
 	}
+
+	// TODO! Add phyics properties for serialisation
 	if (m_shader != nullptr)
 	{
 		if (m_shader != RenderManager::Get().GetLightingShader() &&

@@ -27,7 +27,7 @@ bool Log::Shutdown()
 	return true;
 }
 
-void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
+void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
 {
 #ifdef _RELEASE
 	return;
@@ -106,7 +106,7 @@ void Log::Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char
 	}
 }
 
-void Log::WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...)
+void Log::WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...)
 {
 #ifdef _RELEASE
 	return;

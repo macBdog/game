@@ -193,7 +193,7 @@ bool InputManager::EventPump(const SDL_Event & a_event)
 			}
 
 			// Convert SDL button to internal enum
-			MouseButton::Enum but = MouseButton::Left;
+			MouseButton but = MouseButton::Left;
 			switch (a_event.button.button)
 			{
 				case SDL_BUTTON_LEFT:	but = MouseButton::Left; break;
@@ -207,7 +207,7 @@ bool InputManager::EventPump(const SDL_Event & a_event)
 		case SDL_MOUSEBUTTONUP:
 		{
 			// Convert SDL button to internal enum
-			MouseButton::Enum but = MouseButton::Left;
+			MouseButton but = MouseButton::Left;
 			switch (a_event.button.button)
 			{
 				case SDL_BUTTON_LEFT:	but = MouseButton::Left; break;
@@ -283,16 +283,16 @@ bool InputManager::IsKeyDepressed(SDL_Keycode a_key)
 	return false;
 }
 
-bool InputManager::ProcessMouseDown(MouseButton::Enum a_button)
+bool InputManager::ProcessMouseDown(MouseButton a_button)
 {
 	// Nothing is done here except set the depressed button list that the script manager accesses
-	m_depressedMouseButtons[a_button] = true;
+	m_depressedMouseButtons[static_cast<int>(a_button)] = true;
 	return true;
 }
 
-bool InputManager::ProcessMouseUp(MouseButton::Enum a_button)
+bool InputManager::ProcessMouseUp(MouseButton a_button)
 {
-	m_depressedMouseButtons[a_button] = false;
+	m_depressedMouseButtons[static_cast<int>(a_button)] = false;
 
 	if (!DebugMenu::Get().IsDebugMenuEnabled() && !m_mouseEnabled)
 	{

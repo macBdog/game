@@ -25,23 +25,18 @@ enum class InputType : int
 };
 
 //\brief Easy to use mouse button constants, independant from SDLs numbered buttons
-namespace MouseButton
+enum class MouseButton : int
 {
-	enum Enum
-	{
-		None = -1,
-		Left,
-		Right,
-		Middle,
-		Count,
-	};
-}
+	None = -1,
+	Left,
+	Right,
+	Middle,
+	Count,
+};
 
 class InputManager : public Singleton<InputManager>
 {
-
 public:
-
 	InputManager()
 		: m_focus(true)
 		, m_fullScreen(false)
@@ -56,7 +51,7 @@ public:
 	{
 		// Init the list of depressed keys
 		memset(&m_depressedKeys[0], SDLK_UNKNOWN, sizeof(SDL_Keycode) * s_maxDepressedKeys);
-		memset(&m_depressedMouseButtons[0], 0, sizeof(bool) * MouseButton::Count);
+		memset(&m_depressedMouseButtons[0], 0, sizeof(bool) * static_cast<int>(MouseButton::Count));
 		
 		// Init gamepad pointers
 		for (int i = 0; i < s_maxGamepads; ++i)
@@ -89,7 +84,7 @@ public:
 	void SetMousePosRelative(const Vector2 & a_newPos);
 	inline void DisableMouseInput() { m_mouseEnabled = false; }
 	inline void EnableMouseInput() { m_mouseEnabled = true; }
-	inline bool IsMouseButtonDepressed(MouseButton::Enum a_button) { return m_depressedMouseButtons[a_button]; }
+	inline bool IsMouseButtonDepressed(MouseButton a_button) { return m_depressedMouseButtons[static_cast<int>(a_button)]; }
 
 	//\brief Utility function to get the last key pressed or released
 	//\param a_keyPress if the last key to be pressed or released is required, optional
@@ -126,7 +121,7 @@ public:
 	//\param a_type defaults to mouse up but can be changed to to down or motion
 	//\param a_oneShot bool defines if the event should be deleted after the callback function is called
 	template <typename TObj, typename TMethod>
-	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, MouseButton::Enum a_button, InputType a_type = InputType::MouseUp, bool a_oneShot = false)
+	void RegisterMouseCallback(TObj * a_callerObject, TMethod a_callback, MouseButton a_button, InputType a_type = InputType::MouseUp, bool a_oneShot = false)
 	{
 		// Add an event to the list of items to be processed
 		// TODO memory management! Kill std new with a rusty fork
@@ -192,7 +187,7 @@ private:
 	union InputSource
 	{
 		SDL_Keycode m_key;						///< A keyboard button
-		MouseButton::Enum m_mouseButton;	///< A mouse click
+		MouseButton m_mouseButton;	///< A mouse click
 	};
 
 	//\brief Storage for an input event and it's callback
@@ -214,8 +209,8 @@ private:
 	//		 switch statement going on. All these just process SDL input
 	bool ProcessKeyDown(SDL_Keycode a_key);
 	bool ProcessKeyUp(SDL_Keycode a_key);
-	bool ProcessMouseDown(MouseButton::Enum a_button);
-	bool ProcessMouseUp(MouseButton::Enum a_button);
+	bool ProcessMouseDown(MouseButton a_button);
+	bool ProcessMouseUp(MouseButton a_button);
     bool ProcessMouseMove();
 	bool ProcessGamepadButtonDown(int a_gamepadId, int a_buttonId);
 	bool ProcessGamepadButtonUp(int a_gamepadId, int a_buttonId);
@@ -241,6 +236,7 @@ private:
 	static const int s_maxGamepads = 8;										///< How many gamepads can be connected and playing a game
 	static const int s_maxGamepadButtons = 16;								///< How many buttons are supported on each gamepad
 	static const float s_gamePadCheckTime;									///< Interval for waiting to check for new gamepads
+	static constexpr int s_maxMouseButtons = static_cast<int>(MouseButton::Count);
 
 	InputEvent m_alphaKeysDown;												///< Special input event to catch all keys being pressed
 	InputEvent m_alphaKeysUp;												///< Special input event to catch all keys being released
@@ -258,7 +254,7 @@ private:
 	SDL_Joystick * m_gamepads[s_maxGamepads];								///< Pointers to all open gamepads
 	int m_numGamepads;														///< How many gamepads are connected
 	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];		///< If each of the gamepad buttons are pressed
-	bool m_depressedMouseButtons[MouseButton::Count];						///< If each of the mouse buttons are pressed
+	bool m_depressedMouseButtons[s_maxMouseButtons];						///< If each of the mouse buttons are pressed
 };
 
 #endif // _ENGINE_INPUT_MANAGER_

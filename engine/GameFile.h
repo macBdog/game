@@ -79,8 +79,10 @@ public:
 			if (strstr(colString, ","))
 			{
 				float r, g, b, a = 0.0f;
-				sscanf(StringUtils::TrimString(colString), "%f,%f,%f,%f", &r, &g, &b, &a);
-				return Colour(r, g, b, a);
+				if (sscanf(StringUtils::TrimString(colString), "%f,%f,%f,%f", &r, &g, &b, &a) != -1)
+				{
+					return Colour(r, g, b, a);
+				}
 			}
 			return sc_colourWhite;
 		}
@@ -91,8 +93,10 @@ public:
 			if (strstr(vecString, ","))
 			{
 				float f1, f2, f3 = 0.0f;
-				sscanf(StringUtils::TrimString(vecString), "%f,%f,%f", &f1, &f2, &f3);
-				return Vector(f1, f2, f3);
+				if (sscanf(StringUtils::TrimString(vecString), "%f,%f,%f", &f1, &f2, &f3) != -1)
+				{
+					return Vector(f1, f2, f3);
+				}
 			}
 			return Vector::Zero();
 		}
@@ -103,8 +107,10 @@ public:
 			if (strstr(quatString, ","))
 			{
 				float f1, f2, f3, f4 = 0.0f;
-				sscanf(StringUtils::TrimString(quatString), "%f,%f,%f,%f", &f1, &f2, &f3, &f4);
-				return Quaternion(f1, f2, f3, f4);
+				if (sscanf(StringUtils::TrimString(quatString), "%f,%f,%f,%f", &f1, &f2, &f3, &f4) != -1)
+				{
+					return Quaternion(f1, f2, f3, f4);
+				}
 			}
 			return Quaternion();
 		}
@@ -115,8 +121,10 @@ public:
 			if (strstr(vecString, ","))
 			{
 				float f1, f2 = 0.0f;
-				sscanf(StringUtils::TrimString(vecString), "%f,%f", &f1, &f2);
-				return Vector2(f1, f2);
+				if (sscanf(StringUtils::TrimString(vecString), "%f,%f", &f1, &f2) != -1)
+				{
+					return Vector2(f1, f2);
+				}
 			}
 			return Vector2::Vector2Zero();
 		}
@@ -282,6 +290,7 @@ private:
 				// A line without any symbols means a new object
 				if (IsLineNewObject(line))
 				{
+
 					int linesRead = ReadObjectAndProperties<TInputData>(line, a_input);
 					if (linesRead == 0)
 					{
@@ -292,7 +301,8 @@ private:
 				}
 				else // Bad formatting
 				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Bad game file format, expecting an object declaration at line %d.", lineCount);
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Bad game file format, expecting an object declaration at line %d", lineCount);
+					return false;
 				}
 			}
 		}

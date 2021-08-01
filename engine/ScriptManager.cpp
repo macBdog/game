@@ -379,7 +379,10 @@ bool ScriptManager::Update(float a_dt)
 					scriptsReloaded = true;
 					curScript->m_timeStamp = curTimeStamp;
 
-					// Clean up any script-owned objects including physics
+					// Handle any objects with physics and collision
+					PhysicsManager::Get().DestroyAllScriptOwnedObjects();
+
+					// Clean up any script-owned objects
 					WorldManager::Get().DestroyAllScriptOwnedObjects();
 
 					// Stop any music that has been playing
@@ -3003,7 +3006,7 @@ int ScriptManager::AddGameObjectToCollisionWorld(lua_State * a_luaState)
 		if (GameObject * gameObj = CheckGameObject(a_luaState))
 		{
 			// Add object to collision world
-			if (gameObj->GetClipType() == ClipType::Mesh || gameObj->GetClipSize().LengthSquared() > 0.0f)
+			if (gameObj->GetClipSize().LengthSquared() > 0.0f)
 			{
 				PhysicsManager::Get().AddCollisionObject(gameObj);
 			}

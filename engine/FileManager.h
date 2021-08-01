@@ -9,16 +9,13 @@
 #include "StringUtils.h"
 
 //\brief Types of file modification
-namespace ModificationType
+enum class ModificationType : unsigned char
 {
-	enum Enum
-	{
-		Change = 0,	///< A file's modification date is new
-		Create,		///< A file was created in a managed directory
-		Delete,		///< A file was deleted in a managed directory
-		Count,
-	};
-}
+	Change = 0,	///< A file's modification date is new
+	Create,		///< A file was created in a managed directory
+	Delete,		///< A file was deleted in a managed directory
+	Count,
+};
 
 ///\brief The file manager handles regular opening, reading and writing of files but 
 //		  can also create a delegate for any system that cares about modifications in
@@ -157,7 +154,7 @@ private:
 			m_fileName[0] = '\0';
 		}
 
-		ModificationType::Enum m_src;						///< What event happened
+		ModificationType m_src;								///< What event happened
 		char m_fileName[StringUtils::s_maxCharsPerName];	///< The file that was affected
 		Delegate<bool, bool> m_delegate;					///< Pointer to object to call when it happens
 	};

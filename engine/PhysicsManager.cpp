@@ -1,3 +1,4 @@
+#include "CollisionUtils.h"
 #include "DebugMenu.h"
 #include "FontManager.h"
 #include "GameObject.h"
@@ -18,12 +19,6 @@ PhysicsObject::~PhysicsObject()
 
 bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack)
 {
-	// Cache off path to bullet files
-	if (a_meshPath != nullptr && a_meshPath[0] != '\0')
-	{
-		strncpy(m_meshPath, a_meshPath, sizeof(char) * strlen(a_meshPath) + 1);
-	}
-
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		// Cache off the datapack path for loading models from pack
@@ -93,10 +88,9 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 	// If the config specifies physics properties, set up the world
 	if (GameFile::Object * physConfig = a_config.FindObject("physics"))
 	{
-		Vector gravity(0.0f, 0.0f, -10.0f);
 		if (GameFile::Property * gravProp = physConfig->FindProperty("gravity"))
 		{
-			gravity = gravProp->GetVector();
+			SetGravity(gravProp->GetVector());
 		}
 	}
 
@@ -105,12 +99,126 @@ bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath,
 
 bool PhysicsManager::Shutdown()
 {
+	m_physicsWorld.clear();
+	m_collisionWorld.clear();
 	return true;
 }
 
-void PhysicsManager::Update(float a_dt)
+void PhysicsManager::DestroyAllScriptOwnedObjects()
 {
+	// Object can only be added to the physics and collision scenes by script
+	m_physicsWorld.clear();
+	m_collisionWorld.clear();
+}
 
+void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
+{
+	// Solve collisions
+	for (const auto& objA : m_collisionWorld)
+	{
+		for (const auto& objB : m_collisionWorld)
+		{
+			if (objA == objB)
+			{
+				continue;
+			}
+
+			bool colResult = false;
+			Vector colPos = Vector::Zero();
+			Vector colNormal = Vector::Zero();
+			switch (objA->GetClipType())
+			{
+				case ClipType::Sphere:
+				{
+					if (objB->GetClipType() == ClipType::Sphere)
+					{
+						colResult = CollisionUtils::IntersectSpheres(objA->GetPos(), objA->GetClipSize().GetX(), objB->GetPos(), objB->GetClipSize().GetX(), colPos, colNormal);
+					}
+					break;
+				}
+				case ClipType::AxisBox:
+				{
+					if (objB->GetClipType() == ClipType::Sphere)
+					{
+						colResult = CollisionUtils::IntersectAxisBoxSphere(objB->GetPos(), objB->GetClipSize().GetX(), objA->GetPos(), objA->GetClipSize(), colPos, colNormal);
+					}
+					break;
+				}
+				case ClipType::Box:
+				{
+					if (objB->GetClipType() == ClipType::Sphere)
+					{
+						colResult = CollisionUtils::IntersectBoxSphere(objB->GetPos(), objB->GetClipSize().GetX(), objA->GetPos(), objA->GetClipSize(), objA->GetRot(), colPos, colNormal);
+					}
+					break;
+				}
+				default: break;
+			}
+
+			if (colResult)
+			{
+				ClearCollisions(objA);
+				AddCollision(objA, objB);
+
+				auto collisionResponse = [&colNormal](auto a_physObj, auto a_gameObj)
+				{
+					const auto vel = a_physObj->GetVelocity();
+					const auto restitution = (1.0f + a_gameObj->GetPhysicsElasticity());
+					auto incident = colNormal * vel.Dot(colNormal) * restitution;
+					a_physObj->AddForce(-incident);
+				};
+
+				if (auto physA = objA->GetPhysics())
+				{
+					collisionResponse(physA, objA);
+				}
+				if (auto physB = objB->GetPhysics())
+				{
+					collisionResponse(physB, objB);
+				}
+			}
+		}
+	}
+}
+
+void PhysicsManager::UpdatePhysicsWorld(const float& a_dt)
+{
+	// Step the dynamic physics sim
+	const Vector g = m_gravity * 100.0f;
+	for (const auto& curPhys : m_physicsWorld)
+	{
+		auto physObj = curPhys.get();
+		auto gameObj = physObj->m_gameObject;
+		const float mass = gameObj->GetPhysicsMass();
+		if (m_type == PhysicsIntegrationType::Euler)
+		{
+			// Semi-implicit euler
+			physObj->m_force = g;
+			physObj->m_acc = physObj->m_force / mass;
+			physObj->m_vel += physObj->m_acc * a_dt;
+			physObj->m_pos += physObj->m_vel * a_dt;
+		}
+		else if (m_type == PhysicsIntegrationType::Verlet)
+		{
+			physObj->m_lastAcc = physObj->m_acc;
+			physObj->m_pos += physObj->m_vel * a_dt + (physObj->m_lastAcc * 0.5f * (a_dt * a_dt));
+			physObj->m_acc = (physObj->m_force + g) / mass;
+			physObj->m_avgAcc = (physObj->m_lastAcc + physObj->m_acc) * 0.5f;
+			physObj->m_vel += physObj->m_avgAcc * a_dt;
+		}
+	}
+}
+
+void PhysicsManager::UpdateGameObjects(const float& a_dt)
+{
+	for (const auto& curPhys : m_physicsWorld)
+	{		
+		// Apply physics world transform to game object and collision state
+		auto gameObj = curPhys->m_gameObject;
+		Matrix gameObjMat = gameObj->GetWorldMat();
+		gameObjMat.SetPos(curPhys->GetPos());
+		gameObj->SetWorldMat(gameObjMat);
+	}
 }
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
@@ -122,66 +230,49 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		return false;
 	}
 
-	switch (a_gameObj->GetClipType())
+	if (a_gameObj->GetClipType() == ClipType::Mesh)
 	{
-		case ClipType::Box: 
-		{	
-			const Vector halfBoxSize = a_gameObj->GetClipSize() * 0.5f;
-			
-			break;
-		}
-		case ClipType::Sphere:
-		{
-			
-			break;
-		}
-		case ClipType::Mesh:
-		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Mesh collision is not supported!");
-			break;
-		}
-		default: return false;
+		Log::Get().Write(LogLevel::Error, LogCategory::Game, "Mesh collision is no longer supported for game object %s!", a_gameObj->GetName());
+		return false;
 	}
-	return false;
+
+	m_collisionWorld.push_back(a_gameObj);
+	return m_collisionWorld.back() == a_gameObj;
 }
 
 bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 {
-	if (a_gameObj == nullptr || a_gameObj->GetPhysics() == nullptr)
+	if (a_gameObj == nullptr)
 	{
 		return false;
 	}
 
+	// Set up a new physics object
+	if (a_gameObj->GetPhysics() == nullptr)
+	{
+		m_physicsWorld.push_back(make_unique<PhysicsObject>(a_gameObj));
+		a_gameObj->SetPhysics(m_physicsWorld.back());
+	}
+
+	// Objects can be re-added at the game object scene position
+	const auto& phys = m_physicsWorld.back();
+	auto physObj = phys.get();
+	physObj->m_pos = a_gameObj->GetPos();
+	
 	return true;
 }
 
-void PhysicsManager::UpdateGameObject(GameObject * a_gameObj)
+PhysicsObject* PhysicsManager::GetAddPhysicsObject(GameObject* a_gameObj)
 {
 	if (a_gameObj == nullptr)
 	{
-		return;
+		return nullptr;
 	}
-
-	// Set the position of the game object and collision from the rigid body physics
-	PhysicsObject * phys = a_gameObj->GetPhysics();
-	if (phys->HasRigidBody())
+	if (a_gameObj->GetPhysics() == nullptr)
 	{
-		
-		// Apply physics world transform to game object and collision state
-		Matrix gameObjMat = a_gameObj->GetWorldMat();
-		gameObjMat.SetIdentity();
-		a_gameObj->SetWorldMat(gameObjMat);
-
-		// Set it on all the collision objects
-		
+		AddPhysicsObject(a_gameObj);
 	}
-	else // Or the other way around if this object is collision only
-	{
-		Matrix & gMat = a_gameObj->GetWorldMat();
-		
-
-	}
-	ClearCollisions(a_gameObj);
+	return a_gameObj->GetPhysics();
 }
 
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
@@ -193,7 +284,11 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		{
 			ClearCollisions(a_gameObj);
 			delete phys;
-			a_gameObj->SetPhysics(nullptr);
+			auto existingPhys = a_gameObj->GetPhysics();
+			//TODO ! for (auto curPhys : m_physicsWorld)
+			//{
+			//	m_physicsWorld.swap(curPhys);
+			//}
 			return true;
 		}
 	}
@@ -202,34 +297,24 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 
 bool PhysicsManager::ApplyForce(GameObject * a_gameObj, const Vector & a_force)
 {
-	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != nullptr)
+	if (a_gameObj && a_gameObj->GetPhysics() != nullptr)
 	{
 		if (PhysicsObject * phys = a_gameObj->GetPhysics())
 		{
-			if (phys->HasRigidBody())
-			{
-				
-			}
+			
 			return true;
 		}
 	}
 	return false;
 }
 
-Vector PhysicsManager::GetVelocity(GameObject * a_gameObj)
+Vector PhysicsManager::GetVelocity(GameObject * a_gameObj) const
 {
-	Vector vel(0.0f);
-	if (a_gameObj && a_gameObj->GetPhysicsMass() > 0.0f && a_gameObj->GetPhysics() != nullptr)
+	if (a_gameObj && a_gameObj->GetPhysics() != nullptr)
 	{
-		if (PhysicsObject * phys = a_gameObj->GetPhysics())
-		{
-			if (phys->HasRigidBody())
-			{
-				
-			}
-		}
+		return a_gameObj->GetPhysics()->GetVelocity();
 	}
-	return vel;
+	return Vector::Zero();
 }
 
 bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT)

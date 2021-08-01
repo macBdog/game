@@ -14,27 +14,21 @@
 #include "Time.h"
 
 //\brief The importance of the entry being logged
-namespace LogLevel
+enum class LogLevel : unsigned char
 {
-	enum Enum
-	{
-		Info = 0,
-		Warning,
-		Error,
-		Count,
-	};
-}
+	Info = 0,
+	Warning,
+	Error,
+	Count,
+};
 
 //\brief What part of the system logged the entry
-namespace LogCategory
+enum class LogCategory : unsigned char
 {
-	enum Enum
-	{
-		Engine = 0,
-		Game,
-		Count,
-	};
-}
+	Engine = 0,
+	Game,
+	Count,
+};
 
 class Log : public Singleton<Log>
 {
@@ -49,8 +43,8 @@ public:
 	bool Shutdown();
 
 	//\brief Create a log entry that is written to standard out and displayed on screen
-	void Write(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...);
-	void WriteOnce(LogLevel::Enum a_level, LogCategory::Enum a_category, const char * a_message, ...);
+	void Write(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
+	void WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_message, ...);
 
 	//\brief Some handy overrides for common usage
 	inline void WriteEngineErrorNoParams(const char * a_message) { Write(LogLevel::Error, LogCategory::Engine, a_message); }
@@ -71,11 +65,11 @@ private:
 	struct LogDisplayEntry
 	{
 		//\brief Set up the basic properties of a log display message
-		LogDisplayEntry(const char * a_message, LogLevel::Enum a_level)
+		LogDisplayEntry(const char * a_message, LogLevel a_level)
 		{
 			strncpy(m_message, a_message, sizeof(char) * strlen(a_message) + 1);
-			m_lifeTime = s_logDisplayTime[a_level];
-			m_colour = s_logDisplayColour[a_level];
+			m_lifeTime = s_logDisplayTime[static_cast<int>(a_level)];
+			m_colour = s_logDisplayColour[static_cast<int>(a_level)];
 		}
 
 		char m_message[StringUtils::s_maxCharsPerLine];		// What text to display on screen
@@ -84,7 +78,7 @@ private:
 	};
 
 	//\brief Utility function to stringify log constants
-	static void PrependLogDetails(LogLevel::Enum a_level, LogCategory::Enum a_category, char * a_string_OUT)
+	static void PrependLogDetails(LogLevel a_level, LogCategory a_category, char * a_string_OUT)
 	{
 		switch (a_level)
 		{

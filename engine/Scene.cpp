@@ -164,18 +164,21 @@ bool Scene::InitFromConfig()
 			}
 			if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
 			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
+				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Sphere);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+				{
+					newObject->SetClipType(ClipType::AxisBox);
+				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Box);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
 				{
 					newObject->SetClipType(ClipType::Mesh);
-					newObject->SetPhysicsMesh(clipType->GetString());
 				}
 				else
 				{

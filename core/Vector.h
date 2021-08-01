@@ -56,7 +56,9 @@ public:
 	void operator *= (const Vector & a_val) { x *= a_val.x; y *= a_val.y; z *= a_val.z; }
 
 private:
-	float x, y, z{ 0.0f };
+	float x{ 0.0f };
+	float y{ 0.0f };
+	float z{ 0.0f };
 };
 
 //\brief Simple 2 component vector class

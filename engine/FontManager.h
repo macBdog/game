@@ -39,10 +39,10 @@ public:
 	//\param a_pos 2D screen space coords to draw the font at, from the top left
 	//\param a_colour The colour to tint the font texture to
 	//\return true if the glyph quads were submitted to the render manager
-	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Gui);
-	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Gui);
-	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::World);
-	bool DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer::Enum a_renderLayer = RenderLayer::Debug2D);
+	bool DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer a_renderLayer = RenderLayer::Gui);
+	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer a_renderLayer = RenderLayer::Gui);
+	bool DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour = sc_colourWhite, RenderLayer a_renderLayer = RenderLayer::World);
+	bool DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour = sc_colourWhite, RenderLayer a_renderLayer = RenderLayer::Debug2D);
 	bool DrawDebugString3D(const char * a_string, Vector a_pos, Colour a_colour = sc_colourWhite, float a_size = s_debugFontSize3D);
 
 	//\brief Do the same work as draw string but just accumlate width and height
@@ -71,16 +71,16 @@ private:
 	//\brief Spacing and positioning info about a character in a font
 	struct FontChar
 	{
-		float m_x;						///< X position in the texture file
-		float m_y;						///< Y position in the texture file
-		float m_width;					///< How wide the glyph is
-		float m_height;					///< How high the glyph is
-		float m_xoffset;				///< X position of the glyph insuide it's box
-		float m_yoffset;				///< Y position of the glyph inside it's box
-		float m_xadvance;				///< How much spacing to put in front of the glyph
-		Vector2 m_charSize;
-		TexCoord m_texSize;
-		TexCoord m_texCoord;
+		float m_x{ 0.0f };						///< X position in the texture file
+		float m_y{ 0.0f };						///< Y position in the texture file
+		float m_width{ 0.0f };					///< How wide the glyph is
+		float m_height{ 0.0f };					///< How high the glyph is
+		float m_xoffset{ 0.0f };				///< X position of the glyph insuide it's box
+		float m_yoffset{ 0.0f };				///< Y position of the glyph inside it's box
+		float m_xadvance{ 0.0f };				///< How much spacing to put in front of the glyph
+		Vector2 m_charSize{0.0f, 0.0f};			///< How much physical space the character takes
+		TexCoord m_texSize{ 0.0f, 0.0f };		///< Size of the texture resource to draw with
+		TexCoord m_texCoord{ 0.0f, 0.0f };		///< Where in the texture resource is utilised
 	};
 
 	//\brief Info about a font and a group of all the character info
@@ -94,10 +94,10 @@ private:
 		{}
 		StringHash	m_fontName;
 		FontChar	m_chars[s_maxCharsPerFont];
-		Texture *	m_texture;
-		unsigned int m_numChars;
-		unsigned int m_sizeX;
-		unsigned int m_sizeY;
+		Texture* m_texture{ nullptr };
+		unsigned int m_numChars{ 0 };
+		unsigned int m_sizeX{ 0 };
+		unsigned int m_sizeY{ 0 };
 	};
 
 	//\brief Alias to store a list of fonts for drawing

@@ -22,32 +22,26 @@ class PhysicsObject;
 class Shader;
 
 //\brief GameObject state determines how the update effects related subsystems
-namespace GameObjectState
+enum class GameObjectState : unsigned char
 {
-	enum Enum
-	{
-		New = 0,	///< Object is created but not ready for life
-		Loading,	///< Loading resources, shaders, models etc
-		Active,		///< Out and about in the world
-		Sleep,		///< Hibernation, no updates or rendering, can come back from sleep
-		Death,		///< Unloading and cleaning up before destruction, no coming back from death
-		Count,
-	};
-}
+	New = 0,	///< Object is created but not ready for life
+	Loading,	///< Loading resources, shaders, models etc
+	Active,		///< Out and about in the world
+	Sleep,		///< Hibernation, no updates or rendering, can come back from sleep
+	Death,		///< Unloading and cleaning up before destruction, no coming back from death
+	Count,
+};
 
 //\brief Clipping is for render culling, simple collisions for picking and specifying physics objects
-namespace ClipType
+enum class ClipType : unsigned char
 {
-	enum Enum
-	{
-		None = 0,	///< Always rendered, can't be picked
-		AxisBox,	///< Box that can't be rotated
-		Sphere,		///< Sphere bounding volume
-		Box,		///< Box with three seperate dimensions
-		Mesh,		///< Triangles defined in a separate collision mesh
-		Count,
-	};
-}
+	None = 0,	///< Always rendered, can't be picked
+	AxisBox,	///< Box that can't be rotated
+	Sphere,		///< Sphere bounding volume
+	Box,		///< Box with three seperate dimensions
+	Mesh,		///< Triangles defined in a separate collision mesh
+	Count,
+};
 	
 //\brief A GameObject is the container for all entities involved in the gameplay.
 //		 It is lightweight yet has provisions for all basic game related functions like
@@ -68,7 +62,6 @@ public:
 		, m_blender(nullptr)
 		, m_state(GameObjectState::New)
 		, m_lifeTime(0.0f)
-		, m_physicsMass(0.0f)
 		, m_shaderData(0.0f)
 		, m_clipType(ClipType::AxisBox)
 		, m_clipVolumeSize(1.0f)
@@ -82,7 +75,6 @@ public:
 		{ 
 			SetName("UNNAMED_GAME_OBJECT");
 			SetTemplate("");
-			m_physicsMesh[0] = '\0';
 		}
 
 	~GameObject() { assert(m_physics == nullptr); }
@@ -100,26 +92,26 @@ public:
 	inline bool IsSleeping()  { return m_state == GameObjectState::Sleep; }
 	inline void SetId(unsigned int a_newId) { m_id = a_newId; }
 	inline void SetLifeTime(float a_newTime) { m_lifeTime = a_newTime; }
-	inline void SetPhysicsMass(float a_newMass) { m_physicsMass = a_newMass;  }
 	inline void SetShaderData(const Vector & a_shaderData) { m_shaderData = a_shaderData; }
-	inline void SetClipType(ClipType::Enum a_newClipType) { m_clipType = a_newClipType; }
+	inline void SetClipType(ClipType a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
 	inline void SetClipGroup(const char * a_clipGroupName) { m_clipGroup.SetCString(a_clipGroupName); }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
+	inline void SetPhysicsMass(const float & a_newMass) { m_physicsMass = a_newMass; }
+	inline void SetPhysicsElasticity(const float & a_newElastic) { m_physicsElasticity = a_newElastic; }
+	inline void SetPhysicsLinearDrag(const Vector & a_newDrag) { m_physicsLinearDrag = a_newDrag; }
+	inline void SetPhysicsAngularDrag(const Vector& a_newDrag) { m_physicsAngularDrag = a_newDrag; }
 	inline void SetVisible(bool a_enable) { m_visible = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
-	inline void SetPhysics(PhysicsObject * a_physics) { m_physics = a_physics; }
-	inline void SetPhysicsMesh(const char * a_meshName) { if (a_meshName != nullptr && a_meshName[0] != '\0') { strncpy(m_physicsMesh, a_meshName, StringUtils::s_maxCharsPerName); } }
-
+	inline void SetPhysics(const std::unique_ptr<PhysicsObject>& a_physics) { m_physics = a_physics.get(); }
+	
 	inline unsigned int GetId() const { return m_id; }
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetTemplate() const { return m_template; }
-	inline const char * GetPhysicsMeshName() const { return m_physicsMesh; }
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
-	inline float GetPhysicsMass() const { return m_physicsMass; }
 	inline Vector GetShaderData() const { return m_shaderData; }
 	inline Matrix & GetLocalMat() { return m_localMat; }
 	inline Matrix & GetWorldMat() { return m_worldMat; }
@@ -128,8 +120,12 @@ public:
 	inline Vector GetClipPos() const { return m_worldMat.GetPos() + m_localMat.GetPos() + m_clipVolumeOffset; }
 	inline Vector GetClipOffset() { return m_clipVolumeOffset; }
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
-	inline ClipType::Enum GetClipType() const { return m_clipType; }
+	inline ClipType GetClipType() const { return m_clipType; }
 	inline StringHash GetClipGroup() const { return m_clipGroup; }
+	inline float GetPhysicsMass() const { return m_physicsMass; }
+	inline float GetPhysicsElasticity() const { return m_physicsElasticity; }
+	inline Vector GetPhysicsLinearDrag() const { return m_physicsLinearDrag; }
+	inline Vector GetPhysicsAngularDrag() const { return m_physicsAngularDrag; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline bool IsClipping() const { return m_clipping; }
@@ -141,7 +137,7 @@ public:
 	//\brief Resource mutators and accessors
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
-	inline void SetState(GameObjectState::Enum a_newState) { m_state = a_newState; }
+	inline void SetState(GameObjectState a_newState) { m_state = a_newState; }
 	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
 	void SetTemplate(const char * a_templateName);
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
@@ -182,40 +178,42 @@ public:
 	void Serialise(GameFile * a_outputFile, GameFile::Object * a_parent);
 	void SerialiseTemplate();
 
-	static const char * s_clipTypeStrings[ClipType::Count];				///< String literals for the clip types
+	static const char * s_clipTypeStrings[static_cast<int>(ClipType::Count)];				///< String literals for the clip types
 
 private:
 	
 	//\brief Reset member data from any template properties that exist
 	void SetTemplateProperties();
 
-	unsigned int		  m_id;											///< Unique identifier, objects can be resolved from ids
-	GameObject *		  m_child;										///< Pointer to first child game obhject
-	GameObject *		  m_next;										///< Pointer to sibling game objects
-	CollisionList		  m_collisions;									///< List of objects that this game object has collided with this frame
-	Model *				  m_model;										///< Pointer to a mesh for display purposes
-	Shader *			  m_shader;										///< Pointer to a shader owned by the render manager to draw with
-	PhysicsObject *		  m_physics;									///< Pointer to physics manager object for collisions and dynamics
-	AnimationBlender *	  m_blender;									///< Pointer to an animation blender if present
-	GameObjectState::Enum m_state;										///< What state the object is in
-	float				  m_lifeTime;									///< How long this guy has been active
-	float				  m_physicsMass;								///< What mass the object has in the physics system, 0 is infinite and immovable
-	Vector				  m_shaderData;									///< 3 floats to transmit to the shader
-	ClipType::Enum		  m_clipType;									///< What kind of shape represents the bounds of the object
-	Vector				  m_clipVolumeSize;								///< Dimensions of the clipping volume for culling and picking
-	Vector				  m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
-	bool				  m_clipping;									///< If collision is enabled
-	bool				  m_visible;									///< If the game object's model should be added to the render list
-	StringHash			  m_clipGroup;									///< What group the object belongs to and can collide with
-	Matrix				  m_worldMat;									///< Position and orientation in the world
-	Matrix				  m_localMat;									///< Position and orientation relative to world mat, used for animation
-	Matrix				  m_finalMat;									///< Aggregate of world and local only used by render
-	char				  m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
+	unsigned int			m_id;										///< Unique identifier, objects can be resolved from ids
+	GameObject *			m_child;									///< Pointer to first child game obhject
+	GameObject *			m_next;										///< Pointer to sibling game objects
+	CollisionList			m_collisions;								///< List of objects that this game object has collided with this frame
+	Model *					m_model;									///< Pointer to a mesh for display purposes
+	Shader *				m_shader;									///< Pointer to a shader owned by the render manager to draw with
+	PhysicsObject *			m_physics;									///< Pointer to physics manager object for collisions and dynamics
+	AnimationBlender *		m_blender;									///< Pointer to an animation blender if present
+	GameObjectState			m_state;									///< What state the object is in
+	float					m_lifeTime;									///< How long this guy has been active
+	Vector					m_shaderData;								///< 3 floats to transmit to the shader
+	ClipType				m_clipType;									///< What kind of shape represents the bounds of the object
+	Vector					m_clipVolumeSize;							///< Dimensions of the clipping volume for culling and picking
+	Vector					m_clipVolumeOffset;							///< How far from the pivot of the object the clip volume is
+	bool					m_clipping{ false };						///< If collision is enabled
+	float					m_physicsMass{ 0.0f };						///< Mass of the object being simulated
+	float					m_physicsElasticity{ 0.0f };				///< How much force is retained from collisions
+	Vector					m_physicsLinearDrag{ 0.0f };				///< How much linear inertia is lost per time step
+	Vector					m_physicsAngularDrag{ 0.0f };				///< How much rotational torque is lost per time step
+	bool					m_visible{ true };							///< If the game object's model should be added to the render list
+	StringHash				m_clipGroup;								///< What group the object belongs to and can collide with
+	Matrix					m_worldMat;									///< Position and orientation in the world
+	Matrix					m_localMat;									///< Position and orientation relative to world mat, used for animation
+	Matrix					m_finalMat;									///< Aggregate of world and local only used by render
+	char					m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
 	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
 #ifndef _RELEASE
 	FileManager::Timestamp m_templateTimeStamp;							///< For auto-reloading of templates
 #endif
-	char				  m_physicsMesh[StringUtils::s_maxCharsPerName];///< If the clip type of mesh is used, this is the name of the mesh to load
 	int					  m_scriptRef;									///< If the object is created and managed by script, the ID on the script side is stored here
 };
 

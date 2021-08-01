@@ -102,18 +102,18 @@ bool FontManager::Shutdown()
 	return true;
 }
 
-bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
+bool FontManager::DrawString(const char * a_string, StringHash * a_fontName, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer a_renderLayer)
 {
 	return DrawString(a_string, a_fontName->GetHash(), a_size, a_pos, a_colour, a_renderLayer);
 }
 
-bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector2 a_pos, Colour a_colour, RenderLayer a_renderLayer)
 {
 	Vector stringPos(a_pos.GetX(), a_pos.GetY(), 0.0f);
 	return DrawString(a_string, a_fontNameHash, a_size, stringPos, a_colour, a_renderLayer);
 }
 
-bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
+bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash, float a_size, Vector a_pos, Colour a_colour, RenderLayer a_renderLayer)
 {
 	const bool is2D = a_renderLayer != RenderLayer::Debug3D && a_renderLayer != RenderLayer::World;
 
@@ -242,7 +242,7 @@ bool FontManager::MeasureString2D(const char * a_string, unsigned int a_fontName
 	return false;
 }
 
-bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderLayer::Enum a_renderLayer)
+bool FontManager::DrawDebugString2D(const char * a_string, Vector2 a_pos, Colour a_colour, RenderLayer a_renderLayer)
 {
 	// Use the first loaded font as the debug font
 	if (m_fonts.GetLength() > 0)

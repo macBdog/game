@@ -14,27 +14,21 @@
 #include "Texture.h"
 
 //\brief Alignment types are used as every widget is relative to another
-namespace AlignX
+enum class AlignX : unsigned char
 {
-	enum Enum
-	{
-		Left = 0,
-		Middle,
-		Right,
-		Count,
-	};
-}
+	Left = 0,
+	Middle,
+	Right,
+	Count,
+};
 
-namespace AlignY
+enum class AlignY : unsigned char
 {
-	enum Enum
-	{
-		Top = 0,
-		Centre,
-		Bottom,
-		Count,
-	};
-}
+	Top = 0,
+	Centre,
+	Bottom,
+	Count,
+};
 
 //		 ___________________________________________________________________________________________
 //		|																							|\
@@ -58,20 +52,20 @@ namespace AlignY
 struct Alignment
 {
 	Alignment() : m_x(AlignX::Middle), m_y(AlignY::Centre) { }
-	Alignment(AlignX::Enum a_x, AlignY::Enum a_y) : m_x(a_x), m_y(a_y) { }
+	Alignment(AlignX a_x, AlignY a_y) : m_x(a_x), m_y(a_y) { }
 		
 	//\brief String equivalents for  alignment constants written in gui files
-	inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[m_x]); }
-	inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[m_y]); }
-	inline void SetXFromString(const char * a_alignString) { for (int i = 0; i < AlignX::Count; ++i) { if (strcmp(a_alignString, s_alignXNames[i]) == 0) { m_x = (AlignX::Enum)i; break; } } }
-	inline void SetYFromString(const char * a_alignString) { for (int i = 0; i < AlignY::Count; ++i) { if (strcmp(a_alignString, s_alignYNames[i]) == 0) { m_y = (AlignY::Enum)i; break; } } }
+	inline void GetStringX(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignXNames[static_cast<int>(m_x)]); }
+	inline void GetStringY(char * a_string_OUT) { sprintf(a_string_OUT, "%s", s_alignYNames[static_cast<int>(m_y)]); }
+	inline void SetXFromString(const char * a_alignString) { for (int i = 0; i < static_cast<int>(AlignX::Count); ++i) { if (strcmp(a_alignString, s_alignXNames[i]) == 0) { m_x = (AlignX)i; break; } } }
+	inline void SetYFromString(const char * a_alignString) { for (int i = 0; i < static_cast<int>(AlignY::Count); ++i) { if (strcmp(a_alignString, s_alignYNames[i]) == 0) { m_y = (AlignY)i; break; } } }
 		
 	//\brief Literal names for alignment types
-	static const char * s_alignXNames[AlignX::Count];
-	static const char * s_alignYNames[AlignY::Count];
+	static const char * s_alignXNames[static_cast<int>(AlignX::Count)];
+	static const char * s_alignYNames[static_cast<int>(AlignY::Count)];
 
-	AlignX::Enum m_x;		///< Is widget position relative to left, middle or right
-	AlignY::Enum m_y;		///< Is widget position relative to top, centre or bottom
+	AlignX m_x{};		///< Is widget position relative to left, middle or right
+	AlignY m_y{};		///< Is widget position relative to top, centre or bottom
 };
 
 //\brief A widget vector is a 2D vector with the additional properties
@@ -95,9 +89,9 @@ public:
 	inline Alignment GetAlignment() const { return m_align; }
 	inline Alignment GetAlignmentAnchor() const { return m_alignAnchor; }
 	inline void SetAlignment(const Alignment & a_align) { m_align.m_x = a_align.m_x; m_align.m_y = a_align.m_y; }
-	inline void SetAlignment(AlignX::Enum a_x, AlignY::Enum a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
+	inline void SetAlignment(AlignX a_x, AlignY a_y) { m_align.m_x = a_x; m_align.m_y = a_y; }
 	inline void SetAlignmentAnchor(const Alignment & a_align) { m_alignAnchor.m_x = a_align.m_x; m_alignAnchor.m_y = a_align.m_y; }
-	inline void SetAlignmentAnchor(AlignX::Enum a_x, AlignY::Enum a_y) { m_alignAnchor.m_x = a_x; m_alignAnchor.m_y = a_y; }
+	inline void SetAlignmentAnchor(AlignX a_x, AlignY a_y) { m_alignAnchor.m_x = a_x; m_alignAnchor.m_y = a_y; }
 
 	// Operator overloads are not inherited by default
 	void operator = (const Vector2 & a_val) { x = a_val.GetX(); y = a_val.GetY(); }
@@ -264,9 +258,9 @@ public:
 	inline void SetScissorRect(const Vector2 & a_rect) { m_scissorRect = a_rect; }
 	inline void SetPos(const WidgetVector & a_pos) { m_pos = a_pos; }
 	inline void SetAlignment(const Alignment & a_align) { m_pos.SetAlignment(a_align); } 
-	inline void SetAlignment(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); }
+	inline void SetAlignment(AlignX a_alignX, AlignY a_alignY) { m_pos.SetAlignment(a_alignX, a_alignY); }
 	inline void SetAlignmentAnchor(const Alignment & a_align) { m_pos.SetAlignmentAnchor(a_align); } 
-	inline void SetAlignmentAnchor(AlignX::Enum a_alignX, AlignY::Enum a_alignY) { m_pos.SetAlignmentAnchor(a_alignX, a_alignY); }
+	inline void SetAlignmentAnchor(AlignX a_alignX, AlignY a_alignY) { m_pos.SetAlignmentAnchor(a_alignX, a_alignY); }
 	inline void SetSize(Vector2 a_size) { m_size = a_size; }
 	inline void SetColour(Colour a_colour) { m_colour = a_colour; }
 	inline void SetActive(bool a_active = true) { m_active = a_active; }
@@ -359,7 +353,7 @@ public:
 	//\brief Show alignment handles and parent alignment
 	void DrawDebugAlignment();
 	void DrawDebugAlignmentHandleSelectionBox(const Vector2 & a_topLeft, const Vector2 & a_handleSize);
-	bool GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX::Enum & a_xSelected_OUT, AlignY::Enum & a_ySelected_OUT);
+	bool GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX & a_xSelected_OUT, AlignY & a_ySelected_OUT);
 	void DrawDebugAlignmentHandles(const Vector2 & a_boxSize, const Colour & a_drawColour, const Colour & a_selectedColour);
 #endif
 

@@ -88,9 +88,9 @@ private:
 		FileManager::Timestamp m_timeStamp;						///< When the anim file was last edited
 		char m_path[StringUtils::s_maxCharsPerLine];			///< Where the anim resides for reloading
 		StringHash m_name;										///< What the anim is called
-		int m_numKeys;											///< How many keys are in the animation
-		int m_frameRate;										///< The speed at which the animation should be played
-		KeyFrame * m_data;										///< Pointer to the keyframe data
+		int m_numKeys{ 0 };											///< How many keys are in the animation
+		int m_frameRate{ 0 };										///< The speed at which the animation should be played
+		KeyFrame* m_data{ nullptr };										///< Pointer to the keyframe data
 	};
 
 	typedef LinkedListNode<ManagedAnim> ManagedAnimNode;		///< Alias for a linked list node that points to a managed animation
@@ -398,9 +398,9 @@ private:
 	ManagedAnimList m_anims;									///< List of all the scripts found on disk at startup
 	LinearAllocator<KeyFrame> m_data;							///< Keyframe data shared with blenders
 	char m_animPath[StringUtils::s_maxCharsPerLine];			///< Cache off path to animation data 
-	float m_updateFreq;											///< How often the script manager should check for changes to shaders
-	float m_updateTimer;										///< If we are due for a scan and update of scripts
-	KeyFrame * m_last;											///< Last allocated animation memory
+	float m_updateFreq{ 0.0f };									///< How often the script manager should check for changes to shaders
+	float m_updateTimer{ 0.0f };								///< If we are due for a scan and update of scripts
+	KeyFrame* m_last{ nullptr };								///< Last allocated animation memory
 };
 
 #endif // _ENGINE_ANIMATION_MANAGER

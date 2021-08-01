@@ -11,41 +11,67 @@
 
 class GameObject;
 
+//\ brief A way to try out multiple integration methods
+enum class PhysicsIntegrationType : unsigned char
+{
+	Euler = 0,
+	Verlet,
+	RungeKutta,
+};
+
 //\ brief Grouping of collision and physics states, can have multiple objects and shapes
 class PhysicsObject
 {
+	friend class PhysicsManager;
 public:
-
-	PhysicsObject() = default;
+	PhysicsObject() = delete;
+	PhysicsObject(GameObject * a_owner) : m_gameObject(a_owner) {}
 	~PhysicsObject();
 
-	inline bool HasCollision() { return false; }
-	inline bool HasRigidBody() { return false; }
+	inline bool HasCollision() const { return false; }
+	inline Vector GetVelocity() const  { return m_vel; }
+	inline Vector GetPos() const { return m_pos; }
+	inline Vector GetForce() const { return m_force; }
 
-	inline int GetCollisionGroup() { return m_collisionGroup; }
-	inline void SetCollisionGroup(int a_newGroup) { m_collisionGroup = a_newGroup; }
+	inline void SetForce(const Vector& a_newForce) { m_force = a_newForce; }
+	inline void AddForce(const Vector& a_newForce) { m_force += a_newForce; }
+	inline void SetVelocity(const Vector& a_newVel) { m_vel = a_newVel; }
 
-private:
-	int m_collisionGroup{ -1 };								///< Group for collision filtering, if any
+protected:
+	GameObject* m_gameObject{ nullptr };		///< The object that is controlled by this physics object
+	Vector m_pos{};								///< Position just for simulations
+	Vector m_force{};							///< Force to be applied each sim step
+	Vector m_vel{};								///< The resulting velocity
+	Vector m_acc{};								///< Acceleration is accumulation of force
+	Vector m_avgAcc{};
+	Vector m_lastAcc{};
 };
 
 class PhysicsManager : public Singleton<PhysicsManager>
 {
-	friend class PhysicsObject;
-
 public:
-
-	PhysicsManager() 
-		: m_dataPack(nullptr)
-	{
-		m_meshPath[0] = '\0';
-	}
+	PhysicsManager() = default;
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
 	bool Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack);
 	bool Shutdown();
-	void Update(float a_dt);
+
+	void DestroyAllScriptOwnedObjects();
+	
+	//\brief In order of operations:	1. Solve collision world, calculate restitution and report back to the game object's collision lists
+	//									2. Integrate dynamic physics and store in physics object register
+	//									3. Update game object transform
+	inline void Update(float a_dt)
+	{
+		UpdateCollisionWorld(a_dt);
+		UpdatePhysicsWorld(a_dt);
+		UpdateGameObjects(a_dt);
+	}
+	
+	//\brief Set the constant force to be applied throughout the simulation, usually done from the game config file
+	inline void SetGravity(const Vector& a_gravity) { m_gravity = a_gravity; }
+	inline Vector GetGravity() const { return m_gravity; }
 
 	//\brief Add a bullet collision object
 	//\param a_gameObj pointer to the game object to change
@@ -56,10 +82,7 @@ public:
 	//\param a_gameObj pointer to the game object to change
 	//\return true if an object was added to the simulation
 	bool AddPhysicsObject(GameObject * a_gameObj);
-
-	//\brief Sync transform of physics world object with game object
-	//\param a_gameObj pointer to the game object to change
-	void UpdateGameObject(GameObject * a_gameObj);
+	PhysicsObject * GetAddPhysicsObject(GameObject* a_gameObj);
 
 	//\brief Remove collision and rigid body physics for an object from the world
 	//\param a_gameObj pointer to the game object to change
@@ -75,7 +98,7 @@ public:
 	//\\brief Get the velocity of a physics rigid body owned by a game objet
 	//\param a_gameObj the object that owns the physics body
 	//\return A vector of the velocity of the physics body
-	Vector GetVelocity(GameObject * a_gameObj);
+	Vector GetVelocity(GameObject * a_gameObj) const;
 
 	//\brief Cast a ray at the collision world and retrieve the results immediately
 	//\param a_rayStart is the start point in worldspace of the ray
@@ -103,14 +126,20 @@ protected:
 
 private:
 
-	static const int s_maxCollisionGroups = 16;
+	//\brief Helper functions to run the steps of the dynamics equation
+	void UpdateCollisionWorld(const float & a_dt);
+	void UpdatePhysicsWorld(const float& a_dt);
+	void UpdateGameObjects(const float& a_dt);
 
-	StringHash m_collisionGroups[s_maxCollisionGroups];
-	BitSet m_collisionFilters[s_maxCollisionGroups];
+	static constexpr int s_maxCollisionGroups = 16;
 
-	char m_meshPath[StringUtils::s_maxCharsPerLine];
-
+	StringHash m_collisionGroups[s_maxCollisionGroups];						///< Set of hashes of the user defined groups that collide
+	BitSet m_collisionFilters[s_maxCollisionGroups];						///< Precomputed bitmask to determine if two objects should collide
+	PhysicsIntegrationType m_type{ PhysicsIntegrationType::Euler };			///< What type of integration algorith will be used for the sim
+	Vector m_gravity{ 0.0f, 0.0f, 0.0f };									///< Constant force applied to world wide sim
 	const DataPack* m_dataPack{ nullptr };									///< Pointer to a datapack to load from, if any
+	std::vector<GameObject*> m_collisionWorld{ };							///< Every object that is checking collisions against itself
+	std::vector<unique_ptr<PhysicsObject>> m_physicsWorld{ };				///< Every object we simulate dynamics with	
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER

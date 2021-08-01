@@ -7,7 +7,7 @@
 #include "FontManager.h"
 
 const float Camera::sc_defaultCameraSpeed = 32.0f;
-const float Camera::sc_defaultCameraRotSpeed = 64.0f;
+const float Camera::sc_defaultCameraRotSpeed = 256.0f;
 const float Camera::sc_defaultCameraTargetDistance = 10.0f;
 
 template<> CameraManager * Singleton<CameraManager>::s_instance = nullptr;

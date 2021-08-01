@@ -19,58 +19,46 @@ class GameObject;
 class Scene;
 
 //\brief Render modes are used to change how the scene is rendered wholesale
-namespace RenderMode
+enum class RenderMode : unsigned char
 {
-	enum Enum
-	{
-		None = 0,
-		Wireframe,
-		Full,
-		Count,
-	};
-}
+	None = 0,
+	Wireframe,
+	Full,
+	Count,
+};
 
 //\brief A render layer is a way to specify rendering order
-namespace RenderLayer
-{
-	enum Enum
-	{
-		None = 0,		//< It's valid to render in the none renderLayer
-		World,			//< But it will be drawn over by the world
-		Gui,			//< GUI covers the world
-		Debug2D,		//< Debug text over everything
-		Debug3D,		//< Debug text over everything
-		Count,
-	};
-}
+enum class RenderLayer : unsigned char
+{	
+	None = 0,		//< It's valid to render in the none renderLayer
+	World,			//< But it will be drawn over by the world
+	Gui,			//< GUI covers the world
+	Debug2D,		//< Debug text over everything
+	Debug3D,		//< Debug text over everything
+	Count,
+};
 
 //\brief Render stages define full size target buffers for post processing
-namespace RenderStage
+enum class RenderStage : unsigned char
 {
-	enum Enum
-	{
-		Scene = 0,		//< Full scene rendered to source
-		PostFX,			//< Render scene with a different shader
-		Count,
-	};
-}
+	Scene = 0,		//< Full scene rendered to source
+	PostFX,			//< Render scene with a different shader
+	Count,
+};
 
 //\brief Type of objects to draw
-namespace RenderObjectType
+enum class RenderObjectType : unsigned char
 {
-	enum Enum
-	{
-		Tris = 0,
-		Quads,
-		Lines,
-		DebugBoxes,
-		DebugSpheres,
-		DebugTransforms,
-		Models,
-		FontChars,
-		Count,
-	};
-}
+	Tris = 0,
+	Quads,
+	Lines,
+	DebugBoxes,
+	DebugSpheres,
+	DebugTransforms,
+	Models,
+	FontChars,
+	Count,
+};
 
 //\brief Data that the user authors for each particle system
 struct ParticleDefinition
@@ -155,7 +143,7 @@ public:
 	{ 
 		m_shaderPath[0] = '\0'; 
 
-		for (int i = 0; i < RenderLayer::Count; ++i)
+		for (int i = 0; i < static_cast<int>(RenderLayer::Count); ++i)
 		{
 			m_tris[i] = nullptr;
 			m_quads[i] = nullptr;
@@ -165,13 +153,13 @@ public:
 			m_debugTransforms[i] = nullptr;
 			m_models[i] = nullptr;
 			m_fontChars[i] = nullptr;
-			for (int j = 0; j < RenderObjectType::Count; ++j)
+			for (int j = 0; j < static_cast<int>(RenderObjectType::Count); ++j)
 			{
 				m_objectCount[i][j] = 0;
 			}
 		}
 
-		for (int i = 0; i < RenderStage::Count; ++i)
+		for (int i = 0; i < static_cast<int>(RenderStage::Count); ++i)
 		{
 			m_frameBuffers[i] = 0;
 			m_colourBuffers[i] = 0;
@@ -206,7 +194,7 @@ public:
 	
 	//\brief Change the render mode
 	//\param a_renderMode the new mode to set
-	inline void SetRenderMode(RenderMode::Enum a_renderMode) { m_renderMode = a_renderMode; }
+	inline void SetRenderMode(RenderMode a_renderMode) { m_renderMode = a_renderMode; }
 
 	//\brief Accessors for the viewport dimensions and render properties
 	inline unsigned int GetViewWidth() { return m_viewWidth; }
@@ -226,19 +214,19 @@ public:
 	//\param a_point1 is the start of the line
 	//\param a_point2 is the end of the line
 	//\a_tint is the colour to draw the line
-	void AddLine2D(RenderLayer::Enum a_layer, Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
+	void AddLine2D(RenderLayer a_layer, Vector2 a_point1, Vector2 a_point2, Colour a_tint = sc_colourWhite);
 
 	//\brief Quad drawing function with manual texture coordinates
 	//\param texCoord is the top left of the texture coordinate box, with 0,0 being top left
 	//\param texSize is the bounds of the texture coordinate box with 1,1 being the bottom right
-	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
-	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
-	void AddQuad2D(RenderLayer::Enum a_layer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
-	void AddQuad3D(RenderLayer::Enum a_layer, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer a_layer, Vector2 a_topLeft, Vector2 a_size, Texture * a_tex, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad2D(RenderLayer a_layer, Vector2 * a_verts, Texture * a_tex, TexCoord a_texCoord, TexCoord a_texSize, TextureOrientation::Enum a_orient = TextureOrientation::Normal, Colour a_tint = sc_colourWhite);
+	void AddQuad3D(RenderLayer a_layer, Vector * a_verts, Texture * a_tex, Colour a_tint = sc_colourWhite);
 
 	//\brief 3D Drawing functions
-	void AddLine(RenderLayer::Enum a_layer, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
-	void AddTri(RenderLayer::Enum a_layer, Vector a_point1, Vector a_point2, Vector a_point3, 
+	void AddLine(RenderLayer a_layer, Vector a_point1, Vector a_point2, Colour a_tint = sc_colourWhite);
+	void AddTri(RenderLayer a_layer, Vector a_point1, Vector a_point2, Vector a_point3, 
 								TexCoord a_txc1, TexCoord a_txc2, TexCoord a_txc3,
 								Texture * a_tex, Colour a_tint = sc_colourWhite);
 	
@@ -248,14 +236,14 @@ public:
 	//\param a_mat is a pointer to the position and orientation to draw the model at
 	//\param a_shader is a pointer to a shader to render the model with if any
 	//\param a_life is how old the object that owns the model is, in seconds
-	void AddModel(RenderLayer::Enum a_layer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime);
+	void AddModel(RenderLayer a_layer, Model * a_model, Matrix * a_mat, Shader * a_shader, const Vector & a_shaderData, float a_lifeTime);
 
 	//\brief Add a font character for drawing
 	//\param a_renderLayer is the rendering group to draw the model in
 	//\param a_fontCharId is the display list ID of the character to call
 	//\param a_size is the size multiplier to use
 	//\param a_pos is the position in 3D space to draw. If a 2D renderLayer is used, the Z component will be ignored
-	void AddFontChar(RenderLayer::Enum a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);					 
+	void AddFontChar(RenderLayer a_renderLayer, const Vector2& a_charSize, const TexCoord & a_texSize, const TexCoord & a_texCoord, Texture * a_texture, const Vector2 & a_size, Vector a_pos, Colour a_colour = sc_colourWhite);					 
 	
 	//\brief Add a particle emitter
 	//\param a_numParticles the maximum particles that can be alive at once for this emitter
@@ -635,26 +623,28 @@ private:
 	SortedRenderModel * m_sortedRenderModelPool;					///< Storage for pointers to objects and their render distances
 	SortedRenderNode * m_sortedRenderNodePool;						///< Storage for the above in a list for sorting
 
-	float m_renderTime;												///< How long the game has been rendering frames for (accumulated frame delta)
-	float m_lastRenderTime;											///< How long the last frame took
+	float m_renderTime{ 0.0f };										///< How long the game has been rendering frames for (accumulated frame delta)
+	float m_lastRenderTime{ 0.0f };									///< How long the last frame took
 
-	Tri	 * m_tris[RenderLayer::Count];								///< Pointer to a pool of memory for tris
-	Quad * m_quads[RenderLayer::Count];								///< Pointer to a pool of memory for quads
-	Line * m_lines[RenderLayer::Count];								///< Lines for each renderLayer
-	DebugBox * m_debugBoxes[RenderLayer::Count];					///< Debug boxes made of lines
-	DebugSphere * m_debugSpheres[RenderLayer::Count];				///< Debug spheres made of lines
-	DebugTransform * m_debugTransforms[RenderLayer::Count];			///< Debug transforms made of 3 coloured lines
-	RenderModel * m_models[RenderLayer::Count];						///< Models for each renderLayer
-	FontChar * m_fontChars[RenderLayer::Count];						///< Characters of a display string
+	static constexpr unsigned char s_maxLayers = (unsigned char)RenderLayer::Count;
+	static constexpr unsigned char s_maxStages = (unsigned char)RenderStage::Count;
+	Tri	 * m_tris[s_maxLayers];										///< Pointer to a pool of memory for tris
+	Quad * m_quads[s_maxLayers];									///< Pointer to a pool of memory for quads
+	Line * m_lines[s_maxLayers];									///< Lines for each renderLayer
+	DebugBox * m_debugBoxes[s_maxLayers];							///< Debug boxes made of lines
+	DebugSphere * m_debugSpheres[s_maxLayers];						///< Debug spheres made of lines
+	DebugTransform * m_debugTransforms[s_maxLayers];				///< Debug transforms made of 3 coloured lines
+	RenderModel * m_models[s_maxLayers];							///< Models for each renderLayer
+	FontChar * m_fontChars[s_maxLayers];							///< Characters of a display string
 	ParticleEmitter m_particleEmitters[s_maxParticleEmitters];		///< BUffer containing a vert for each particle
 	int m_numParticleEmitters;
-	int m_objectCount[RenderLayer::Count][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
+	int m_objectCount[s_maxLayers][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
 
 	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
 	unsigned int m_mrtAttachments[s_numRenderTargets + 1];			///< Array of identifies for all colour attachments
-	unsigned int m_frameBuffers[RenderStage::Count];				///< Identifier for the whole scene framebuffers for each stage
-	unsigned int m_colourBuffers[RenderStage::Count];				///< Identifier for the texture to render to
-	unsigned int m_depthBuffers[RenderStage::Count];				///< Identifier for the buffers for pixel depth per stage
+	unsigned int m_frameBuffers[s_maxStages];						///< Identifier for the whole scene framebuffers for each stage
+	unsigned int m_colourBuffers[s_maxStages];						///< Identifier for the texture to render to
+	unsigned int m_depthBuffers[s_maxStages];						///< Identifier for the buffers for pixel depth per stage
 
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
 	Quad m_particleBuffer;											///< Single VBO for all world particles
@@ -673,14 +663,14 @@ private:
 	Shader * m_particleShader;										///< Shader that updates the position, scale, colour and lifetime of particles and renders them
 	Shader * m_finalShader;											///< Shader that draws from the diffuse texture directly to the colour buffer FragmentColour
 
-	unsigned int m_viewWidth;										///< Cache of arguments passed to init
-	unsigned int m_viewHeight;										///< Cache of arguments passed to init
-	unsigned int m_bpp;												///< Cache of arguments passed to init
-	float m_aspect;													///< Calculated ratio of width to height
-	Colour m_clearColour;											///< Cache of arguments passed to init
-	RenderMode::Enum m_renderMode;									///< How the scene is to be rendered
+	unsigned int m_viewWidth{ 0 };									///< Cache of arguments passed to init
+	unsigned int m_viewHeight{ 0 };									///< Cache of arguments passed to init
+	unsigned int m_bpp{ 0 };										///< Cache of arguments passed to init
+	float m_aspect{ 0.0f };											///< Calculated ratio of width to height
+	Colour m_clearColour{};											///< Cache of arguments passed to init
+	RenderMode m_renderMode;									///< How the scene is to be rendered
 
-	bool m_vr;														///< If the oculus rendering component will be wedged in between the normal rendering calls
+	bool m_vr{ false };												///< If the oculus rendering component will be wedged in between the normal rendering calls
 
 	char m_shaderPath[StringUtils::s_maxCharsPerLine];				///< Path to the shader files
 
@@ -690,9 +680,9 @@ private:
 	ManagedShaderList m_managedShaders;								///< List of managed shaders that are scanned for hot loading
 	LinkedList<Shader> m_shaders;									///< List of shaders the game references
 
-	float m_updateFreq;												///< How often the render manager should check for changes to shaders
-	float m_updateTimer;											///< If we are due for a scan and update of shaders
-	int m_drawCallCounter;											///< Consumed by the debug menu, set during drawing, cleared during update
+	float m_updateFreq{ 0.0f };										///< How often the render manager should check for changes to shaders
+	float m_updateTimer{ 0.0f };									///< If we are due for a scan and update of shaders
+	int m_drawCallCounter{ -1 };									///< Consumed by the debug menu, set during drawing, cleared during update
 };
 
 #endif // _ENGINE_RENDER_MANAGER

@@ -265,21 +265,20 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				bool hasCollision = false;
 				if (GameFile::Property * clipType = object->FindProperty("clipType"))
 				{
-					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Sphere]) != nullptr)
+					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Sphere);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Box]) != nullptr)
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Box);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[ClipType::Mesh]) != nullptr)
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Mesh);
-						newGameObject->SetPhysicsMesh(clipType->GetString());
 					}
 					else
 					{
@@ -331,6 +330,18 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				if (GameFile::Property * massProp = object->FindProperty("physicsMass"))
 				{
 					newGameObject->SetPhysicsMass(massProp->GetFloat());
+				}
+				if (GameFile::Property * elasticityProp = object->FindProperty("physicsElasticity"))
+				{
+					newGameObject->SetPhysicsElasticity(elasticityProp->GetFloat());
+				}
+				if (GameFile::Property * linearDragProp = object->FindProperty("physicsLinearDrag"))
+				{
+					newGameObject->SetPhysicsLinearDrag(linearDragProp->GetVector());
+				}
+				if (GameFile::Property * angularDragProp = object->FindProperty("physicsAngularDrag"))
+				{
+					newGameObject->SetPhysicsAngularDrag(angularDragProp->GetVector());
 				}
 
 				// All loading operations have completed

@@ -126,33 +126,33 @@ private:
 	void HideTextInput();
 	void HideColourPicker();
 
-	bool m_enabled;									///< Is the menu being shown
-	bool m_timePaused;								///< Is the game dt running forward
-	bool m_debugPhysics;							///< Are we showing a wireframe representation of the physics world
-	float m_gameTimeScale;							///< How fast the game is running, 1.0 means real time
-	Texture m_colourPickerTexture;					///< Texture to be displayed when the user is picking a colour
-	BitSet m_dirtyFlags;							///< Bitset of types of resources that need writing
-	Vector2 m_lastMousePosRelative;					///< Cache off the last mouse pos to diff between frames
-	EditType m_editType;						///< What type of object we are editing 
-	EditMode m_editMode;						///< If we are in a modal editing mode, which mode are we in
-	Widget * m_widgetToEdit;						///< If we have selected a widget to edit, this will be set
-	GameObject * m_gameObjectToEdit;				///< If we have selected a game object to edit, this will be set
-	Light * m_lightToEdit;							///< If a light has been selected to edit, this will be set
-	void * m_colourPickerTextureMemory;				///< Memory for generating the colour spectrum
+	bool m_enabled;										///< Is the menu being shown
+	bool m_timePaused;									///< Is the game dt running forward
+	bool m_debugPhysics;								///< Are we showing a wireframe representation of the physics world
+	float m_gameTimeScale;								///< How fast the game is running, 1.0 means real time
+	Texture m_colourPickerTexture;						///< Texture to be displayed when the user is picking a colour
+	BitSet m_dirtyFlags;								///< Bitset of types of resources that need writing
+	Vector2 m_lastMousePosRelative;						///< Cache off the last mouse pos to diff between frames
+	EditType m_editType;								///< What type of object we are editing 
+	EditMode m_editMode;								///< If we are in a modal editing mode, which mode are we in
+	Widget * m_widgetToEdit{ nullptr };					///< If we have selected a widget to edit, this will be set
+	GameObject * m_gameObjectToEdit{ nullptr };			///< If we have selected a game object to edit, this will be set
+	Light * m_lightToEdit{ nullptr };					///< If a light has been selected to edit, this will be set
+	void * m_colourPickerTextureMemory{ nullptr };		///< Memory for generating the colour spectrum
 
-	DebugMenuCommandRegistry m_commands;			///< List of commands that can be performed by the debug menu
+	DebugMenuCommandRegistry m_commands;				///< List of commands that can be performed by the debug menu
 
-	Widget * m_colourPicker;
+	Widget * m_colourPicker{ nullptr };
 
-	Widget * m_resourceSelect;
-		Widget * m_resourceSelectList;
-		Widget * m_btnResourceSelectOk;
-		Widget * m_btnResourceSelectCancel;
+	Widget* m_resourceSelect{ nullptr };
+	Widget * m_resourceSelectList{ nullptr };
+	Widget * m_btnResourceSelectOk{ nullptr };
+	Widget * m_btnResourceSelectCancel{ nullptr };
 
-	Widget * m_textInput;
-		Widget * m_textInputField;
-		Widget * m_btnTextInputOk;
-		Widget * m_btnTextInputCancel;
+	Widget * m_textInput{ nullptr };
+	Widget * m_textInputField{ nullptr };
+	Widget * m_btnTextInputOk{ nullptr };
+	Widget * m_btnTextInputCancel{ nullptr };
 };
 
 #endif //_ENGINE_DEBUG_MENU_

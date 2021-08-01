@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+const char * StringUtils::s_charLineEnd = "\n";				// Char sequence for the end of a line
+const char * StringUtils::s_charTab = "\t";					// Char sequence for a tab
+const char * StringUtils::s_charPathSep = "\\";				// Path seperator in Win32
+
 const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
 {
 	// Early out for bad string or no delim
@@ -222,13 +226,13 @@ const char * StringUtils::ReadLine(FILE *a_filePointer)
 	return retBuf;										
 }
 
-extern unsigned char StringUtils::ConvertToLower(unsigned char a_char)
+unsigned char StringUtils::ConvertToLower(unsigned char a_char)
 {
 	// TODO!
 	return a_char;
 }
 
-extern unsigned int StringUtils::CountCharacters(const char * a_string, const char & a_searchChar)
+unsigned int StringUtils::CountCharacters(const char * a_string, const char & a_searchChar)
 {
 	// Early out for bad input
 	if (a_string == nullptr || a_string[0] == '\0')
@@ -249,7 +253,7 @@ extern unsigned int StringUtils::CountCharacters(const char * a_string, const ch
 	return numOccurances;
 }
 
-extern bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefix)
+bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefix)
 {
 	char tempString[s_maxCharsPerLine];
 	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
@@ -262,7 +266,7 @@ extern bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefi
 	return false;
 }
 
-extern bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix)
+bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix)
 {
 	char tempString[s_maxCharsPerLine];
 	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
@@ -275,7 +279,7 @@ extern bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix
 	return false;
 }
 
-extern const char * StringUtils::BoolToString(bool a_input)
+const char * StringUtils::BoolToString(bool a_input)
 {
 	return a_input ? "true" : "false";
 }

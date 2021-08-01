@@ -744,8 +744,8 @@ bool DebugMenu::OnSelect(bool a_active)
 		if (m_widgetToEdit != nullptr)
 		{
 			Vector2 handlePos;
-			AlignX::Enum selectionX = AlignX::Count;
-			AlignY::Enum selectionY = AlignY::Count;
+			AlignX selectionX = AlignX::Count;
+			AlignY selectionY = AlignY::Count;
 			bool setAlignment = false;
 			if (m_widgetToEdit->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
 			{

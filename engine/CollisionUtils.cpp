@@ -2,7 +2,7 @@
 
 #include "CollisionUtils.h"
 
-extern bool CollisionUtils::IntersectLinePlane(Vector a_lineStart, Vector a_lineEnd, Vector a_planeCentre, Vector a_planeNormal, Vector & a_intesection_OUT)
+bool CollisionUtils::IntersectLinePlane(Vector a_lineStart, Vector a_lineEnd, Vector a_planeCentre, Vector a_planeNormal, Vector & a_intesection_OUT)
 {
 	// Check the line and plane aren't parallel
 	Vector line = a_lineEnd - a_lineStart;
@@ -19,7 +19,7 @@ extern bool CollisionUtils::IntersectLinePlane(Vector a_lineStart, Vector a_line
 	}
 }
 
-extern bool CollisionUtils::IntersectLineAxisBox(Vector a_lineStart, Vector a_lineEnd, Vector a_boxPos, Vector a_boxDimensions, Vector & a_intersection_OUT)
+bool CollisionUtils::IntersectLineAxisBox(Vector a_lineStart, Vector a_lineEnd, Vector a_boxPos, Vector a_boxDimensions, Vector & a_intersection_OUT)
 {
 	// Check the dimensions of the line against the box
 	const Vector halfDim = a_boxDimensions * 0.5f;
@@ -99,7 +99,7 @@ extern bool CollisionUtils::IntersectLineAxisBox(Vector a_lineStart, Vector a_li
 	return false;
 }
 
-extern bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lineEnd, Vector a_spherePos, float a_sphereRadius)
+bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lineEnd, Vector a_spherePos, float a_sphereRadius)
 {
 	// Early out if the start or end or the line segment is inside the radius
 	const float sphRadSq = a_sphereRadius * a_sphereRadius;
@@ -131,7 +131,7 @@ extern bool CollisionUtils::IntersectLineSphere(Vector a_lineStart, Vector a_lin
 	return distanceToSphereSq <= sphRadSq;
 }
 
-extern bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const Vector & a_boxPos, const Vector & a_boxDimensions)
+bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const Vector & a_boxPos, const Vector & a_boxDimensions)
 {
 	const Vector halfDim = a_boxDimensions * 0.5f;
 	if (a_point.GetX() >= a_boxPos.GetX() - halfDim.GetX() && 
@@ -147,7 +147,7 @@ extern bool CollisionUtils::IntersectPointAxisBox(const Vector & a_point, const 
 	return false;
 }
 
-extern bool CollisionUtils::IntersectAxisBoxes(const Vector & a_box1Pos, const Vector & a_box1Dim, const Vector & a_box2Pos, const Vector & a_box2Dim)
+bool CollisionUtils::IntersectAxisBoxes(const Vector & a_box1Pos, const Vector & a_box1Dim, const Vector & a_box2Pos, const Vector & a_box2Dim)
 {
 	// TODO: Fix this, for ALL intersection cases
 	// Exhaustively test each corner of the game object passed in against our volume
@@ -170,12 +170,12 @@ extern bool CollisionUtils::IntersectAxisBoxes(const Vector & a_box1Pos, const V
 	return false;
 }
 
-extern bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_spherePos, float a_sphereRadius)
+bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_spherePos, float a_sphereRadius)
 {
 	return (a_point - a_spherePos).LengthSquared() <= (a_sphereRadius * a_sphereRadius);
 }
 
-extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float a_bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+bool CollisionUtils::IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float a_bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
 {
 	Vector betweenSpheres = a_bodyAPos - a_bodyBPos;
 	float distBetween = betweenSpheres.Length();
@@ -195,15 +195,42 @@ extern bool IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, con
 	return false;
 }
 
-extern bool IntersectBoxes(const Vector & a_boxAPos, const Vector & a_boxASize, const Quaternion & a_boxARot, const Vector & a_boxBPos, const Vector & a_boxBSize, const Quaternion & a_boxBRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+bool CollisionUtils::IntersectBoxes(const Vector & a_boxAPos, const Vector & a_boxASize, const Quaternion & a_boxARot, const Vector & a_boxBPos, const Vector & a_boxBSize, const Quaternion & a_boxBRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
 {
 	// TODO
 	return false;
 }
 
-extern bool IntersectBoxSphere(const Vector & a_spherePos, float a_sphereRadius, const Vector & a_boxPos, const Vector & a_boxSize, const Quaternion & a_boxRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
+bool CollisionUtils::IntersectBoxSphere(const Vector & a_spherePos, float a_sphereRadius, const Vector & a_boxPos, const Vector & a_boxSize, const Quaternion & a_boxRot, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
 {
 	// TODO
 	return false;
 }
 
+bool CollisionUtils::IntersectAxisBoxSphere(const Vector& a_spherePos, float a_sphereRadius, const Vector& a_boxPos, const Vector& a_boxSize, Vector& a_collisionPos_OUT, Vector& a_collisionNormal_OUT)
+{
+	// Get box closest point to sphere center by clamping
+	const float boxMinX = a_boxPos.GetX() - a_boxSize.GetX();
+	const float boxMaxX = a_boxPos.GetX() + a_boxSize.GetX();
+	const float boxMinY = a_boxPos.GetY() - a_boxSize.GetY();
+	const float boxMaxY = a_boxPos.GetY() + a_boxSize.GetY();
+	const float boxMinZ = a_boxPos.GetZ() - a_boxSize.GetZ();
+	const float boxMaxZ = a_boxPos.GetZ() + a_boxSize.GetZ();
+	const float x = MathUtils::Clamp(boxMinX, a_spherePos.GetX(), boxMaxX);
+	const float y = MathUtils::Clamp(boxMinY, a_spherePos.GetY(), boxMaxY);
+	const float z = MathUtils::Clamp(boxMinZ, a_spherePos.GetZ(), boxMaxZ);
+
+	// Check point inside sphere
+	const float distance = sqrtf((x - a_spherePos.GetX()) * (x - a_spherePos.GetX()) +
+		(y - a_spherePos.GetY()) * (y - a_spherePos.GetY()) +
+		(z - a_spherePos.GetZ()) * (z - a_spherePos.GetZ()));
+
+	if (distance <= a_sphereRadius)
+	{
+		a_collisionNormal_OUT = a_spherePos - a_boxPos;
+		a_collisionNormal_OUT.Normalise();
+		a_collisionPos_OUT = a_spherePos + (a_collisionNormal_OUT * a_sphereRadius);
+		return true;
+	}
+	return false;
+}

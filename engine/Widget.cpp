@@ -12,13 +12,13 @@
 
 using namespace std;	//< For fstream operations
 
-const char * Alignment::s_alignXNames[AlignX::Count] = 
+const char * Alignment::s_alignXNames[static_cast<int>(AlignX::Count)] = 
 {
 	"left",
 	"middle",
 	"right"
 };
-const char * Alignment::s_alignYNames[AlignY::Count] =
+const char * Alignment::s_alignYNames[static_cast<int>(AlignY::Count)] =
 {
 	"top",
 	"centre",
@@ -66,7 +66,7 @@ void Widget::Draw()
 		// Determine draw style from selection
 		Colour selectColour = m_colour;
 		RenderManager & rMan = RenderManager::Get();
-		RenderLayer::Enum renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
+		RenderLayer renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
 		switch (m_selection)
 		{
 			case SelectionFlags::Rollover:		if (m_action.IsSet()) { selectColour -= sc_rolloverColour * s_selectedColourValue;	} break;
@@ -792,7 +792,7 @@ void Widget::MeasureText()
 
 #ifndef _RELEASE
 
-bool Widget::GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX::Enum & a_xSelected_OUT, AlignY::Enum & a_ySelected_OUT)
+bool Widget::GetAlignmentSelection(const Vector2 & a_selectionPos, const Vector2 & a_handleSize, Vector2 & a_handlePos_OUT, AlignX & a_xSelected_OUT, AlignY & a_ySelected_OUT)
 {
 	a_handlePos_OUT = m_drawPos;
 	bool inSelectionX = false;
@@ -858,8 +858,8 @@ void Widget::DrawDebugAlignment()
 
 	// Detect mouse over handle for anchor and draw a box around it
 	Vector2 selectedHandlePos = m_drawPos;
-	AlignX::Enum selectionX = AlignX::Count;
-	AlignY::Enum selectionY = AlignY::Count;
+	AlignX selectionX = AlignX::Count;
+	AlignY selectionY = AlignY::Count;
 	if (GetAlignmentSelection(mousePos, handleSizeVec, selectedHandlePos, selectionX, selectionY))
 	{
 		DrawDebugAlignmentHandleSelectionBox(selectedHandlePos, handleSizeVec);
@@ -867,8 +867,8 @@ void Widget::DrawDebugAlignment()
 
 	// Detect mouse over handle for parent alignment and draw a box around it
 	Vector2 parentSelectedHandlePos = m_alignTo->m_drawPos;
-	AlignX::Enum parentSelectionX = AlignX::Count;
-	AlignY::Enum parentSelectionY = AlignY::Count;
+	AlignX parentSelectionX = AlignX::Count;
+	AlignY parentSelectionY = AlignY::Count;
 	if (m_alignTo->GetAlignmentSelection(mousePos, handleSizeVec, parentSelectedHandlePos, parentSelectionX, parentSelectionY))
 	{
 		DrawDebugAlignmentHandleSelectionBox(parentSelectedHandlePos, handleSizeVec);
