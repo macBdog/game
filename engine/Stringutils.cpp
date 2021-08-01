@@ -168,7 +168,7 @@ const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes)
 		const unsigned int stringLength = strlen(a_buffer);
 
 		 // Allocate memory for the new buffer
-		char * retBuf = (char*)malloc(sizeof(char)*stringLength+1);
+		char * retBuf = (char*)malloc(sizeof(char)*stringLength+2);
 		if (retBuf != nullptr)
 		{
 			// Copy chars from the buffer and terminate the string

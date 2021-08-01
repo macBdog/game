@@ -51,7 +51,7 @@ bool TextureManager::Init(bool a_useLinearTextureFilter)
 	m_updateTimer = 0;
 
 	// Init a pool of memory for each category
-	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
+	for (unsigned int i = 0; i < static_cast<unsigned int>(TextureCategory::Count); ++i)
 	{
 		if (m_texturePool[i].Init(s_texurePoolSize[i]))
 		{
@@ -74,7 +74,7 @@ bool TextureManager::Init(bool a_useLinearTextureFilter)
 bool TextureManager::Shutdown()
 {
 	// Cleanup memory
-	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
+	for (unsigned int i = 0; i < static_cast<unsigned int>(TextureCategory::Count); ++i)
 	{
 		m_texturePool[i].Done();
 	}
@@ -105,7 +105,7 @@ bool TextureManager::Update(float a_dt)
 		bool textureReloaded = false;
 
 		// For each texture category
-		for (unsigned int i = 0; i < TextureCategory::Count; ++i)
+		for (unsigned int i = 0; i < static_cast<unsigned int>(TextureCategory::Count); ++i)
 		{
 			// Each texture in the category gets tested
 			ManagedTexture * curTex = nullptr;
@@ -131,9 +131,10 @@ bool TextureManager::Update(float a_dt)
 	}
 }
 
-Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter)
+Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
+	const int tCat = static_cast<int>(a_cat);
 	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
 	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
@@ -158,17 +159,17 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 	// Get the identifier for the new texture
 	StringHash texHash(fileNameBuf);
 	unsigned int texId = texHash.GetHash();
-	TextureCategory::Enum loadedCat = IsTextureLoaded(texId);
+	TextureCategory loadedCat = IsTextureLoaded(texId);
 
 	// If it already exists
 	if (loadedCat != TextureCategory::None)
 	{
 		// Just returned the cached copy
 		ManagedTexture * foundTex = nullptr;
-		m_textureMap[loadedCat].Get(texId, foundTex);
+		m_textureMap[static_cast<int>(loadedCat)].Get(texId, foundTex);
 		return &foundTex->m_texture;
 	}
-	else if (ManagedTexture * newTex = m_texturePool[a_cat].Allocate(sizeof(ManagedTexture)))
+	else if (ManagedTexture * newTex = m_texturePool[tCat].Allocate(sizeof(ManagedTexture)))
 	{
 		// If the filter is not specified, use the default
 		if (a_currentFilter == TextureFilter::Invalid)
@@ -185,7 +186,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 				if (newTex->m_texture.LoadTGAFromMemory((void *)packedTexture->m_data, packedTexture->m_size, a_currentFilter == TextureFilter::Linear))
 				{
 					sprintf(newTex->m_path, "%s", fileNameBuf);
-					m_textureMap[a_cat].Insert(texId, newTex);
+					m_textureMap[tCat].Insert(texId, newTex);
 					return &newTex->m_texture;
 				}
 				else
@@ -207,7 +208,7 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
 			{
 				FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
 				sprintf(newTex->m_path, "%s", fileNameBuf);
-				m_textureMap[a_cat].Insert(texId, newTex);
+				m_textureMap[tCat].Insert(texId, newTex);
 				return &newTex->m_texture;
 			}
 			else
@@ -225,15 +226,15 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory::En
    return nullptr;
 }
 
-TextureCategory::Enum TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)
+TextureCategory TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)
 {
 	// Look through each category for the target texture
-	for (unsigned int i = 0; i < TextureCategory::Count; ++i)
+	for (unsigned int i = 0; i < static_cast<unsigned int>(TextureCategory::Count); ++i)
 	{
 		ManagedTexture * foundTex = nullptr;
 		if (m_textureMap[i].Get(a_tgaPathHash, foundTex))
 		{
-			return (TextureCategory::Enum)i;
+			return (TextureCategory)i;
 		}
 	}
 	return TextureCategory::None;

@@ -12,19 +12,14 @@ template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = nullptr;
 PhysicsObject::~PhysicsObject()
 {
 	// Clean up physics if present
-
-	// And collision objects
-
+	if (m_gameObject != nullptr)
+	{
+		m_gameObject = nullptr;
+	}
 }
 
-bool PhysicsManager::Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack)
+bool PhysicsManager::Startup(const GameFile & a_config)
 {
-	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
-	{
-		// Cache off the datapack path for loading models from pack
-		m_dataPack = a_dataPack;
-	}
-
 	// Setup collision groups and flags from config file
 	if (GameFile::Object * colConfig = a_config.FindObject("collision"))
 	{
@@ -104,13 +99,6 @@ bool PhysicsManager::Shutdown()
 	return true;
 }
 
-void PhysicsManager::DestroyAllScriptOwnedObjects()
-{
-	// Object can only be added to the physics and collision scenes by script
-	m_physicsWorld.clear();
-	m_collisionWorld.clear();
-}
-
 void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 {
 	// Solve collisions
@@ -184,6 +172,7 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 void PhysicsManager::UpdatePhysicsWorld(const float& a_dt)
 {
 	// Step the dynamic physics sim
+	const float p_dt = MathUtils::Clamp(s_minPhysicsStep, a_dt, s_maxPhysicsStep);
 	const Vector g = m_gravity * 100.0f;
 	for (const auto& curPhys : m_physicsWorld)
 	{
@@ -195,16 +184,16 @@ void PhysicsManager::UpdatePhysicsWorld(const float& a_dt)
 			// Semi-implicit euler
 			physObj->m_force = g;
 			physObj->m_acc = physObj->m_force / mass;
-			physObj->m_vel += physObj->m_acc * a_dt;
-			physObj->m_pos += physObj->m_vel * a_dt;
+			physObj->m_vel += physObj->m_acc * p_dt;
+			physObj->m_pos += physObj->m_vel * p_dt;
 		}
 		else if (m_type == PhysicsIntegrationType::Verlet)
 		{
 			physObj->m_lastAcc = physObj->m_acc;
-			physObj->m_pos += physObj->m_vel * a_dt + (physObj->m_lastAcc * 0.5f * (a_dt * a_dt));
+			physObj->m_pos += physObj->m_vel * p_dt + (physObj->m_lastAcc * 0.5f * (p_dt * p_dt));
 			physObj->m_acc = (physObj->m_force + g) / mass;
 			physObj->m_avgAcc = (physObj->m_lastAcc + physObj->m_acc) * 0.5f;
-			physObj->m_vel += physObj->m_avgAcc * a_dt;
+			physObj->m_vel += physObj->m_avgAcc * p_dt;
 		}
 	}
 }
@@ -223,8 +212,6 @@ void PhysicsManager::UpdateGameObjects(const float& a_dt)
 
 bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 {
-	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
-
 	if (a_gameObj == nullptr)
 	{
 		return false;
@@ -275,21 +262,43 @@ PhysicsObject* PhysicsManager::GetAddPhysicsObject(GameObject* a_gameObj)
 	return a_gameObj->GetPhysics();
 }
 
+bool PhysicsManager::RemoveCollisionObject(GameObject* a_gameObj)
+{
+	if (a_gameObj != nullptr)
+	{
+		ClearCollisions(a_gameObj);
+		for (auto it = m_collisionWorld.begin(); it != m_collisionWorld.end();)
+		{
+			if (*it == a_gameObj)
+			{
+				it = m_collisionWorld.erase(it);
+				return true;
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+	return false;
+}
+
 bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 {
 	if (a_gameObj != nullptr)
 	{
-		PhysicsObject * phys = a_gameObj->GetPhysics();
-		if (phys != nullptr)
+		auto existingPhys = a_gameObj->GetPhysics();
+		for (auto it = m_physicsWorld.begin(); it != m_physicsWorld.end();)
 		{
-			ClearCollisions(a_gameObj);
-			delete phys;
-			auto existingPhys = a_gameObj->GetPhysics();
-			//TODO ! for (auto curPhys : m_physicsWorld)
-			//{
-			//	m_physicsWorld.swap(curPhys);
-			//}
-			return true;
+			if (it->get() == existingPhys)
+			{
+				it = m_physicsWorld.erase(it);
+				return true;
+			}
+			else
+			{
+				++it;
+			}
 		}
 	}
 	return false;

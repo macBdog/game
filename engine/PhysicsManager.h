@@ -54,11 +54,9 @@ public:
 	~PhysicsManager() { Shutdown(); }
 
 	//\brief Lifecycle functions
-	bool Startup(const GameFile & a_config, const char * a_meshPath, const DataPack * a_dataPack);
+	bool Startup(const GameFile & a_config);
 	bool Shutdown();
 
-	void DestroyAllScriptOwnedObjects();
-	
 	//\brief In order of operations:	1. Solve collision world, calculate restitution and report back to the game object's collision lists
 	//									2. Integrate dynamic physics and store in physics object register
 	//									3. Update game object transform
@@ -84,10 +82,15 @@ public:
 	bool AddPhysicsObject(GameObject * a_gameObj);
 	PhysicsObject * GetAddPhysicsObject(GameObject* a_gameObj);
 
-	//\brief Remove collision and rigid body physics for an object from the world
+	//\brief Remove dynamic physics for an object from the world
 	//\param a_gameObj pointer to the game object to change
 	//\return true if the physics world was affected
 	bool RemovePhysicsObject(GameObject * a_gameObj);
+
+	//\brief Remove collision for an object from the world
+	//\param a_gameObj pointer to the game object to change
+	//\return true if the collision world was affected
+	bool RemoveCollisionObject(GameObject* a_gameObj);
 
 	//\brief Apply an impulse to the centre of the physics object in a direction
 	//\param a_gameObj the object that owns the physics body to apply the force to
@@ -132,12 +135,13 @@ private:
 	void UpdateGameObjects(const float& a_dt);
 
 	static constexpr int s_maxCollisionGroups = 16;
+	static constexpr float s_minPhysicsStep = 1.0f / 166.0f;
+	static constexpr float s_maxPhysicsStep = 1.0f / 30.0f;
 
 	StringHash m_collisionGroups[s_maxCollisionGroups];						///< Set of hashes of the user defined groups that collide
 	BitSet m_collisionFilters[s_maxCollisionGroups];						///< Precomputed bitmask to determine if two objects should collide
 	PhysicsIntegrationType m_type{ PhysicsIntegrationType::Euler };			///< What type of integration algorith will be used for the sim
 	Vector m_gravity{ 0.0f, 0.0f, 0.0f };									///< Constant force applied to world wide sim
-	const DataPack* m_dataPack{ nullptr };									///< Pointer to a datapack to load from, if any
 	std::vector<GameObject*> m_collisionWorld{ };							///< Every object that is checking collisions against itself
 	std::vector<unique_ptr<PhysicsObject>> m_physicsWorld{ };				///< Every object we simulate dynamics with	
 };

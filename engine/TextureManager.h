@@ -12,31 +12,25 @@
 #include "Texture.h"
 
 //\brief Textures are stored in reference to engine systems
-namespace TextureCategory
+enum class TextureCategory : int
 {
-	enum Enum
-	{
-		None = -1,
-		Debug,
-		Gui,
-		Model,
-		Particle,
-		World,
-		Count
-	};
-}
+	None = -1,
+	Debug,
+	Gui,
+	Model,
+	Particle,
+	World,
+	Count
+};
 
 //\brief A abbreviation of a a set of flags to use when generating textures
-namespace TextureFilter
+enum class TextureFilter : int
 {
-	enum Enum
-	{
-		Invalid = -1,		///< Means we don't care what filter is applied
-		Linear,				///< Normal stretchy blurry mode
-		Nearest,			///< Pixelised nearest neighbour
-		Count,
-	};
-}
+	Invalid = -1,		///< Means we don't care what filter is applied
+	Linear,				///< Normal stretchy blurry mode
+	Nearest,			///< Pixelised nearest neighbour
+	Count,
+};
 
 //\brief TextureManager keeps track of all textures in the game and the memory
 //		 required for them. It handles hot loading of all texture resources
@@ -62,22 +56,22 @@ public:
 	//\brief Get or load a TGA file into texture memory
 	//\param a_tgaPath cstring to identify the texture by
 	//\return texture ID of the identified texture
-	Texture * GetTexture(const char *a_tgaPath, TextureCategory::Enum a_cat, TextureFilter::Enum a_currentFilter = TextureFilter::Invalid);
+	Texture * GetTexture(const char *a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter = TextureFilter::Invalid);
 
 	//\brief Functions to check if a texture has already been loaded
 	//\param a_tgaPathHash is the identified for the texture
 	//\return -1 the category that the texture is loaded into, none if not loaded
-	TextureCategory::Enum IsTextureLoaded(unsigned int a_tgaPathHash);
-	inline TextureCategory::Enum IsTextureLoaded(const char *a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
+	TextureCategory IsTextureLoaded(unsigned int a_tgaPathHash);
+	inline TextureCategory IsTextureLoaded(const char *a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
 
 	//\brief Reload a single texture without changing the IDs
 	//\param a_cat the category the texture is found in. If not supplied, an exhaustive search is performed
 	//\return true in the texture was found and reloaded successfully
-	bool ReloadTexture(unsigned int a_tgaPathHash, TextureCategory::Enum a_cat = TextureCategory::None);
-	inline bool ReloadTexture(const char *a_tgaPath, TextureCategory::Enum a_cat = TextureCategory::None) { return ReloadTexture(StringHash(a_tgaPath).GetHash(), a_cat); }
+	bool ReloadTexture(unsigned int a_tgaPathHash, TextureCategory a_cat = TextureCategory::None);
+	inline bool ReloadTexture(const char *a_tgaPath, TextureCategory a_cat = TextureCategory::None) { return ReloadTexture(StringHash(a_tgaPath).GetHash(), a_cat); }
 
 	//\brief Wholesale reload of single or multiple categories
-	bool ReloadTextureCategory(TextureCategory::Enum a_cat);
+	bool ReloadTextureCategory(TextureCategory a_cat);
 	bool ReloadAllTextureCategories();
 
 	//\brief Get the fully qualified texture path
@@ -108,7 +102,7 @@ private:
 	DataPack * m_dataPack;													///< Cache off the data pack to load from
 	float m_updateFreq;														///< How often the texture manager should check for changes
 	float m_updateTimer;													///< If we are due for a scan and update of textures
-	TextureFilter::Enum m_filterMode;										///< Filtering rule to apply, can make exceptions on a per texture basis
+	TextureFilter m_filterMode;										///< Filtering rule to apply, can make exceptions on a per texture basis
 };
 
 #endif /* _ENGINE_TEXTURE_MANAGER_H_ */

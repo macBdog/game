@@ -216,8 +216,9 @@ bool GameObject::Shutdown()
 	if (m_physics != nullptr)
 	{
 		PhysicsManager & physMan = PhysicsManager::Get();
-		physMan.ClearCollisions(this);
 		physMan.RemovePhysicsObject(this);
+		physMan.RemoveCollisionObject(this);
+		m_physics = nullptr;
 	}
 
 	// Remove references to managed resources

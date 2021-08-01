@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(fontPath, &dataPack);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath, &dataPack);
-	PhysicsManager::Get().Startup(gameConfig, modelPath, &dataPack);
+	PhysicsManager::Get().Startup(gameConfig, modelPath);
 	AnimationManager::Get().Startup(modelPath, &dataPack);
 	WorldManager::Get().Startup(templatePath, scenePath, &dataPack);
 	CameraManager::Get().Startup();
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath, NULL);
-	PhysicsManager::Get().Startup(gameConfig, modelPath, NULL);
+	PhysicsManager::Get().Startup(gameConfig);
 	AnimationManager::Get().Startup(modelPath, NULL);
 	WorldManager::Get().Startup(templatePath, scenePath, NULL);
 	CameraManager::Get().Startup();

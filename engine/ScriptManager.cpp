@@ -379,9 +379,6 @@ bool ScriptManager::Update(float a_dt)
 					scriptsReloaded = true;
 					curScript->m_timeStamp = curTimeStamp;
 
-					// Handle any objects with physics and collision
-					PhysicsManager::Get().DestroyAllScriptOwnedObjects();
-
 					// Clean up any script-owned objects
 					WorldManager::Get().DestroyAllScriptOwnedObjects();
 
