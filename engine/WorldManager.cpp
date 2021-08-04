@@ -337,11 +337,11 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				}
 				if (GameFile::Property * linearDragProp = object->FindProperty("physicsLinearDrag"))
 				{
-					newGameObject->SetPhysicsLinearDrag(linearDragProp->GetVector());
+					newGameObject->SetPhysicsLinearDrag(linearDragProp->GetFloat());
 				}
 				if (GameFile::Property * angularDragProp = object->FindProperty("physicsAngularDrag"))
 				{
-					newGameObject->SetPhysicsAngularDrag(angularDragProp->GetVector());
+					newGameObject->SetPhysicsAngularDrag(angularDragProp->GetFloat());
 				}
 
 				// All loading operations have completed

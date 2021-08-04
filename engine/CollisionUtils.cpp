@@ -177,7 +177,7 @@ bool CollisionUtils::IntersectPointSphere(Vector a_point, Vector a_spherePos, fl
 
 bool CollisionUtils::IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARadius, const Vector & a_bodyBPos, float a_bodyBRadius, Vector & a_collisionPos_OUT, Vector & a_collisionNormal_OUT)
 {
-	Vector betweenSpheres = a_bodyAPos - a_bodyBPos;
+	Vector betweenSpheres = a_bodyBPos - a_bodyAPos;
 	float distBetween = betweenSpheres.Length();
 	if (distBetween <= a_bodyARadius + a_bodyBRadius && distBetween >= fabs(a_bodyARadius - a_bodyBRadius))
 	{
@@ -189,7 +189,7 @@ bool CollisionUtils::IntersectSpheres(const Vector & a_bodyAPos, float a_bodyARa
 		float radiusOfIntersection = sqrt(a_bodyARadius*a_bodyARadius - centreOfIntersection * centreOfIntersection * distBetween * distBetween);
 
 		// Or go on to find an arbitrary but coplanar point on this cicle. 
-		a_collisionPos_OUT = centreOfIntersection;
+		a_collisionPos_OUT = a_bodyAPos + (a_collisionNormal_OUT * centreOfIntersection);
 		return true;
 	}
 	return false;
@@ -227,9 +227,9 @@ bool CollisionUtils::IntersectAxisBoxSphere(const Vector& a_spherePos, float a_s
 
 	if (distance <= a_sphereRadius)
 	{
-		a_collisionNormal_OUT = a_spherePos - a_boxPos;
+		a_collisionPos_OUT = Vector(x, y, z);
+		a_collisionNormal_OUT = a_spherePos - a_collisionPos_OUT;
 		a_collisionNormal_OUT.Normalise();
-		a_collisionPos_OUT = a_spherePos + (a_collisionNormal_OUT * a_sphereRadius);
 		return true;
 	}
 	return false;

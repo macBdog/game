@@ -77,7 +77,7 @@ void Widget::Draw()
 			{
 				selectColour -= sc_editRolloverColour;
 				const float extraSelectionSize = 0.05f;
-				const Vector2 selectSize = m_size + (m_size * extraSelectionSize);
+				const Vector2 selectSize(m_size + (m_size * extraSelectionSize));
 				Vector2 startVec = drawPos;
 				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
 				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
@@ -91,7 +91,7 @@ void Widget::Draw()
 			{
 				selectColour -= sc_editSelectedColour;
 				const float extraSelectionSize = 0.05f;
-				const Vector2 selectSize = m_size + (m_size * extraSelectionSize);
+				const Vector2 selectSize(m_size + (m_size * extraSelectionSize));
 				Vector2 startVec = drawPos;
 				startVec.SetX(startVec.GetX() - (selectSize.GetX() - m_size.GetX()) * 0.5f);
 				startVec.SetY(startVec.GetY() + (selectSize.GetY() - m_size.GetY()) * 0.5f);
@@ -236,7 +236,7 @@ void Widget::UpdateSelection(WidgetVector a_pos)
 		a_pos.GetY() <= drawPos.GetY() && a_pos.GetY() >= drawPos.GetY() - m_size.GetY())
 	{
 		// Check selection flags
-		if ((m_selectFlags & SelectionFlags::Rollover) > 0)
+		if ((m_selectFlags & static_cast<unsigned int>(SelectionFlags::Rollover)) > 0)
 		{
 			if (DebugMenu::Get().IsDebugMenuEnabled())
 			{
@@ -304,7 +304,7 @@ bool Widget::DoActivation()
 	// Check if the position is inside the widget
 	DebugMenu & debug = DebugMenu::Get();
 	bool activated = false;
-	SelectionFlags::Enum flags = debug.IsDebugMenuEnabled() ? SelectionFlags::EditRollover : SelectionFlags::Rollover;
+	SelectionFlags flags = debug.IsDebugMenuEnabled() ? SelectionFlags::EditRollover : SelectionFlags::Rollover;
 	if (IsSelected(flags))
 	{
 		if (!IsDebugWidget() && debug.IsDebugMenuEnabled())
@@ -330,7 +330,7 @@ bool Widget::DoActivation()
 	return activated;
 }
 
-bool Widget::IsSelected(SelectionFlags::Enum a_selectMode)
+bool Widget::IsSelected(SelectionFlags a_selectMode)
 { 
 	// TODO Should be a bittest with every selection flag
 	return m_selection == a_selectMode;
@@ -863,6 +863,11 @@ void Widget::DrawDebugAlignment()
 	if (GetAlignmentSelection(mousePos, handleSizeVec, selectedHandlePos, selectionX, selectionY))
 	{
 		DrawDebugAlignmentHandleSelectionBox(selectedHandlePos, handleSizeVec);
+	}
+
+	if (m_alignTo == nullptr)
+	{
+		return;
 	}
 
 	// Detect mouse over handle for parent alignment and draw a box around it

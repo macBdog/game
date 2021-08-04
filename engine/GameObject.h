@@ -100,8 +100,8 @@ public:
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetPhysicsMass(const float & a_newMass) { m_physicsMass = a_newMass; }
 	inline void SetPhysicsElasticity(const float & a_newElastic) { m_physicsElasticity = a_newElastic; }
-	inline void SetPhysicsLinearDrag(const Vector & a_newDrag) { m_physicsLinearDrag = a_newDrag; }
-	inline void SetPhysicsAngularDrag(const Vector& a_newDrag) { m_physicsAngularDrag = a_newDrag; }
+	inline void SetPhysicsLinearDrag(const float & a_newDrag) { m_physicsLinearDrag = a_newDrag; }
+	inline void SetPhysicsAngularDrag(const float & a_newDrag) { m_physicsAngularDrag = a_newDrag; }
 	inline void SetVisible(bool a_enable) { m_visible = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
@@ -122,10 +122,10 @@ public:
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline ClipType GetClipType() const { return m_clipType; }
 	inline StringHash GetClipGroup() const { return m_clipGroup; }
-	inline float GetPhysicsMass() const { return m_physicsMass; }
-	inline float GetPhysicsElasticity() const { return m_physicsElasticity; }
-	inline Vector GetPhysicsLinearDrag() const { return m_physicsLinearDrag; }
-	inline Vector GetPhysicsAngularDrag() const { return m_physicsAngularDrag; }
+	inline auto GetPhysicsMass() const { return m_physicsMass; }
+	inline auto GetPhysicsElasticity() const { return m_physicsElasticity; }
+	inline auto GetPhysicsLinearDrag() const { return m_physicsLinearDrag; }
+	inline auto GetPhysicsAngularDrag() const { return m_physicsAngularDrag; }
 	inline bool HasTemplate() const { return strlen(m_template) > 0; }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline bool IsClipping() const { return m_clipping; }
@@ -186,6 +186,7 @@ private:
 	void SetTemplateProperties();
 
 	unsigned int			m_id;										///< Unique identifier, objects can be resolved from ids
+	char					m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name, up top for ease of debugging
 	GameObject *			m_child;									///< Pointer to first child game obhject
 	GameObject *			m_next;										///< Pointer to sibling game objects
 	CollisionList			m_collisions;								///< List of objects that this game object has collided with this frame
@@ -202,15 +203,14 @@ private:
 	bool					m_clipping{ false };						///< If collision is enabled
 	float					m_physicsMass{ 1.0f };						///< Mass of the object being simulated
 	float					m_physicsElasticity{ 1.0f };				///< How much force is retained from collisions
-	Vector					m_physicsLinearDrag{ 1.0f };				///< How much linear inertia is lost per time step
-	Vector					m_physicsAngularDrag{ 1.0f };				///< How much rotational torque is lost per time step
+	float					m_physicsLinearDrag{ 1.0f };				///< How much linear inertia is lost per time step
+	float					m_physicsAngularDrag{ 1.0f };				///< How much rotational torque is lost per time step
 	bool					m_visible{ true };							///< If the game object's model should be added to the render list
 	StringHash				m_clipGroup;								///< What group the object belongs to and can collide with
 	Matrix					m_worldMat;									///< Position and orientation in the world
 	Matrix					m_localMat;									///< Position and orientation relative to world mat, used for animation
 	Matrix					m_finalMat;									///< Aggregate of world and local only used by render
-	char					m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name
-	char				  m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
+	char					m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
 #ifndef _RELEASE
 	FileManager::Timestamp m_templateTimeStamp;							///< For auto-reloading of templates
 #endif

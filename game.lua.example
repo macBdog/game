@@ -217,12 +217,14 @@ gameObject
 {
   name: playerBall
   model: player_ball.obj
-  clipType: player_ball.bullet
+  clipType: sphere
   clipGroup: player
   clipSize: 10, 10 10
   clipOffset: 10, 10, 10
-  physics: true
-  physicsMass: 15
+  physicsMass: 15.0
+  physicsElasticity: 0.75
+  physicsLinearDrag: 1.0
+  physicsAngularDrag: 1.0
   shader: myshader
 }
 
@@ -243,6 +245,15 @@ function Startup()
 
   	seed = os.time()
 	math.randomseed(seed)
+
+	local sceneObject = GameObject:Get("object_name")
+	sceneObject:AddToCollisionWorld();
+
+	local scriptObject = GameObject:Create("template_name", "scene_name")
+	scriptObject:SetName("script_object")
+	scriptObject:SetPosition(0.0, 0.0, 10.0)
+	scriptObject:AddToCollisionWorld()
+	scriptObject:AddToPhysicsWorld()
 
 	-- Main game loop
 	while Update() do
@@ -268,13 +279,6 @@ Other Notes
 -----------
 
 Blender export settings: Apply modifiers, Include edges, Write normals, Include UVs, Write Materials, Triangulate Faces, Objects as OBJ, Objects as OBJ Groups, Y Forward, Z Up
-
-Physics: Use only dynamic physics type with convex hulls for complex shapes.
-
-Python script to export bullet collision (must run while Blender Game is running and while Blender has write access as administrator):
-
-import PhysicsConstraints;
-PhysicsConstraints.exportBulletFile("c:/block_terrain1.bullet")
 
 Debug menu
 ----------

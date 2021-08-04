@@ -79,11 +79,11 @@ void GameObject::SetTemplateProperties()
 			}
 			if (GameFile::Property* linearDragProp = object->FindProperty("physicsLinearDrag"))
 			{
-				SetPhysicsLinearDrag(linearDragProp->GetVector());
+				SetPhysicsLinearDrag(linearDragProp->GetFloat());
 			}
 			if (GameFile::Property* angularDragProp = object->FindProperty("physicsAngularDrag"))
 			{
-				SetPhysicsAngularDrag(angularDragProp->GetVector());
+				SetPhysicsAngularDrag(angularDragProp->GetFloat());
 			}
 		}
 	}

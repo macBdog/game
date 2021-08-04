@@ -13,8 +13,6 @@
 class Quaternion
 {
 public:
-
-	// Constructors
 	Quaternion() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
 	Quaternion(	const float & a_x, 
 			const float & a_y, 
@@ -98,7 +96,7 @@ public:
 	}
 
 	bool IsUnit() const { return abs(1.0f - ((w*w) + (x*x) + (y*y) + (z*z))) > EPSILON; }
-	inline void ApplyToMatrix(Matrix & a_mat) { a_mat = a_mat.Multiply(GetRotationMatrix()); }
+	inline void ApplyToMatrix(Matrix & a_mat) const { a_mat = a_mat.Multiply(GetRotationMatrix()); }
 	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f, %f", x, y, z, w); }
 	inline Vector GetXYZ() const { return Vector(x, y, z); }
 	inline float GetX() const { return x; }

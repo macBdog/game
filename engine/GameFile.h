@@ -20,7 +20,7 @@ using namespace std;	//< For fstream operations
 //\brief A GameFile is a general purpose configuration and data file that
 //		 is designed to be human readable and lightweight in syntax unlike
 //		 XML. There are no types, the data is stored as chars and converted
-//		 On the fly by request. It looks like this:
+//		 on-the-fly by request. Please note this predates .Json Derulo.
 //		
 //		 // A single line comment
 //		 Object

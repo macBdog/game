@@ -15,16 +15,13 @@ struct Light;
 class DataPack;
 
 //\brief SceneState keeps track of which scenes are loaded
-namespace SceneState
-{
-	enum Enum : unsigned int
-	{
-		Unloaded = 0,	///< Not rendering or updating
-		Loading,		///< Loading settings and game objects
-		Active,			///< Updating and rendering
-		Count,
-	};
-}
+enum class SceneState : unsigned char
+{	
+	Unloaded = 0,	///< Not rendering or updating
+	Loading,		///< Loading settings and game objects
+	Active,			///< Updating and rendering
+	Count,
+};
 
 //\brief A scene is a subset of a world, containing objects that are fixed and created by the engine and script objects
 class Scene
@@ -149,13 +146,13 @@ private:
 	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
 	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
 	char m_filePath[StringUtils::s_maxCharsPerLine];				///< Path of the scene for reloading
-	FileManager::Timestamp m_timeStamp;								///< When the scene file was last edited
-	float m_updateTimer;											///< The amount of time elapsed since the last file datestamp check
-	float m_updateFreq;												///< How often the file resource is checked for changes
+	FileManager::Timestamp m_timeStamp{ };							///< When the scene file was last edited
+	float m_updateTimer{ 0.0f };									///< The amount of time elapsed since the last file datestamp check
+	float m_updateFreq{ 0.0f };										///< How often the file resource is checked for changes
 	Light m_lights[Shader::s_maxLights];							///< The lights in the scene
-	SceneState::Enum m_state;										///< What state the scene is in
-	bool m_beginLoaded;												///< If the scene should be loaded and rendering on startup
-	int m_numLights;												///< The number of lights in the scene
-	Shader * m_shader;												///< Shader for the whole scene
+	SceneState m_state{ SceneState::Unloaded };						///< What state the scene is in
+	bool m_beginLoaded{ false };									///< If the scene should be loaded and rendering on startup
+	int m_numLights{ 0 };											///< The number of lights in the scene
+	Shader* m_shader{ nullptr };									///< Shader for the whole scene
 };
 

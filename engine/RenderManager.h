@@ -620,31 +620,31 @@ private:
 	static const float s_fovAngleY;									///< Field of view angle, in degrees, in the y direction
 	static float s_renderDepth2D;									///< Z value for ortho rendered primitives
 
-	SortedRenderModel * m_sortedRenderModelPool;					///< Storage for pointers to objects and their render distances
-	SortedRenderNode * m_sortedRenderNodePool;						///< Storage for the above in a list for sorting
+	SortedRenderModel* m_sortedRenderModelPool{ nullptr };			///< Storage for pointers to objects and their render distances
+	SortedRenderNode * m_sortedRenderNodePool{ nullptr };			///< Storage for the above in a list for sorting
 
 	float m_renderTime{ 0.0f };										///< How long the game has been rendering frames for (accumulated frame delta)
 	float m_lastRenderTime{ 0.0f };									///< How long the last frame took
 
 	static constexpr unsigned char s_maxLayers = (unsigned char)RenderLayer::Count;
 	static constexpr unsigned char s_maxStages = (unsigned char)RenderStage::Count;
-	Tri	 * m_tris[s_maxLayers];										///< Pointer to a pool of memory for tris
-	Quad * m_quads[s_maxLayers];									///< Pointer to a pool of memory for quads
-	Line * m_lines[s_maxLayers];									///< Lines for each renderLayer
-	DebugBox * m_debugBoxes[s_maxLayers];							///< Debug boxes made of lines
-	DebugSphere * m_debugSpheres[s_maxLayers];						///< Debug spheres made of lines
-	DebugTransform * m_debugTransforms[s_maxLayers];				///< Debug transforms made of 3 coloured lines
-	RenderModel * m_models[s_maxLayers];							///< Models for each renderLayer
-	FontChar * m_fontChars[s_maxLayers];							///< Characters of a display string
-	ParticleEmitter m_particleEmitters[s_maxParticleEmitters];		///< BUffer containing a vert for each particle
-	int m_numParticleEmitters;
+	Tri	 * m_tris[s_maxLayers]{ nullptr };							///< Pointer to a pool of memory for tris
+	Quad * m_quads[s_maxLayers]{ nullptr };							///< Pointer to a pool of memory for quads
+	Line * m_lines[s_maxLayers]{ nullptr };							///< Lines for each renderLayer
+	DebugBox * m_debugBoxes[s_maxLayers]{ nullptr };				///< Debug boxes made of lines
+	DebugSphere * m_debugSpheres[s_maxLayers]{ nullptr };			///< Debug spheres made of lines
+	DebugTransform * m_debugTransforms[s_maxLayers]{ nullptr };		///< Debug transforms made of 3 coloured lines
+	RenderModel * m_models[s_maxLayers]{ nullptr };					///< Models for each renderLayer
+	FontChar * m_fontChars[s_maxLayers]{ nullptr };					///< Characters of a display string
+	ParticleEmitter m_particleEmitters[s_maxParticleEmitters]{};	///< BUffer containing a vert for each particle
+	int m_numParticleEmitters{ 0 };
 	int m_objectCount[s_maxLayers][(int)RenderObjectType::Count];	///< How many of each object are batched, resets every frame
 
-	unsigned int m_renderTargets[s_numRenderTargets];				///< Identifiers for the general use targets
-	unsigned int m_mrtAttachments[s_numRenderTargets + 1];			///< Array of identifies for all colour attachments
-	unsigned int m_frameBuffers[s_maxStages];						///< Identifier for the whole scene framebuffers for each stage
-	unsigned int m_colourBuffers[s_maxStages];						///< Identifier for the texture to render to
-	unsigned int m_depthBuffers[s_maxStages];						///< Identifier for the buffers for pixel depth per stage
+	unsigned int m_renderTargets[s_numRenderTargets]{ 0 };			///< Identifiers for the general use targets
+	unsigned int m_mrtAttachments[s_numRenderTargets + 1]{ 0 };		///< Array of identifies for all colour attachments
+	unsigned int m_frameBuffers[s_maxStages]{ 0 };					///< Identifier for the whole scene framebuffers for each stage
+	unsigned int m_colourBuffers[s_maxStages]{ 0 };					///< Identifier for the texture to render to
+	unsigned int m_depthBuffers[s_maxStages]{ 0 };					///< Identifier for the buffers for pixel depth per stage
 
 	Quad m_fullscreenQuad;											///< Used for drawing full screen buffers
 	Quad m_particleBuffer;											///< Single VBO for all world particles
@@ -656,19 +656,19 @@ private:
 	Matrix m_shaderOrthoMat;
 	Matrix m_shaderIdentityMat;
 	
-	Shader * m_postShader;											///< Shader used to draw the gbuffers each frame
-	Shader * m_colourShader;										///< Vertex and pixel shader used when no shader is specified in a scene or model
-	Shader * m_textureShader;										///< Shader for textured objects when no shader specified
-	Shader * m_lightingShader;										///< Shader for objects in scenes with lights specified
-	Shader * m_particleShader;										///< Shader that updates the position, scale, colour and lifetime of particles and renders them
-	Shader * m_finalShader;											///< Shader that draws from the diffuse texture directly to the colour buffer FragmentColour
+	Shader * m_postShader{ nullptr };								///< Shader used to draw the gbuffers each frame
+	Shader * m_colourShader{ nullptr };								///< Vertex and pixel shader used when no shader is specified in a scene or model
+	Shader * m_textureShader{ nullptr };							///< Shader for textured objects when no shader specified
+	Shader * m_lightingShader{ nullptr };							///< Shader for objects in scenes with lights specified
+	Shader * m_particleShader{ nullptr };							///< Shader that updates the position, scale, colour and lifetime of particles and renders them
+	Shader * m_finalShader{ nullptr };								///< Shader that draws from the diffuse texture directly to the colour buffer FragmentColour
 
 	unsigned int m_viewWidth{ 0 };									///< Cache of arguments passed to init
 	unsigned int m_viewHeight{ 0 };									///< Cache of arguments passed to init
 	unsigned int m_bpp{ 0 };										///< Cache of arguments passed to init
 	float m_aspect{ 0.0f };											///< Calculated ratio of width to height
 	Colour m_clearColour{};											///< Cache of arguments passed to init
-	RenderMode m_renderMode;									///< How the scene is to be rendered
+	RenderMode m_renderMode;										///< How the scene is to be rendered
 
 	bool m_vr{ false };												///< If the oculus rendering component will be wedged in between the normal rendering calls
 

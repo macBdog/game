@@ -31,15 +31,20 @@ public:
 	inline bool HasCollision() const { return false; }
 	inline Vector GetVelocity() const  { return m_vel; }
 	inline Vector GetPos() const { return m_pos; }
+	inline Quaternion GetRot() const { return m_rot; }
 	inline Vector GetForce() const { return m_force; }
 
 	inline void SetForce(const Vector& a_newForce) { m_force = a_newForce; }
-	inline void AddForce(const Vector& a_newForce) { m_force += a_newForce; }
+	inline void AddLinearForce(const Vector& a_newForce, const float& a_mass) { m_force += a_newForce + a_mass; }
+	inline void AddLinearImpulse(const Vector& a_newImpulse, const float& a_mass) { m_vel += a_newImpulse * (1.0f / a_mass); }
 	inline void SetVelocity(const Vector& a_newVel) { m_vel = a_newVel; }
 
 protected:
 	GameObject* m_gameObject{ nullptr };		///< The object that is controlled by this physics object
 	Vector m_pos{};								///< Position just for simulations
+	Quaternion m_rot{};							///< Angular torque affects the rotation
+	Vector m_torque{};							///< Rotational force applied at a point
+	Vector m_inertia{};							///< TODO: Like m_acc?
 	Vector m_force{};							///< Force to be applied each sim step
 	Vector m_vel{};								///< The resulting velocity
 	Vector m_acc{};								///< Acceleration is accumulation of force
@@ -65,6 +70,7 @@ public:
 		UpdateCollisionWorld(a_dt);
 		UpdatePhysicsWorld(a_dt);
 		UpdateGameObjects(a_dt);
+		UpdateDebugRender(a_dt);
 	}
 	
 	//\brief Set the constant force to be applied throughout the simulation, usually done from the game config file
@@ -133,6 +139,7 @@ private:
 	void UpdateCollisionWorld(const float & a_dt);
 	void UpdatePhysicsWorld(const float& a_dt);
 	void UpdateGameObjects(const float& a_dt);
+	void UpdateDebugRender(const float& a_dt);
 
 	static constexpr int s_maxCollisionGroups = 16;
 	static constexpr float s_minPhysicsStep = 1.0f / 166.0f;

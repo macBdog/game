@@ -754,7 +754,7 @@ bool DebugMenu::OnSelect(bool a_active)
 				m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::GUI));
 				setAlignment = true;
 			}
-			if (m_widgetToEdit->GetAlignTo()->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
+			if (m_widgetToEdit->GetAlignTo() != nullptr && m_widgetToEdit->GetAlignTo()->GetAlignmentSelection(mousePos, Widget::sc_alignmentHandleSize, handlePos, selectionX, selectionY))
 			{
 				m_widgetToEdit->SetOffset(Vector2::Vector2Zero());
 				m_widgetToEdit->SetAlignment(selectionX, selectionY);

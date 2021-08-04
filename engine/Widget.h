@@ -108,18 +108,16 @@ public:
 };
 
 //\brief Represents states of element selection
-namespace SelectionFlags
+enum class SelectionFlags : unsigned char
 {
-	enum Enum
-	{
-	  None			= 0,	// Drawn without tint
-	  Rollover		= 2,	// Indicating possible selection
-	  Selected		= 4,	// Showing element selection
-	  EditRollover	= 8,	// Showing the element will be selected for editing
-	  EditSelected	= 16,	// Indicating edits will affect this element
-	  Count = 5,
-	};
-}
+	None			= 0,	// Drawn without tint
+	Rollover		= 2,	// Indicating possible selection
+	Selected		= 4,	// Showing element selection
+	EditRollover	= 8,	// Showing the element will be selected for editing
+	EditSelected	= 16,	// Indicating edits will affect this element
+	Count = 5,
+};
+
 
 //\brief The idea is that any widget has the capabilities to behave as
 // any kind of widget but the types exist to short cut behaviour and appearance
@@ -207,7 +205,7 @@ public:
 		const char * m_name;
 		unsigned int m_fontNameHash;
 		float m_fontSize;
-		SelectionFlags::Enum m_selectFlags;
+		SelectionFlags m_selectFlags;
 	};
 		
 	typedef LinkedList<Widget> WidgetList;
@@ -229,8 +227,8 @@ public:
 	//\brief Find out if the widget is currently selected
 	//\param a_selectMode is the kind of selection to check for
 	//\return true if the element is selected
-	bool IsSelected(SelectionFlags::Enum a_selectMode = SelectionFlags::Rollover);
-	inline void SetSelection(SelectionFlags::Enum a_newFlags) { m_selection = a_newFlags; }
+	bool IsSelected(SelectionFlags a_selectMode = SelectionFlags::Rollover);
+	inline void SetSelection(SelectionFlags a_newFlags) { m_selection = a_newFlags; }
 	inline void ClearSelection() { m_selection = SelectionFlags::None; }
 
 	//\brief Active means rendering, updating selection and responding to events
@@ -296,7 +294,7 @@ public:
 			strncpy(m_scriptFuncName, a_scriptName, StringUtils::s_maxCharsPerName);
 		}
 	}
-	inline void SetSelectFlags(SelectionFlags::Enum a_flags) { m_selectFlags = a_flags; }
+	inline void SetSelectFlags(const SelectionFlags & a_flags) { m_selectFlags = static_cast<unsigned int>(a_flags); }
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
@@ -385,11 +383,11 @@ private:
 	bool m_showTextCursor;				///< If the cursor should be shown on a text field
 	unsigned int m_fontNameHash;		///< Hash of the name of the font to render with
 	float m_fontSize;					///< How large to draw text on this widget 
-	Texture * m_texture;				///< What to draw
-	Widget * m_alignTo;					///< If this widget's position depends on another
+	Texture* m_texture{ nullptr };		///< What to draw
+	Widget * m_alignTo{ nullptr };		///< If this widget's position depends on another
 	WidgetList m_children;				///< Each widget can have multiple children
 	unsigned int m_selectFlags;			///< Bit mask of kind of selection this widget supports
-	SelectionFlags::Enum m_selection;	///< The current type of selection that that is current applied to the widget
+	SelectionFlags m_selection;			///< The current type of selection that that is current applied to the widget
 	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
 	bool m_debugRender;					///< If the widget should be rendered using the debug renderLayer
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off

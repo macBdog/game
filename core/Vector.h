@@ -34,6 +34,9 @@ public:
 	Vector Cross(const Vector & a_vec) const { return Vector(((y * a_vec.z) - (z * a_vec.y)),  ((z * a_vec.x) - (x * a_vec.z)), ((x * a_vec.y) - (y * a_vec.x))); }
 	void Normalise() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; z = z / fLen; } }
 	static Vector Zero() { return Vector(0.0f, 0.0f, 0.0f); }
+	static Vector Left() { return Vector(-1.0f, 0.0f, 0.0f); }
+	static Vector Right() { return Vector(1.0f, 0.0f, 0.0f); }
+	static Vector Forward() { return Vector(0.0f, 1.0f, 0.0f); }
 	static Vector Up() { return Vector(0.0f, 0.0f, 1.0f); }
 	bool IsSmallerMagnitude (const Vector & a_compare) const { return LengthSquared() < a_compare.LengthSquared(); }
 	bool IsGreaterMagnitude (const Vector & a_compare) const { return LengthSquared() > a_compare.LengthSquared(); }
