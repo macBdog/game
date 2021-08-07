@@ -129,7 +129,7 @@ public:
 		FileEvent * newEvent = newFileNode->GetData();
 		sprintf(newEvent->m_fileName, "%s", a_filePath);
 		newEvent->m_delegate.SetCallback(a_callerObject, a_callback);
-		m_events.Insert(newInputNode);
+		m_events.Insert(newEvent);
 
 		// The filelist itself is regular
 		return FillFileList(a_filePath, a_fileList_OUT, a_fileSubstring);
@@ -162,6 +162,8 @@ private:
 	//\brief Alias to store a list of file handle callbacks
 	typedef LinkedListNode<FileEvent> FileEventNode;
 	typedef LinkedList<FileEvent> FileEventList;
+
+	FileEventList m_events{};
 }; 
 
 #endif // _ENGINE_FILE_MANAGER_

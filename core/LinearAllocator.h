@@ -157,17 +157,17 @@ public:
 
 	//\brief Informational functions to track how much memory is in use
 	inline size_t GetAllocationSizeBytes() { return m_memorySize; }
-	inline float GetAllocationRatio() { return m_memorySize > 0 ? m_currentOffset / m_memorySize : 0.0f; }
+	inline float GetAllocationRatio() { return m_memorySize > 0 ? m_memorySize / m_maxEnd : 0.0f; }
 	inline T * GetHead() { return m_memory; }
 	inline T * GetLastAllocation() { return m_memoryPtr; }
 
 private:
 
-	T * m_memory;						///< Pointer to our chunk of memory
-	T * m_memoryEnd;					///< The end of the allocation
-	T * m_memoryPtr;					///< Pointer to the head of the last allocation made
-	size_t m_memorySize;				///< Total memory size in bytes
-	size_t m_maxEnd;					///< The end marker of the stack
+	T* m_memory{ nullptr };						///< Pointer to our chunk of memory
+	T * m_memoryEnd{ nullptr };					///< The end of the allocation
+	T * m_memoryPtr{ nullptr };					///< Pointer to the head of the last allocation made
+	size_t m_memorySize{ nullptr };				///< Total memory size in bytes
+	size_t m_maxEnd{ nullptr };					///< The end marker of the stack
 
 };
 

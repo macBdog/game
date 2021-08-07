@@ -6,7 +6,7 @@
 
 template<> TextureManager * Singleton<TextureManager>::s_instance = nullptr;
 
-const unsigned int TextureManager::s_texurePoolSize[TextureCategory::Count] = 
+const unsigned int TextureManager::s_texurePoolSize[TextureManager::s_numPools] =
 {
 	4096,		// 4 meg for debug textures
 	32768,		// 32 for gui

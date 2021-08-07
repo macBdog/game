@@ -5,6 +5,8 @@
 #include "../core/LinearAllocator.h"
 #include "../core/Vector.h"
 
+#include "TextureManager.h"
+
 class DataPack;
 struct DataPackEntry;
 class TexCoord;
@@ -330,8 +332,8 @@ private:
 
 		// Read one object at a time
 		Object * currentObject = nullptr;
-		ios::streampos lastReadOffset = 0;
-		ios::streampos currentObjectOffset = 0;
+		std::streamoff lastReadOffset = 0;
+		std::streamoff currentObjectOffset = 0;
 		ObjectReadPass::Enum objectReadPass = ObjectReadPass::CountFaces;
 		unsigned int numNormals = 0;
 		unsigned int numVerts = 0;

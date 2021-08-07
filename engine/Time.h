@@ -1,5 +1,3 @@
-#ifndef _ENGINE_TIMER_
-#define _ENGINE_TIMER_
 #pragma once
 
 #include <SDL.h>
@@ -12,15 +10,7 @@ namespace Time
 class Timer
 {
 public:
-
-    Timer()
-    : m_active(false)
-    , m_expired(false)
-    , m_currentTime(0)
-    , m_timerLength(0)
-    {
-    }
-
+    Timer() = default;
     void Update();
 
     inline void Set(unsigned int a_totalTime) { m_timerLength = a_totalTime; }
@@ -30,10 +20,8 @@ public:
     inline void Deactivate() { m_active = false; }
 
 private:
-        bool m_active;                  // Is the timer currently running down
-        bool m_expired;                 // Has the timer been running for timerLength
-        unsigned int m_currentTime;     // How far the timer has run down
-        unsigned int m_timerLength;     // How long the timer will take to run down
+    bool m_active{ false };                     ///< Is the timer currently running down
+    bool m_expired{ false };                    ///< Has the timer been running for timerLength
+    unsigned int m_currentTime{ 0 };            ///< How far the timer has run down
+    unsigned int m_timerLength{ 0 };            ///< How long the timer will take to run down
 };
-
-#endif // _ENGINE_TIMER_

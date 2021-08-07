@@ -275,14 +275,28 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Box);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
 					{
 						hasCollision = true;
-						newGameObject->SetClipType(ClipType::Mesh);
+						newGameObject->SetClipType(ClipType::AxisBox);
 					}
 					else
 					{
 						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
+					}
+				}
+				// Clip group
+				if (GameFile::Property* clipGroup = object->FindProperty("clipGroup"))
+				{
+					const PhysicsManager & pMan = PhysicsManager::Get();
+					if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
+					{
+						int clipGroupId = pMan.GetCollisionGroupId(clipGroup->GetString());
+						newGameObject->SetClipGroup(clipGroup->GetString(), clipGroupId);
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
 					}
 				}
 				// Clipping size
@@ -317,7 +331,8 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 					{
 						if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
 						{
-							newGameObject->SetClipGroup(clipGroup->GetString());
+							int clipGroupId = pMan.GetCollisionGroupId(clipGroup->GetString());
+							newGameObject->SetClipGroup(clipGroup->GetString(), clipGroupId);
 						}
 						else
 						{

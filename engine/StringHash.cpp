@@ -52,11 +52,11 @@ unsigned int StringHash::GenerateCRC(const char * a_string, bool a_convertToLowe
 	}
 
 	// Start out with all bits set high
-	register unsigned int ulCRC = 0xffffffff; 
+	unsigned int ulCRC = 0xffffffff; 
 
 	// Perform the algorithm on each character 
 	// in the string, using the lookup table values
-	register unsigned char* buffer = (unsigned char*)a_string;
+	unsigned char* buffer = (unsigned char*)a_string;
 	while(*buffer) 
 	{
 		if (a_convertToLower)
@@ -82,7 +82,7 @@ unsigned int StringHash::GenerateCRCBinary(const unsigned int * a_binaryData, un
 	}
 
 	// Start out with all bits set high
-	register unsigned int ulCRC = 0xffffffff; 
+	unsigned int ulCRC = 0xffffffff; 
 
 	// Perform the algorithm on each character in the string, using the lookup table values
 	for (unsigned int i = 0; i < a_length; ++i)

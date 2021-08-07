@@ -160,18 +160,6 @@ GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_par
 	return newObject->GetData();
 }
 
-GameFile::Property * GameFile::AddProperty(GameFile::Object * a_parentObject, const char * a_propertyName, const char * a_value)
-{
-	LinkedListNode<Property> * newProperty = new LinkedListNode<Property>();
-	newProperty->SetData(new Property());
-	newProperty->GetData()->m_name = StringHash(a_propertyName);
-	ALLOC_CSTRING_COPY(newProperty->GetData()->m_data, a_value);
-
-	a_parentObject->m_properties.Insert(newProperty);
-
-	return newProperty->GetData();
-}
-
 GameFile::Object * GameFile::FindObject(const char * a_name) const
 {
 	// Iterate through all objects in this file looking for a name match

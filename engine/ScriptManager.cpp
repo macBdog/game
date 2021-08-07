@@ -1508,8 +1508,8 @@ int ScriptManager::GetFileBytes(lua_State * a_luaState)
 				char readChar[2] = { ' ', '\0' };
 				for (int i = 0; i < byteCount; ++i)
 				{
-					fileToRead.read(&readChar[0], 1);
-					lua_pushnumber(a_luaState, i + 1);
+					fileToRead.read(&readChar[0], static_cast<std::streamsize>(1));
+					lua_pushinteger(a_luaState, i + 1);
 					lua_pushstring(a_luaState, &readChar[0]);
 					lua_settable(a_luaState, -3);
 
@@ -2191,7 +2191,7 @@ int ScriptManager::DebugPrint(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * debugText = lua_tostring(a_luaState, 1);
-		if (debugText != nullptr && debugText != nullptr)
+		if (debugText != nullptr)
 		{
 			DebugMenu::Get().ShowScriptDebugText(debugText);
 		}
@@ -2210,7 +2210,7 @@ int ScriptManager::DebugLog(lua_State * a_luaState)
 	{
 		luaL_checktype(a_luaState, 1, LUA_TSTRING);
 		const char * debugText = lua_tostring(a_luaState, 1);
-		if (debugText != nullptr && debugText != nullptr)
+		if (debugText != nullptr)
 		{
 			Log::Get().Write(LogLevel::Info, LogCategory::Game, debugText);
 		}

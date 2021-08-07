@@ -69,7 +69,7 @@ public:
 		Deallocate();
 		m_tableSize = a_newSize;
 		m_length = 0;
-		Allocate()
+		Allocate();
 	}
 
 	bool Contains(K a_key)

@@ -11,15 +11,6 @@
 
 template<> PhysicsManager * Singleton<PhysicsManager>::s_instance = nullptr;
 
-PhysicsObject::~PhysicsObject()
-{
-	// Clean up physics if present
-	if (m_gameObject != nullptr)
-	{
-		m_gameObject = nullptr;
-	}
-}
-
 bool PhysicsManager::Startup(const GameFile & a_config)
 {
 	// Setup collision groups and flags from config file
@@ -113,6 +104,14 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 				continue;
 			}
 
+			const int groupA = objA->GetClipGroupId();
+			const int groupB = objB->GetClipGroupId();
+			if (!m_collisionFilters[groupA].IsBitSet(groupB) &&
+				!m_collisionFilters[groupB].IsBitSet(groupA))
+			{
+				continue;
+			}
+
 			bool colResult = false;
 			Vector colPos = Vector::Zero();
 			float colDepth = 0.0f;
@@ -200,29 +199,28 @@ void PhysicsManager::UpdatePhysicsWorld(const float& a_dt)
 {
 	// Step the dynamic physics sim
 	const float p_dt = MathUtils::Clamp(s_minPhysicsStep, a_dt, s_maxPhysicsStep);
-	for (const auto& curPhys : m_physicsWorld)
+	for (auto& physObj : m_physicsWorld)
 	{
-		auto physObj = curPhys.get();
-		auto gameObj = physObj->m_gameObject;
+		auto gameObj = physObj.m_gameObject;
 		const float mass = gameObj->GetPhysicsMass();
 		const auto lDrag = gameObj->GetPhysicsLinearDrag();
 		const auto aDrag = gameObj->GetPhysicsAngularDrag();
 		if (m_type == PhysicsIntegrationType::Euler)
 		{
 			// Semi-implicit euler
-			physObj->AddLinearImpulse(m_gravity * p_dt * Vector::Up(), mass);
-			physObj->m_vel += (physObj->m_force * (1.0f / mass)) * p_dt;
-			physObj->m_rot *= Quaternion(physObj->m_torque, physObj->m_inertia * p_dt * (aDrag + 1.0f));
-			physObj->m_vel *= 1.0f / (1.0f + p_dt * lDrag);
-			physObj->m_pos += physObj->m_vel * p_dt;
+			physObj.AddLinearImpulse(m_gravity * p_dt * Vector::Up(), mass);
+			physObj.m_vel += (physObj.m_force * (1.0f / mass)) * p_dt;
+			physObj.m_rot *= Quaternion(physObj.m_torque, physObj.m_inertia * p_dt * (aDrag + 1.0f));
+			physObj.m_vel *= 1.0f / (1.0f + p_dt * lDrag);
+			physObj.m_pos += physObj.m_vel * p_dt;
 		}
 		else if (m_type == PhysicsIntegrationType::Verlet)
 		{
-			physObj->m_lastAcc = physObj->m_acc;
-			physObj->m_pos += physObj->m_vel * p_dt + (physObj->m_lastAcc * 0.5f * (p_dt * p_dt));
-			physObj->m_acc = (physObj->m_force + m_gravity) / mass;
-			physObj->m_avgAcc = (physObj->m_lastAcc + physObj->m_acc) * 0.5f;
-			physObj->m_vel += physObj->m_avgAcc * p_dt;
+			physObj.m_lastAcc = physObj.m_acc;
+			physObj.m_pos += physObj.m_vel * p_dt + (physObj.m_lastAcc * 0.5f * (p_dt * p_dt));
+			physObj.m_acc = (physObj.m_force + m_gravity) / mass;
+			physObj.m_avgAcc = (physObj.m_lastAcc + physObj.m_acc) * 0.5f;
+			physObj.m_vel += physObj.m_avgAcc * p_dt;
 		}
 		else if (m_type == PhysicsIntegrationType::RungeKutta)
 		{
@@ -236,9 +234,9 @@ void PhysicsManager::UpdateGameObjects(const float & a_dt)
 	for (const auto& curPhys : m_physicsWorld)
 	{
 		// Apply physics world transform to game object and collision state
-		auto gameObj = curPhys->m_gameObject;
+		auto gameObj = curPhys.m_gameObject;
 		Matrix gameObjMat = gameObj->GetWorldMat();
-		gameObjMat.SetPos(curPhys->GetPos());
+		gameObjMat.SetPos(curPhys.GetPos());
 		gameObj->SetWorldMat(gameObjMat);
 	}
 }
@@ -271,10 +269,10 @@ void PhysicsManager::UpdateDebugRender(const float& a_dt)
 		std::unordered_map<unsigned int, bool> alreadyDrawn;
 		for (const auto& curPhys : m_physicsWorld)
 		{
-			auto gameObj = curPhys->m_gameObject;
-			drawDebugClipping(gameObj->GetClipType(), curPhys->GetPos(), curPhys->GetRot(), gameObj->GetClipSize(), sc_colourPurple);
-			curPhys->GetVelocity().GetString(pString);
-			fMan.DrawDebugString3D(pString, curPhys->GetPos(), sc_colourBlue);
+			auto gameObj = curPhys.m_gameObject;
+			drawDebugClipping(gameObj->GetClipType(), curPhys.GetPos(), curPhys.GetRot(), gameObj->GetClipSize(), sc_colourPurple);
+			curPhys.GetVelocity().GetString(pString);
+			fMan.DrawDebugString3D(pString, curPhys.GetPos(), sc_colourBlue);
 			alreadyDrawn.insert(std::pair<unsigned int, bool>(gameObj->GetId(), true));
 		}
 
@@ -314,17 +312,10 @@ bool PhysicsManager::AddPhysicsObject(GameObject * a_gameObj)
 	}
 
 	// Set up a new physics object
-	if (a_gameObj->GetPhysics() == nullptr)
+ 	if (a_gameObj->GetPhysics() == nullptr)
 	{
-		m_physicsWorld.push_back(make_unique<PhysicsObject>(a_gameObj));
-		a_gameObj->SetPhysics(m_physicsWorld.back());
+ 		m_physicsWorld.emplace_back(a_gameObj);
 	}
-
-	// Objects can be re-added at the game object scene position
-	const auto& phys = m_physicsWorld.back();
-	auto physObj = phys.get();
-	physObj->m_pos = a_gameObj->GetPos();
-	
 	return true;
 }
 
@@ -369,7 +360,7 @@ bool PhysicsManager::RemovePhysicsObject(GameObject * a_gameObj)
 		auto existingPhys = a_gameObj->GetPhysics();
 		for (auto it = m_physicsWorld.begin(); it != m_physicsWorld.end();)
 		{
-			if (it->get() == existingPhys)
+			if (it->m_gameObject == a_gameObj)
 			{
 				it = m_physicsWorld.erase(it);
 				return true;
@@ -407,11 +398,11 @@ Vector PhysicsManager::GetVelocity(GameObject * a_gameObj) const
 
 bool PhysicsManager::RayCast(const Vector & a_rayStart, const Vector & a_rayEnd, Vector & a_worldHit_OUT, Vector & a_worldNormal_OUT)
 {
-	
+	// TODO!
 	return false;
 }
 
-int PhysicsManager::GetCollisionGroupId(StringHash a_colGroupHash)
+int PhysicsManager::GetCollisionGroupId(StringHash a_colGroupHash) const
 {
 	for (int i = 1; i < s_maxCollisionGroups; ++i)
 	{

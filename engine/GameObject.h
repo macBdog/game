@@ -1,5 +1,3 @@
-#ifndef _ENGINE_GAME_OBJECT_
-#define _ENGINE_GAME_OBJECT_
 #pragma once
 
 #include <assert.h>
@@ -96,7 +94,7 @@ public:
 	inline void SetClipType(ClipType a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
-	inline void SetClipGroup(const char * a_clipGroupName) { m_clipGroup.SetCString(a_clipGroupName); }
+	inline void SetClipGroup(const char* a_clipGroupName, const int& a_clipGroupId) { m_clipGroup.SetCString(a_clipGroupName); m_clipGroupId = a_clipGroupId; }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetPhysicsMass(const float & a_newMass) { m_physicsMass = a_newMass; }
 	inline void SetPhysicsElasticity(const float & a_newElastic) { m_physicsElasticity = a_newElastic; }
@@ -105,7 +103,7 @@ public:
 	inline void SetVisible(bool a_enable) { m_visible = a_enable; }
 	inline void SetWorldMat(const Matrix & a_mat) { m_worldMat = a_mat; }
 	inline void SetScriptReference(int a_scriptRef) { m_scriptRef = a_scriptRef; }
-	inline void SetPhysics(const std::unique_ptr<PhysicsObject>& a_physics) { m_physics = a_physics.get(); }
+	inline void SetPhysics(PhysicsObject* a_physics) { m_physics = a_physics; }
 	
 	inline unsigned int GetId() const { return m_id; }
 	inline const char * GetName() const { return m_name; }
@@ -122,6 +120,7 @@ public:
 	inline Vector GetClipSize() const { return m_clipVolumeSize; }
 	inline ClipType GetClipType() const { return m_clipType; }
 	inline StringHash GetClipGroup() const { return m_clipGroup; }
+	inline int GetClipGroupId() const { return m_clipGroupId; }
 	inline auto GetPhysicsMass() const { return m_physicsMass; }
 	inline auto GetPhysicsElasticity() const { return m_physicsElasticity; }
 	inline auto GetPhysicsLinearDrag() const { return m_physicsLinearDrag; }
@@ -187,13 +186,13 @@ private:
 
 	unsigned int			m_id;										///< Unique identifier, objects can be resolved from ids
 	char					m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name, up top for ease of debugging
-	GameObject *			m_child;									///< Pointer to first child game obhject
-	GameObject *			m_next;										///< Pointer to sibling game objects
+	GameObject *			m_child{ nullptr };							///< Pointer to first child game obhject
+	GameObject *			m_next{ nullptr };							///< Pointer to sibling game objects
 	CollisionList			m_collisions;								///< List of objects that this game object has collided with this frame
-	Model *					m_model;									///< Pointer to a mesh for display purposes
-	Shader *				m_shader;									///< Pointer to a shader owned by the render manager to draw with
-	PhysicsObject *			m_physics;									///< Pointer to physics manager object for collisions and dynamics
-	AnimationBlender *		m_blender;									///< Pointer to an animation blender if present
+	Model *					m_model{ nullptr };							///< Pointer to a mesh for display purposes
+	Shader *				m_shader{ nullptr };						///< Pointer to a shader owned by the render manager to draw with
+	PhysicsObject*			m_physics{ nullptr };						///< Pointer to physics manager object for collisions and dynamics
+	AnimationBlender *		m_blender{ nullptr };						///< Pointer to an animation blender if present
 	GameObjectState			m_state;									///< What state the object is in
 	float					m_lifeTime;									///< How long this guy has been active
 	Vector					m_shaderData;								///< 3 floats to transmit to the shader
@@ -207,14 +206,13 @@ private:
 	float					m_physicsAngularDrag{ 1.0f };				///< How much rotational torque is lost per time step
 	bool					m_visible{ true };							///< If the game object's model should be added to the render list
 	StringHash				m_clipGroup;								///< What group the object belongs to and can collide with
+	int						m_clipGroupId{ 0 };							///< The bit in the bitset that should be set for the clip group
 	Matrix					m_worldMat;									///< Position and orientation in the world
 	Matrix					m_localMat;									///< Position and orientation relative to world mat, used for animation
 	Matrix					m_finalMat;									///< Aggregate of world and local only used by render
 	char					m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
 #ifndef _RELEASE
-	FileManager::Timestamp m_templateTimeStamp;							///< For auto-reloading of templates
+	FileManager::Timestamp	m_templateTimeStamp;						///< For auto-reloading of templates
 #endif
-	int					  m_scriptRef;									///< If the object is created and managed by script, the ID on the script side is stored here
+	int						m_scriptRef;								///< If the object is created and managed by script, the ID on the script side is stored here
 };
-
-#endif // _ENGINE_GAME_OBJECT_

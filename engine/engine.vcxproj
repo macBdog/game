@@ -56,6 +56,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>..\external\glew-2.1.0\include;..\external\remotery\lib;..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.7\include;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
     <GenerateManifest>false</GenerateManifest>
+    <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>..\external\irrKlang-1.5.0\include;..\external\lua-5.2.3\include;..\external\SDL2-2.0.3\include;..\external\LibOVR\Src;..\external\LibOVRKernel\Src;..\external\LibOVR\Include;..\external\zlib-1.2.8\include;$(IncludePath)</IncludePath>
@@ -69,6 +70,8 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;OVR_OS_WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

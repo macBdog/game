@@ -93,16 +93,17 @@ private:
 
 	bool Init(bool a_useLinearTextureFilter);								///< Perform the work required when starting up
 
-	static const unsigned int s_texurePoolSize[TextureCategory::Count];		///< How much memory is assigned for each category
+	static constexpr unsigned int s_numPools = static_cast<int>(TextureCategory::Count);	///< How many categories there are
+	static const unsigned int s_texurePoolSize[s_numPools];					///< How much memory is assigned for each category
 	static const float s_updateFreq;										///< How often the texture manager should check for updates
 
-	LinearAllocator<ManagedTexture> m_texturePool[TextureCategory::Count];	///< Memory pool for each texture category
-	TextureMap m_textureMap[TextureCategory::Count];						///< List of textures for each category
+	LinearAllocator<ManagedTexture> m_texturePool[s_numPools];				///< Memory pool for each texture category
+	TextureMap m_textureMap[s_numPools];									///< List of textures for each category
 	char m_texturePath[StringUtils::s_maxCharsPerLine];						///< Cache off texture path 
 	DataPack * m_dataPack;													///< Cache off the data pack to load from
 	float m_updateFreq;														///< How often the texture manager should check for changes
 	float m_updateTimer;													///< If we are due for a scan and update of textures
-	TextureFilter m_filterMode;										///< Filtering rule to apply, can make exceptions on a per texture basis
+	TextureFilter m_filterMode;												///< Filtering rule to apply, can make exceptions on a per texture basis
 };
 
 #endif /* _ENGINE_TEXTURE_MANAGER_H_ */

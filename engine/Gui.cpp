@@ -116,26 +116,28 @@ bool Gui::Update(float a_dt)
 	// Update the pulsing of selected widgets that have actions
 	s_widgetPulseTimer += a_dt * 16.0f;
 	Widget::s_selectedColourValue = sin(s_widgetPulseTimer);
-
-	// Draw all elements of the active menu
-	if (m_activeMenu != nullptr)
-	{
-		m_activeMenu->Draw();
-	}
-
+	
 	// Draw debug menu elements over the top of the menu
 	m_debugRoot.Draw();
 
-	// Draw the name of the current menu
-	if (DebugMenu::Get().IsDebugMenuEnabled())
+	if (m_activeMenu != nullptr)
 	{
-		FontManager::Get().DrawDebugString2D(m_activeMenu->GetName(), Vector2(-1.0, 1.0f));
+		// Draw all elements of the active menu
+		m_activeMenu->Draw();
+
+		// Draw the name of the current menu
+		if (DebugMenu::Get().IsDebugMenuEnabled())
+		{
+			FontManager::Get().DrawDebugString2D(m_activeMenu->GetName(), Vector2(-1.0, 1.0f));
+		}
 	}
-	else // Draw game mouse cursor over the top of the gui
+	
+	// Draw game mouse cursor over the top of the gui
+	if (DebugMenu::Get().IsDebugMenuEnabled())
 	{
 		m_cursor.Draw();
 	}
-
+	
 	// Blink the text cursor
 	s_cursorBlinkTimer += a_dt;
 	if (s_cursorBlinkTimer >= s_cursorBlinkTime)

@@ -92,12 +92,12 @@ private:
 	static float s_widgetPulseTimer;
 	
 	char m_guiPath[StringUtils::s_maxCharsPerLine];
-	MenuList m_menus;		///< All menus loaded from data or created on the fly
-	GameFile m_configFile;	///< Base gui config file
-	Widget m_debugRoot;		///< All debug menu elements are children of this
-	Widget m_cursor;		///< A special widget for the mouse position
-	Widget * m_activeMenu;	///< The current menu that's active of editing and display
-	Widget * m_startupMenu;	///< The widget that has been marked as the menu that should be loaded when the game starts
+	MenuList m_menus{};					///< All menus loaded from data or created on the fly
+	GameFile m_configFile{};			///< Base gui config file
+	Widget m_debugRoot{};				///< All debug menu elements are children of this
+	Widget m_cursor{};					///< A special widget for the mouse position
+	Widget* m_activeMenu{ nullptr };	///< The current menu that's active of editing and display
+	Widget * m_startupMenu{ nullptr };	///< The widget that has been marked as the menu that should be loaded when the game starts
 };
 
 

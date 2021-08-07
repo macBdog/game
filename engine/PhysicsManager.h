@@ -24,9 +24,42 @@ class PhysicsObject
 {
 	friend class PhysicsManager;
 public:
+	PhysicsObject(GameObject* a_owner) : m_gameObject(a_owner) 
+	{
+		InitialiseFromGameObject();
+	}
 	PhysicsObject() = delete;
-	PhysicsObject(GameObject * a_owner) : m_gameObject(a_owner) {}
-	~PhysicsObject();
+	~PhysicsObject()
+	{
+		m_gameObject->SetPhysics(nullptr);
+		m_gameObject = nullptr;
+	}
+	// Copy 
+	PhysicsObject(PhysicsObject& a_other) 
+	{
+		m_gameObject = a_other.m_gameObject;
+		m_gameObject->SetPhysics(this);
+	};
+	// Move
+	PhysicsObject(PhysicsObject&& a_other) noexcept
+	{
+		m_gameObject = a_other.m_gameObject;
+		m_gameObject->SetPhysics(this);
+	}
+	// Copy assignment 
+	PhysicsObject& operator =(PhysicsObject& a_other) noexcept
+	{
+		m_gameObject = a_other.m_gameObject;
+		m_gameObject->SetPhysics(this);
+		return *this;
+	};
+	// Move assignment 
+	PhysicsObject& operator =(PhysicsObject&& a_other) noexcept
+	{
+		m_gameObject = a_other.m_gameObject;
+		m_gameObject->SetPhysics(this);
+		return *this;
+	};
 
 	inline bool HasCollision() const { return false; }
 	inline Vector GetVelocity() const  { return m_vel; }
@@ -50,6 +83,18 @@ protected:
 	Vector m_acc{};								///< Acceleration is accumulation of force
 	Vector m_avgAcc{};
 	Vector m_lastAcc{};
+
+private:
+	inline void InitialiseFromGameObject()
+	{
+		if (m_gameObject == nullptr)
+		{
+			return;
+		}
+		m_pos = m_gameObject->GetPos();
+		m_rot = m_gameObject->GetRot();
+		m_gameObject->SetPhysics(this);
+	}
 };
 
 class PhysicsManager : public Singleton<PhysicsManager>
@@ -120,8 +165,8 @@ public:
 
 	//\brief Get the group ID matching the name of a collision group
 	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group
-	int GetCollisionGroupId(StringHash a_colGroupHash);
-	inline int GetCollisionGroupId(const char * a_colGroupName) { return GetCollisionGroupId(StringHash(a_colGroupName)); }
+	int GetCollisionGroupId(StringHash a_colGroupHash) const;
+	inline int GetCollisionGroupId(const char * a_colGroupName) const { return GetCollisionGroupId(StringHash(a_colGroupName)); }
 
 	//\brief Remove all entries from a game object collision list, called once a frame
 	//		 before the physics world is queried
@@ -142,7 +187,7 @@ private:
 	void UpdateDebugRender(const float& a_dt);
 
 	static constexpr int s_maxCollisionGroups = 16;
-	static constexpr float s_minPhysicsStep = 1.0f / 166.0f;
+	static constexpr float s_minPhysicsStep = 1.0f / 500.0f;
 	static constexpr float s_maxPhysicsStep = 1.0f / 30.0f;
 
 	StringHash m_collisionGroups[s_maxCollisionGroups];						///< Set of hashes of the user defined groups that collide
@@ -150,7 +195,7 @@ private:
 	PhysicsIntegrationType m_type{ PhysicsIntegrationType::Euler };			///< What type of integration algorith will be used for the sim
 	Vector m_gravity{ 0.0f, 0.0f, 0.0f };									///< Constant force applied to world wide sim
 	std::vector<GameObject*> m_collisionWorld{ };							///< Every object that is checking collisions against itself
-	std::vector<unique_ptr<PhysicsObject>> m_physicsWorld{ };				///< Every object we simulate dynamics with	
+	std::vector<PhysicsObject> m_physicsWorld{ };							///< Every object we simulate dynamics with	
 };
 
 #endif //_ENGINE_PHYSICS_MANAGER

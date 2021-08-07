@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <type_traits>
 
 #include "../core/Colour.h"
 #include "../core/LinkedList.h"
@@ -248,14 +249,46 @@ public:
 	//\param a_parentObject is a pointer to another Object of the same file that will be linked to the new property
 	//\param a_propertyName is a pointer to a cstring containing the name of the property to add
 	//\param a_value is the string version of the value to add, other data types will be cast from string
-	//\return A pointer to the property that was added or nullptr if the operation was unsuccesfull
-	Property * AddProperty(GameFile::Object * a_parentObject, const char * a_propertyName, const char * a_value);
+	//\return A pointer to the property that was added or nullptr if the operation was unsuccesful
+	template<typename T>
+	Property * AddProperty(GameFile::Object * a_parentObject, const char* a_propertyName, T a_value)
+	{
+		static_assert(std::is_same_v<float, decltype(a_value)> ||
+						std::is_same_v<Vector, decltype(a_value)> ||
+						std::is_same_v<char*, decltype(a_value)> , "GameFile::AddProperty does not have a declaration for the supplied data type.");
+		return nullptr;
+	}
+	template<>
+	Property * AddProperty<float>(GameFile::Object* a_parentObject, const char* a_propertyName, float a_value)
+	{
+		char valBuf[StringUtils::s_maxCharsPerName];
+		sprintf(valBuf, "%f", a_value);
+		return AddProperty(a_parentObject, a_propertyName, valBuf);
+	}
+	template<>
+	Property * AddProperty<Vector>(GameFile::Object* a_parentObject, const char* a_propertyName, Vector a_value)
+	{
+		char valBuf[StringUtils::s_maxCharsPerName];
+		a_value.GetString(valBuf);
+		return AddProperty(a_parentObject, a_propertyName, valBuf);
+	}
+	template<>
+	Property * AddProperty(GameFile::Object * a_parentObject, const char * a_propertyName, const char * a_value)
+	{
+		LinkedListNode<Property>* newProperty = new LinkedListNode<Property>();
+		newProperty->SetData(new Property());
+		newProperty->GetData()->m_name = StringHash(a_propertyName);
+		ALLOC_CSTRING_COPY(newProperty->GetData()->m_data, a_value);
+
+		a_parentObject->m_properties.Insert(newProperty);
+
+		return newProperty->GetData();
+	}
 
 	//\brief Helper function to find an object by name
 	//\param a_name is the pointer to a c string of the name
 	//\return A pointer to the object data or nullptr if there was no object found by name
 	Object * FindObject(const char * a_name) const;
-
 private:
 
 	//\brief Load function will work with either datapack entry or input stream

@@ -1,5 +1,3 @@
-#ifndef _ENGINE_CAMERA_MANAGER
-#define _ENGINE_CAMERA_MANAGER
 #pragma once
 
 #include "..\core\Matrix.h"
@@ -67,8 +65,8 @@ public:
 	{ }
 
 	//\brief Stubbed out for loading cameras for each scene
-	void Startup() { ; }
-	void Shutdown() { ; }
+	void Startup() { }
+	void Shutdown() { }
 	void Update(float a_dt);
 
 	//\brief Accessors for rendering 
@@ -84,11 +82,9 @@ public:
 
 private:
 
-	Camera m_gameCamera;							///< Camera only modified by game/script 
-	Camera m_debugCamera;							///< Camera modified while debug menu is active
-	Camera * m_currentCamera;						///< Pointer to either camera
-	Vector2 m_debugOrientationInput;				///< Input to orientation given mouse coords
-	Vector m_debugMouseLookAngleEuler;				///< Where the debug camera is looking
+	Camera m_gameCamera{};								///< Camera only modified by game/script 
+	Camera m_debugCamera{};								///< Camera modified while debug menu is active
+	Camera* m_currentCamera{ nullptr };					///< Pointer to either camera
+	Vector2 m_debugOrientationInput{ 0.0f };			///< Input to orientation given mouse coords
+	Vector m_debugMouseLookAngleEuler{ 0.0f };			///< Where the debug camera is looking
 };
-
-#endif //_ENGINE_CAMERA_MANAGER

@@ -7,6 +7,7 @@
 #include "../core/Matrix.h"
 
 #include "FileManager.h"
+#include "Log.h"
 #include "Singleton.h"
 #include "StringHash.h"
 

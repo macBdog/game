@@ -2,6 +2,7 @@
 #include "DebugMenu.h"
 #include "FontManager.h"
 #include "ModelManager.h"
+#include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "ScriptManager.h"
 #include "WorldManager.h"
@@ -192,6 +193,10 @@ bool Scene::InitFromConfig()
 			if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
 			{
 				newObject->SetClipOffset(clipOffset->GetVector());
+			}
+			if (GameFile::Property* clipGroup = childObj->FindProperty("clipGroup"))
+			{
+				newObject->SetClipGroup(clipGroup->GetString(), PhysicsManager::Get().GetCollisionGroupId(clipGroup->GetString()));
 			}
 			if (childObj->FindProperty("model"))
 			{

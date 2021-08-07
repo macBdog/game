@@ -1,5 +1,3 @@
-#ifndef _ENGINE_DATA_PACK_
-#define _ENGINE_DATA_PACK_
 #pragma once
 
 #include <ios>
@@ -46,7 +44,7 @@ struct DataPackEntry
 		int numBytesRead = 0;
 		while (!foundEnd && numBytesRead < a_numCharsMax)
 		{
-			foundEnd = inBuff == '\0' || *inBuff == '\n' || *inBuff == '\r';
+			foundEnd = *inBuff == '\0' || *inBuff == '\n' || *inBuff == '\r';
 			if (!foundEnd)
 			{
 				*outBuff++ = *inBuff++;
@@ -168,10 +166,8 @@ private:
 	void AddEntryToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
 	void AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const;
 
-	EntryList m_manifest;									///< The list of all entries
-	LinearAllocator<char> m_resourceData;					///< When a datapack is loaded, the resource data lives here
-	char m_relativePath[StringUtils::s_maxCharsPerLine];	///< Relative path when the datapack was made so the pack is always relative
-	bool m_loaded;											///< If load has been called on the data pack
+	EntryList m_manifest{};									///< The list of all entries
+	LinearAllocator<char> m_resourceData{};					///< When a datapack is loaded, the resource data lives here
+	char m_relativePath[StringUtils::s_maxCharsPerLine]{};	///< Relative path when the datapack was made so the pack is always relative
+	bool m_loaded{ false };									///< If load has been called on the data pack
 };
-
-#endif // _ENGINE_DATA_PACK_

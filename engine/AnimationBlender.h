@@ -1,5 +1,3 @@
-#ifndef _ENGINE_ANIMATION_BLENDER_
-#define _ENGINE_ANIMATION_BLENDER_
 #pragma once
 
 #include "../core/Matrix.h"
@@ -74,5 +72,3 @@ private:
 	GameObject * m_gameObject;								///< The game object that owns this blender
 	AnimationChannel m_channels[s_maxAnimationChannels];	///< A number of animations can be playing at once
 };
-
-#endif // _ENGINE_ANIMATION_BLENDER_

@@ -26,7 +26,10 @@ public:
 		m_maxItems = a_maxItems;
 		m_memory = (T*)(malloc(m_size));
 #ifndef _RELEASE
-		memset(m_memory, 0, m_size);
+		if (m_memory != nullptr)
+		{
+			memset(m_memory, 0, m_size);
+		}
 #endif
 		return m_memory != nullptr;
 	}
@@ -59,10 +62,10 @@ public:
 	}
 	
 private:
-	size_t m_size;
-	size_t m_itemSize;
-	unsigned int m_maxItems;
-	T * m_memory;
+	size_t m_size{ 0 };
+	size_t m_itemSize{ 0 };
+	unsigned int m_maxItems{ 0 };
+	T* m_memory{ nullptr };
 };
 
 //\brief For use where contiguous resizable array like storage is required. 

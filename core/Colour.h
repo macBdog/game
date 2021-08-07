@@ -41,7 +41,7 @@ public:
 	void operator += (const Colour & a_val) { r += a_val.r; g += a_val.g; b += a_val.b; a += a_val.a; }
 	void operator -= (const Colour & a_val) { r -= a_val.r; g -= a_val.g; b -= a_val.b; a -= a_val.a; }
 
-	static void Colour::HSVtoRGB(float hue, float saturation, float val, float& red_OUT, float& green_OUT, float& blue_OUT)
+	static void HSVtoRGB(float hue, float saturation, float val, float& red_OUT, float& green_OUT, float& blue_OUT)
 	{
 		// Branchless conversion lifted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl 
 		const float cKx = hue + 1.0f;
@@ -58,7 +58,7 @@ public:
 		blue_OUT = val * MathUtils::LerpFloat(1.0f, MathUtils::Clamp(0.0f, pZ - 1.0f, 1.0f), saturation);
 	}
 
-	static void Colour::RGBtoHSV(float red, float green, float blue, float& hue_OUT, float& saturation_OUT, float& value_OUT)
+	static void RGBtoHSV(float red, float green, float blue, float& hue_OUT, float& saturation_OUT, float& value_OUT)
 	{
 		// Fast conditional conversion lifted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 		const float px = green < blue ? blue : green;

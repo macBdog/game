@@ -61,6 +61,10 @@ void GameObject::SetTemplateProperties()
 			{
 				SetClipOffset(clipOffset->GetVector());
 			}
+			if (GameFile::Property* clipGroup = object->FindProperty("clipGroup"))
+			{
+				SetClipGroup(clipGroup->GetString(), PhysicsManager::Get().GetCollisionGroupId(clipGroup->GetString()));
+			}
 			// Shader 
 			RenderManager & rMan = RenderManager::Get();
 			if (GameFile::Property * shader = object->FindProperty("shader"))
@@ -296,21 +300,20 @@ bool GameObject::CollidesWith(Vector a_worldPos)
 
 bool GameObject::CollidesWith(GameObject * a_colObj)
 { 
-	// TODO: This is SUPER branchy code, change clip type to a bit set and re-do
-
 	// Clip each type against type
 	ClipType colClip = a_colObj->GetClipType();
+	Vector colPos = { 0.0f }, colNorm = { 0.0f };
 	if (m_clipType == ClipType::Sphere && colClip == ClipType::Sphere)
 	{
-		return false; /* TODO: CollisionUtils::IntersectSphereSphere(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
+		return CollisionUtils::IntersectSpheres(GetClipPos(), GetClipSize().GetX(), a_colObj->GetClipPos(), a_colObj->GetClipSize().GetX(), colPos, colNorm);
 	} 
 	else if ((m_clipType == ClipType::Sphere && colClip == ClipType::AxisBox) || (m_clipType == ClipType::AxisBox && colClip == ClipType::Sphere)) 
 	{
-		return false; /* TODO: CollisionUtils::IntersectSphereAxisBox(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
+		return CollisionUtils::IntersectAxisBoxSphere(GetClipPos(), GetClipSize().GetX(), a_colObj->GetClipPos(), a_colObj->GetClipSize(), colPos, colNorm);
 	} 
 	else if ((m_clipType == ClipType::Sphere && colClip == ClipType::Box) || (m_clipType == ClipType::Box && colClip == ClipType::Sphere)) 
 	{
-		return false; /* TODO: CollisionUtils::IntersectSphereBox(GetClipPos(), GetClipSize(), a_colObj->GetClipPos(), a_colObj->GetClipSize()); */
+		return CollisionUtils::IntersectBoxSphere(GetClipPos(), GetClipSize().GetX(), a_colObj->GetClipPos(), a_colObj->GetClipSize(), a_colObj->GetRot(), colPos, colNorm);
 	} 
 	else if (m_clipType == ClipType::AxisBox && colClip == ClipType::AxisBox) 
 	{
@@ -393,7 +396,13 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			{
 				outputFile->AddProperty(fileObject, "clipGroup", m_clipGroup.GetCString());
 			}
-			// TODO! Add physics properties for serialisation
+			if (m_physicsMass > 0.0f)
+			{
+				outputFile->AddProperty(fileObject, "physicsMass", m_physicsMass);
+				outputFile->AddProperty(fileObject, "physicsElasticity", m_physicsElasticity);
+				outputFile->AddProperty(fileObject, "physicsLinearDrag", m_physicsLinearDrag);
+				outputFile->AddProperty(fileObject, "physicsAngularDrag", m_physicsAngularDrag);
+			}
 			if (m_shader != nullptr)
 			{
 				// Make sure the shader is not a default engine shader
@@ -444,7 +453,14 @@ void GameObject::SerialiseTemplate()
 		templateFile->AddProperty(templateObj, "clipGroup", m_clipGroup.GetCString());
 	}
 
-	// TODO! Add phyics properties for serialisation
+	if (m_physicsMass > 0.0f)
+	{
+		templateFile->AddProperty(templateObj, "physicsMass", m_physicsMass);
+		templateFile->AddProperty(templateObj, "physicsElasticity", m_physicsElasticity);
+		templateFile->AddProperty(templateObj, "physicsLinearDrag", m_physicsLinearDrag);
+		templateFile->AddProperty(templateObj, "physicsAngularDrag", m_physicsAngularDrag);
+	}
+
 	if (m_shader != nullptr)
 	{
 		if (m_shader != RenderManager::Get().GetLightingShader() &&

@@ -1,5 +1,3 @@
-#ifndef _ENGINE_SYSTEM_LOG_
-#define _ENGINE_SYSTEM_LOG_
 #pragma once
 
 #include <iostream>
@@ -100,12 +98,11 @@ private:
 	typedef LinkedListNode<LogDisplayEntry> LogDisplayNode;
 	typedef LinkedList<LogDisplayEntry> LogDisplayList;
 
-	const static float	s_logDisplayTime[LogLevel::Count];			// How long to display each log category on screen
-	const static Colour s_logDisplayColour[LogLevel::Count];		// What colours to display each log category in
+	static constexpr int s_numLogs = static_cast<int>(LogLevel::Count);
+	const static float	s_logDisplayTime[s_numLogs];				///< How long to display each log category on screen
+	const static Colour s_logDisplayColour[s_numLogs];				///< What colours to display each log category in
 
-	LogDisplayList m_displayList;									// All log entries that are being displayed at a time
-	HashMap<unsigned int, void *> m_writeOnceList;					// When a message is logged only once, it's hash is added to this map
-	bool m_renderToScreen;											// If log entries should be rendered to the screen
+	LogDisplayList m_displayList;									///< All log entries that are being displayed at a time
+	HashMap<unsigned int, void *> m_writeOnceList;					///< When a message is logged only once, it's hash is added to this map
+	bool m_renderToScreen{ false };									///< If log entries should be rendered to the screen
 };
-
-#endif // _ENGINE_SYSTEM_LOG_
