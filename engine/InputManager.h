@@ -1,5 +1,3 @@
-#ifndef _ENGINE_INPUT_MANAGER_
-#define _ENGINE_INPUT_MANAGER_
 #pragma once
 
 #include <SDL.h>
@@ -256,5 +254,3 @@ private:
 	bool m_depressedGamepadButtons[s_maxGamepads][s_maxGamepadButtons];		///< If each of the gamepad buttons are pressed
 	bool m_depressedMouseButtons[s_maxMouseButtons];						///< If each of the mouse buttons are pressed
 };
-
-#endif // _ENGINE_INPUT_MANAGER_

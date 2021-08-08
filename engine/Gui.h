@@ -1,5 +1,3 @@
-#ifndef _ENGINE_GUI_
-#define _ENGINE_GUI_
 #pragma once
 
 #include "../core/LinkedList.h"
@@ -99,6 +97,3 @@ private:
 	Widget* m_activeMenu{ nullptr };	///< The current menu that's active of editing and display
 	Widget * m_startupMenu{ nullptr };	///< The widget that has been marked as the menu that should be loaded when the game starts
 };
-
-
-#endif // _ENGINE_GUI_

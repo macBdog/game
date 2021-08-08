@@ -270,15 +270,15 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Sphere);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
-					{
-						hasCollision = true;
-						newGameObject->SetClipType(ClipType::Box);
-					}
 					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::AxisBox);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
+					{
+						hasCollision = true;
+						newGameObject->SetClipType(ClipType::Box);
 					}
 					else
 					{

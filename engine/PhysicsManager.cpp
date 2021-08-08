@@ -94,6 +94,12 @@ bool PhysicsManager::Shutdown()
 
 void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 {
+	// Clear all collision each frame
+	for (const auto& objA : m_collisionWorld)
+	{
+		ClearCollisions(objA);
+	}
+
 	// Solve collisions
 	for (const auto& objA : m_collisionWorld)
 	{
@@ -116,16 +122,18 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 			Vector colPos = Vector::Zero();
 			float colDepth = 0.0f;
 			Vector colNormal = Vector::Zero();
+			const auto objAPos = objA->GetPos() + objA->GetClipOffset();
+			const auto objBPos = objB->GetPos() + objB->GetClipOffset();
 			switch (objA->GetClipType())
 			{
 				case ClipType::Sphere:
 				{
 					if (objB->GetClipType() == ClipType::Sphere)
 					{
-						if (CollisionUtils::IntersectSpheres(objA->GetPos(), objA->GetClipSize().GetX(), objB->GetPos(), objB->GetClipSize().GetX(), colPos, colNormal))
+						if (CollisionUtils::IntersectSpheres(objAPos, objA->GetClipSize().GetX(), objBPos, objB->GetClipSize().GetX(), colPos, colNormal))
 						{
 							colResult = true;
-							const auto toCol = colPos - objA->GetPos();
+							const auto toCol = colPos - objAPos;
 							colDepth = MathUtils::GetMax(objA->GetClipSize().GetX() - toCol.Length(), 0.0f);
 						}
 					}
@@ -135,10 +143,10 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 				{
 					if (objB->GetClipType() == ClipType::Sphere)
 					{
-						if (CollisionUtils::IntersectAxisBoxSphere(objB->GetPos(), objB->GetClipSize().GetX(), objA->GetPos(), objA->GetClipSize(), colPos, colNormal))
+						if (CollisionUtils::IntersectAxisBoxSphere(objBPos, objB->GetClipSize().GetX(), objAPos, objA->GetClipSize(), colPos, colNormal))
 						{
 							colResult = true;
-							const auto toCol = colPos - objB->GetPos();
+							const auto toCol = colPos - objBPos;
 							colDepth = MathUtils::GetMax(objB->GetClipSize().GetX() - toCol.Length(), 0.0f);
 						}
 					}
@@ -148,10 +156,10 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 				{
 					if (objB->GetClipType() == ClipType::Sphere)
 					{
-						if (CollisionUtils::IntersectBoxSphere(objB->GetPos(), objB->GetClipSize().GetX(), objA->GetPos(), objA->GetClipSize(), objA->GetRot(), colPos, colNormal))
+						if (CollisionUtils::IntersectBoxSphere(objBPos, objB->GetClipSize().GetX(), objAPos, objA->GetClipSize(), objA->GetRot(), colPos, colNormal))
 						{
 							colResult = true;
-							const auto toCol = colPos - objB->GetPos();
+							const auto toCol = colPos - objBPos;
 							colDepth = MathUtils::GetMax(objB->GetClipSize().GetX() - toCol.Length(), 0.0f);
 						}
 					}
@@ -162,8 +170,8 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 
 			if (colResult)
 			{
-				ClearCollisions(objA);
 				AddCollision(objA, objB);
+				AddCollision(objB, objA);
 
 				auto collisionResponse = [&colNormal, &colDepth](auto a_physObj, auto a_gameObj)
 				{
@@ -236,7 +244,7 @@ void PhysicsManager::UpdateGameObjects(const float & a_dt)
 		// Apply physics world transform to game object and collision state
 		auto gameObj = curPhys.m_gameObject;
 		Matrix gameObjMat = gameObj->GetWorldMat();
-		gameObjMat.SetPos(curPhys.GetPos());
+		gameObjMat.SetPos(curPhys.GetPos() + gameObj->GetClipOffset());
 		gameObj->SetWorldMat(gameObjMat);
 	}
 }
@@ -255,6 +263,7 @@ void PhysicsManager::UpdateDebugRender(const float& a_dt)
 		const auto drawDebugClipping = [&rMan](const ClipType a_type, const Vector& a_pos, const Quaternion & a_rot, const Vector& a_size, const Colour& a_col)
 		{
 			Matrix t;
+			t.SetIdentity();
 			t.SetPos(a_pos);
 			a_rot.ApplyToMatrix(t);
 			switch (a_type)

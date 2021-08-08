@@ -945,7 +945,7 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 	
 	// Set the lights in the scene for the shader
 	Scene * curScene = WorldManager::Get().GetCurrentScene();
-	if (curScene->HasLights())
+	if (curScene != nullptr && curScene->HasLights())
 	{
 		for (int i = 0; i < curScene->GetNumLights(); ++i)
 		{
@@ -1210,8 +1210,10 @@ void RenderManager::RenderScene(Matrix & a_viewMatrix, Matrix & a_perspectiveMat
 		Matrix debugBoxMat = Matrix::Identity();
 		for (int j = 0; j < m_objectCount[i][static_cast<int>(RenderObjectType::DebugBoxes)]; ++j)
 		{
+			debugBoxMat.SetScale(b->m_scale);
 			debugBoxMat.SetPos(b->m_pos);
 			shaderData.m_objectMatrix = &debugBoxMat;
+			shaderData.m_materialAmbient = b->m_colour;
 			m_colourShader->UseShader(shaderData);
 			glBindVertexArray(m_debugBoxBuffer.m_vertexArrayId);
 			glDrawElements(GL_LINE_LOOP, s_numDebugBoxVerts, GL_UNSIGNED_INT, 0);
@@ -1826,6 +1828,7 @@ void RenderManager::AddDebugAxisBox(const Vector & a_worldPos, const Vector & a_
 	t += m_objectCount[static_cast<int>(RenderLayer::Debug3D)][static_cast<int>(RenderObjectType::DebugBoxes)]++;
 	t->m_pos = a_worldPos;
 	t->m_scale = a_dimensions;
+	t->m_colour = Vector(a_colour.GetValues());
 #endif
 }
 

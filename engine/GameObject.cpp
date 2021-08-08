@@ -44,13 +44,23 @@ void GameObject::SetTemplateProperties()
 				{
 					SetClipType(ClipType::Sphere);
 				}
+				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+				{
+					SetClipType(ClipType::AxisBox);
+				}
 				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
 				{
 					SetClipType(ClipType::Box);
 				}
 				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
 				{
-					SetClipType(ClipType::Mesh);
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s, defaulting to axisbox.", GetName());
+					SetClipType(ClipType::AxisBox);
+				}
+				else
+				{
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unknown clip type of %s specified for object %s, defaulting to axisbox.", clipType->GetString(), GetName());
+					SetClipType(ClipType::AxisBox);
 				}
 			}
 			if (GameFile::Property * clipSize = object->FindProperty("clipSize"))

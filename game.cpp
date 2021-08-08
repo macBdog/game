@@ -1,16 +1,28 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <windows.h>
-
 #include <SDL.h>
-#include <SDL_syswm.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+	#include <windows.h>
+	#include <SDL_syswm.h>
+#elif __APPLE__
+// Apple
+#elif __linux__
+// linux
+#elif __unix__ // all unices not caught above
+// Unix
+#elif defined(_POSIX_VERSION)
+// POSIX
+#else
+#   error "Unknown compiler"
+#endif
 
 #ifndef _RELEASE
 #include "Remotery.h"
 #endif
 
-#include "core/MathUtils.h"
+#include "core/MathUtils.h"	
 
 #include "engine/AnimationManager.h"
 #include "engine/CameraManager.h"

@@ -179,11 +179,13 @@ bool Scene::InitFromConfig()
 				}
 				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
 				{
-					newObject->SetClipType(ClipType::Mesh);
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s in scene %s, defaulting to axisbox.", newObject->GetName(), GetName());
+					newObject->SetClipType(ClipType::AxisBox);
 				}
 				else
 				{
 					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), GetName());
+					newObject->SetClipType(ClipType::AxisBox);
 				}
 			}
 			if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))

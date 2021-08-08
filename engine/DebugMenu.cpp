@@ -920,7 +920,7 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 		if (lastKey == SDLK_BACKSPACE)
 		{
 			// Delete a character off the end of the name
-			unsigned int nameLength = strlen(newName);
+			const auto nameLength = strlen(newName);
 			if (nameLength > 0)
 			{
 				newName[nameLength - 1] = '\0';
