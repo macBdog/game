@@ -40,7 +40,7 @@ public:
 
 	HashMap(const HashMap & a_moveFrom)
 	{
-
+		// TODO
 	}
 
 	HashMap(HashMap && a_moveFrom)
