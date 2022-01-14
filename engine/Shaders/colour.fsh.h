@@ -13,4 +13,5 @@ void main()
 { 
 	FragmentColour = Colour * vec4(MaterialAmbient, 1.0);
 	GBuffer1Colour = Colour * vec4(MaterialAmbient, 1.0);
-})";
+}
+)";

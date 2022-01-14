@@ -53,4 +53,5 @@ void main(void)
 		fragColour += texFrag * vec4((Iamb + Idiff + Ispec), texFrag.a); 
 	} 
 	GBuffer1Colour = fragColour; 
-})";
+}
+)";

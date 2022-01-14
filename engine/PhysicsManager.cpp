@@ -150,6 +150,14 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 							colDepth = MathUtils::GetMax(objB->GetClipSize().GetX() - toCol.Length(), 0.0f);
 						}
 					}
+					else if (objB->GetClipType() == ClipType::Box)
+					{
+						if (CollisionUtils::IntersectAxisBoxes(objBPos, objB->GetClipSize(), objAPos, objA->GetClipSize()))
+						{
+							colResult = true;
+							colDepth = (objAPos - objBPos).Length();
+						}
+					}
 					break;
 				}
 				case ClipType::Box:
@@ -161,6 +169,14 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 							colResult = true;
 							const auto toCol = colPos - objBPos;
 							colDepth = MathUtils::GetMax(objB->GetClipSize().GetX() - toCol.Length(), 0.0f);
+						}
+					}
+					else if (objB->GetClipType() == ClipType::Box)
+					{
+						if (CollisionUtils::IntersectAxisBoxes(objBPos, objB->GetClipSize(), objAPos, objA->GetClipSize()))
+						{
+							colResult = true;
+							colDepth = (objAPos - objBPos).Length();
 						}
 					}
 					break;

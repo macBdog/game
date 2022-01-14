@@ -33,4 +33,4 @@ layout(location = 3) out vec4 GBuffer3Colour;
 layout(location = 4) out vec4 GBuffer4Colour;
 layout(location = 5) out vec4 GBuffer5Colour;
 layout(location = 6) out vec4 GBuffer6Colour;
-})";
+)";

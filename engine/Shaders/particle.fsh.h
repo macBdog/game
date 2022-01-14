@@ -20,4 +20,5 @@ void main()
 		discard;
 	}
 	GBuffer1Colour = vec4(fragment.Colour.rgb, fragment.Colour.a * 1.0 - d);
-})";
+}
+)";

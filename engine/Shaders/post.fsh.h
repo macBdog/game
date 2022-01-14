@@ -23,4 +23,5 @@ void main()
 { 
 	GBuffer1Colour = texture2D(GBuffer1, OutTexCoord) * Colour;
 	FragmentColour = GBuffer1Colour;
-})";
+}
+)";

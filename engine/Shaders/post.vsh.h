@@ -14,4 +14,5 @@ void main()
 	gl_Position = vec4(VertexPosition, 1.0) * ObjectMatrix * ViewMatrix * ProjectionMatrix;
 	Colour = VertexColour;
 	OutTexCoord = VertexUV;
-})";
+}
+)";

@@ -17,4 +17,5 @@ void main(void)
 	LightVertexNormal = VertexNormal;
 	OutTexCoord = VertexUV;
 	gl_Position = vec4(VertexPosition, 1.0) * ObjectMatrix * ViewMatrix * ProjectionMatrix;
-})";
+}
+)";

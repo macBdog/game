@@ -50,4 +50,5 @@ void main()
 	gl_Position = p * ViewMatrix * ProjectionMatrix;
 	EmitVertex();
 	EndPrimitive();
-})";
+}
+)";

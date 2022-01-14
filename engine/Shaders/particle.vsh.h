@@ -31,4 +31,5 @@ void main()
 		particle.Colour = vec4(ParticleColour.xyz, 1.0 - lifeFrac);
 		particle.Size = ParticleSize * (1.0 - lifeFrac);
 	}
-})";
+}
+)";

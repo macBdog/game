@@ -22,4 +22,5 @@ in vec2 OutTexCoord;
 void main()
 { 
 	GBuffer1Colour = texture2D(DiffuseTexture, OutTexCoord) * Colour;
-})";
+}
+)";

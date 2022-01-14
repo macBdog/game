@@ -52,7 +52,7 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	int finalStringSize = _vscprintf(a_message, formatArgs);
 	formatString = (char *)malloc(sizeof(char) * finalStringSize + 1);
 	finalString = (char *)malloc(sizeof(char) * finalStringSize + strlen(errorString) + 8);
-	if (finalString != nullptr && formatString != nullptr)
+ 	if (finalString != nullptr && formatString != nullptr)
 	{
 		vsprintf(formatString, a_message, formatArgs);
 		sprintf(finalString, "%s %s\n", errorString, formatString);
