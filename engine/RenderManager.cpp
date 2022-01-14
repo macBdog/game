@@ -282,19 +282,19 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	}
 
 	// Setup default shaders
-	#include "Shaders\post.vsh.inc"
-	#include "Shaders\post.fsh.inc"
-	#include "Shaders\colour.vsh.inc"
-	#include "Shaders\colour.fsh.inc"
-	#include "Shaders\texture.vsh.inc"
-	#include "Shaders\texture.fsh.inc"
-	#include "Shaders\lighting.vsh.inc"
-	#include "Shaders\lighting.fsh.inc"
-	#include "Shaders\particle.vsh.inc"
-	#include "Shaders\particle.fsh.inc"
-	#include "Shaders\particle.gsh.inc"
-	#include "Shaders\final.fsh.inc"
-	#include "Shaders\final.vsh.inc"
+	#include "Shaders\post.vsh.h"
+	#include "Shaders\post.fsh.h"
+	#include "Shaders\colour.vsh.h"
+	#include "Shaders\colour.fsh.h"
+	#include "Shaders\texture.vsh.h"
+	#include "Shaders\texture.fsh.h"
+	#include "Shaders\lighting.vsh.h"
+	#include "Shaders\lighting.fsh.h"
+	#include "Shaders\particle.vsh.h"
+	#include "Shaders\particle.fsh.h"
+	#include "Shaders\particle.gsh.h"
+	#include "Shaders\final.fsh.h"
+	#include "Shaders\final.vsh.h"
 	if (m_postShader = new Shader("post"))
 	{
 		m_postShader->Init(postVertexShader, postFragmentShader);
@@ -2045,8 +2045,8 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 	}
 
 	// All scene shaders include the global inputs and outputs
-	#include "Shaders\global.fsh.inc"
-	#include "Shaders\global.vsh.inc"
+	#include "Shaders\global.fsh.h"
+	#include "Shaders\global.vsh.h"
 
 	char * vertexSource = nullptr;
 	char * fragmentSource = nullptr;

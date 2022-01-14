@@ -116,6 +116,9 @@
     <ClInclude Include="VRRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders\particle.vsh.h">
+      <Filter>Source Files\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="InputManager.cpp">
@@ -213,28 +216,28 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\colour.fsh.inc">
+    <None Include="Shaders\colour.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\colour.vsh.inc">
+    <None Include="Shaders\colour.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\texture.fsh.inc">
+    <None Include="Shaders\texture.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\texture.vsh.inc">
+    <None Include="Shaders\texture.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\global.fsh.inc">
+    <None Include="Shaders\global.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\global.vsh.inc">
+    <None Include="Shaders\global.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\lighting.fsh.inc">
+    <None Include="Shaders\lighting.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\lighting.vsh.inc">
+    <None Include="Shaders\lighting.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Font\default.fnt.inc">
@@ -246,22 +249,22 @@
     <None Include="Shaders\particle.vsh.inc">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Shaders\post.fsh.inc">
+    <None Include="Shaders\post.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\post.vsh.inc">
+    <None Include="Shaders\post.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\particle.fsh.inc">
+    <None Include="Shaders\particle.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\particle.gsh.inc">
+    <None Include="Shaders\particle.gsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\final.fsh.inc">
+    <None Include="Shaders\final.fsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\final.vsh.inc">
+    <None Include="Shaders\final.vsh.h">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

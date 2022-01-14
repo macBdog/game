@@ -135,6 +135,7 @@
     <ClInclude Include="LuaScript.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelManager.h" />
+    <ClInclude Include="Shaders\particle.vsh.h" />
     <ClInclude Include="VRManager.h" />
     <ClInclude Include="VRRender.h" />
     <ClInclude Include="PhysicsManager.h" />
@@ -188,21 +189,21 @@
   <ItemGroup>
     <None Include="Font\default.fnt.inc" />
     <None Include="Font\default.tga.inc" />
-    <None Include="Shaders\colour.fsh.inc" />
-    <None Include="Shaders\colour.vsh.inc" />
-    <None Include="Shaders\final.fsh.inc" />
-    <None Include="Shaders\final.vsh.inc" />
-    <None Include="Shaders\global.fsh.inc" />
-    <None Include="Shaders\global.vsh.inc" />
-    <None Include="Shaders\lighting.fsh.inc" />
-    <None Include="Shaders\lighting.vsh.inc" />
-    <None Include="Shaders\particle.fsh.inc" />
-    <None Include="Shaders\particle.gsh.inc" />
+    <None Include="Shaders\colour.fsh.h" />
+    <None Include="Shaders\colour.vsh.h" />
+    <None Include="Shaders\final.fsh.h" />
+    <None Include="Shaders\final.vsh.h" />
+    <None Include="Shaders\global.fsh.h" />
+    <None Include="Shaders\global.vsh.h" />
+    <None Include="Shaders\lighting.fsh.h" />
+    <None Include="Shaders\lighting.vsh.h" />
+    <None Include="Shaders\particle.fsh.h" />
+    <None Include="Shaders\particle.gsh.h" />
     <None Include="Shaders\particle.vsh.inc" />
-    <None Include="Shaders\post.fsh.inc" />
-    <None Include="Shaders\post.vsh.inc" />
-    <None Include="Shaders\texture.fsh.inc" />
-    <None Include="Shaders\texture.vsh.inc" />
+    <None Include="Shaders\post.fsh.h" />
+    <None Include="Shaders\post.vsh.h" />
+    <None Include="Shaders\texture.fsh.h" />
+    <None Include="Shaders\texture.vsh.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
