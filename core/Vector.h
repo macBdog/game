@@ -71,12 +71,12 @@ public:
 
 	// Constructors
 	Vector2() { x = 0; y = 0; }
-	Vector2(float a_val) { x = a_val; y = a_val; }
-	Vector2(float a_x, float a_y) { x = a_x; y = a_y; }
+	Vector2(const float & a_val) { x = a_val; y = a_val; }
+	Vector2(const float & a_x, float a_y) { x = a_x; y = a_y; }
 
 	// Mutators
-	inline void SetX(float a_x) { x = a_x; }
-	inline void SetY(float a_y) { y = a_y; }
+	inline void SetX(const float & a_x) { x = a_x; }
+	inline void SetY(const float & a_y) { y = a_y; }
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
 	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f", x, y); }

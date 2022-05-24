@@ -1,5 +1,3 @@
-#ifndef _CORE_BITSET_
-#define _CORE_BITSET_
 #pragma once
 
 // Values for bit counting by lookup table
@@ -126,5 +124,3 @@ private:
 
 	unsigned int m_bits; ///< Storage for 32 of the finest bits
 };
-
-#endif _CORE_BITSET_

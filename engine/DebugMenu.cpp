@@ -162,17 +162,21 @@ bool DebugMenu::Startup()
 	// Setup the colour picker texture
 	size_t colourPickerTextureMemorySize = sc_colourPickerTextureSize * sc_colourPickerTextureSize * ((sc_colourPickerTextureBpp) >> 3);
 	m_colourPickerTextureMemory = malloc(colourPickerTextureMemorySize);
-	int * currentPixel = (int*)m_colourPickerTextureMemory;
+	int * currentPixel = (int *)m_colourPickerTextureMemory;
 	for (int i = 0; i < sc_colourPickerTextureSize; ++i)
 	{
 		for (int j = 0; j < sc_colourPickerTextureSize; ++j)
 		{
+			if (currentPixel == nullptr)
+			{
+				continue;
+			}
 			float h = (float)j / sc_colourPickerTextureSize;
 			float s = sinf(PI * (1.0f - (float)i / (float)sc_colourPickerTextureSize));
 			float v = (float)i / (float)sc_colourPickerTextureSize;
 			float r, g, b = 0.0f;
 			Colour::HSVtoRGB(h, s, v, r, g, b);
-			char * curChannel = (char*)currentPixel;
+			char * curChannel = (char *)currentPixel;
 			*curChannel = (char)(r * 255.0f);
 			curChannel++;
 			*curChannel = (char)(g * 255.0f);
@@ -986,8 +990,8 @@ void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_f
 	// Position buttons on the panel
 	const float buttonSpacingX = 0.025f;
 	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
-	Vector2 parentSize = m_resourceSelect->GetSize();
-	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
+	const Vector2 parentSize = m_resourceSelect->GetSize();
+	const Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
 	m_resourceSelect->SetOffset(parentPos);
 
 	// Position the list of resources
@@ -1035,15 +1039,15 @@ void DebugMenu::ShowFontSelect()
 	// Position buttons on the panel
 	const float buttonSpacingX = 0.025f;
 	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
-	Vector2 parentSize = m_resourceSelect->GetSize();
-	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
+	const Vector2 parentSize = m_resourceSelect->GetSize();
+	const Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
 	m_resourceSelect->SetOffset(parentPos);
 
 	// Position the list of resources
 	m_resourceSelectList->SetOffset(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
 
 	// Position the Ok and Cancel buttons
-	Vector2 buttonSize = m_btnResourceSelectOk->GetSize();
+	const Vector2 buttonSize = m_btnResourceSelectOk->GetSize();
 	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
 								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
 	m_btnResourceSelectOk->SetOffset(buttonPos);
@@ -1054,7 +1058,6 @@ void DebugMenu::ShowFontSelect()
 	
 	// Add fonts list to widget
 	FontManager & fontMan = FontManager::Get();
-	
 	const int numFonts = fontMan.GetNumLoadedFonts();
 	for (int i = 0; i < numFonts; ++i)
 	{
@@ -1073,15 +1076,15 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	// Position buttons on the panel
 	const float buttonSpacingX = 0.025f;
 	const float buttonSpacingY = buttonSpacingX * RenderManager::Get().GetViewAspect();
-	Vector2 parentSize = m_textInput->GetSize();
-	Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
+	const Vector2 parentSize = m_textInput->GetSize();
+	const Vector2 parentPos = Vector2(-parentSize.GetX()*0.5f, 0.75f);
 	m_textInput->SetOffset(parentPos);
 
 	// Position the list of resources
 	m_textInputField->SetOffset(Vector2(parentPos.GetX() + buttonSpacingX*2.0f, parentPos.GetY() - buttonSpacingY*2.0f));
 
 	// Position the Ok and Cancel buttons
-	Vector2 buttonSize = m_btnTextInputOk->GetSize();
+	const Vector2 buttonSize = m_btnTextInputOk->GetSize();
 	Vector2 buttonPos = Vector2(parentPos.GetX() + buttonSpacingX,
 								parentPos.GetY() - parentSize.GetY() + buttonSize.GetY() + buttonSpacingY);
 	m_btnTextInputOk->SetOffset(buttonPos);

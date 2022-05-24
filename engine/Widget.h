@@ -305,7 +305,7 @@ public:
 	
 	inline WidgetVector GetPos() const { return m_pos; }
 	inline Vector2 GetDrawPos() const { return m_drawPos; }
-	inline WidgetVector GetSize() const { return m_size; }
+	inline Vector2 GetSize() const { return m_size; }
 	inline const char * GetName() const { return m_name; }
 	inline const char * GetText() const { return m_text; }
 	inline float GetTextWidth() { if (m_textWidth < 0.0) { MeasureText(); } return m_textWidth; }

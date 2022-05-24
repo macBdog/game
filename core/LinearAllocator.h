@@ -1,5 +1,3 @@
-#ifndef _CORE_LINEAR_ALLOCATOR_
-#define _CORE_LINEAR_ALLOCATOR_
 #pragma once
 
 #include <stdlib.h>
@@ -163,12 +161,10 @@ public:
 
 private:
 
-	T* m_memory{ nullptr };						///< Pointer to our chunk of memory
+	T * m_memory{ nullptr };					///< Pointer to our chunk of memory
 	T * m_memoryEnd{ nullptr };					///< The end of the allocation
 	T * m_memoryPtr{ nullptr };					///< Pointer to the head of the last allocation made
 	size_t m_memorySize{ nullptr };				///< Total memory size in bytes
 	size_t m_maxEnd{ nullptr };					///< The end marker of the stack
 
 };
-
-#endif // _CORE_LINEAR_ALLOCATOR_

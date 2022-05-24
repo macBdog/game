@@ -191,10 +191,10 @@ private:
 
 	static const size_t s_defaultTableSize = 512;	
 
-	unsigned int m_length;									///< How many objects are inserted into the map
-	unsigned int m_tableSize;								///< Number of bytes allocated to hold the complete table
-	HashNode<K, T> ** m_map;								///< Chunk of memory pointing to the objects in the map ordered by key
-	KeyHash<K> m_hashFunc;									///< Pointer to struct for hashing
+	unsigned int m_length{ 0 };									///< How many objects are inserted into the map
+	unsigned int m_tableSize{ 0 };								///< Number of bytes allocated to hold the complete table
+	HashNode<K, T> ** m_map;									///< Chunk of memory pointing to the objects in the map ordered by key
+	KeyHash<K> m_hashFunc;										///< Pointer to struct for hashing
 };
 
-static const int s_maxStringHash32bit = 9;		// TODO Move the StringHash guts into the HashMap to replace this hacky hash stuff
+static const int s_maxStringHash32bit = 9;						// TODO Move the StringHash guts into the HashMap to replace this hacky hash stuff

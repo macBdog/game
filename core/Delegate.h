@@ -1,5 +1,3 @@
-#ifndef _CORE_DELEGATE_
-#define _CORE_DELEGATE_
 #pragma once
 
 #include <cstdlib>
@@ -51,5 +49,3 @@ private:
 
 	CallbackBase<TReturnType, TParam> * m_callback;	// Storage for the callback
 };
-
-#endif //_CORE_DELEGATE_

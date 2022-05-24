@@ -1,5 +1,3 @@
-#ifndef _CORE_CALLBACK_
-#define _CORE_CALLBACK_
 #pragma once
 
 //\brief Abstract base class so any class can instance this and still have Execute called
@@ -36,5 +34,3 @@ private:
 	void * m_object;		// The object that the method is run on 
 	TMethod m_method;		// The method to call on the object
 };
-
-#endif //_CORE_CALLBACK_

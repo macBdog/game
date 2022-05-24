@@ -1,5 +1,3 @@
-#ifndef _CORE_COLOUR_
-#define _CORE_COLOUR_
 #pragma once
 
 #include <stdio.h>
@@ -96,5 +94,3 @@ static const Colour sc_colourYellow			= Colour(1.0f, 1.0f, 0.0f, 1.0f);
 static const Colour sc_colourOrange			= Colour(1.0f, 0.33f, 0.0f, 1.0f);
 static const Colour sc_colourBrown			= Colour(0.625f, 0.2f, 0.0f, 1.0f);
 static const Colour sc_colourMauve			= Colour(0.35f, 0.1875f, 1.0f, 1.0f);
-
-#endif //_CORE_COLOUR_
