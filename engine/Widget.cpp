@@ -777,8 +777,8 @@ Vector2 Widget::GetPositionRelative(Widget * a_alignParent)
 	// Offset from anchor Y
 	switch (m_pos.GetAlignmentAnchor().m_y)
 	{
-		case AlignY::Bottom:	pos.SetY(pos.GetY() + sizeY);			break;
 		case AlignY::Centre:	pos.SetY(pos.GetY() + sizeY * 0.5f);	break;
+		case AlignY::Bottom:	pos.SetY(pos.GetY() + sizeY);			break;
 		default: break;
 	}
 	
