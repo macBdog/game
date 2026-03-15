@@ -1,11 +1,16 @@
 {
     "version": "2.0.0",
+    "options": {
+        "shell": {
+            "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
+            "args": ["-l", "-c"]
+        }
+    },
     "tasks": [
         {
             "label": "bazel-build-debug",
             "type": "shell",
-            "command": "bazel",
-            "args": ["build", "//:game", "--config=dbg"],
+            "command": "bazelisk build //:game --config=dbg",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -15,8 +20,7 @@
         {
             "label": "bazel-build-release",
             "type": "shell",
-            "command": "bazel",
-            "args": ["build", "//:game", "--config=opt"],
+            "command": "bazelisk build //:game --config=opt",
             "group": "build",
             "problemMatcher": ["$gcc", "$msCompile"]
         }

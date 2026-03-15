@@ -9,14 +9,19 @@ cc_library(
         "@platforms//os:macos": ["-lSDL2"],
     }),
     deps = select({
-        "@platforms//os:windows": [":sdl2_win"],
+        "@platforms//os:windows": [":sdl2_win", ":sdl2main_win"],
         "//conditions:default": [],
     }),
 )
 
-# Windows: link against vendored import library
+# Windows: link against vendored import libraries
 cc_import(
     name = "sdl2_win",
     interface_library = "lib/x64/SDL2.lib",
     shared_library = "lib/x64/SDL2.dll",
+)
+
+cc_import(
+    name = "sdl2main_win",
+    static_library = "lib/x64/SDL2main.lib",
 )
