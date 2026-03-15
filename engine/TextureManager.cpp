@@ -137,11 +137,11 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory a_c
 	const int tCat = static_cast<int>(a_cat);
 	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
-	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
-	if (!strstr(a_tgaPath, pathQualifier))
+	if (!readFromDataPack && !StringUtils::IsAbsolutePath(a_tgaPath))
 	{
 		// Strip out any leading slashes
-		const char * filenameOnly = strstr(a_tgaPath, "\\");
+		const char * filenameOnly = strstr(a_tgaPath, "/");
+		if (filenameOnly == nullptr) filenameOnly = strstr(a_tgaPath, "\\");
 		if (filenameOnly != nullptr)
 		{
 			sprintf(fileNameBuf, "%s%s", m_texturePath, filenameOnly);

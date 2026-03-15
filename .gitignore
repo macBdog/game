@@ -1,64 +1,26 @@
-#Engine data files
+# Engine data files
 datapack.dtz
 datapack.dtz.tmp
 
-#OS junk files
+# OS junk files
 [Tt]humbs.db
 *.DS_Store
 
-# Visual Studio 2015 user specific files
-.vs/
-
-# Visual Studio 2015 database file
-*.VC.db
-
-#Visual Studio files
+# Build artifacts
 *.[Oo]bj
-*.user
-*.aps
 *.pch
-*.vspscc
-*.vssscc
-*_i.c
-*_p.c
-*.ncb
-*.suo
-*.tlb
-*.tlh
-*.bak
-*.[Cc]ache
 *.ilk
-*.log
-#*.lib
-*.sbr
-*.sdf
-*.opensdf
-*.unsuccessfulbuild
-ipch/
-obj/
-[Bb]in
-[Dd]ebug*/
-[Rr]elease*/
-[Dd]esigner*/
-Ankh.NoLoad
+*.pdb
+*.exp
+*.idb
+*.lib
+*.exe
+!third_party/**/*.lib
+!third_party/**/*.dll
 
-#Tooling
-_ReSharper*/
-*.resharper
-[Tt]est[Rr]esult*
+# Bazel
+/bazel-*
+.bazelrc.user
 
-#Project files
-[Bb]uild/
-
-#Subversion files
-.svn
-
-# Office Temp Files
-~$*
-
-#NuGet
-packages/
-
-#ncrunch
-*ncrunch*
-*crunch*.local.xml
+# Compile commands (generated)
+/compile_commands.json

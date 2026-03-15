@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "bazel-build-debug",
+            "type": "shell",
+            "command": "bazel",
+            "args": ["build", "//:game", "--config=dbg"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc", "$msCompile"]
+        },
+        {
+            "label": "bazel-build-release",
+            "type": "shell",
+            "command": "bazel",
+            "args": ["build", "//:game", "--config=opt"],
+            "group": "build",
+            "problemMatcher": ["$gcc", "$msCompile"]
+        }
+    ]
+}

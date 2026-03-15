@@ -1,4 +1,6 @@
+
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -14,8 +16,6 @@
 #include "InputManager.h"
 #include "LuaScript.h"
 #include "ModelManager.h"
-#include "VRManager.h"
-#include "VRRender.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "SoundManager.h"
@@ -607,11 +607,7 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 int ScriptManager::IsVR(lua_State * a_luaState)
 {
 	bool keyIsDown = false;
-	if (lua_gettop(a_luaState) == 0)
-	{
-		return VRManager::Get().IsInitialised();
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "IsVR", "expects no parameters.");
 	}
@@ -623,15 +619,7 @@ int ScriptManager::IsVR(lua_State * a_luaState)
 int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
 {
 	Vector lookDir(0.0f);
-	if (lua_gettop(a_luaState) == 0)
-	{
-		VRManager& vrMan = VRManager::Get();
-		if (vrMan.IsInitialised())
-		{
-			lookDir = vrMan.GetVRRender()->GetLookDir();
-		}
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "GetVRLookDirection", "expects no parameters.");
 	}
@@ -645,15 +633,7 @@ int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
 int ScriptManager::GetVRLookPosition(lua_State * a_luaState)
 {
 	Vector lookDir(0.0f);
-	if (lua_gettop(a_luaState) == 0)
-	{
-		VRManager& vrMan = VRManager::Get();
-		if (vrMan.IsInitialised())
-		{
-			lookDir = vrMan.GetVRRender()->GetLookPos();
-		}
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "GetVRLookPosition", "expects no parameters.");
 	}

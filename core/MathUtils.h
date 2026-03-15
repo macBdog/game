@@ -3,7 +3,8 @@
 #pragma once
 
 #include <random>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 
 #include "Vector.h"
 
@@ -31,7 +32,7 @@ namespace MathUtils
 	//\brief Must be called once a program execution
 	static void InitialiseRandomNumberGenerator()
 	{
-		srand((unsigned)time(0));
+		std::srand((unsigned)std::time(0));
 	}
 
 	//\brief Return a random float between 0.0 and 1.0

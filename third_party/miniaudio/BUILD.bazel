@@ -1,0 +1,15 @@
+cc_library(
+    name = "miniaudio",
+    srcs = ["miniaudio_impl.c"],
+    hdrs = ["miniaudio.h"],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    linkopts = select({
+        "@platforms//os:linux": ["-lpthread", "-lm", "-ldl"],
+        "@platforms//os:macos": [
+            "-framework CoreAudio",
+            "-framework AudioToolbox",
+        ],
+        "//conditions:default": [],
+    }),
+)

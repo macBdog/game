@@ -191,8 +191,7 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 	// Model paths are either fully qualified or relative to the config model dir
 	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
 	char fileNameBuf[StringUtils::s_maxCharsPerLine];
-	char * pathQualifier = readFromDataPack ? "\\" : ":\\";
-	if (!strstr(a_modelPath, pathQualifier))
+	if (!readFromDataPack && !StringUtils::IsAbsolutePath(a_modelPath))
 	{
 		sprintf(fileNameBuf, "%s%s", m_modelPath, a_modelPath);
 	}

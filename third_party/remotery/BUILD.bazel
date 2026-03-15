@@ -1,0 +1,13 @@
+cc_library(
+    name = "remotery",
+    srcs = ["lib/Remotery.c"],
+    hdrs = ["lib/Remotery.h"],
+    includes = ["lib"],
+    defines = ["RMT_ENABLED=1"],
+    visibility = ["//visibility:public"],
+    linkopts = select({
+        "@platforms//os:windows": ["Ws2_32.lib"],
+        "@platforms//os:linux": ["-lpthread"],
+        "//conditions:default": [],
+    }),
+)

@@ -1,10 +1,10 @@
 #include <iostream>
 #include <math.h>
 
-#include "cVector.h"
-#include "cLinkedList.h"
-#include "cIterator.h"
-#include "cLinearAllocator.h"
+#include "Vector.h"
+#include "LinkedList.h"
+#include "Iterator.h"
+#include "LinearAllocator.h"
 
 
 int main(int argc, char * argv)
@@ -13,20 +13,20 @@ int main(int argc, char * argv)
 
 	// Generate some vector data to test on
 	const static int numTestData = 5;
-	cVector vecs[numTestData];
-	cLinkedListNode<cVector> nodes[numTestData];
+	Vector vecs[numTestData];
+	LinkedListNode<Vector> nodes[numTestData];
 
 	// Insert test data into our list
-	cLinkedList<cVector> listOfVectors;
+	LinkedList<Vector> listOfVectors;
 	for (int i = 0; i < numTestData; ++i)
 	{
-		vecs[i] = cVector(float(rand() % 10), float(rand() % 10), float(rand() % 10));
+		vecs[i] = Vector(float(rand() % 10), float(rand() % 10), float(rand() % 10));
 		nodes[i].SetData(&vecs[i]);
 		listOfVectors.Insert(&nodes[i]);
 	}
 
 	// Walk over list using loops
-	cLinkedListNode<cVector> * currentNode = listOfVectors.GetHead();
+	LinkedListNode<Vector> * currentNode = listOfVectors.GetHead();
 	while (currentNode != 0)
 	{
 		printf("%.2f, %.2f, %.2f, Length = %f\n", 		currentNode->GetData()->GetX(), 
@@ -42,7 +42,7 @@ int main(int argc, char * argv)
 	printf("\n ************************************************************************\n \n");
 
 	// Walk over list using iterator
-	cIterator<cLinkedListNode<cVector>> iter(listOfVectors.GetHead());
+	Iterator<LinkedListNode<Vector>> iter(listOfVectors.GetHead());
 	while (iter.Resolve() != 0)
 	{
 		printf("%.2f, %.2f, %.2f, Length = %f\n",	iter.Resolve()->GetData()->GetX(), 

@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Bazel",
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

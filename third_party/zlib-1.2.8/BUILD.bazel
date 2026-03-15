@@ -1,0 +1,22 @@
+cc_library(
+    name = "zlib",
+    hdrs = glob(["include/*.h"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "@platforms//os:linux": ["-lz"],
+        "@platforms//os:macos": ["-lz"],
+    }),
+    deps = select({
+        "@platforms//os:windows": [":zlib_win"],
+        "//conditions:default": [],
+    }),
+)
+
+# Windows: link against vendored import library
+cc_import(
+    name = "zlib_win",
+    interface_library = "lib/zdll.lib",
+    shared_library = "zlib1.dll",
+)

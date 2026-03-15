@@ -214,7 +214,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		else
 		{
 			char fileNameBuf[StringUtils::s_maxCharsPerLine];
-			if (!strstr(a_templatePath, ":\\"))
+			if (!StringUtils::IsAbsolutePath(a_templatePath))
 			{
 				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
 

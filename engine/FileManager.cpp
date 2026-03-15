@@ -1,7 +1,6 @@
-#include <windows.h>
-#include <tchar.h> 
-#include <stdio.h>
-#include <strsafe.h>
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
 
 #include "Log.h"
 
@@ -9,12 +8,8 @@
 
 template<> FileManager * Singleton<FileManager>::s_instance = nullptr;
 
-#if _WIN32
 bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
 {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-	
 	// Check there is actually a path supplied
 	if (a_path == nullptr || !a_path[0])
 	{
@@ -22,132 +17,66 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 		return false;
 	}
 
-	// Construct a copy of the string for modification
-	unsigned int pathLength = strlen(a_path);
-	char workingPath[StringUtils::s_maxCharsPerLine];
-	memset(&workingPath, 0, sizeof(char)*pathLength);
-	memcpy(workingPath, a_path, pathLength);
-
-	// Check path isn't too deep
-	if (pathLength > StringUtils::s_maxCharsPerLine)
+	// Check path exists and is a directory
+	std::error_code ec;
+	if (!std::filesystem::is_directory(a_path, ec))
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot recurse files in a directory with such large path: %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s", a_path);
 		return false;
 	}
 
-	// Strip any trailing slash from the path
-	if (workingPath[pathLength - 1] == '\\')
+	for (const auto & entry : std::filesystem::directory_iterator(a_path, ec))
 	{
-		workingPath[pathLength - 1] = '\0';
-	}
-	
-	// Now try getting the first file of the list
-	TCHAR szDir[MAX_PATH];
-	StringCchCopy(szDir, MAX_PATH, workingPath);
-	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
-	hFind = FindFirstFileA(szDir, &findFileData);
+		const auto filename = entry.path().filename().string();
 
-	// Check path can be traversed
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s with error %d", workingPath, GetLastError());
-		return false;
-	} 
-	
-	do
-	{
-		// Check substring parameter
-		if (!a_fileSubstring || strstr(findFileData.cFileName, a_fileSubstring))
+		// Don't add dot-prefixed entries
+		if (filename[0] == '.')
 		{
-			// Don't add the dot and dot dot dirs
-			if (findFileData.cFileName[0] != '.')
-			{
-				// Allocate a new file and set its properties
-				FileListNode * newFile = new FileListNode();
-				newFile->SetData(new FileInfo());
-				sprintf(newFile->GetData()->m_name, "%s", findFileData.cFileName);
-				newFile->GetData()->m_sizeBytes = 0;
-				newFile->GetData()->m_isDir = (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-
-				// If not a directory set the size
-				if (!newFile->GetData()->m_isDir)
-				{
-					LARGE_INTEGER fileSize;
-					fileSize.LowPart = findFileData.nFileSizeLow;
-					fileSize.HighPart = findFileData.nFileSizeHigh;
-					newFile->GetData()->m_sizeBytes = (unsigned int)fileSize.QuadPart; 
-				}
-
-				// Add to the file list
-				a_fileList_OUT.Insert(newFile);
-			}
+			continue;
 		}
+
+		// Check substring parameter
+		if (a_fileSubstring && filename.find(a_fileSubstring) == std::string::npos)
+		{
+			continue;
+		}
+
+		// Allocate a new file and set its properties
+		FileListNode * newFile = new FileListNode();
+		newFile->SetData(new FileInfo());
+		snprintf(newFile->GetData()->m_name, StringUtils::s_maxCharsPerLine, "%s", filename.c_str());
+		newFile->GetData()->m_sizeBytes = 0;
+		newFile->GetData()->m_isDir = entry.is_directory();
+
+		// If not a directory set the size
+		if (!newFile->GetData()->m_isDir)
+		{
+			newFile->GetData()->m_sizeBytes = static_cast<unsigned int>(entry.file_size(ec));
+		}
+
+		// Add to the file list
+		a_fileList_OUT.Insert(newFile);
 	}
-    while (FindNextFile(hFind, &findFileData) != 0);
- 
-	// Final error check now iteration is done
-   if (GetLastError() != ERROR_NO_MORE_FILES) 
-   {
-      Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error completing enumeration in path %s", a_path);
-   }
 
-   FindClose(hFind);
+	if (ec)
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error completing enumeration in path %s", a_path);
+	}
 
-   return true;	
+	return true;
 }
 
 bool FileManager::CheckFilePath(const char * a_filePath)
 {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-	
 	// Check there is actually a path supplied
 	if (a_filePath == nullptr || !a_filePath[0])
 	{
 		return false;
 	}
 
-	// Construct a copy of the string for modification
-	unsigned int pathLength = strlen(a_filePath);
-	char workingPath[StringUtils::s_maxCharsPerLine];
-	memset(&workingPath, 0, sizeof(char)*pathLength);
-	memcpy(workingPath, a_filePath, pathLength);
-
-	// Check path isn't too deep
-	if (pathLength > StringUtils::s_maxCharsPerLine)
-	{
-		return false;
-	}
-
-	// Strip any trailing slash from the path
-	if (workingPath[pathLength-1] == '\\')
-	{
-		workingPath[pathLength-1] = '\0';
-	}
-	
-	// Now try getting the first file of the list
-	TCHAR szDir[MAX_PATH];
-	StringCchCopy(szDir, MAX_PATH, workingPath);
-	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
-	hFind = FindFirstFile(szDir, &findFileData);
-
-	// Check path actually exists
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		return false;
-	}
-
-	// Must be alright if we got this far
-	return true;
+	std::error_code ec;
+	return std::filesystem::is_directory(a_filePath, ec);
 }
-
-#else
-bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
-{
-	// TODO implementation on other platforms
-	return false;		
-}
-#endif
 
 void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 {
@@ -165,7 +94,6 @@ void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 	}
 }
 
-#if __WIN32__
 bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
 {
 	// Check there is actually a path supplied
@@ -175,28 +103,35 @@ bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_
 		return false;
 	}
 
-	// Use the GetFileAttributes function to reckon date stamp
-	WIN32_FILE_ATTRIBUTE_DATA lpFileInformation;
-	if (GetFileAttributesEx(a_path, GetFileExInfoStandard, &lpFileInformation))
+	std::error_code ec;
+	auto ftime = std::filesystem::last_write_time(a_path, ec);
+	if (ec)
 	{
-		SYSTEMTIME times, stLocal;
-		FileTimeToSystemTime(&lpFileInformation.ftLastWriteTime, &times);
-		SystemTimeToTzSpecificLocalTime(nullptr, &times, &stLocal);
-
-		a_timestamp_OUT.m_totalDays = stLocal.wYear*365 + stLocal.wMonth*31 + stLocal.wDay;
-		a_timestamp_OUT.m_totalSeconds = stLocal.wHour*60*60 + stLocal.wMinute*60 + stLocal.wSecond;
-		return true;
-	}
-	else
-	{
-			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
 		return false;
 	}
-}
+
+	// Convert file_clock time to time_t for calendar breakdown
+	// C++17 does not have clock_cast, so use the file_clock epoch offset
+#if defined(_WIN32)
+	// MSVC file_clock epoch matches system_clock (both use Windows FILETIME epoch)
+	auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+		std::chrono::system_clock::time_point(ftime.time_since_epoch()));
 #else
-bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
-{
-	// TODO Platform specifc file system implementation
-	return false;
-}
+	// On other platforms, approximate via current time anchoring
+	auto fileNow = std::filesystem::file_time_type::clock::now();
+	auto sysNow = std::chrono::system_clock::now();
+	auto sctp = sysNow + (ftime - fileNow);
 #endif
+	std::time_t tt = std::chrono::system_clock::to_time_t(sctp);
+	std::tm local_tm;
+#if defined(_WIN32)
+	localtime_s(&local_tm, &tt);
+#else
+	localtime_r(&tt, &local_tm);
+#endif
+
+	a_timestamp_OUT.m_totalDays = (local_tm.tm_year + 1900) * 365 + (local_tm.tm_mon + 1) * 31 + local_tm.tm_mday;
+	a_timestamp_OUT.m_totalSeconds = local_tm.tm_hour * 60 * 60 + local_tm.tm_min * 60 + local_tm.tm_sec;
+	return true;
+}

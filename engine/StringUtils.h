@@ -76,6 +76,17 @@ public:
 	//\return true if the string was moodified
 	static bool AppendString(char* a_buffer_OUT, const char* a_suffix);
 
+	//\brief Check if a path is absolute (e.g. "C:/foo" on Windows, "/foo" on Unix)
+	static inline bool IsAbsolutePath(const char * a_path)
+	{
+		if (a_path == nullptr || !a_path[0]) return false;
+		// Unix absolute path
+		if (a_path[0] == '/') return true;
+		// Windows drive letter (e.g. "C:/" or "C:\")
+		if (a_path[0] != '\0' && a_path[1] == ':') return true;
+		return false;
+	}
+
 	//\brief String versions of primitive types for serialisation
 	static const char* BoolToString(bool a_input);
 

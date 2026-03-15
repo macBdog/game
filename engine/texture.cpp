@@ -1,9 +1,6 @@
 #include "Texture.h"
 
-#include <windows.h>
-
-#include "GL/glew.h"
-#include <GL/glu.h>
+#include <glad/gl.h>
 #include <iostream>
 #include <fstream>
 
@@ -156,7 +153,6 @@ bool Texture::GenerateTexture(int a_x, int a_y, int a_bpp, bool a_useLinearFilte
 
 	if (a_useLinearFilter)
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	}

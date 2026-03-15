@@ -1,21 +1,15 @@
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 
 #include <SDL.h>
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-	#include <windows.h>
-	#include <SDL_syswm.h>
-#elif __APPLE__
-// Apple
-#elif __linux__
-// linux
-#elif __unix__ // all unices not caught above
-// Unix
-#elif defined(_POSIX_VERSION)
-// POSIX
-#else
-#   error "Unknown compiler"
+#define ENABLE_VR 0
+
+#if ENABLE_VR
+	#if defined(_WIN32)
+		#include <SDL_syswm.h>
+	#endif
 #endif
 
 #ifndef _RELEASE
@@ -34,7 +28,9 @@
 #include "engine/InputManager.h"
 #include "engine/Log.h"
 #include "engine/ModelManager.h"
+#if ENABLE_VR
 #include "engine/VRManager.h"
+#endif
 #include "engine/RenderManager.h"
 #include "engine/ScriptManager.h"
 #include "engine/StringUtils.h"
@@ -64,12 +60,10 @@ int main(int argc, char *argv[])
 	// Make sure SDL cleans up before exit
 	atexit(SDL_Quit);
 
-	// Figure out where the exe is being run from to relative paths to the exe can be used
-	const char * executableName = "game.exe";
-	const int partialLength = strlen(argv[0]) - strlen(executableName) - 1;
+	// Figure out where the exe is being run from so relative paths to the exe can be used
+	std::filesystem::path exeDir = std::filesystem::path(argv[0]).parent_path();
 	char partialPath[StringUtils::s_maxCharsPerLine];
-	strncpy(partialPath, argv[0], partialLength);
-	partialPath[partialLength] = '\0';
+	snprintf(partialPath, sizeof(partialPath), "%s", exeDir.string().c_str());
 
 	// Storage for resource paths
 	char gameConfigPath[StringUtils::s_maxCharsPerLine];
@@ -122,22 +116,10 @@ int main(int argc, char *argv[])
 		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
 
-		// Check to see if the dot operators are being used
-		if (strstr(gameDataPathFromFile, "..\\") != NULL)
-		{
-			const char * lastSlash = strrchr(partialPath, '\\');
-			const int pathLength = strlen(argv[0]) - strlen(executableName) - strlen(lastSlash);
-			strncpy(gameDataPath, argv[0], pathLength);
-			gameDataPath[pathLength] = '\0';
-			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, "..\\") + 3);
-
-		}
-		else if (strstr(gameDataPathFromFile, ".\\") != NULL)
-		{
-			strncpy(gameDataPath, argv[0], partialLength);
-			gameDataPath[partialLength] = '\0';
-			sprintf(gameDataPath, "%s%s", gameDataPath, strstr(gameDataPathFromFile, ".\\") + 1);
-		}
+		// Resolve relative paths against the executable directory
+		std::filesystem::path resolvedPath = exeDir / gameDataPathFromFile;
+		resolvedPath = resolvedPath.lexically_normal();
+		snprintf(gameDataPath, sizeof(gameDataPath), "%s", resolvedPath.string().c_str());
 	}
 
 	// All files read by the game will be added to the datapack in case we want to make a pack
@@ -209,8 +191,12 @@ int main(int argc, char *argv[])
 	}
 
 	// VR init must precede render device context creation
+#if ENABLE_VR
 	bool useVr = gameConfig.GetBool("render", "vr");
 	VRManager::Get().Startup(useVr);
+#else
+	bool useVr = false;
+#endif
 
 	// The flags to pass to SDL_CreateWindow
 	int videoFlags = SDL_WINDOW_OPENGL;
@@ -227,6 +213,7 @@ int main(int argc, char *argv[])
 	int height = titleConfigFile.GetInt("config", "height");
 	int bpp = titleConfigFile.GetInt("config", "bpp");
 
+#if ENABLE_VR
 	// Override display creation for VR mode so the resoultion is correct for the hmd
 	if (useVr)
 	{
@@ -242,6 +229,7 @@ int main(int argc, char *argv[])
 			height = VRManager::s_hmdDefaultResolutionHeight;
 		}
 	}
+#endif
 
 	const char * gameName = titleConfigFile.GetString("config", "name");
 	SDL_Window * sdlWindow = SDL_CreateWindow(gameName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
@@ -263,18 +251,26 @@ int main(int argc, char *argv[])
 	// Hide the mouse cursor
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	
+#if ENABLE_VR && defined(_WIN32)
 	// Get window info to pass to managers that need the window handle
 	SDL_SysWMinfo windowInfo;
 	SDL_VERSION(&windowInfo.version);
 	SDL_GetWindowWMInfo(sdlWindow, &windowInfo);
+#endif
 
 	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Starting up subsystems");
 
 	// Subsystem creation and startup
 	MathUtils::InitialiseRandomNumberGenerator();
 
+#if ENABLE_VR
 	// Now the rendering device context is created, it can be passed into the VR rendering component
+#if defined(_WIN32)
 	VRManager::Get().StartupRendering(&windowInfo.info.win.window, useVr);
+#else
+	VRManager::Get().StartupRendering(nullptr, useVr);
+#endif
+#endif
 
 #ifdef _DATAPACK
 	RenderManager::Get().Startup(sc_colourBlack, shaderPath, &dataPack, useVr);
@@ -306,6 +302,7 @@ int main(int argc, char *argv[])
 	ScriptManager::Get().Startup(scriptPath, NULL);
 #endif
 
+#if ENABLE_VR
 	// Allow custom  GUI setup in VR
 	if (useVr)
 	{
@@ -319,6 +316,7 @@ int main(int argc, char *argv[])
 			RenderManager::Get().Set2DRenderDepth(-0.95f);
 		}
 	}
+#endif
 
 	// Profiling macros do nothing in release builds
 #ifdef _RELEASE									
@@ -409,7 +407,9 @@ int main(int argc, char *argv[])
 		}
 
 		// Drawing the scene will flush the renderLayers
+#if ENABLE_VR
 		UPDATE_AND_PROFILE(VRManager);
+#endif
 		UPDATE_AND_PROFILE(RenderManager);
 		
 #ifndef _RELEASE
@@ -419,6 +419,7 @@ int main(int argc, char *argv[])
 #endif
 		
 		// Only swap the buffers at the end of all the rendering passes
+#if ENABLE_VR
 		if (useVr)
 		{
 			if (!VRManager::Get().DrawToHMD())
@@ -427,6 +428,7 @@ int main(int argc, char *argv[])
 			}
 		}
 		else
+#endif
 		{
 			RenderManager::Get().DrawToScreen(CameraManager::Get().GetCameraMatrix().GetInverse());
 		}
@@ -469,10 +471,12 @@ int main(int argc, char *argv[])
 	InputManager::Get().Shutdown();
 	SoundManager::Get().Shutdown();
 
+#if ENABLE_VR
 	if (useVr)
 	{
 		VRManager::Get().Shutdown();
 	}
+#endif
 
 	// Once finished with OpenGL functions, the SDL_GLContext can be deleted.
 	SDL_GL_DeleteContext(glcontext);

@@ -1,7 +1,5 @@
 #include <stddef.h>
 
-#include "windows.h"
-
 #include "../core/MathUtils.h"
 
 #include "CameraManager.h"

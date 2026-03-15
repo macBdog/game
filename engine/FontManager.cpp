@@ -7,8 +7,8 @@
 
 #include "FontManager.h"
 
-#include "Font\default.fnt.inc"
-#include "Font\default.tga.inc"
+#include "Font/default.fnt.inc"
+#include "Font/default.tga.inc"
 
 using namespace std;	//< For fstream operations
 

@@ -6,9 +6,6 @@
 
 class VRRender;
 
-struct HWND__;
-typedef HWND__* HWND;
-
 //\brief VRManager handles the resources that are shared between the camera and render parts of the VR API integration
 class VRManager : public Singleton<VRManager>
 {
@@ -20,12 +17,12 @@ public:
 	, m_hmdHeight(0)
 	, m_vrRender(nullptr)
 	{ }
-	
+
 	~VRManager()
 	{ }
 
-	void Startup(bool a_useVr); // Calls ovr_Initialize which must happen before render context initilization in StartupRendering 
-	void StartupRendering(HWND * a_window, bool a_useVr);
+	void Startup(bool a_useVr); // Calls ovr_Initialize which must happen before render context initilization in StartupRendering
+	void StartupRendering(void * a_nativeWindow, bool a_useVr);
 	void Update(float a_dt);
 	bool DrawToHMD();
 	void Shutdown();

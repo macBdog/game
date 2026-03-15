@@ -9,7 +9,7 @@
 
 #include "Singleton.h"
 #include "StringUtils.h"
-#include "Time.h"
+#include "GameTime.h"
 
 //\brief The importance of the entry being logged
 enum class LogLevel : unsigned char

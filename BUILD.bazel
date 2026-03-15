@@ -1,0 +1,40 @@
+load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+
+refresh_compile_commands(
+    name = "refresh_compile_commands",
+    targets = {"//:game": ""},
+)
+
+cc_binary(
+    name = "game",
+    srcs = ["game.cpp"],
+    deps = [
+        "//core",
+        "//engine",
+        "//third_party/remotery",
+        "//third_party/SDL2-2.0.7:sdl2",
+    ],
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS"],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:windows": [
+            "opengl32.lib",
+            "Ws2_32.lib",
+        ],
+        "@platforms//os:linux": [
+            "-lGL",
+            "-lm",
+            "-lpthread",
+            "-ldl",
+        ],
+        "@platforms//os:macos": [
+            "-framework OpenGL",
+            "-framework Cocoa",
+            "-framework IOKit",
+            "-framework CoreAudio",
+            "-framework AudioToolbox",
+        ],
+    }),
+)

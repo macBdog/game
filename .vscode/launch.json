@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (Windows - MSVC)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-debug"
+        },
+        {
+            "name": "Debug (Linux/Mac - LLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-debug"
+        }
+    ]
+}
