@@ -1,22 +1,23 @@
 cc_library(
     name = "lua",
+    srcs = glob(
+        ["src/*.c"],
+        exclude = [
+            "src/lua.c",   # standalone interpreter
+            "src/luac.c",  # standalone compiler
+        ],
+    ) + glob(["src/*.h"]),
     hdrs = glob(["include/*.h"]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
-    linkopts = select({
-        "@platforms//os:windows": [],
-        "@platforms//os:linux": ["-llua5.2", "-lm"],
-        "@platforms//os:macos": ["-llua", "-lm"],
+    includes = ["include", "src"],
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS", "/w"],
+        "@platforms//os:linux": ["-DLUA_USE_LINUX", "-w"],
+        "@platforms//os:macos": ["-DLUA_USE_MACOSX", "-w"],
     }),
-    deps = select({
-        "@platforms//os:windows": [":lua_win"],
+    linkopts = select({
+        "@platforms//os:linux": ["-lm", "-ldl"],
+        "@platforms//os:macos": ["-lm"],
         "//conditions:default": [],
     }),
-)
-
-# Windows: link against vendored import library
-cc_import(
-    name = "lua_win",
-    interface_library = "lua52.lib",
-    shared_library = "lua52.dll",
+    visibility = ["//visibility:public"],
 )
