@@ -149,6 +149,12 @@ void RenderManager::ParticleEmitter::Unbind()
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
+	// Load GL function pointers before any GL calls
+	if (!m_vr)
+	{
+		gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	}
+
 	unsigned int glErrorEnum = glGetError();
 
     // Set the clear colour
@@ -170,11 +176,6 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	if (!m_vr)
-	{
-		gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
-	}
 	
 	const Colour debugWhite(1.0f, 1.0f, 1.0f, 1.0f);
 	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), debugWhite, TexCoord(0.0f, 0.0f));
