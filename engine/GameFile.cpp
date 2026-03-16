@@ -52,8 +52,8 @@ GameFile::Object * GameFile::Object::FindObject(const char * a_objectName)
 		return nullptr;
 	}
 
-	m_childObjectCache.emplace_back(&(*it), std::string(a_objectName));
-	return &m_childObjectCache.back();
+	m_childObjectCache.push_back(std::make_unique<Object>(&(*it), std::string(a_objectName)));
+	return m_childObjectCache.back().get();
 }
 
 std::vector<GameFile::Object *> & GameFile::Object::GetChildObjects()
@@ -72,8 +72,8 @@ std::vector<GameFile::Object *> & GameFile::Object::GetChildObjects()
 		{
 			if (element.is_object())
 			{
-				m_childObjectCache.emplace_back(&element, m_name);
-				m_childPtrCache.push_back(&m_childObjectCache.back());
+				m_childObjectCache.push_back(std::make_unique<Object>(&element, m_name));
+				m_childPtrCache.push_back(m_childObjectCache.back().get());
 			}
 		}
 	}
@@ -84,8 +84,8 @@ std::vector<GameFile::Object *> & GameFile::Object::GetChildObjects()
 		{
 			if (it->is_object())
 			{
-				m_childObjectCache.emplace_back(&(*it), it.key());
-				m_childPtrCache.push_back(&m_childObjectCache.back());
+				m_childObjectCache.push_back(std::make_unique<Object>(&(*it), it.key()));
+				m_childPtrCache.push_back(m_childObjectCache.back().get());
 			}
 			else if (it->is_array() && it->size() > 0 && (*it)[0].is_object())
 			{
@@ -94,8 +94,8 @@ std::vector<GameFile::Object *> & GameFile::Object::GetChildObjects()
 				{
 					if (element.is_object())
 					{
-						m_childObjectCache.emplace_back(&element, it.key());
-						m_childPtrCache.push_back(&m_childObjectCache.back());
+						m_childObjectCache.push_back(std::make_unique<Object>(&element, it.key()));
+						m_childPtrCache.push_back(m_childObjectCache.back().get());
 					}
 				}
 			}

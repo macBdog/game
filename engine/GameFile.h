@@ -2,7 +2,9 @@
 #define _ENGINE_GAME_FILE_
 #pragma once
 
+#include <deque>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -150,8 +152,8 @@ public:
 		std::string m_name;
 
 		// Caches for returned pointers (so they remain valid)
-		std::vector<Property> m_propertyCache;
-		std::vector<Object> m_childObjectCache;
+		std::deque<Property> m_propertyCache;
+		std::vector<std::unique_ptr<Object>> m_childObjectCache;
 		std::vector<Object *> m_childPtrCache;
 	};
 
@@ -199,8 +201,9 @@ private:
 	mutable nlohmann::json m_root;						///< The root JSON document
 
 	// Caches for Object wrappers so pointers remain valid
-	mutable std::vector<Object> m_objectCache;
-	mutable std::vector<Property> m_propertyCache;
+	// Using deque so emplace_back never invalidates existing pointers
+	mutable std::deque<Object> m_objectCache;
+	mutable std::deque<Property> m_propertyCache;
 	mutable std::string m_stringCache;
 };
 
