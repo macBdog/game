@@ -505,9 +505,9 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	const char * templateName = luaL_checkstring(a_luaState, 2);
 	char templatePath[StringUtils::s_maxCharsPerName];
 	templatePath[0] = '\n';
-	if (strstr(templateName, ".tmp") == nullptr)
+	if (strstr(templateName, ".json") == nullptr)
 	{
-		sprintf(templatePath, "%s.tmp", templateName);
+		sprintf(templatePath, "%s.json", templateName);
 	}
 	else // Just copy chars over from LUA string
 	{
@@ -1480,7 +1480,7 @@ int ScriptManager::GetFileBytes(lua_State * a_luaState)
 			const int byteOffset = (int)lua_tonumber(a_luaState, 2);
 			const int byteCount = (int)lua_tonumber(a_luaState, 3);
 
-			ifstream fileToRead(filePath, ifstream::in | ifstream::binary);
+			std::ifstream fileToRead(filePath, std::ifstream::in | std::ifstream::binary);
 			if (fileToRead.is_open())
 			{
 				lua_createtable(a_luaState, 1, 0);

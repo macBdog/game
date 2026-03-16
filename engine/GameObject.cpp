@@ -365,11 +365,8 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 {
 	if (a_parent != nullptr)
 	{
-		// Get string versions of numeric values
-		char vecBuf[StringUtils::s_maxCharsPerName];
-		
 		// Output all mandatory properties
-		GameFile::Object * fileObject = outputFile->AddObject("gameObject", a_parent);
+		GameFile::Object * fileObject = outputFile->AddObject("gameObjects", a_parent);
 		outputFile->AddProperty(fileObject, "name", m_name);
 
 		// Save template if set
@@ -379,12 +376,9 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			outputFile->AddProperty(fileObject, "template", m_template);
 			SerialiseTemplate();
 		}
-		
-		GetPos().GetString(vecBuf);
-		outputFile->AddProperty(fileObject, "pos", vecBuf);
 
-		GetRot().GetString(vecBuf);
-		outputFile->AddProperty(fileObject, "rot", vecBuf);
+		outputFile->AddProperty(fileObject, "pos", GetPos());
+		outputFile->AddProperty(fileObject, "rot", GetRot());
 
 		// And optional ones
 		if (!templated)
@@ -392,14 +386,11 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 			if (m_clipType != ClipType::None)
 			{
 				// Primitive type clipping
-				if (m_clipType != ClipType::Mesh) 
+				if (m_clipType != ClipType::Mesh)
 				{
 					outputFile->AddProperty(fileObject, "clipType", s_clipTypeStrings[static_cast<int>(m_clipType)]);
-					char vecBuf[StringUtils::s_maxCharsPerName];
-					m_clipVolumeSize.GetString(vecBuf);
-					outputFile->AddProperty(fileObject, "clipSize", vecBuf);
-					m_clipVolumeOffset.GetString(vecBuf);
-					outputFile->AddProperty(fileObject, "clipOffset", vecBuf);
+					outputFile->AddProperty(fileObject, "clipSize", m_clipVolumeSize);
+					outputFile->AddProperty(fileObject, "clipOffset", m_clipVolumeOffset);
 				}
 			}
 			if (!m_clipGroup.IsEmpty())
@@ -427,7 +418,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 				outputFile->AddProperty(fileObject, "model", m_model->GetName());
 			}
 		}
-		
+
 		// Serialise any children of this child
 		GameObject * child = m_child;
 		while (child != nullptr)
@@ -451,11 +442,8 @@ void GameObject::SerialiseTemplate()
 		if (m_clipType != ClipType::Mesh)
 		{
 			templateFile->AddProperty(templateObj, "clipType", s_clipTypeStrings[static_cast<int>(m_clipType)]);
-			char vecBuf[StringUtils::s_maxCharsPerName];
-			m_clipVolumeSize.GetString(vecBuf);
-			templateFile->AddProperty(templateObj, "clipSize", vecBuf);
-			m_clipVolumeOffset.GetString(vecBuf);
-			templateFile->AddProperty(templateObj, "clipOffset", vecBuf);
+			templateFile->AddProperty(templateObj, "clipSize", m_clipVolumeSize);
+			templateFile->AddProperty(templateObj, "clipOffset", m_clipVolumeOffset);
 		}
 	}
 	if (!m_clipGroup.IsEmpty())
@@ -484,5 +472,6 @@ void GameObject::SerialiseTemplate()
 	char templatePath[StringUtils::s_maxCharsPerLine];
 	sprintf(templatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
 	templateFile->Write(templatePath);
+	delete templateFile;
 }
 

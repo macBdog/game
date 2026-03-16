@@ -320,10 +320,11 @@ public:
 	//\brief Execute the callback if defined
 	void Activate();
 
-	//\brief Write the widget and all properties to a file stream
-	//\param a_outputStream is a pointer to an output stream to write to, will create one if nullptr
-	//\param a_indentCount is an optional number of tab character to prefix each line with
-	void Serialise(std::ofstream * a_outputStream = nullptr, unsigned int a_indentCount = 0);
+	//\brief Write the widget and all its properties to a JSON file
+	void Serialise();
+
+	//\brief Serialise this widget into a GameFile object (used for child widgets)
+	void SerialiseToGameFile(GameFile * a_file, GameFile::Object * a_parent);
 
 	// Templated function so any part of the engine or game can be a widget action listener
 	template <class TObj, typename TMethod>

@@ -221,8 +221,8 @@ bool DataPack::Serialize(const char * a_path) const
 			// Now write the resource by opening and reading it from the disk
 			char diskPath[StringUtils::s_maxCharsPerLine];
 
-			// Special case for game.cfg as it lives outside the data folder
-			if (strstr(curEntry->m_path, "game.cfg") != 0)
+			// Special case for game.json as it lives outside the data folder
+			if (strstr(curEntry->m_path, "game.json") != 0)
 			{ 
 				sprintf(diskPath, "%s", curEntry->m_path);
 			}

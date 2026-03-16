@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	}
 	else // No argument specified, use a fallback
 	{
-		sprintf(titleConfigFilePath, "game.cfg");
+		sprintf(titleConfigFilePath, "game.json");
 	}
 
 	// Make sure SDL cleans up before exit
@@ -174,10 +174,10 @@ int main(int argc, char *argv[])
 	dataPack.AddFile(gameConfigPath);
 	dataPack.AddFolder(texturePath, ".tga");
 	dataPack.AddFolder(fontPath, ".tga,.fnt");
-	dataPack.AddFolder(guiPath, ".cfg,.mnu");
+	dataPack.AddFolder(guiPath, ".json");
 	dataPack.AddFolder(modelPath, ".obj,.mtl,.fbx,.bullet");
-	dataPack.AddFolder(templatePath, ".tmp");
-	dataPack.AddFolder(scenePath, ".scn");
+	dataPack.AddFolder(templatePath, ".json");
+	dataPack.AddFolder(scenePath, ".json");
 	dataPack.AddFolder(scriptPath, ".lua");
 	dataPack.AddFolder(shaderPath, ".fsh,.vsh");
 	dataPack.AddFolder(soundPath, ".wav,.mp3");

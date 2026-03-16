@@ -63,60 +63,17 @@ bool Scene::InitFromConfig()
 	{
 		// Set various properties of a scene
 		bool propsOk = true;
-		if (GameFile::Object * sceneObj = m_sourceFile.FindObject("scene"))
+		GameFile::Property * nameProp = sceneObject->FindProperty("name");
+		GameFile::Property * beginLoadedProp = sceneObject->FindProperty("beginLoaded");
+		if (nameProp && beginLoadedProp)
 		{
-			GameFile::Property * nameProp = sceneObj->FindProperty("name");
-			GameFile::Property * beginLoadedProp = sceneObj->FindProperty("beginLoaded");
-			if (nameProp && beginLoadedProp)
-			{
-				SetName(nameProp->GetString());
-				SetBeginLoaded(beginLoadedProp->GetBool());
+			SetName(nameProp->GetString());
+			SetBeginLoaded(beginLoadedProp->GetBool());
 
-				// Set whole scene shader if specified
-				if (GameFile::Property * shaderProp = sceneObj->FindProperty("shader"))
-				{
-					RenderManager::Get().ManageShader(this, shaderProp->GetString());
-				}
-			}
-			// Support for up to four lights per scene
-			GameFile::Object * lightingObj = sceneObj->FindObject("lighting");
-			if (lightingObj)
+			// Set whole scene shader if specified
+			if (GameFile::Property * shaderProp = sceneObject->FindProperty("shader"))
 			{
-				int numLights = 0;
-				LinkedListNode<GameFile::Object> * nextLight = lightingObj->GetChildren();
-				while (nextLight != nullptr)
-				{
-					// Check there aren't more lights than we support
-					if (numLights >= Shader::s_maxLights)
-					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", GetName(), Shader::s_maxLights);
-						propsOk = false;
-						break;
-					}
-					GameFile::Object * light = nextLight->GetData();
-					GameFile::Property * lName = light->FindProperty("name");
-					GameFile::Property * lPos = light->FindProperty("pos");
-					GameFile::Property * lDir = light->FindProperty("dir");
-					GameFile::Property * lAmbient = light->FindProperty("ambient");
-					GameFile::Property * lDiffuse = light->FindProperty("diffuse");
-					GameFile::Property * lSpecular = light->FindProperty("specular");
-					if (lName && lPos && lDir && lAmbient && lDiffuse && lSpecular)
-					{
-						AddLight(lName->GetString(), 
-							lPos->GetVector(),
-							lDir->GetQuaternion(),
-							lAmbient->GetColour(),
-							lDiffuse->GetColour(),
-							lSpecular->GetColour());
-						numLights++;
-					}
-					else
-					{
-						Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.", GetName());
-						propsOk = false;
-					}
-					nextLight = nextLight->GetNext();
-				}
+				RenderManager::Get().ManageShader(this, shaderProp->GetString());
 			}
 		}
 		else
@@ -124,101 +81,132 @@ bool Scene::InitFromConfig()
 			propsOk = false;
 		}
 
-		// Load child game objects of the scene
-		LinkedListNode<GameFile::Object> * childGameObject = sceneObject->GetChildren();
-		while (childGameObject != nullptr)
+		// Support for up to four lights per scene
+		if (GameFile::Object * lightingObj = sceneObject->FindObject("lighting"))
 		{
-			// Children of the scene file can be lighting or game objects, make sure we only create game objects
-			if (childGameObject->GetData()->m_name.GetHash() != StringHash::GenerateCRC("gameObject"))
+			int numLights = 0;
+			auto & lights = lightingObj->GetChildObjects();
+			for (GameFile::Object * light : lights)
 			{
-				childGameObject = childGameObject->GetNext();
-				continue;
-			}
-
-			const char * templateName = nullptr;
-			GameFile::Object * childObj = childGameObject->GetData();
-			if (GameFile::Property * prop = childObj->FindProperty("template"))
-			{
-				templateName = prop->GetString();
-			}
-				
-			// Create object with optional template values and add to the scene
-			GameObject * newObject = WorldManager::Get().CreateObject(templateName, this);
-
-			// Override any templated values
-			if (templateName != nullptr)
-			{
-				newObject->SetTemplate(templateName);
-			}
-
-			if (childObj->FindProperty("name"))
-			{
-				newObject->SetName(childObj->FindProperty("name")->GetString());
-			}
-			if (childObj->FindProperty("pos"))
-			{
-				newObject->SetPos(childObj->FindProperty("pos")->GetVector());
-			}
-			if (childObj->FindProperty("rot"))
-			{
-				newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
-			}
-			if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
-			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
+				// Check there aren't more lights than we support
+				if (numLights >= Shader::s_maxLights)
 				{
-					newObject->SetClipType(ClipType::Sphere);
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Scene %s declares more than the maximum of %d lights.", GetName(), Shader::s_maxLights);
+					propsOk = false;
+					break;
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+				GameFile::Property * lName = light->FindProperty("name");
+				GameFile::Property * lPos = light->FindProperty("pos");
+				GameFile::Property * lDir = light->FindProperty("dir");
+				GameFile::Property * lAmbient = light->FindProperty("ambient");
+				GameFile::Property * lDiffuse = light->FindProperty("diffuse");
+				GameFile::Property * lSpecular = light->FindProperty("specular");
+				if (lName && lPos && lDir && lAmbient && lDiffuse && lSpecular)
 				{
-					newObject->SetClipType(ClipType::AxisBox);
-				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
-				{
-					newObject->SetClipType(ClipType::Box);
-				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
-				{
-					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s in scene %s, defaulting to axisbox.", newObject->GetName(), GetName());
-					newObject->SetClipType(ClipType::AxisBox);
+					AddLight(lName->GetString(),
+						lPos->GetVector(),
+						lDir->GetQuaternion(),
+						lAmbient->GetColour(),
+						lDiffuse->GetColour(),
+						lSpecular->GetColour());
+					numLights++;
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), GetName());
-					newObject->SetClipType(ClipType::AxisBox);
+					Log::Get().Write(LogLevel::Error, LogCategory::Game, "Scene %s declares a light without the required required name, pos, dir, ambient, diffuse and specular properties.", GetName());
+					propsOk = false;
 				}
 			}
-			if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
+		}
+
+		// Load child game objects of the scene
+		if (GameFile::Object * gameObjectsArray = sceneObject->FindObject("gameObjects"))
+		{
+			auto & gameObjects = gameObjectsArray->GetChildObjects();
+			for (GameFile::Object * childObj : gameObjects)
 			{
-				newObject->SetClipSize(clipSize->GetVector());
+				const char * templateName = nullptr;
+				if (GameFile::Property * prop = childObj->FindProperty("template"))
+				{
+					templateName = prop->GetString();
+				}
+
+				// Create object with optional template values and add to the scene
+				GameObject * newObject = WorldManager::Get().CreateObject(templateName, this);
+
+				// Override any templated values
+				if (templateName != nullptr)
+				{
+					newObject->SetTemplate(templateName);
+				}
+
+				if (childObj->FindProperty("name"))
+				{
+					newObject->SetName(childObj->FindProperty("name")->GetString());
+				}
+				if (childObj->FindProperty("pos"))
+				{
+					newObject->SetPos(childObj->FindProperty("pos")->GetVector());
+				}
+				if (childObj->FindProperty("rot"))
+				{
+					newObject->SetRot(childObj->FindProperty("rot")->GetQuaternion());
+				}
+				if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
+				{
+					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
+					{
+						newObject->SetClipType(ClipType::Sphere);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+					{
+						newObject->SetClipType(ClipType::AxisBox);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
+					{
+						newObject->SetClipType(ClipType::Box);
+					}
+					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s in scene %s, defaulting to axisbox.", newObject->GetName(), GetName());
+						newObject->SetClipType(ClipType::AxisBox);
+					}
+					else
+					{
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), GetName());
+						newObject->SetClipType(ClipType::AxisBox);
+					}
+				}
+				if (GameFile::Property * clipSize = childObj->FindProperty("clipSize"))
+				{
+					newObject->SetClipSize(clipSize->GetVector());
+				}
+				if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
+				{
+					newObject->SetClipOffset(clipOffset->GetVector());
+				}
+				if (GameFile::Property* clipGroup = childObj->FindProperty("clipGroup"))
+				{
+					newObject->SetClipGroup(clipGroup->GetString(), PhysicsManager::Get().GetCollisionGroupId(clipGroup->GetString()));
+				}
+				if (childObj->FindProperty("model"))
+				{
+					newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));
+				}
+				if (childObj->FindProperty("shader"))
+				{
+					RenderManager::Get().ManageShader(newObject, childObj->FindProperty("shader")->GetString());
+				}
+				else if (HasLights())
+				{
+					// Set default shader
+					newObject->SetShader(RenderManager::Get().GetLightingShader());
+				}
 			}
-			if (GameFile::Property * clipOffset = childObj->FindProperty("clipOffset"))
-			{
-				newObject->SetClipOffset(clipOffset->GetVector());
-			}
-			if (GameFile::Property* clipGroup = childObj->FindProperty("clipGroup"))
-			{
-				newObject->SetClipGroup(clipGroup->GetString(), PhysicsManager::Get().GetCollisionGroupId(clipGroup->GetString()));
-			}
-			if (childObj->FindProperty("model"))
-			{
-				newObject->SetModel(ModelManager::Get().GetModel(childObj->FindProperty("model")->GetString()));
-			}
-			if (childObj->FindProperty("shader"))
-			{
-				RenderManager::Get().ManageShader(newObject, childObj->FindProperty("shader")->GetString());
-			}
-			else if (HasLights())
-			{
-				// Set default shader
-				newObject->SetShader(RenderManager::Get().GetLightingShader());		
-			}
-				
-			childGameObject = childGameObject->GetNext();
 		}
 
 		// No properties present
-		if (!propsOk) 
+		if (!propsOk)
 		{
 			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene %s, scene does not have required properties.", GetName());
 			return false;
@@ -229,7 +217,7 @@ bool Scene::InitFromConfig()
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading scene %s, no valid scene parent element.", GetName());
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -468,39 +456,37 @@ void Scene::Serialise()
 {
 	// Construct the path from the scene directory and name of the scene
 	char scenePath[StringUtils::s_maxCharsPerLine];
-	sprintf(scenePath, "%s%s.scn", WorldManager::Get().GetScenePath(), m_name);
+	sprintf(scenePath, "%s%s.json", WorldManager::Get().GetScenePath(), m_name);
 
 	// Create an output stream
 	GameFile * sceneFile = new GameFile();
 
 	GameFile::Object * sceneObject = sceneFile->AddObject("scene");
 	sceneFile->AddProperty(sceneObject, "name", m_name);
-	sceneFile->AddProperty(sceneObject, "beginLoaded", StringUtils::BoolToString(m_beginLoaded));
+	sceneFile->AddProperty(sceneObject, "beginLoaded", m_beginLoaded);
 
 	// Optional properties of the scene
-	if (m_shader != nullptr) 
+	if (m_shader != nullptr)
 	{
 		sceneFile->AddProperty(sceneObject, "shader", m_shader->GetName());
 	}
 
-	// Add lighting section
+	// Add lighting section as an array
 	if (HasLights())
 	{
-		GameFile::Object * lightsObject = sceneFile->AddObject("lighting", sceneObject);
 		for (int i = 0; i < m_numLights; ++i)
 		{
-			char vecBuf[StringUtils::s_maxCharsPerName];
-			GameFile::Object * curLightObj = sceneFile->AddObject("light", lightsObject);
+			GameFile::Object * curLightObj = sceneFile->AddObject("lighting", sceneObject);
 			sceneFile->AddProperty(curLightObj, "name", m_lights[i].m_name);
-			m_lights[i].m_pos.GetString(vecBuf);		sceneFile->AddProperty(curLightObj, "pos", vecBuf);
-			m_lights[i].m_dir.GetString(vecBuf);		sceneFile->AddProperty(curLightObj, "dir", vecBuf);
-			m_lights[i].m_ambient.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "ambient", vecBuf);
-			m_lights[i].m_diffuse.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "diffuse", vecBuf);
-			m_lights[i].m_specular.GetString(vecBuf);	sceneFile->AddProperty(curLightObj, "specular", vecBuf);
+			sceneFile->AddProperty(curLightObj, "pos", m_lights[i].m_pos);
+			sceneFile->AddProperty(curLightObj, "dir", m_lights[i].m_dir);
+			sceneFile->AddProperty(curLightObj, "ambient", m_lights[i].m_ambient);
+			sceneFile->AddProperty(curLightObj, "diffuse", m_lights[i].m_diffuse);
+			sceneFile->AddProperty(curLightObj, "specular", m_lights[i].m_specular);
 		}
 	}
-	
-	// Add each object in the scene
+
+	// Add each object in the scene as an array
 	for (unsigned int i = 0; i < m_objects.GetCount(); ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
@@ -513,7 +499,7 @@ void Scene::Serialise()
 			}
 		}
 	}
-	
+
 	// Write all the game file data to a file
 	sceneFile->Write(scenePath);
 	delete sceneFile;
