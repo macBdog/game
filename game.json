@@ -1,0 +1,20 @@
+{
+  "config": {
+    "name": "game",
+    "width": 1280,
+    "height": 720,
+    "bpp": 32,
+    "fullscreen": false,
+    "gameDataPath": "C:\\projects\\galagus\\",
+    "gameConfigFile": "gameSettings.json",
+    "texturePath": "tex\\",
+    "modelPath": "mesh\\",
+    "guiPath": "gui\\",
+    "fontPath": "gui\\font\\",
+    "templatePath": "template\\",
+    "scenePath": "scene\\",
+    "scriptPath": "script\\",
+    "shaderPath": "shader\\",
+    "soundPath": "sound\\"
+  }
+}

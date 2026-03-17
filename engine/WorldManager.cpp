@@ -27,7 +27,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	{
 		// Populate a list of scene files
 		DataPack::EntryList sceneEntries;
-		a_dataPack->GetAllEntries(".scn", sceneEntries);
+		a_dataPack->GetAllEntries(".json", sceneEntries);
 		DataPack::EntryNode * curNode = sceneEntries.GetHead();
 
 		// Load each scene in the data pack
@@ -72,7 +72,7 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 	{
 		// Populate a list of scenes on the disk
 		FileManager::FileList sceneFiles;
-		FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".scn");
+		FileManager::Get().FillFileList(m_scenePath, sceneFiles, ".json");
 
 		// Load each scene in the directory
 		FileManager::FileListNode * curNode = sceneFiles.GetHead();
@@ -214,14 +214,14 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		else
 		{
 			char fileNameBuf[StringUtils::s_maxCharsPerLine];
-			if (!strstr(a_templatePath, ":\\"))
+			if (!StringUtils::IsAbsolutePath(a_templatePath))
 			{
 				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
 
 				// Add on file extension if not present
-				if (!strstr(fileNameBuf, ".tmp"))
+				if (!strstr(fileNameBuf, ".json"))
 				{
-					const char * fileExt = ".tmp\0";
+					const char * fileExt = ".json\0";
 					int lastChar = (int)strlen(fileNameBuf);
 					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt) + 1);
 				}

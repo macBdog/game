@@ -1,0 +1,23 @@
+cc_library(
+    name = "lua",
+    srcs = glob(
+        ["src/*.c"],
+        exclude = [
+            "src/lua.c",   # standalone interpreter
+            "src/luac.c",  # standalone compiler
+        ],
+    ) + glob(["src/*.h"]),
+    hdrs = glob(["include/*.h"]),
+    includes = ["include", "src"],
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS", "/w"],
+        "@platforms//os:linux": ["-DLUA_USE_LINUX", "-w"],
+        "@platforms//os:macos": ["-DLUA_USE_MACOSX", "-w"],
+    }),
+    linkopts = select({
+        "@platforms//os:linux": ["-lm", "-ldl"],
+        "@platforms//os:macos": ["-lm"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

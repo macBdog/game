@@ -5,7 +5,7 @@
 
 const char * StringUtils::s_charLineEnd = "\n";				// Char sequence for the end of a line
 const char * StringUtils::s_charTab = "\t";					// Char sequence for a tab
-const char * StringUtils::s_charPathSep = "\\";				// Path seperator in Win32
+const char * StringUtils::s_charPathSep = "/";				// Path separator
 
 const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
 {
@@ -131,7 +131,7 @@ const char * StringUtils::ExtractFileNameFromPath(const char * a_buffer)
 	{
 		for (unsigned int i = bufLength; i > 0; --i)
 		{
-			if (a_buffer[i] == '\\')
+			if (a_buffer[i] == '/' || a_buffer[i] == '\\')
 			{
 				return &a_buffer[i+1];
 			}
@@ -149,7 +149,7 @@ void StringUtils::TrimFileNameFromPath(char * a_buffer_OUT)
 		// Work backwards through the string until a slash is encountered
 		for (unsigned int i = bufLength; i > 0; --i)
 		{
-			if (a_buffer_OUT[i] == '\\')
+			if (a_buffer_OUT[i] == '/' || a_buffer_OUT[i] == '\\')
 			{
 				// Terminate the string at the slash
 				a_buffer_OUT[i+1] = '\0';

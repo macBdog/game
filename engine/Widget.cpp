@@ -567,115 +567,88 @@ void Widget::Activate()
 	}
 }
 
-void Widget::Serialise(std::ofstream * a_outputStream, unsigned int a_indentCount)
+void Widget::SerialiseToGameFile(GameFile * a_file, GameFile::Object * a_parent)
 {
 	char outBuf[StringUtils::s_maxCharsPerName];
 
-	// If this is a recursive call the output stream will be already set up
-	if (a_outputStream != nullptr)
-	{
-		// Generate the correct tab amount
-		char tabs[StringUtils::s_maxCharsPerName];
-		memset(&tabs[0], '\t', a_indentCount);
-		tabs[a_indentCount] = '\0';
+	GameFile::Object * widgetObj = a_file->AddObject("widgets", a_parent);
+	a_file->AddProperty(widgetObj, "name", m_name);
 
-		std::ofstream & menuStream = *a_outputStream;
-		menuStream << tabs << "widget" << StringUtils::s_charLineEnd;
-		menuStream << tabs << "{" << StringUtils::s_charLineEnd;
-		menuStream << tabs << StringUtils::s_charTab << "name: "	<< m_name				<< StringUtils::s_charLineEnd;
+	// Write the begin loaded property out
+	if (Gui::Get().GetStartupMenu() == this)
+	{
+		a_file->AddProperty(widgetObj, "beginLoaded", true);
+	}
+
+	a_file->AddProperty(widgetObj, "text", m_text);
+	a_file->AddProperty(widgetObj, "colour", m_colour);
+
+	sprintf(outBuf, "%s", FontManager::Get().GetLoadedFontName(m_fontNameHash));
+	a_file->AddProperty(widgetObj, "font", outBuf);
+
+	a_file->AddProperty(widgetObj, "fontSize", m_fontSize);
+	a_file->AddProperty(widgetObj, "offset", Vector2(m_pos.GetX(), m_pos.GetY()));
+	a_file->AddProperty(widgetObj, "size", m_size);
+
+	if (m_alignToName[0] != '\0')
+	{
+		a_file->AddProperty(widgetObj, "alignTo", m_alignToName);
+	}
+
+	m_pos.GetAlignment().GetStringX(outBuf);
+	a_file->AddProperty(widgetObj, "alignX", outBuf);
+
+	m_pos.GetAlignment().GetStringY(outBuf);
+	a_file->AddProperty(widgetObj, "alignY", outBuf);
+
+	m_pos.GetAlignmentAnchor().GetStringX(outBuf);
+	a_file->AddProperty(widgetObj, "alignAnchorX", outBuf);
+
+	m_pos.GetAlignmentAnchor().GetStringY(outBuf);
+	a_file->AddProperty(widgetObj, "alignAnchorY", outBuf);
+
+	if (m_texture != nullptr)
+	{
+		a_file->AddProperty(widgetObj, "texture", m_texture->GetFileName());
+	}
+
+	if (m_scriptFuncName[0] != '\0')
+	{
+		a_file->AddProperty(widgetObj, "action", m_scriptFuncName);
+	}
+
+	// Serialise any children of this child
+	WidgetNode * curChild = m_children.GetHead();
+	while (curChild != nullptr)
+	{
+		curChild->GetData()->SerialiseToGameFile(a_file, widgetObj);
+		curChild = curChild->GetNext();
+	}
+}
+
+void Widget::Serialise()
+{
+	if (strlen(m_filePath) > 0)
+	{
+		GameFile menuFile;
+		GameFile::Object * menuObj = menuFile.AddObject("menu");
+		menuFile.AddProperty(menuObj, "name", m_name);
 
 		// Write the begin loaded property out
 		if (Gui::Get().GetStartupMenu() == this)
 		{
-			menuStream << tabs << StringUtils::s_charTab << "beginLoaded: true"	<< StringUtils::s_charLineEnd;
+			menuFile.AddProperty(menuObj, "beginLoaded", true);
 		}
 
-		strncpy(outBuf, m_text, strlen(m_text) + 1);
-		menuStream << tabs << StringUtils::s_charTab << "text: " << outBuf << StringUtils::s_charLineEnd;
-		
-		m_colour.GetString(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "colour: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		sprintf(outBuf, "%s", FontManager::Get().GetLoadedFontName(m_fontNameHash));
-		menuStream << tabs << StringUtils::s_charTab << "font: " << outBuf	 << StringUtils::s_charLineEnd;
-
-		sprintf(outBuf, "%f", m_fontSize);
-		menuStream << tabs << StringUtils::s_charTab << "fontSize: " << outBuf << StringUtils::s_charLineEnd;
-
-		m_pos.GetString(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "offset: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		m_size.GetString(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "size: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		if (m_alignToName[0] != '\0')
-		{
-			menuStream << tabs << StringUtils::s_charTab << "alignTo: "	<< m_alignToName	<< StringUtils::s_charLineEnd;
-		}
-
-		m_pos.GetAlignment().GetStringX(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "alignX: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		m_pos.GetAlignment().GetStringY(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "alignY: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		m_pos.GetAlignmentAnchor().GetStringX(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "alignAnchorX: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		m_pos.GetAlignmentAnchor().GetStringY(outBuf);
-		menuStream << tabs << StringUtils::s_charTab << "alignAnchorY: "	<< outBuf	<< StringUtils::s_charLineEnd;
-
-		if (m_texture != nullptr)
-		{
-			menuStream << tabs << StringUtils::s_charTab << "texture: " << m_texture->GetFileName() << StringUtils::s_charLineEnd;
-		}
-
-		if (m_scriptFuncName[0] != '\0')
-		{
-			menuStream << tabs << StringUtils::s_charTab << "action: " << m_scriptFuncName << StringUtils::s_charLineEnd;
-		}
-
-		menuStream << tabs << "}" << StringUtils::s_charLineEnd;
-
-		// Serialise any children of this child
+		// Write out any children of this widget
 		WidgetNode * curChild = m_children.GetHead();
 		while (curChild != nullptr)
 		{
-			curChild->GetData()->Serialise(a_outputStream, ++a_indentCount);
+			curChild->GetData()->SerialiseToGameFile(&menuFile, menuObj);
 			curChild = curChild->GetNext();
 		}
-	}
-	else if (strlen(m_filePath) > 0)
-	{
-		// Create an output stream
-		ofstream menuOutput;
-		menuOutput.open(m_filePath);
 
-		// Write menu header
-		if (menuOutput.is_open())
-		{
-			menuOutput << "menu"	<< StringUtils::s_charLineEnd;
-			menuOutput << "{"		<< StringUtils::s_charLineEnd;
-			menuOutput << StringUtils::s_charTab		<< "name: "		<< m_name << StringUtils::s_charLineEnd;
-					
-			// Write the begin loaded property out
-			if (Gui::Get().GetStartupMenu() == this)
-			{
-				menuOutput << StringUtils::s_charTab << "beginLoaded: true"	<< StringUtils::s_charLineEnd;
-			}
-
-			// Write out any children of this child
-			WidgetNode * curChild = m_children.GetHead();
-			while (curChild != nullptr)
-			{
-				curChild->GetData()->Serialise(&menuOutput, 1);
-				curChild = curChild->GetNext();
-			}
-
-			menuOutput << "}" << StringUtils::s_charLineEnd;
-		}
-
-		menuOutput.close();
+		menuFile.Write(m_filePath);
 	}
 }
 

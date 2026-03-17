@@ -1,0 +1,11 @@
+cc_library(
+    name = "zlib",
+    srcs = glob(["src/*.c", "src/*.h"]),
+    hdrs = glob(["include/*.h"]),
+    includes = ["include"],
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS", "/w"],
+        "//conditions:default": ["-w"],
+    }),
+    visibility = ["//visibility:public"],
+)

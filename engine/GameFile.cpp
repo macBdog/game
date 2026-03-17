@@ -1,67 +1,187 @@
-#include <assert.h>
+#include <fstream>
+#include <sstream>
 
 #include "GameFile.h"
 
+// ---- Property finding on Object ----
+
+GameFile::Property * GameFile::Object::FindProperty(const char * a_propertyName)
+{
+	if (m_json == nullptr || !m_json->is_object())
+	{
+		return nullptr;
+	}
+
+	auto it = m_json->find(a_propertyName);
+	if (it == m_json->end())
+	{
+		return nullptr;
+	}
+
+	// Don't return objects or arrays-of-objects as properties
+	if (it->is_object())
+	{
+		return nullptr;
+	}
+	if (it->is_array() && it->size() > 0 && (*it)[0].is_object())
+	{
+		return nullptr;
+	}
+
+	// Cache the property wrapper so the pointer stays valid
+	m_propertyCache.emplace_back(&(*it), std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Object * GameFile::Object::FindObject(const char * a_objectName)
+{
+	if (m_json == nullptr || !m_json->is_object())
+	{
+		return nullptr;
+	}
+
+	auto it = m_json->find(a_objectName);
+	if (it == m_json->end())
+	{
+		return nullptr;
+	}
+
+	// Must be an object or array of objects
+	if (!it->is_object() && !it->is_array())
+	{
+		return nullptr;
+	}
+
+	m_childObjectCache.push_back(std::make_unique<Object>(&(*it), std::string(a_objectName)));
+	return m_childObjectCache.back().get();
+}
+
+std::vector<GameFile::Object *> & GameFile::Object::GetChildObjects()
+{
+	m_childPtrCache.clear();
+
+	if (m_json == nullptr)
+	{
+		return m_childPtrCache;
+	}
+
+	if (m_json->is_array())
+	{
+		// Array of objects - each element is a child
+		for (auto & element : *m_json)
+		{
+			if (element.is_object())
+			{
+				m_childObjectCache.push_back(std::make_unique<Object>(&element, m_name));
+				m_childPtrCache.push_back(m_childObjectCache.back().get());
+			}
+		}
+	}
+	else if (m_json->is_object())
+	{
+		// Object with named children - each key-value pair where value is object
+		for (auto it = m_json->begin(); it != m_json->end(); ++it)
+		{
+			if (it->is_object())
+			{
+				m_childObjectCache.push_back(std::make_unique<Object>(&(*it), it.key()));
+				m_childPtrCache.push_back(m_childObjectCache.back().get());
+			}
+			else if (it->is_array() && it->size() > 0 && (*it)[0].is_object())
+			{
+				// Array of objects under a key
+				for (auto & element : *it)
+				{
+					if (element.is_object())
+					{
+						m_childObjectCache.push_back(std::make_unique<Object>(&element, it.key()));
+						m_childPtrCache.push_back(m_childObjectCache.back().get());
+					}
+				}
+			}
+		}
+	}
+
+	return m_childPtrCache;
+}
+
+// ---- GameFile Loading ----
+
+bool GameFile::Load(const char * a_filePath)
+{
+	Unload();
+	std::ifstream file(a_filePath);
+	if (!file.is_open())
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game file resource at path %s", a_filePath);
+		return false;
+	}
+
+	try
+	{
+		m_root = nlohmann::json::parse(file, nullptr, true, true);
+	}
+	catch (const nlohmann::json::parse_error & e)
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "JSON parse error in %s: %s", a_filePath, e.what());
+		return false;
+	}
+	return true;
+}
+
+bool GameFile::Load(DataPackEntry * a_packData)
+{
+	Unload();
+	if (a_packData == nullptr || a_packData->m_data == nullptr || a_packData->m_size == 0)
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Could not open game datapack file resource.");
+		return false;
+	}
+
+	try
+	{
+		std::string jsonStr(a_packData->m_data, a_packData->m_size);
+		m_root = nlohmann::json::parse(jsonStr, nullptr, true, true);
+	}
+	catch (const nlohmann::json::parse_error & e)
+	{
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "JSON parse error in datapack entry: %s", e.what());
+		return false;
+	}
+	return true;
+}
+
 void GameFile::Unload()
 {
-	// Iterate through all objects and delete inclusive of properties
-	auto nextObject = m_objects.GetHead();
-	while(nextObject != nullptr)
-	{
-		auto * nextProperty = nextObject->GetData()->m_properties.GetHead();	
-		while(nextProperty != nullptr)
-		{
-			// Cache off the working node so we can delete it and its data
-			auto * curProperty = nextProperty;
-			nextProperty = nextProperty->GetNext();
-
-			nextObject->GetData()->m_properties.Remove(curProperty);
-			delete curProperty->GetData();
-			delete curProperty;
-		}
-
-		// Cache off working node as above
-		auto * curObject = nextObject;
-		nextObject = nextObject->GetNext();
-
-		m_objects.Remove(curObject);
-		delete curObject->GetData();
-		delete curObject;	
-	}	
+	m_root.clear();
+	m_objectCache.clear();
+	m_propertyCache.clear();
 }
 
 bool GameFile::Write(const char * a_filePath)
 {
-	// Create an output stream
-	ofstream fileOutput;
-	fileOutput.open(a_filePath);
-
-	// Write menu header
-	if (fileOutput.is_open())
+	std::ofstream fileOutput(a_filePath);
+	if (!fileOutput.is_open())
 	{
-		// Output each object and it's properties
-		auto * cur = m_objects.GetHead();
-		while(cur != nullptr)
-		{
-			cur->GetData()->Serialise(fileOutput);	
-			cur = cur->GetNext();
-		}
+		return false;
 	}
-
-	// Cleanup
+	fileOutput << m_root.dump(2) << std::endl;
 	fileOutput.close();
 	return true;
 }
 
+// ---- Top-level accessors ----
+
 const char * GameFile::GetString(const char * a_object, const char * a_property) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end() && propIt->is_string())
 		{
-			return prop->GetString();
+			m_stringCache = propIt->get<std::string>();
+			return m_stringCache.c_str();
 		}
 	}
 	return "";
@@ -69,13 +189,14 @@ const char * GameFile::GetString(const char * a_object, const char * a_property)
 
 int GameFile::GetInt(const char * a_object, const char * a_property) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end())
 		{
-			return prop->GetInt();
+			if (propIt->is_number()) return propIt->get<int>();
+			if (propIt->is_string()) return atoi(propIt->get<std::string>().c_str());
 		}
 	}
 	return -1;
@@ -83,13 +204,14 @@ int GameFile::GetInt(const char * a_object, const char * a_property) const
 
 float GameFile::GetFloat(const char * a_object, const char * a_property) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end())
 		{
-			return prop->GetFloat();
+			if (propIt->is_number()) return propIt->get<float>();
+			if (propIt->is_string()) return (float)atof(propIt->get<std::string>().c_str());
 		}
 	}
 	return 0.0f;
@@ -97,13 +219,14 @@ float GameFile::GetFloat(const char * a_object, const char * a_property) const
 
 bool GameFile::GetBool(const char * a_object, const char * a_property) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end())
 		{
-			return prop->GetBool();
+			if (propIt->is_boolean()) return propIt->get<bool>();
+			if (propIt->is_string()) return propIt->get<std::string>().find("true") != std::string::npos;
 		}
 	}
 	return false;
@@ -111,104 +234,145 @@ bool GameFile::GetBool(const char * a_object, const char * a_property) const
 
 bool GameFile::GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end() && propIt->is_array() && propIt->size() >= 3)
 		{
-			a_vec_OUT = prop->GetVector();
+			a_vec_OUT = Vector((*propIt)[0].get<float>(), (*propIt)[1].get<float>(), (*propIt)[2].get<float>());
 			return true;
 		}
 	}
 	return false;
 }
-	
+
 bool GameFile::GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT) const
 {
-	// First find the object
-	if (Object * parentObject = FindObject(a_object))
+	auto objIt = m_root.find(a_object);
+	if (objIt != m_root.end() && objIt->is_object())
 	{
-		// Then the property
-		if (Property * prop = parentObject->FindProperty(a_property))
+		auto propIt = objIt->find(a_property);
+		if (propIt != objIt->end() && propIt->is_array() && propIt->size() >= 2)
 		{
-			a_vec_OUT = prop->GetVector2();
+			a_vec_OUT = Vector2((*propIt)[0].get<float>(), (*propIt)[1].get<float>());
 			return true;
 		}
 	}
 	return false;
 }
+
+// ---- Object/Property construction ----
 
 GameFile::Object * GameFile::AddObject(const char * a_objectName, Object * a_parent)
 {
-	LinkedListNode<Object> * newObject = new LinkedListNode<Object>();
-	newObject->SetData(new Object());
-
-	// Set name
-	newObject->GetData()->m_name = StringHash(a_objectName);
-
-	// Top level object
 	if (a_parent == nullptr)
 	{
-		m_objects.Insert(newObject);
+		// Top-level object
+		m_root[a_objectName] = nlohmann::json::object();
+		m_objectCache.emplace_back(&m_root[a_objectName], std::string(a_objectName));
+		return &m_objectCache.back();
 	}
-	else // Set parent child relationship
+	else
 	{
-		a_parent->m_children.Insert(newObject);
-	}
+		// Check if there is already an array key for child objects of this type
+		// For repeated object names (like multiple gameObjects), use an array
+		nlohmann::json * parentJson = a_parent->m_json;
 
-	return newObject->GetData();
+		auto it = parentJson->find(a_objectName);
+		if (it != parentJson->end())
+		{
+			// Key exists - if it's an array, append; if object, convert to array
+			if (it->is_array())
+			{
+				it->push_back(nlohmann::json::object());
+				nlohmann::json & added = it->back();
+				m_objectCache.emplace_back(&added, std::string(a_objectName));
+				return &m_objectCache.back();
+			}
+			else if (it->is_object())
+			{
+				// Convert single object to array
+				nlohmann::json existing = *it;
+				*it = nlohmann::json::array();
+				it->push_back(existing);
+				it->push_back(nlohmann::json::object());
+				nlohmann::json & added = it->back();
+				m_objectCache.emplace_back(&added, std::string(a_objectName));
+				return &m_objectCache.back();
+			}
+		}
+
+		// New key
+		(*parentJson)[a_objectName] = nlohmann::json::object();
+		m_objectCache.emplace_back(&(*parentJson)[a_objectName], std::string(a_objectName));
+		return &m_objectCache.back();
+	}
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, const char * a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = std::string(a_value);
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, float a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = a_value;
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, int a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = a_value;
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, bool a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = a_value;
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, const Vector & a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = { a_value.GetX(), a_value.GetY(), a_value.GetZ() };
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, const Vector2 & a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = { a_value.GetX(), a_value.GetY() };
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, const Quaternion & a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = { a_value.GetX(), a_value.GetY(), a_value.GetZ(), a_value.GetW() };
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
+}
+
+GameFile::Property * GameFile::AddProperty(Object * a_parentObject, const char * a_propertyName, const Colour & a_value)
+{
+	(*a_parentObject->m_json)[a_propertyName] = { a_value.GetR(), a_value.GetG(), a_value.GetB(), a_value.GetA() };
+	m_propertyCache.emplace_back(&(*a_parentObject->m_json)[a_propertyName], std::string(a_propertyName));
+	return &m_propertyCache.back();
 }
 
 GameFile::Object * GameFile::FindObject(const char * a_name) const
 {
-	// Iterate through all objects in this file looking for a name match
-	LinkedListNode<Object> * cur = m_objects.GetHead();
-	while(cur != nullptr)
+	auto it = m_root.find(a_name);
+	if (it != m_root.end() && it->is_object())
 	{
-		// Quit out of the loop if found
-		if (cur->GetData()->m_name == StringHash::GenerateCRC(a_name))
-		{
-			return cur->GetData();
-		}
-		cur = cur->GetNext();
+		m_objectCache.emplace_back(&(*it), std::string(a_name));
+		return &m_objectCache.back();
 	}
-
-	return nullptr;
-}
-
-GameFile::Property * GameFile::Object::FindProperty(const char * a_propertyName) const
-{
-	// Iterate through all objects in the parent's property list till a name match is found
-	LinkedListNode<Property> * cur = m_properties.GetHead();
-	while(cur != nullptr)
-	{
-		// Quit out of the loop if found
-		if (cur->GetData()->m_name == StringHash::GenerateCRC(a_propertyName))
-		{
-			return cur->GetData();
-		}
-		cur = cur->GetNext();
-	}
-
-	// Not found
-	return nullptr;
-}
-
-GameFile::Object * GameFile::Object::FindObject(const char * a_objectName) const
-{
-	// Walk the hierachy to find the targeted object
-	LinkedListNode<Object> * curChild = m_children.GetHead();
-	while (curChild != nullptr)
-	{
-		Object * curObject = curChild->GetData();
-		if (curObject->m_name == StringHash::GenerateCRC(a_objectName))
-		{
-			return curObject;
-		}
-		curChild = curChild->GetNext();
-	}
-
-	// Not found
 	return nullptr;
 }

@@ -1,0 +1,31 @@
+cc_library(
+    name = "engine",
+    srcs = glob(
+        ["*.cpp"],
+        exclude = [
+            "VRManager.cpp",
+            "VRRender.cpp",
+        ],
+    ) + glob(["Shaders/*.h"]) + glob(["Font/*.inc"]),
+    hdrs = glob(
+        ["*.h"],
+        exclude = [
+            "VRManager.h",
+            "VRRender.h",
+        ],
+    ),
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS"],
+        "//conditions:default": [],
+    }),
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//core",
+        "//third_party/glad",
+        "//third_party/lua-5.2.3:lua",
+        "//third_party/miniaudio",
+        "//third_party/SDL2-2.0.7:sdl2",
+        "//third_party/zlib-1.2.8:zlib",
+    ],
+)

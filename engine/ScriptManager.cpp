@@ -1,4 +1,6 @@
+
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -14,8 +16,6 @@
 #include "InputManager.h"
 #include "LuaScript.h"
 #include "ModelManager.h"
-#include "VRManager.h"
-#include "VRRender.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
 #include "SoundManager.h"
@@ -505,9 +505,9 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	const char * templateName = luaL_checkstring(a_luaState, 2);
 	char templatePath[StringUtils::s_maxCharsPerName];
 	templatePath[0] = '\n';
-	if (strstr(templateName, ".tmp") == nullptr)
+	if (strstr(templateName, ".json") == nullptr)
 	{
-		sprintf(templatePath, "%s.tmp", templateName);
+		sprintf(templatePath, "%s.json", templateName);
 	}
 	else // Just copy chars over from LUA string
 	{
@@ -607,11 +607,7 @@ int ScriptManager::GetGameObject(lua_State * a_luaState)
 int ScriptManager::IsVR(lua_State * a_luaState)
 {
 	bool keyIsDown = false;
-	if (lua_gettop(a_luaState) == 0)
-	{
-		return VRManager::Get().IsInitialised();
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "IsVR", "expects no parameters.");
 	}
@@ -623,15 +619,7 @@ int ScriptManager::IsVR(lua_State * a_luaState)
 int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
 {
 	Vector lookDir(0.0f);
-	if (lua_gettop(a_luaState) == 0)
-	{
-		VRManager& vrMan = VRManager::Get();
-		if (vrMan.IsInitialised())
-		{
-			lookDir = vrMan.GetVRRender()->GetLookDir();
-		}
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "GetVRLookDirection", "expects no parameters.");
 	}
@@ -645,15 +633,7 @@ int ScriptManager::GetVRLookDirection(lua_State * a_luaState)
 int ScriptManager::GetVRLookPosition(lua_State * a_luaState)
 {
 	Vector lookDir(0.0f);
-	if (lua_gettop(a_luaState) == 0)
-	{
-		VRManager& vrMan = VRManager::Get();
-		if (vrMan.IsInitialised())
-		{
-			lookDir = vrMan.GetVRRender()->GetLookPos();
-		}
-	}
-	else
+	if (lua_gettop(a_luaState) != 0)
 	{
 		LogScriptError(a_luaState, "GetVRLookPosition", "expects no parameters.");
 	}
@@ -1500,7 +1480,7 @@ int ScriptManager::GetFileBytes(lua_State * a_luaState)
 			const int byteOffset = (int)lua_tonumber(a_luaState, 2);
 			const int byteCount = (int)lua_tonumber(a_luaState, 3);
 
-			ifstream fileToRead(filePath, ifstream::in | ifstream::binary);
+			std::ifstream fileToRead(filePath, std::ifstream::in | std::ifstream::binary);
 			if (fileToRead.is_open())
 			{
 				lua_createtable(a_luaState, 1, 0);

@@ -36,34 +36,22 @@ bool PhysicsManager::Startup(const GameFile & a_config)
 			{
 				if (GameFile::Property * filterProp = colFilters->FindProperty(m_collisionGroups[i].GetCString()))
 				{
-					// If the collision filter is a single entry
-					const char * curFilters = filterProp->GetString();
-					if (strstr(curFilters, ",") == nullptr)
+					// Filters are stored as a JSON array of strings
+					if (filterProp->m_json && filterProp->m_json->is_array())
 					{
-						int colFilterInListId = GetCollisionGroupId(curFilters);
-						if (colFilterInListId > 0)
+						for (auto & filterEntry : *filterProp->m_json)
 						{
-							m_collisionFilters[i].Set(colFilterInListId);
-						}
-						else
-						{
-							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", curFilters, m_collisionGroups[i].GetCString());
-						}
-					}
-					else // Collision filter is a comma separated list of collision group names
-					{
-						for (int j = 0; j < s_maxCollisionGroups; ++j)
-						{
-							if (const char * colFilterInList = StringUtils::ExtractField(curFilters, ",", j))
+							if (filterEntry.is_string())
 							{
-								int colFilterInListId = GetCollisionGroupId(colFilterInList);
+								const std::string filterName = filterEntry.get<std::string>();
+								int colFilterInListId = GetCollisionGroupId(filterName.c_str());
 								if (colFilterInListId > 0)
 								{
 									m_collisionFilters[i].Set(colFilterInListId);
 								}
 								else
 								{
-									Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", curFilters, m_collisionGroups[i].GetCString());
+									Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid collision group name %s in filter for group called %s", filterName.c_str(), m_collisionGroups[i].GetCString());
 								}
 							}
 						}

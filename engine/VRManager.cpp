@@ -1,5 +1,3 @@
-#include <windows.h>
-
 #include "CameraManager.h"
 #include "InputManager.h"
 #include "Log.h"
@@ -28,7 +26,7 @@ void VRManager::Startup(bool a_useVr)
 	}
 }
 
-void VRManager::StartupRendering(HWND * a_window, bool a_useVr)
+void VRManager::StartupRendering(void * a_nativeWindow, bool a_useVr)
 {
 	if (a_useVr)
 	{

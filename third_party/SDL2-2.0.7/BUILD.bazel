@@ -1,0 +1,27 @@
+cc_library(
+    name = "sdl2",
+    hdrs = glob(["include/*.h"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "@platforms//os:linux": ["-lSDL2"],
+        "@platforms//os:macos": ["-lSDL2"],
+    }),
+    deps = select({
+        "@platforms//os:windows": [":sdl2_win", ":sdl2main_win"],
+        "//conditions:default": [],
+    }),
+)
+
+# Windows: link against vendored import libraries
+cc_import(
+    name = "sdl2_win",
+    interface_library = "lib/x64/SDL2.lib",
+    shared_library = "lib/x64/SDL2.dll",
+)
+
+cc_import(
+    name = "sdl2main_win",
+    static_library = "lib/x64/SDL2main.lib",
+)

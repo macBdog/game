@@ -27,7 +27,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 
 	// Load in the gui config file
 	char fileName[StringUtils::s_maxCharsPerLine];
-	sprintf(fileName, "%s%s", a_guiPath, "gui.cfg");
+	sprintf(fileName, "%s%s", a_guiPath, "gui.json");
 
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
@@ -57,7 +57,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 		// Create one and add it to the list
 		Widget * defaultMenu = new Widget();
 		defaultMenu->SetName("New Menu");
-		sprintf(fileName, "%s%s", a_guiPath, "newMenu.mnu");
+		sprintf(fileName, "%s%s", a_guiPath, "newMenu.json");
 		defaultMenu->SetFilePath(fileName);
 		defaultMenu->SetActive(false);
 
@@ -443,7 +443,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 				if (a_dataPack == nullptr || !a_dataPack->IsLoaded())
 				{
 					char menuFilePath[StringUtils::s_maxCharsPerLine];
-					sprintf(menuFilePath, "%s%s.mnu", m_guiPath, createdMenu->GetName());
+					sprintf(menuFilePath, "%s%s.json", m_guiPath, createdMenu->GetName());
 					createdMenu->SetFilePath(menuFilePath);
 				}
 				createdMenu->SetActive(false);
@@ -452,18 +452,19 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 				createdMenu->SetSize(Vector2(2.0f, 2.0f));
 				createdMenu->SetDrawPos(Vector2(-1.0, 1.0));
 
-				// Load child elements of the menu
-				auto childWidget = menuObject->GetChildren();
-				while (childWidget != nullptr)
+				// Load child elements of the menu from the "widgets" array
+				if (GameFile::Object * widgetsArray = menuObject->FindObject("widgets"))
 				{
-					GameFile::Object * curObject = childWidget->GetData();
-					Widget * newChild = CreateWidget(curObject, createdMenu);
-					// If not specified in the file, align child widgets to the parent menu
-					if (!newChild->HasAlignTo())
+					auto & widgets = widgetsArray->GetChildObjects();
+					for (GameFile::Object * curObject : widgets)
 					{
-						newChild->SetAlignTo(createdMenu);
+						Widget * newChild = CreateWidget(curObject, createdMenu);
+						// If not specified in the file, align child widgets to the parent menu
+						if (!newChild->HasAlignTo())
+						{
+							newChild->SetAlignTo(createdMenu);
+						}
 					}
-					childWidget = childWidget->GetNext();
 				}
 
 				// Add to list of menus
@@ -471,7 +472,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 			}
 			else // No properties present
 			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file %s, menu does not have a name property.", a_menuFile);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file, menu does not have a name property.");
 			}
 
 			// Set the active menu to the last menu with the begin loaded property
@@ -485,7 +486,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 		}
 		else // Unexpected file format, no root element
 		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file %s, no valid menu parent element.", a_menuFile);
+			Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error loading menu file, no valid menu parent element.");
 		}
 
 		return true;
@@ -499,7 +500,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
 		DataPack::EntryList menuEntries;
-		a_dataPack->GetAllEntries(".mnu", menuEntries);
+		a_dataPack->GetAllEntries(".json", menuEntries);
 		DataPack::EntryNode * curNode = menuEntries.GetHead();
 
 		// Load each menu in the list
@@ -519,7 +520,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 		// Get a list of menu files in the gui directory
 		FileManager & fileMan = FileManager::Get();
 		FileManager::FileList menuFiles;
-		fileMan.FillFileList(a_guiPath, menuFiles, ".mnu");
+		fileMan.FillFileList(a_guiPath, menuFiles, ".json");
 
 		// Load each menu in the directory
 		FileManager::FileListNode * curNode = menuFiles.GetHead();

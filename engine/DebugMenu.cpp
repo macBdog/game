@@ -602,13 +602,13 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				if (m_gameObjectToEdit != nullptr)
 				{
 					char templateString[StringUtils::s_maxCharsPerName];
-					if (strstr(m_textInputField->GetText(), ".tmp"))
+					if (strstr(m_textInputField->GetText(), ".json"))
 					{
 						sprintf(templateString, "%s", m_textInputField->GetText());
 					}
 					else
 					{
-						sprintf(templateString, "%s.tmp", m_textInputField->GetText());
+						sprintf(templateString, "%s.json", m_textInputField->GetText());
 					}
 					m_gameObjectToEdit->SetTemplate(templateString);
 					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));

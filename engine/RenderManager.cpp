@@ -1,8 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <windows.h>
 
-#include "GL/glew.h"
+#include <glad/gl.h>
+#include <SDL.h>
 
 #include "../core/MathUtils.h"
 
@@ -149,13 +149,16 @@ void RenderManager::ParticleEmitter::Unbind()
 
 bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
+	// Load GL function pointers before any GL calls
+	if (!m_vr)
+	{
+		gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	}
+
 	unsigned int glErrorEnum = glGetError();
 
     // Set the clear colour
     m_clearColour = a_clearColour;
-
-    // Enable smooth shading
-    glShadeModel(GL_SMOOTH);
 
     // Set the clear color
     glClearColor(m_clearColour.GetR(), m_clearColour.GetG(), m_clearColour.GetB(), m_clearColour.GetA());
@@ -173,15 +176,6 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Really Nice Perspective Calculations
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
-
-	if (!m_vr)
-	{
-		glewInit();
-	}
 	
 	const Colour debugWhite(1.0f, 1.0f, 1.0f, 1.0f);
 	m_fullscreenQuad.SetVert2D(0, Vector(-1.0f, -1.0f, s_renderDepth2D), debugWhite, TexCoord(0.0f, 0.0f));
@@ -282,19 +276,19 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	}
 
 	// Setup default shaders
-	#include "Shaders\post.vsh.h"
-	#include "Shaders\post.fsh.h"
-	#include "Shaders\colour.vsh.h"
-	#include "Shaders\colour.fsh.h"
-	#include "Shaders\texture.vsh.h"
-	#include "Shaders\texture.fsh.h"
-	#include "Shaders\lighting.vsh.h"
-	#include "Shaders\lighting.fsh.h"
-	#include "Shaders\particle.vsh.h"
-	#include "Shaders\particle.fsh.h"
-	#include "Shaders\particle.gsh.h"
-	#include "Shaders\final.fsh.h"
-	#include "Shaders\final.vsh.h"
+	#include "Shaders/post.vsh.h"
+	#include "Shaders/post.fsh.h"
+	#include "Shaders/colour.vsh.h"
+	#include "Shaders/colour.fsh.h"
+	#include "Shaders/texture.vsh.h"
+	#include "Shaders/texture.fsh.h"
+	#include "Shaders/lighting.vsh.h"
+	#include "Shaders/lighting.fsh.h"
+	#include "Shaders/particle.vsh.h"
+	#include "Shaders/particle.fsh.h"
+	#include "Shaders/particle.gsh.h"
+	#include "Shaders/final.fsh.h"
+	#include "Shaders/final.vsh.h"
 	if (m_postShader = new Shader("post"))
 	{
 		m_postShader->Init(postVertexShader, postFragmentShader);
@@ -749,7 +743,6 @@ bool RenderManager::Resize(unsigned int a_viewWidth, unsigned int a_viewHeight, 
 
     // Setup our viewport
     glViewport(0, 0, (GLint)a_viewWidth, (GLint)a_viewHeight);
-    glLoadIdentity();
 
 	// Create the framebuffers for each render stage
 	bool framebuffersOk = true;
@@ -2045,8 +2038,8 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 	}
 
 	// All scene shaders include the global inputs and outputs
-	#include "Shaders\global.fsh.h"
-	#include "Shaders\global.vsh.h"
+	#include "Shaders/global.fsh.h"
+	#include "Shaders/global.vsh.h"
 
 	char * vertexSource = nullptr;
 	char * fragmentSource = nullptr;
