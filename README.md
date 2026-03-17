@@ -1,5 +1,6 @@
 # GAME
 _Great name..._
+![Screenshot](screenshot.png)
 
 ## What is this project?
 
@@ -65,17 +66,19 @@ from source or linked from vendored binaries as appropriate for each platform.
 
 ## Building
 
-Build the game from the repository root:
+Make an alias from bazelisk -> bazel if required, then build the game from the repository root:
 
 ```
-bazelisk build //:game
+bazel build //:game
 ```
 
 Build configurations:
 
 ```
-bazelisk build //:game --config=dbg    # Debug build (symbols, no optimisation)
-bazelisk build //:game --config=opt    # Optimised release build
+bazel build //:game --config=db Editor debug — loads loose files from source datapath, debug tools enabled
+bazel build //:game --config=opt Editor release — loads loose files, debug tools stripped
+bazel build //:game --config=datapack	Datapack release — loads from packed archive, fastest
+
 ```
 
 The output binary is placed in `bazel-bin/`.
@@ -83,7 +86,7 @@ The output binary is placed in `bazel-bin/`.
 ### Running
 
 ```
-bazelisk run //:game
+bazel run //:game
 ```
 
 Or run the binary directly:
@@ -96,14 +99,14 @@ bazel-bin/game.exe
 bazel-bin/game
 ```
 
-The working directory must contain `game.cfg` and the `datapack.dtz` data file.
+The working directory must contain `game.cfg` and (optionally) the `datapack.dtz` data file.
 
 ### IDE Support (compile_commands.json)
 
 For clangd-based code completion and navigation in VS Code, Vim, etc.:
 
 ```
-bazelisk run //:refresh_compile_commands
+bazel run //:refresh_compile_commands
 ```
 
 This generates a `compile_commands.json` at the repository root.
@@ -114,7 +117,7 @@ This generates a `compile_commands.json` at the repository root.
 
 1. Build with debug symbols:
    ```
-   bazelisk build //:game --config=dbg
+   bazel build //:game --config=dbg
    ```
 2. Open Visual Studio (without a project/solution).
 3. **Debug > Attach to Process** or **File > Open > Folder** and point to the repo root.
@@ -147,7 +150,7 @@ Add to `.vscode/launch.json`:
 ### Linux / macOS (GDB / LLDB)
 
 ```
-bazelisk build //:game --config=dbg
+bazel build //:game --config=dbg
 gdb ./bazel-bin/game        # or: lldb ./bazel-bin/game
 ```
 

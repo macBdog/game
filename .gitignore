@@ -24,3 +24,6 @@ datapack.dtz.tmp
 
 # Compile commands (generated)
 /compile_commands.json
+
+# Agents
+/.claude

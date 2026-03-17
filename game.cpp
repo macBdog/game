@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 	FontManager::Get().Startup(fontPath, &dataPack);
 	InputManager::Get().Startup(fullScreen);
 	ModelManager::Get().Startup(modelPath, &dataPack);
-	PhysicsManager::Get().Startup(gameConfig, modelPath);
+	PhysicsManager::Get().Startup(gameConfig);
 	AnimationManager::Get().Startup(modelPath, &dataPack);
 	WorldManager::Get().Startup(templatePath, scenePath, &dataPack);
 	CameraManager::Get().Startup();

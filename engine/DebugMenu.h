@@ -27,7 +27,7 @@ public:
 
 	//\brief Startup registers input callbacks for mouse clicks
 	bool Startup();
-	inline void Shutdown();
+	void Shutdown();
 
 	//\brief Update will draw all debug menu items
 	//\param a_dt float of time since the last frame in seconds

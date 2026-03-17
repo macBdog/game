@@ -23,6 +23,20 @@
             "command": "bazelisk build //:game --config=opt",
             "group": "build",
             "problemMatcher": ["$gcc", "$msCompile"]
+        },
+        {
+            "label": "bazel-build-datapack",
+            "type": "shell",
+            "command": "bazelisk build //:game --config=datapack",
+            "group": "build",
+            "problemMatcher": ["$gcc", "$msCompile"]
+        },
+        {
+            "label": "refresh-compile-commands",
+            "type": "shell",
+            "command": "bazelisk run //:refresh_compile_commands",
+            "group": "build",
+            "problemMatcher": []
         }
     ]
 }

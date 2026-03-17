@@ -9,11 +9,17 @@ build:macos --host_cxxopt=-std=c++17
 build:windows --cxxopt=/std:c++17
 build:windows --host_cxxopt=/std:c++17
 
-# Debug configuration
+# Editor Debug - loose files, debug tools enabled
 build:dbg --compilation_mode=dbg
 
-# Optimized configuration
+# Editor Release - loose files, debug tools stripped
 build:opt --compilation_mode=opt
+build:opt --copt=-D_RELEASE
+
+# Datapack Release - loads from packed archive, debug tools stripped
+build:datapack --compilation_mode=opt
+build:datapack --copt=-D_RELEASE
+build:datapack --copt=-D_DATAPACK
 
 # Suppress MSVC warnings for third-party code
 build --per_file_copt=third_party/.*@/w

@@ -2,22 +2,64 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug (Windows - MSVC)",
+            "name": "Editor Debug (Windows - MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/game.exe",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "bazel-build-debug"
+            "preLaunchTask": "bazel-build-debug",
+            "console": "integratedTerminal"
         },
         {
-            "name": "Debug (Linux/Mac - LLDB)",
+            "name": "Editor Release (Windows - MSVC)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-release",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Datapack Release (Windows - MSVC)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-datapack",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Editor Debug (Linux/Mac - LLDB)",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/game",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "bazel-build-debug"
+            "preLaunchTask": "bazel-build-debug",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Editor Release (Linux/Mac - LLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-release",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Datapack Release (Linux/Mac - LLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-datapack",
+            "console": "integratedTerminal"
         }
     ]
 }
