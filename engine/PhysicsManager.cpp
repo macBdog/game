@@ -1,3 +1,4 @@
+#include <string>
 #include <unordered_map>
 
 #include "CollisionUtils.h"
@@ -18,11 +19,9 @@ bool PhysicsManager::Startup(const GameFile & a_config)
 	{
 		if (GameFile::Object * colGroups = colConfig->FindObject("groups"))
 		{
-			char colGroupName[StringUtils::s_maxCharsPerName];
-			colGroupName[0] = '\0';
 			for (int i = 1; i < s_maxCollisionGroups; ++i)
 			{
-				sprintf(colGroupName, "group%d", i);
+				std::string colGroupName = "group" + std::to_string(i);
 				if (GameFile::Property * colGroupProp = colGroups->FindProperty(colGroupName))
 				{
 					m_collisionGroups[i] = StringHash(colGroupProp->GetString());
@@ -44,7 +43,7 @@ bool PhysicsManager::Startup(const GameFile & a_config)
 							if (filterEntry.is_string())
 							{
 								const std::string filterName = filterEntry.get<std::string>();
-								int colFilterInListId = GetCollisionGroupId(filterName.c_str());
+								int colFilterInListId = GetCollisionGroupId(std::string_view(filterName));
 								if (colFilterInListId > 0)
 								{
 									m_collisionFilters[i].Set(colFilterInListId);
@@ -261,7 +260,6 @@ void PhysicsManager::UpdateDebugRender(const float& a_dt)
 
 	RenderManager& rMan = RenderManager::Get();
 	FontManager& fMan = FontManager::Get();
-	char pString[StringUtils::s_maxCharsPerName];
 	if (DebugMenu::Get().IsPhysicsDebuggingOn())
 	{
 		const auto drawDebugClipping = [&rMan](const ClipType a_type, const Vector& a_pos, const Quaternion & a_rot, const Vector& a_size, const Colour& a_col)
@@ -284,8 +282,8 @@ void PhysicsManager::UpdateDebugRender(const float& a_dt)
 		{
 			auto gameObj = curPhys.m_gameObject;
 			drawDebugClipping(gameObj->GetClipType(), curPhys.GetPos(), curPhys.GetRot(), gameObj->GetClipSize(), sc_colourPurple);
-			curPhys.GetVelocity().GetString(pString);
-			fMan.DrawDebugString3D(pString, curPhys.GetPos(), sc_colourBlue);
+			std::string pString = curPhys.GetVelocity().GetString();
+			fMan.DrawDebugString3D(pString.c_str(), curPhys.GetPos(), sc_colourBlue);
 			alreadyDrawn.insert(std::pair<unsigned int, bool>(gameObj->GetId(), true));
 		}
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "../core/LinkedList.h"
 
 #include "GameFile.h"
@@ -17,16 +20,16 @@ class Gui : public Singleton<Gui>
 public:
 
 	// Constructor just for initialisation list
-	Gui() 
+	Gui()
 		: m_activeMenu(nullptr)
 		, m_startupMenu(nullptr)
-	{ m_guiPath[0] = '\0'; }
+	{ }
 
 	// Destructor cleans up all allocations
 	~Gui() { Shutdown(); }
 
 	//\brief Load up resources from the gui config file
-	bool Startup(const char * a_guiPath, const DataPack * a_dataPack);
+	bool Startup(std::string_view a_guiPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Draw all visible widgets
@@ -41,7 +44,7 @@ public:
 	//return A pointer to the newly created widget if succesfull otherwise nullptr
 	Widget * CreateWidget(const Widget::WidgetDef & a_def, Widget * a_parent, bool a_startActive = true);
 	Widget * CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, bool a_startActive = true);
-	Widget * FindWidget(const char * a_widgetName);
+	Widget * FindWidget(std::string_view a_widgetName);
 	Widget * FindSelectedWidget();
 	void DestroyWidget(Widget * a_widget);
 	bool LoadWidgets(GameFile *a_inputFile);
@@ -77,7 +80,7 @@ private:
 	//\param a_menuFile is a pointer to the c string of the path of the menu file to load
 	//\return bool true if the load or load operation completed without failure
 	bool LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack);
-	bool LoadMenus(const char * a_guiPath, const DataPack * a_dataPack);
+	bool LoadMenus(std::string_view a_guiPath, const DataPack * a_dataPack);
 	bool UnloadMenus();
 
 	//\brief Helper function to update selection status of all widgets based on mouse pos
@@ -89,7 +92,7 @@ private:
 	static const float s_cursorBlinkTime;
 	static float s_widgetPulseTimer;
 	
-	char m_guiPath[StringUtils::s_maxCharsPerLine];
+	std::string m_guiPath;
 	MenuList m_menus{};					///< All menus loaded from data or created on the fly
 	GameFile m_configFile{};			///< Base gui config file
 	Widget m_debugRoot{};				///< All debug menu elements are children of this

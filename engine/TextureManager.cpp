@@ -21,27 +21,20 @@ TextureManager::TextureManager(float a_updateFreq)
 	: m_updateFreq(a_updateFreq)
 	, m_updateTimer(0.0f)
 	, m_dataPack(nullptr)
+	, m_filterMode(TextureFilter::Invalid)
 {
-	m_texturePath[0] = '\0';
-	m_filterMode = TextureFilter::Invalid;
 }
 
-bool TextureManager::Startup(const char * a_texturePath, bool a_useLinearTextureFilter)
+bool TextureManager::Startup(std::string_view a_texturePath, bool a_useLinearTextureFilter)
 {
-	// Cache off the texture path for non qualified loading of textures
-	memset(&m_texturePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
-	
+	m_texturePath = a_texturePath;
 	return Init(a_useLinearTextureFilter);
 }
 
-bool TextureManager::Startup(const char * a_texturePath,  DataPack * a_dataPack, bool a_useLinearTextureFilter)
+bool TextureManager::Startup(std::string_view a_texturePath, DataPack * a_dataPack, bool a_useLinearTextureFilter)
 {
-	// Cache off the datapack path for loading textures from pack
 	m_dataPack = a_dataPack;
-	memset(&m_texturePath, 0, StringUtils::s_maxCharsPerLine);
-	strncpy(m_texturePath, a_texturePath, sizeof(char) * strlen(a_texturePath) + 1);
-
+	m_texturePath = a_texturePath;
 	return Init(a_useLinearTextureFilter);
 }
 
@@ -117,8 +110,8 @@ bool TextureManager::Update(float a_dt)
 				{
 					if (curTimeStamp > curTex->m_timeStamp)
 					{
-						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path);
-						textureReloaded = curTex->m_texture.LoadTGAFromFile(curTex->m_path);
+						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in texture %s, reloading.", curTex->m_path.c_str());
+						textureReloaded = curTex->m_texture.LoadTGAFromFile(curTex->m_path.c_str());
 						curTex->m_timeStamp = curTimeStamp;
 
 						// Check any models that use this texture and reload them
@@ -131,33 +124,33 @@ bool TextureManager::Update(float a_dt)
 	}
 }
 
-Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter)
+Texture * TextureManager::GetTexture(std::string_view a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter)
 {
 	// Texture paths are either fully qualified or relative to the config texture dir
 	const int tCat = static_cast<int>(a_cat);
 	bool readFromDataPack = m_dataPack != nullptr && m_dataPack->IsLoaded();
-	char fileNameBuf[StringUtils::s_maxCharsPerLine];
+	std::string fileName;
 	if (!readFromDataPack && !StringUtils::IsAbsolutePath(a_tgaPath))
 	{
 		// Strip out any leading slashes
-		const char * filenameOnly = strstr(a_tgaPath, "/");
-		if (filenameOnly == nullptr) filenameOnly = strstr(a_tgaPath, "\\");
-		if (filenameOnly != nullptr)
+		size_t slashPos = a_tgaPath.find('/');
+		if (slashPos == std::string_view::npos) slashPos = a_tgaPath.find('\\');
+		if (slashPos != std::string_view::npos)
 		{
-			sprintf(fileNameBuf, "%s%s", m_texturePath, filenameOnly);
-		} 
+			fileName = m_texturePath + std::string(a_tgaPath.substr(slashPos));
+		}
 		else
 		{
-			sprintf(fileNameBuf, "%s%s", m_texturePath, a_tgaPath);
+			fileName = m_texturePath + std::string(a_tgaPath);
 		}
-	} 
+	}
 	else // Already fully qualified
 	{
-		sprintf(fileNameBuf, "%s", a_tgaPath);
+		fileName = a_tgaPath;
 	}
-	
+
 	// Get the identifier for the new texture
-	StringHash texHash(fileNameBuf);
+	StringHash texHash(fileName);
 	unsigned int texId = texHash.GetHash();
 	TextureCategory loadedCat = IsTextureLoaded(texId);
 
@@ -181,49 +174,49 @@ Texture * TextureManager::GetTexture(const char * a_tgaPath, TextureCategory a_c
 		if (readFromDataPack)
 		{
 			// Insert the newly allocated texture
-			if (DataPackEntry * packedTexture = m_dataPack->GetEntry(fileNameBuf))
+			if (DataPackEntry * packedTexture = m_dataPack->GetEntry(fileName))
 			{
 				if (newTex->m_texture.LoadTGAFromMemory((void *)packedTexture->m_data, packedTexture->m_size, a_currentFilter == TextureFilter::Linear))
 				{
-					sprintf(newTex->m_path, "%s", fileNameBuf);
+					newTex->m_path = fileName;
 					m_textureMap[tCat].Insert(texId, newTex);
 					return &newTex->m_texture;
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
+					Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileName.c_str());
 					return nullptr;
 				}
 			}
 			else
 			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileNameBuf);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from pack failed for %s", fileName.c_str());
 				return nullptr;
 			}
 		}
 		else
 		{
 			// Insert the newly allocated texture
-			if (newTex->m_texture.LoadTGAFromFile(fileNameBuf, a_currentFilter == TextureFilter::Linear))
+			if (newTex->m_texture.LoadTGAFromFile(fileName.c_str(), a_currentFilter == TextureFilter::Linear))
 			{
-				FileManager::Get().GetFileTimeStamp(fileNameBuf, newTex->m_timeStamp);
-				sprintf(newTex->m_path, "%s", fileNameBuf);
+				FileManager::Get().GetFileTimeStamp(fileName, newTex->m_timeStamp);
+				newTex->m_path = fileName;
 				m_textureMap[tCat].Insert(texId, newTex);
 				return &newTex->m_texture;
 			}
 			else
 			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileNameBuf);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture load from disk failed for %s", fileName.c_str());
 				return nullptr;
 			}
 		}
 	}
 	else // Report the error
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture allocation failed for %s", fileNameBuf);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Texture allocation failed for %s", fileName.c_str());
 		return nullptr;
 	}
-   return nullptr;
+	return nullptr;
 }
 
 TextureCategory TextureManager::IsTextureLoaded(unsigned int a_tgaPathHash)

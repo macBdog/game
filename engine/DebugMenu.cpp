@@ -1,6 +1,9 @@
 #include "../core/Colour.h"
 #include "../core/MathUtils.h"
 
+#include <string>
+#include <string_view>
+
 #include "CameraManager.h"
 #include "FontManager.h"
 #include "InputManager.h"
@@ -476,8 +479,7 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				{
 					if (newResource != nullptr && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
-						char tgaBuf[StringUtils::s_maxCharsPerLine];
-						sprintf(tgaBuf, "%s%s", TextureManager::Get().GetTexturePath(), newResource);
+						std::string tgaBuf = TextureManager::Get().GetTexturePath() + std::string(newResource);
 						m_widgetToEdit->SetTexture(TextureManager::Get().GetTexture(tgaBuf, TextureCategory::Gui));
 					}
 					else // Clear the texture
@@ -532,11 +534,10 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				{
 					if (newResource != nullptr && newResource[0] != '\0' && strlen(newResource)  > 0)
 					{
-						char objBuf[StringUtils::s_maxCharsPerLine];
-						sprintf(objBuf, "%s%s", ModelManager::Get().GetModelPath(), m_resourceSelectList->GetSelectedListItem());
-					
+						std::string objBuf = std::string(ModelManager::Get().GetModelPath()) + m_resourceSelectList->GetSelectedListItem();
+
 						// Load the model and set it as the current model to edit
-						if (Model * newModel = ModelManager::Get().GetModel(objBuf))
+						if (Model * newModel = ModelManager::Get().GetModel(objBuf.c_str()))
 						{
 							m_gameObjectToEdit->SetModel(newModel);
 							m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
@@ -601,16 +602,12 @@ bool DebugMenu::OnMenuItemMouseUp(Widget * a_widget)
 				// Editing the template of an object
 				if (m_gameObjectToEdit != nullptr)
 				{
-					char templateString[StringUtils::s_maxCharsPerName];
-					if (strstr(m_textInputField->GetText(), ".json"))
+					std::string templateString = m_textInputField->GetText();
+					if (templateString.find(".json") == std::string::npos)
 					{
-						sprintf(templateString, "%s", m_textInputField->GetText());
+						templateString += ".json";
 					}
-					else
-					{
-						sprintf(templateString, "%s.json", m_textInputField->GetText());
-					}
-					m_gameObjectToEdit->SetTemplate(templateString);
+					m_gameObjectToEdit->SetTemplate(templateString.c_str());
 					m_dirtyFlags.Set(static_cast<unsigned int>(DirtyFlag::Scene));
 				}
 			}
@@ -916,19 +913,16 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 	// Respond to typing in a text input box
 	if (m_textInput->IsActive())
 	{
-		char newName[StringUtils::s_maxCharsPerName];
-		newName[0] = '\0';
-		strncpy(newName, m_textInputField->GetText(), sizeof(char) * strlen(m_textInputField->GetText()) + 1);
+		std::string newName = m_textInputField->GetText();
 
 		SDL_Keycode lastKey = inMan.GetLastKey();
 		if (lastKey == SDLK_BACKSPACE)
 		{
 			// Delete a character off the end of the name
-			const auto nameLength = strlen(newName);
-			if (nameLength > 0)
+			if (!newName.empty())
 			{
-				newName[nameLength - 1] = '\0';
-				m_textInputField->SetText(newName);
+				newName.pop_back();
+				m_textInputField->SetText(newName.c_str());
 			}
 		}
 		else // Some other alpha key, append to the name
@@ -944,14 +938,14 @@ bool DebugMenu::OnAlphaKeyDown(bool a_unused)
 				lastKey == SDLK_UNDERSCORE)
 			{
 				// Handle upper case letters when a shift is held
-				if ((keyVal >= alphaStart && keyVal <= alphaEnd) && 
+				if ((keyVal >= alphaStart && keyVal <= alphaEnd) &&
 					(inMan.IsKeyDepressed(SDLK_LSHIFT) || inMan.IsKeyDepressed(SDLK_RSHIFT)))
 				{
 					keyVal -= 32;
 				}
 
-				sprintf(newName, "%s%c", m_textInputField->GetText(), keyVal);
-				m_textInputField->SetText(newName);
+				newName += static_cast<char>(keyVal);
+				m_textInputField->SetText(newName.c_str());
 			}
 		}
 
@@ -979,7 +973,7 @@ bool DebugMenu::OnAlphaKeyUp(bool a_unused)
 	return SaveChanges();	
 }
 
-void DebugMenu::ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter)
+void DebugMenu::ShowResourceSelect(std::string_view a_startingPath, std::string_view a_fileExtensionFilter)
 {
 	// Position and display the elements of the dialog
 	m_resourceSelect->SetActive();
@@ -1065,7 +1059,7 @@ void DebugMenu::ShowFontSelect()
 	}
 }
 
-void DebugMenu::ShowTextInput(const char * a_startingText)
+void DebugMenu::ShowTextInput(std::string_view a_startingText)
 {
 	// Position and display the elements of the dialog
 	m_textInput->SetActive();
@@ -1093,9 +1087,9 @@ void DebugMenu::ShowTextInput(const char * a_startingText)
 	m_btnTextInputCancel->SetOffset(buttonPos);
 
 	// Show the starting text if reqd
-	if (a_startingText != nullptr)
+	if (!a_startingText.empty())
 	{
-		m_textInputField->SetText(a_startingText);
+		m_textInputField->SetText(std::string(a_startingText).c_str());
 	}
 }
 
@@ -1107,14 +1101,14 @@ void DebugMenu::ShowColourPicker()
 	}
 }
 
-bool DebugMenu::ShowScriptDebugText(const char * a_text, float a_posX, float a_posY)
+bool DebugMenu::ShowScriptDebugText(std::string_view a_text, float a_posX, float a_posY)
 {
 	Gui & gui = Gui::Get();
 	for (unsigned int i = 0; i < sc_numScriptDebugWidgets; ++i)
 	{
 		if (m_scriptDebugWidgets[i] != nullptr && !m_scriptDebugWidgets[i]->IsActive())
 		{
-			m_scriptDebugWidgets[i]->SetText(a_text);
+			m_scriptDebugWidgets[i]->SetText(std::string(a_text).c_str());
 			m_scriptDebugWidgets[i]->SetActive(true);
 			const WidgetVector boxSize = WidgetVector(m_scriptDebugWidgets[i]->GetTextWidth(), m_scriptDebugWidgets[i]->GetTextHeight());
 			const WidgetVector boxPos = WidgetVector(a_posX, a_posY - (i*0.5f*m_scriptDebugWidgets[i]->GetSize().GetY()));
@@ -1209,20 +1203,18 @@ void DebugMenu::Draw()
 	Vector2 mousePos = InputManager::Get().GetMousePosRelative();
 	if (m_widgetToEdit != nullptr && m_editMode == EditMode::FontSize)
 	{
-		char sizeBuf[16];
-		sprintf(sizeBuf, "%f", m_widgetToEdit->GetFontSize());
+		std::string sizeBuf = std::to_string(m_widgetToEdit->GetFontSize());
 		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, sc_colourWhite);
-		fontMan.DrawDebugString2D(sizeBuf, mousePos, sc_colourWhite);
+		fontMan.DrawDebugString2D(sizeBuf.c_str(), mousePos, sc_colourWhite);
 	}
 
 	// Draw colour editing widget
 	if (m_widgetToEdit != nullptr && m_editMode == EditMode::Colour)
 	{
-		char colourBuf[64];
 		const Colour widgetColour = m_widgetToEdit->GetColour();
-		widgetColour.GetString(colourBuf);
+		std::string colourBuf = widgetColour.GetString();
 		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, widgetColour);
-		fontMan.DrawDebugString2D(colourBuf, mousePos, widgetColour);
+		fontMan.DrawDebugString2D(colourBuf.c_str(), mousePos, widgetColour);
 	}
 
 	// Draw light editing widget
@@ -1236,15 +1228,14 @@ void DebugMenu::Draw()
 			case EditMode::Specular: colourVal = m_lightToEdit->m_specular; break;
 			default: break;
 		}
-		char colourBuf[64];
-		colourVal.GetString(colourBuf);
+		std::string colourBuf = colourVal.GetString();
 		renMan.AddDebugArrow2D(Vector2::Vector2Zero(), mousePos, colourVal);
-		fontMan.DrawDebugString2D(colourBuf, mousePos, colourVal);
+		fontMan.DrawDebugString2D(colourBuf.c_str(), mousePos, colourVal);
 	}
 
 	// Show mouse pos at cursor
 	char mouseBuf[16];
-	sprintf(mouseBuf, "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
+	snprintf(mouseBuf, sizeof(mouseBuf), "%.2f, %.2f", mousePos.GetX(), mousePos.GetY());
 	Vector2 displayPos(mousePos.GetX() + sc_cursorSize, mousePos.GetY() - sc_cursorSize);
 	fontMan.DrawDebugString2D(mouseBuf, displayPos, sc_colourGreen);
 
@@ -1260,9 +1251,8 @@ void DebugMenu::Draw()
 	const int numPhysics = 0;
 	const int numDrawCalls = RenderManager::Get().GetDrawCallCount();
 	const int numMusic = SoundManager::Get().GetNumMusicPlaying();
-	char statBuf[256];
-	sprintf(statBuf, "GameObjects: %d\nPhysics: %d\nDraw: %d\nMusic: %d\n", numObjects, numPhysics, numDrawCalls, numMusic);
-	fontMan.DrawDebugString2D(statBuf, Vector2(-0.85f, 0.75f), sc_colourGreen);
+	std::string statBuf = "GameObjects: " + std::to_string(numObjects) + "\nPhysics: " + std::to_string(numPhysics) + "\nDraw: " + std::to_string(numDrawCalls) + "\nMusic: " + std::to_string(numMusic) + "\n";
+	fontMan.DrawDebugString2D(statBuf.c_str(), Vector2(-0.85f, 0.75f), sc_colourGreen);
 #endif
 }
 

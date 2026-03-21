@@ -1,6 +1,9 @@
 #ifndef _ENGINE_TEXTURE_MANAGER_H_
 #define _ENGINE_TEXTURE_MANAGER_H_
 
+#include <string>
+#include <string_view>
+
 #include "../core/HashMap.h"
 #include "../core/LinearAllocator.h"
 
@@ -44,8 +47,8 @@ public:
 	~TextureManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup textures on shutdown
-	bool Startup(const char * a_texturePath, bool a_useLinearTextureFilter = true);
-	bool Startup(const char * a_texturePath, DataPack * a_dataPack, bool a_useLinearTextureFilter = true);
+	bool Startup(std::string_view a_texturePath, bool a_useLinearTextureFilter = true);
+	bool Startup(std::string_view a_texturePath, DataPack * a_dataPack, bool a_useLinearTextureFilter = true);
 
 	bool Shutdown();
 
@@ -56,19 +59,19 @@ public:
 	//\brief Get or load a TGA file into texture memory
 	//\param a_tgaPath cstring to identify the texture by
 	//\return texture ID of the identified texture
-	Texture * GetTexture(const char *a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter = TextureFilter::Invalid);
+	Texture * GetTexture(std::string_view a_tgaPath, TextureCategory a_cat, TextureFilter a_currentFilter = TextureFilter::Invalid);
 
 	//\brief Functions to check if a texture has already been loaded
 	//\param a_tgaPathHash is the identified for the texture
 	//\return -1 the category that the texture is loaded into, none if not loaded
 	TextureCategory IsTextureLoaded(unsigned int a_tgaPathHash);
-	inline TextureCategory IsTextureLoaded(const char *a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
+	inline TextureCategory IsTextureLoaded(std::string_view a_tgaPath) { return IsTextureLoaded(StringHash(a_tgaPath).GetHash()); }
 
 	//\brief Reload a single texture without changing the IDs
 	//\param a_cat the category the texture is found in. If not supplied, an exhaustive search is performed
 	//\return true in the texture was found and reloaded successfully
 	bool ReloadTexture(unsigned int a_tgaPathHash, TextureCategory a_cat = TextureCategory::None);
-	inline bool ReloadTexture(const char *a_tgaPath, TextureCategory a_cat = TextureCategory::None) { return ReloadTexture(StringHash(a_tgaPath).GetHash(), a_cat); }
+	inline bool ReloadTexture(std::string_view a_tgaPath, TextureCategory a_cat = TextureCategory::None) { return ReloadTexture(StringHash(a_tgaPath).GetHash(), a_cat); }
 
 	//\brief Wholesale reload of single or multiple categories
 	bool ReloadTextureCategory(TextureCategory a_cat);
@@ -76,7 +79,7 @@ public:
 
 	//\brief Get the fully qualified texture path
 	//\return A pointer to a c string containing the texture path
-	inline const char * GetTexturePath() { return m_texturePath; }
+	inline const std::string & GetTexturePath() const { return m_texturePath; }
 	
 private:
 
@@ -86,7 +89,7 @@ private:
 	{
 		Texture  m_texture;													///< The actual texture
 		FileManager::Timestamp m_timeStamp;									///< Datestamp for checking a newer version
-		char m_path[StringUtils::s_maxCharsPerLine];						///< The full path for reloading
+		std::string m_path;												///< The full path for reloading
 	};
 
 	typedef HashMap<int, ManagedTexture *> TextureMap;						///< Alias for a hash map of managed textures
@@ -99,7 +102,7 @@ private:
 
 	LinearAllocator<ManagedTexture> m_texturePool[s_numPools];				///< Memory pool for each texture category
 	TextureMap m_textureMap[s_numPools];									///< List of textures for each category
-	char m_texturePath[StringUtils::s_maxCharsPerLine];						///< Cache off texture path 
+	std::string m_texturePath;												///< Cache off texture path
 	DataPack * m_dataPack;													///< Cache off the data pack to load from
 	float m_updateFreq;														///< How often the texture manager should check for changes
 	float m_updateTimer;													///< If we are due for a scan and update of textures

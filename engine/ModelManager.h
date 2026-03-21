@@ -1,6 +1,9 @@
 #ifndef _ENGINE_MODEL_MANAGER_H_
 #define _ENGINE_MODEL_MANAGER_H_
 
+#include <string>
+#include <string_view>
+
 #include "../core/HashMap.h"
 #include "../core/LinearAllocator.h"
 
@@ -24,7 +27,7 @@ public:
 	~ModelManager() { Shutdown(); }
 
 	//brief Initialise memory pools on startup, cleanup models on shutdown
-	bool Startup(const char * a_modelPath, DataPack * a_dataPack);
+	bool Startup(std::string_view a_modelPath, DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update will poll for model changes and reload any models that have a newer version than on disk
@@ -35,26 +38,26 @@ public:
 	//\brief Get or load a TGA file into model memory
 	//\param a_tgaPath cstring to identify the model by
 	//\return model ID of the identified model
-	Model * GetModel(const char *a_modelPath);
+	Model * GetModel(std::string_view a_modelPath);
 
 	//\brief Functions to check if a model has already been loaded
 	//\param a_tgaPathHash is the identified for the model
 	//\return -1 the category that the model is loaded into, none if not loaded
 	bool IsModelLoaded(unsigned int a_tgaPathHash);
-	inline bool IsModelLoaded(const char *a_tgaPath) { return IsModelLoaded(StringHash(a_tgaPath).GetHash()); }
+	inline bool IsModelLoaded(std::string_view a_tgaPath) { return IsModelLoaded(StringHash(a_tgaPath).GetHash()); }
 
 	//\brief Reload a single model without changing the IDs
 	//\param a_cat the category the model is found in. If not supplied, an exhaustive search is performed
 	//\return true in the model was found and reloaded successfully
 	bool ReloadModel(unsigned int a_modelPathHash);
-	inline bool Reloadmodel(const char *a_modelPath) { return ReloadModel(StringHash(a_modelPath).GetHash()); }
+	inline bool Reloadmodel(std::string_view a_modelPath) { return ReloadModel(StringHash(a_modelPath).GetHash()); }
 
 	//\brief Wholesale reload of models
 	bool ReloadAllModels();
 
 	//\brief Get the fully qualified model path
 	//\return A pointer to a c string containing the model path
-	inline const char * GetModelPath() { return m_modelPath; }
+	inline const char * GetModelPath() { return m_modelPath.c_str(); }
 
 	//\brief While a model is loading, it stores data in these memory pools temporarily
 	static const unsigned int s_loadingVertPoolSize;			///< The maximum number of verts that could be loaded from model file
@@ -77,7 +80,7 @@ private:
 		Model  m_model;											///< The actual model
 		FileManager::Timestamp m_modelTimeStamp;				///< Datestamp for checking a newer version of the model
 		FileManager::Timestamp m_materialTimeStamp;				///< Datestamp for checking a newer version of the material
-		char m_path[StringUtils::s_maxCharsPerLine];			///< The full path for reloading
+		std::string m_path;										///< The full path for reloading
 	};
 
 	typedef HashMap<unsigned int, ManagedModel *> ModelMap;
@@ -93,7 +96,7 @@ private:
 
 	ModelMap m_modelMap;										///< List of models for each category
 	DataPack * m_dataPack;										///< Pointer to a datapack to load from, if any
-	char m_modelPath[StringUtils::s_maxCharsPerLine];			///< Cache off model path 
+	std::string m_modelPath;									///< Cache off model path
 	float m_updateFreq;											///< How often the model manager should check for changes
 	float m_updateTimer;										///< If we are due for a scan and update of models
 };

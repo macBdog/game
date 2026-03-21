@@ -10,18 +10,13 @@ const float Light::s_lightDrawSize = 0.1f;
 // Light data is written to shader in an array of floats
 float Shader::s_lightingData[Shader::s_numLightFloats];
 
-Shader::Shader(const char * a_name)
+Shader::Shader(std::string_view a_name)
 : m_vertexShader(0)
 , m_fragmentShader(0)
 , m_geometryShader(0)
 , m_shader(0)
+, m_name(a_name)
 {
-	if (a_name != nullptr || a_name[0] != '\0')
-	{
-		// Set data
-		m_name[0] = '\0';
-		strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
-	}
 }
 
 Shader::~Shader() 
@@ -39,8 +34,8 @@ Shader::~Shader()
 
 bool Shader::Init(const char * a_vertexSource, const char * a_fragmentSource, const char * a_geometrySource)
 {
-	if (m_name == nullptr || a_vertexSource == nullptr || a_fragmentSource == nullptr ||
-		m_name[0] == '\0' || a_vertexSource[0] == '\0' || a_fragmentSource[0] == '\0')
+	if (m_name.empty() || a_vertexSource == nullptr || a_fragmentSource == nullptr ||
+		a_vertexSource[0] == '\0' || a_fragmentSource[0] == '\0')
 	{
 		return false;
 	}
@@ -152,22 +147,18 @@ unsigned int Shader::Compile(GLuint type, const char * a_src)
 		Log & log = Log::Get();
 		GLint logErrorLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logErrorLength);
-		char * compileError = nullptr;
-        if (compileError = (char *)malloc(logErrorLength))
-		{
-			glGetShaderInfoLog(shader, logErrorLength, &logErrorLength, compileError);
+		std::string compileError(logErrorLength, '\0');
+		glGetShaderInfoLog(shader, logErrorLength, &logErrorLength, compileError.data());
 
-			if (type == GL_VERTEX_SHADER)
-			{
-				log.Write(LogLevel::Error, LogCategory::Engine, "Error compiling shader %s.vsh, compiler output follows:", m_name);
-			}
-			else if (type == GL_FRAGMENT_SHADER)
-			{
-				log.Write(LogLevel::Error, LogCategory::Engine, "Error compiling shader %s.fsh, compiler output follows:", m_name);
-			}
-			log.WriteEngineErrorNoParams(compileError);
-			free(compileError);
+		if (type == GL_VERTEX_SHADER)
+		{
+			log.Write(LogLevel::Error, LogCategory::Engine, "Error compiling shader %s.vsh, compiler output follows:", m_name.c_str());
 		}
+		else if (type == GL_FRAGMENT_SHADER)
+		{
+			log.Write(LogLevel::Error, LogCategory::Engine, "Error compiling shader %s.fsh, compiler output follows:", m_name.c_str());
+		}
+		log.WriteEngineErrorNoParams(compileError.c_str());
 		
         return 0;
     }

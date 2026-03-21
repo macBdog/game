@@ -1,7 +1,8 @@
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
 #include <sys/stat.h>
 
 #include "zlib.h"
@@ -15,7 +16,7 @@ using namespace std;	//< For fstream operations
 
 template<> DataPack * Singleton<DataPack>::s_instance = nullptr;
 
-const char * DataPack::s_defaultDataPackPath = "datapack.dtz";	///< Name of the pack to write and read if not specified
+const char * DataPack::s_defaultDataPackPath = "datapack.dtz";
 
 void DataPack::Unload()
 {
@@ -38,22 +39,23 @@ void DataPack::Unload()
 	m_loaded = false;
 }
 
-bool DataPack::Load(const char * a_path)
+bool DataPack::Load(std::string_view a_path)
 {
 	if (IsLoaded())
 	{
 		Unload();
 	}
 
-	// The relative path needs to exist so the paths the game is looking for can be reconstructed
-	if (m_relativePath[0] == '\0' || strlen(m_relativePath) <= 0)
+	// The relative path needs to exist
+	if (m_relativePath.empty())
 	{
 		assert(false);
 		return false;
 	}
 
 	// Decompress and read file
-	gzFile inputFile = gzopen(a_path, "rb");
+	std::string pathStr(a_path);
+	gzFile inputFile = gzopen(pathStr.c_str(), "rb");
 
 	// Open the file and parse the datapack
 	if (inputFile)
@@ -89,18 +91,19 @@ bool DataPack::Load(const char * a_path)
 	return false;
 }
 
-bool DataPack::AddFile(const char * a_path)
+bool DataPack::AddFile(std::string_view a_path)
 {
-	// The relative path needs to exist so it can be stripped before adding to the datapack
-	if (m_relativePath[0] == '\0' || strlen(m_relativePath) <= 0)
+	// The relative path needs to exist
+	if (m_relativePath.empty())
 	{
 		assert(false);
 		return false;
 	}
 
 	// First get the size of the file
+	std::string pathStr(a_path);
 	struct stat sizeResult;
-	if (stat(a_path, &sizeResult) == 0)
+	if (stat(pathStr.c_str(), &sizeResult) == 0)
 	{
 		const size_t sizeBytes = (size_t)sizeResult.st_size;
 
@@ -108,17 +111,16 @@ bool DataPack::AddFile(const char * a_path)
 		if (!HasFile(a_path))
 		{
 			// Strip out the absolute part of the file path
-			char relPath[StringUtils::s_maxCharsPerLine];
-			strncpy(relPath, a_path, StringUtils::s_maxCharsPerLine);
-			const char * relSub = strstr(a_path, m_relativePath);
-			if (relSub)
+			std::string relPath(a_path);
+			size_t relPos = relPath.find(m_relativePath);
+			if (relPos != std::string::npos)
 			{
-				strncpy(relPath, relSub + strlen(m_relativePath), StringUtils::s_maxCharsPerLine);
+				relPath = relPath.substr(relPos + m_relativePath.size());
 			}
 
 			DataPackEntry * newEntry = new DataPackEntry();
 			newEntry->m_size = sizeBytes;
-			strncpy(newEntry->m_path, relPath, StringUtils::s_maxCharsPerLine);
+			strncpy(newEntry->m_path, relPath.c_str(), StringUtils::s_maxCharsPerLine);
 
 			EntryNode * newNode = new EntryNode();
 			newNode->SetData(newEntry);
@@ -130,33 +132,26 @@ bool DataPack::AddFile(const char * a_path)
 	return false;
 }
 
-bool DataPack::AddFolder(const char * a_path, const char * a_fileExtensions)
+bool DataPack::AddFolder(std::string_view a_path, std::string_view a_fileExtensions)
 {
 	bool filesAdded = false;
-	const char * delimeter = ",";
-	if (a_fileExtensions && a_fileExtensions[0] != '\0')
+	if (!a_fileExtensions.empty())
 	{
 		// Support a list of extension types
-		if (strstr(a_fileExtensions, ",") != nullptr)
+		std::string extensions(a_fileExtensions);
+		size_t pos = 0;
+		size_t comma;
+		while ((comma = extensions.find(',', pos)) != std::string::npos)
 		{
-			char extensionsTokenized[StringUtils::s_maxCharsPerName];
-			strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
-			char * listTok = strtok(&extensionsTokenized[0], delimeter);
-			while(listTok != nullptr)
-			{
-				filesAdded = AddAllFilesInFolder(a_path, listTok);
-				listTok = strtok(nullptr, delimeter);
-			}
+			filesAdded |= AddAllFilesInFolder(a_path, extensions.substr(pos, comma - pos));
+			pos = comma + 1;
 		}
-		else
-		{
-			filesAdded = AddAllFilesInFolder(a_path, a_fileExtensions);
-		}
+		filesAdded |= AddAllFilesInFolder(a_path, extensions.substr(pos));
 	}
 	return filesAdded;
 }
 
-bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExtension)
+bool DataPack::AddAllFilesInFolder(std::string_view a_path, std::string_view a_fileExtension)
 {
 	// Scan all the path for files of the correct extension
 	FileManager & fileMan = FileManager::Get();
@@ -168,9 +163,7 @@ bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExten
 	FileManager::FileListNode * curNode = filesToPack.GetHead();
 	while(curNode != nullptr)
 	{
-		// Get a fresh timestamp on the animation file
-		char fullPath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullPath, "%s%s", a_path, curNode->GetData()->m_name);
+		std::string fullPath = std::string(a_path) + curNode->GetData()->m_name;
 
 		if (curNode->GetData()->m_isDir)
 		{
@@ -186,7 +179,7 @@ bool DataPack::AddAllFilesInFolder(const char * a_path, const char * a_fileExten
 	return numFilesAdded > 0;
 }
 
-bool DataPack::Serialize(const char * a_path) const
+bool DataPack::Serialize(std::string_view a_path) const
 {
 	// First compute the complete size of all resources in the pack
 	size_t packSize = 0;
@@ -199,8 +192,7 @@ bool DataPack::Serialize(const char * a_path) const
 	}
 
 	const int numEntries = m_manifest.GetLength();
-	char tempFilePath[StringUtils::s_maxCharsPerLine];
-	sprintf(tempFilePath, "%s.tmp", a_path);
+	std::string tempFilePath = std::string(a_path) + ".tmp";
 	ofstream outputFile(tempFilePath, ios::out | ios::binary);
 	if (outputFile.is_open())
 	{
@@ -217,24 +209,24 @@ bool DataPack::Serialize(const char * a_path) const
 			// First write the entry header so the reading function knows how far to read
 			outputFile.write((char *)&curEntry->m_size, sizeof(size_t));
 			outputFile.write((char *)&curEntry->m_path, sizeof(char) * StringUtils::s_maxCharsPerLine);
-				
+
 			// Now write the resource by opening and reading it from the disk
-			char diskPath[StringUtils::s_maxCharsPerLine];
+			std::string diskPath;
 
 			// Special case for game.json as it lives outside the data folder
-			if (strstr(curEntry->m_path, "game.json") != 0)
-			{ 
-				sprintf(diskPath, "%s", curEntry->m_path);
+			if (std::string_view(curEntry->m_path).find("game.json") != std::string_view::npos)
+			{
+				diskPath = curEntry->m_path;
 			}
 			else
 			{
-				sprintf(diskPath, "%s%s", m_relativePath, curEntry->m_path);
+				diskPath = m_relativePath + curEntry->m_path;
 			}
 			size_t writeByteCount = 0;
 			ifstream resourceFile(diskPath, ifstream::in | ifstream::binary);
 			if (resourceFile.is_open())
 			{
-				// Read and write the resource file in one pass for faster data pack writes
+				// Read and write the resource file in one pass
 				char * resourceBuffer = (char *)malloc(sizeof(char) * curEntry->m_size);
 				memset(resourceBuffer, 0, sizeof(char) * curEntry->m_size);
 				resourceFile.read(resourceBuffer, curEntry->m_size);
@@ -245,7 +237,7 @@ bool DataPack::Serialize(const char * a_path) const
 			}
 			else
 			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open file %s for writing to the datapack, this will corrupt the datapack.", diskPath);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot open file %s for writing to the datapack, this will corrupt the datapack.", diskPath.c_str());
 			}
 			cur = cur->GetNext();
 		}
@@ -253,7 +245,7 @@ bool DataPack::Serialize(const char * a_path) const
 	outputFile.close();
 
 	// Now compress the file
-	FILE * inputFile = fopen(tempFilePath, "rb");
+	FILE * inputFile = fopen(tempFilePath.c_str(), "rb");
 	gzFile outfile = gzopen(s_defaultDataPackPath, "wb");
 	char readBuffer[128];
 	int bytesRead = 0;
@@ -267,14 +259,13 @@ bool DataPack::Serialize(const char * a_path) const
 	return true;
 }
 
-DataPackEntry * DataPack::GetEntry(const char * a_path) const
+DataPackEntry * DataPack::GetEntry(std::string_view a_path) const
 {
-	// Write each file in the manifest
 	EntryNode * cur = m_manifest.GetHead();
 	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
-		if (strcmp(curEntry->m_path, a_path) == 0)
+		if (std::string_view(curEntry->m_path) == a_path)
 		{
 			return curEntry;
 		}
@@ -283,25 +274,18 @@ DataPackEntry * DataPack::GetEntry(const char * a_path) const
 	return nullptr;
 }
 
-void DataPack::GetAllEntries(const char * a_fileExtensions, EntryList & a_entries_OUT) const
+void DataPack::GetAllEntries(std::string_view a_fileExtensions, EntryList & a_entries_OUT) const
 {
 	// Support a list of extension types
-	const char * delimeter = ",";
-	if (strstr(a_fileExtensions, ",") != nullptr)
+	std::string extensions(a_fileExtensions);
+	size_t pos = 0;
+	size_t comma;
+	while ((comma = extensions.find(',', pos)) != std::string::npos)
 	{
-		char extensionsTokenized[StringUtils::s_maxCharsPerName];
-		strncpy(extensionsTokenized, a_fileExtensions, StringUtils::s_maxCharsPerName);
-		char * listTok = strtok(&extensionsTokenized[0], delimeter);
-		while (listTok != nullptr)
-		{
-			AddEntriesToExternalList(listTok, a_entries_OUT);
-			listTok = strtok(nullptr, delimeter);
-		}
+		AddEntriesToExternalList(extensions.substr(pos, comma - pos), a_entries_OUT);
+		pos = comma + 1;
 	}
-	else
-	{
-		AddEntriesToExternalList(a_fileExtensions, a_entries_OUT);
-	}
+	AddEntriesToExternalList(extensions.substr(pos), a_entries_OUT);
 }
 
 void DataPack::CleanupEntryList(EntryList & a_entries_OUT) const
@@ -319,13 +303,13 @@ void DataPack::CleanupEntryList(EntryList & a_entries_OUT) const
 	}
 }
 
-bool DataPack::HasFile(const char * a_path) const
+bool DataPack::HasFile(std::string_view a_path) const
 {
 	EntryNode * cur = m_manifest.GetHead();
 	while (cur != nullptr)
 	{
 		const DataPackEntry * curEntry = cur->GetData();
-		if (strcmp(curEntry->m_path, a_path) == 0)
+		if (std::string_view(curEntry->m_path) == a_path)
 		{
 			return true;
 		}
@@ -334,18 +318,18 @@ bool DataPack::HasFile(const char * a_path) const
 	return false;
 }
 
-void DataPack::SetRelativePath(const char * a_relativePath)
-{ 
-	strncpy(m_relativePath, a_relativePath, StringUtils::s_maxCharsPerLine); 
+void DataPack::SetRelativePath(std::string_view a_relativePath)
+{
+	m_relativePath = a_relativePath;
 }
 
-void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList & a_entries_OUT) const
+void DataPack::AddEntriesToExternalList(std::string_view a_fileExtension, EntryList & a_entries_OUT) const
 {
 	EntryNode * cur = m_manifest.GetHead();
 	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
-		if (strstr(curEntry->m_path, a_fileExtension) != 0)
+		if (std::string_view(curEntry->m_path).find(a_fileExtension) != std::string_view::npos)
 		{
 			// Data is owned by the datapack
 			EntryNode * newNode = new EntryNode();
@@ -356,13 +340,13 @@ void DataPack::AddEntriesToExternalList(const char * a_fileExtension, EntryList 
 	}
 }
 
-void DataPack::AddEntryToExternalList(const char * a_filePath, EntryList & a_entries_OUT) const
+void DataPack::AddEntryToExternalList(std::string_view a_filePath, EntryList & a_entries_OUT) const
 {
 	EntryNode * cur = m_manifest.GetHead();
 	while (cur != nullptr)
 	{
 		DataPackEntry * curEntry = cur->GetData();
-		if (strcmp(curEntry->m_path, a_filePath) == 0)
+		if (std::string_view(curEntry->m_path) == a_filePath)
 		{
 			// Data is owned by the datapack
 			EntryNode * newNode = new EntryNode();

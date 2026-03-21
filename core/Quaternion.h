@@ -3,7 +3,7 @@
 #pragma once
 
 #include <math.h>
-#include <stdio.h>
+#include <string>
 
 #include "MathUtils.h"
 #include "Matrix.h"
@@ -97,7 +97,7 @@ public:
 
 	bool IsUnit() const { return abs(1.0f - ((w*w) + (x*x) + (y*y) + (z*z))) > EPSILON; }
 	inline void ApplyToMatrix(Matrix & a_mat) const { a_mat = a_mat.Multiply(GetRotationMatrix()); }
-	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f, %f", x, y, z, w); }
+	inline std::string GetString() const { char buf[128]; snprintf(buf, sizeof(buf), "%f, %f, %f, %f", x, y, z, w); return buf; }
 	inline Vector GetXYZ() const { return Vector(x, y, z); }
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }

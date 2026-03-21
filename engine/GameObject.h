@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <string_view>
 
 #include "../core/Matrix.h"
 #include "../core/Quaternion.h"
@@ -94,7 +96,7 @@ public:
 	inline void SetClipType(ClipType a_newClipType) { m_clipType = a_newClipType; }
 	inline void SetClipSize(const Vector & a_clipSize) { m_clipVolumeSize = a_clipSize; }
 	inline void SetClipOffset(const Vector & a_clipOffset) { m_clipVolumeOffset = a_clipOffset; }
-	inline void SetClipGroup(const char* a_clipGroupName, const int& a_clipGroupId) { m_clipGroup.SetCString(a_clipGroupName); m_clipGroupId = a_clipGroupId; }
+	inline void SetClipGroup(std::string_view a_clipGroupName, const int& a_clipGroupId) { m_clipGroup.SetCString(a_clipGroupName); m_clipGroupId = a_clipGroupId; }
 	inline void SetClipping(bool a_enable) { m_clipping = a_enable; }
 	inline void SetPhysicsMass(const float & a_newMass) { m_physicsMass = a_newMass; }
 	inline void SetPhysicsElasticity(const float & a_newElastic) { m_physicsElasticity = a_newElastic; }
@@ -106,8 +108,8 @@ public:
 	inline void SetPhysics(PhysicsObject* a_physics) { m_physics = a_physics; }
 	
 	inline unsigned int GetId() const { return m_id; }
-	inline const char * GetName() const { return m_name; }
-	inline const char * GetTemplate() const { return m_template; }
+	inline const char * GetName() const { return m_name.c_str(); }
+	inline const char * GetTemplate() const { return m_template.c_str(); }
 	inline Model * GetModel() const { return m_model; }
 	inline float GetLifeTime() const { return m_lifeTime; }
 	inline Vector GetShaderData() const { return m_shaderData; }
@@ -125,7 +127,7 @@ public:
 	inline auto GetPhysicsElasticity() const { return m_physicsElasticity; }
 	inline auto GetPhysicsLinearDrag() const { return m_physicsLinearDrag; }
 	inline auto GetPhysicsAngularDrag() const { return m_physicsAngularDrag; }
-	inline bool HasTemplate() const { return strlen(m_template) > 0; }
+	inline bool HasTemplate() const { return !m_template.empty(); }
 	inline bool IsScriptOwned() const { return m_scriptRef >= 0; }
 	inline bool IsClipping() const { return m_clipping; }
 	inline int GetScriptReference() const { return m_scriptRef; }
@@ -137,8 +139,8 @@ public:
 	inline void SetModel(Model * a_newModel) { m_model = a_newModel; }
 	inline void SetShader(Shader * a_newShader) { m_shader = a_newShader; }
 	inline void SetState(GameObjectState a_newState) { m_state = a_newState; }
-	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
-	void SetTemplate(const char * a_templateName);
+	inline void SetName(std::string_view a_name) { m_name = a_name; }
+	void SetTemplate(std::string_view a_templateName);
 	inline void SetPos(const Vector & a_newPos) { m_worldMat.SetPos(a_newPos); }
 	inline void SetScale(const Vector & a_newScale) { m_worldMat.SetScale(a_newScale); }
 	inline void MulScale(const Vector & a_newScale) { m_worldMat.MulScale(a_newScale); }
@@ -185,7 +187,7 @@ private:
 	void SetTemplateProperties();
 
 	unsigned int			m_id;										///< Unique identifier, objects can be resolved from ids
-	char					m_name[StringUtils::s_maxCharsPerName];		///< Every creature needs a name, up top for ease of debugging
+	std::string				m_name;										///< Every creature needs a name, up top for ease of debugging
 	GameObject *			m_child{ nullptr };							///< Pointer to first child game obhject
 	GameObject *			m_next{ nullptr };							///< Pointer to sibling game objects
 	CollisionList			m_collisions;								///< List of objects that this game object has collided with this frame
@@ -210,7 +212,7 @@ private:
 	Matrix					m_worldMat;									///< Position and orientation in the world
 	Matrix					m_localMat;									///< Position and orientation relative to world mat, used for animation
 	Matrix					m_finalMat;									///< Aggregate of world and local only used by render
-	char					m_template[StringUtils::s_maxCharsPerName];	///< Every persistent, serializable creature needs a template
+	std::string				m_template;									///< Every persistent, serializable creature needs a template
 #ifndef _RELEASE
 	FileManager::Timestamp	m_templateTimeStamp;						///< For auto-reloading of templates
 #endif

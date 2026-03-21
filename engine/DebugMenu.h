@@ -2,6 +2,8 @@
 #define _ENGINE_DEBUG_MENU_
 #pragma once
 
+#include <string_view>
+
 #include "../core/BitSet.h"
 #include "../core/Colour.h"
 #include "../core/Vector.h"
@@ -88,20 +90,20 @@ public:
 	//\brief Show the resource selection dialog to enable a file to be chose
 	//\param a_startingPath A pointer to a c string with files that should listed in the dialog
 	//\param a_fileExtensionFilter A pointer to a c string which will limit the files displayed
-	void ShowResourceSelect(const char * a_startingPath, const char * a_fileExtensionFilter = nullptr);
+	void ShowResourceSelect(std::string_view a_startingPath, std::string_view a_fileExtensionFilter = "");
 
 	//\brief Show the resource selection dialog to enable a font to be chosen
 	void ShowFontSelect();
 
 	//\brief Show the text input dialog to enable something to be named
 	//\param a_startingText An optional pointer to a c string with the text that should be displayed
-	void ShowTextInput(const char * a_startingText = nullptr);
+	void ShowTextInput(std::string_view a_startingText = "");
 
 	//\\brief Show a widget with a colour spectrum that can be clicked to choose a colour
 	void ShowColourPicker();
 
 	//\brief Show a debug menu widget for a frame, called from script
-	bool ShowScriptDebugText(const char * a_text, float a_posX = -0.5f, float a_posY = 0.5f);
+	bool ShowScriptDebugText(std::string_view a_text, float a_posX = -0.5f, float a_posY = 0.5f);
 
 	//\brief Game time scale modification and access
 	inline float GetGameTimeScale() { return m_gameTimeScale; }

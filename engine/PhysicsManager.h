@@ -2,6 +2,8 @@
 #define _ENGINE_PHYSICS_MANAGER
 #pragma once
 
+#include <string_view>
+
 #include "..\core\BitSet.h"
 #include "..\core\LinkedList.h"
 
@@ -166,7 +168,7 @@ public:
 	//\brief Get the group ID matching the name of a collision group
 	//\return Collision group id, -1 means not found, 0 means nothing, > 0 is a valid group
 	int GetCollisionGroupId(StringHash a_colGroupHash) const;
-	inline int GetCollisionGroupId(const char * a_colGroupName) const { return GetCollisionGroupId(StringHash(a_colGroupName)); }
+	inline int GetCollisionGroupId(std::string_view a_colGroupName) const { return GetCollisionGroupId(StringHash(a_colGroupName)); }
 
 	//\brief Remove all entries from a game object collision list, called once a frame
 	//		 before the physics world is queried

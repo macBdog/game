@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <string_view>
 
 #include "../core/LinkedList.h"
 #include "../core/PageAllocator.h"
@@ -22,16 +24,16 @@ class WorldManager : public Singleton<WorldManager>
 public:
 
 	//\brief Ctor calls through to startup
-	WorldManager() 
+	WorldManager()
 		: m_totalGameObjects(0)
-		, m_currentScene(nullptr) { m_templatePath[0] = '\0'; m_scenePath[0] = '\0'; }
+		, m_currentScene(nullptr) { }
 	~WorldManager() { Shutdown(); }
 
 	//\brief Initialise memory pools on startup, cleanup worlds objects on shutdown
 	//\param a_templatePath is the path to templates for game object creation
 	//\param a_scenePath is the path to scene files for partitioning groups of game objects
 	//\return bool true if the world and scenes were started without error
-	bool Startup(const char * a_templatePath, const char * a_scenePath, const DataPack * a_dataPack);
+	bool Startup(std::string_view a_templatePath, std::string_view a_scenePath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Update will propogate through all objects in the active scene
@@ -63,19 +65,19 @@ public:
 	//\param a_objectId the unique game id for this object
 	//\return Pointer to a game object in the world
 	GameObject * GetGameObject(unsigned int a_objectId);
-	GameObject * GetGameObject(const char * a_objName);
+	GameObject * GetGameObject(std::string_view a_objName);
 
 	//\brief Get the scene that the world is currently showing
 	//\return A pointer to a scene
 	inline Scene * GetCurrentScene() { return m_currentScene; }
 	inline void SetCurrentScene(Scene * a_scene) { m_currentScene = a_scene; }
-	Scene * GetScene(const char * a_sceneName);
-	void SetCurrentScene(const char * a_sceneName);
-	void SetNewScene(const char * a_sceneName);
+	Scene * GetScene(std::string_view a_sceneName);
+	void SetCurrentScene(std::string_view a_sceneName);
+	void SetNewScene(std::string_view a_sceneName);
 
 	//\brief Accessor for the relative paths
-	inline const char * GetTemplatePath() { return m_templatePath; }
-	inline const char * GetScenePath() { return m_scenePath; }
+	inline const char * GetTemplatePath() { return m_templatePath.c_str(); }
+	inline const char * GetScenePath() { return m_scenePath.c_str(); }
 
 private:
 
@@ -95,6 +97,6 @@ private:
 	LinkedList<Scene> m_scenes;								///< All the currently loaded scenes are added to this list
 	Scene * m_currentScene;									///< The currently active scene
 	unsigned int m_totalGameObjects;						///< Total object count across all scenes, drives ID creation
-	char m_templatePath[StringUtils::s_maxCharsPerLine];	///< Path for templates
-	char m_scenePath[StringUtils::s_maxCharsPerLine];		///< Path for scene files
+	std::string m_templatePath;								///< Path for templates
+	std::string m_scenePath;								///< Path for scene files
 };

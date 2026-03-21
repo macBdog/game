@@ -6,6 +6,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "../core/Colour.h"
@@ -33,14 +34,15 @@ public:
 			: m_json(a_json)
 			, m_name(a_name) { }
 
-		inline const char * GetString() const
+		inline const std::string & GetString() const
 		{
 			if (m_json && m_json->is_string())
 			{
 				m_stringCache = m_json->get<std::string>();
-				return m_stringCache.c_str();
+				return m_stringCache;
 			}
-			return "";
+			static const std::string s_empty;
+			return s_empty;
 		}
 
 		inline int GetInt() const
@@ -136,17 +138,16 @@ public:
 			, m_name(a_name) { }
 
 		///\brief Find a property (non-object, non-array-of-objects value) by name
-		Property * FindProperty(const char * a_propertyName);
+		Property * FindProperty(std::string_view a_propertyName);
 
 		///\brief Find a child object by name
-		Object * FindObject(const char * a_objectName);
+		Object * FindObject(std::string_view a_objectName);
 
 		///\brief Get child objects - for arrays of objects (like lights, gameObjects, widgets)
-		///\return A vector of Object pointers representing child elements
 		std::vector<Object *> & GetChildObjects();
 
 		///\brief Get the name of this object
-		const char * GetName() const { return m_name.c_str(); }
+		const std::string & GetName() const { return m_name; }
 
 		nlohmann::json * m_json;
 		std::string m_name;
@@ -158,43 +159,43 @@ public:
 	};
 
 	GameFile() {}
-	GameFile(const char * a_filePath) { Load(a_filePath); }
+	GameFile(std::string_view a_filePath) { Load(a_filePath); }
 	GameFile(DataPackEntry * a_packData) { Load(a_packData); }
 	~GameFile() { Unload(); }
 
 	///\brief Load the game file and parse it into data
-	bool Load(const char * a_filePath);
+	bool Load(std::string_view a_filePath);
 	bool Load(DataPackEntry * a_packData);
 
 	void Unload();
 	inline bool IsLoaded() const { return !m_root.empty(); }
 
 	///\brief Write data from memory to file
-	bool Write(const char * a_filePath);
+	bool Write(std::string_view a_filePath);
 
 	///\brief Accessors to the gamefile property data
-	const char * GetString(const char * a_object, const char * a_property) const;
-	int GetInt(const char * a_object, const char * a_property) const;
-	float GetFloat(const char * a_object, const char * a_property) const;
-	bool GetBool(const char * a_object, const char * a_property) const;
-	bool GetVector(const char * a_object, const char * a_property, Vector & a_vec_OUT) const;
-	bool GetVector2(const char * a_object, const char * a_property, Vector2 & a_vec_OUT) const;
+	const std::string & GetString(std::string_view a_object, std::string_view a_property) const;
+	int GetInt(std::string_view a_object, std::string_view a_property) const;
+	float GetFloat(std::string_view a_object, std::string_view a_property) const;
+	bool GetBool(std::string_view a_object, std::string_view a_property) const;
+	bool GetVector(std::string_view a_object, std::string_view a_property, Vector & a_vec_OUT) const;
+	bool GetVector2(std::string_view a_object, std::string_view a_property, Vector2 & a_vec_OUT) const;
 
 	///\brief Add an object that has properties
-	Object * AddObject(const char * a_objectName, Object * a_parent = nullptr);
+	Object * AddObject(std::string_view a_objectName, Object * a_parent = nullptr);
 
 	///\brief Add a property with a parent object
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, const char * a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, float a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, int a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, bool a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, const Vector & a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, const Vector2 & a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, const Quaternion & a_value);
-	Property * AddProperty(Object * a_parentObject, const char * a_propertyName, const Colour & a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, std::string_view a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, float a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, int a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, bool a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, const Vector & a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, const Vector2 & a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, const Quaternion & a_value);
+	Property * AddProperty(Object * a_parentObject, std::string_view a_propertyName, const Colour & a_value);
 
 	///\brief Helper function to find an object by name
-	Object * FindObject(const char * a_name) const;
+	Object * FindObject(std::string_view a_name) const;
 
 private:
 

@@ -2,6 +2,9 @@
 #define _ENGINE_FILE_MANAGER_
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "../core/Delegate.h"
 #include "../core/LinkedList.h"
 
@@ -17,20 +20,20 @@ enum class ModificationType : unsigned char
 	Count,
 };
 
-///\brief The file manager handles regular opening, reading and writing of files but 
+///\brief The file manager handles regular opening, reading and writing of files but
 //		  can also create a delegate for any system that cares about modifications in
-//		  a list of files. It uses file system events to callback to systems with an 
+//		  a list of files. It uses file system events to callback to systems with an
 //		  updated file or just notification.
 class FileManager : public Singleton<FileManager>
 {
 public:
-	
+
 	//\brief Basic info about a dir or file
 	struct FileInfo
 	{
-		char m_name[StringUtils::s_maxCharsPerLine];
-		unsigned int m_sizeBytes;
-		bool m_isDir;
+		std::string m_name;
+		unsigned int m_sizeBytes{ 0 };
+		bool m_isDir{ false };
 	};
 
 	//\brief Info for storing a timestamp
@@ -40,29 +43,29 @@ public:
 
 		unsigned int m_totalDays;
 		unsigned int m_totalSeconds;
-		
-		inline bool operator > (const Timestamp & a_val) 
-		{ 
-			if (m_totalDays > a_val.m_totalDays) 
-			{ 
-				return true;	
-			} 
-			else if (m_totalDays == a_val.m_totalDays) 
-			{ 
-				return m_totalSeconds > a_val.m_totalSeconds; 
-			} 
+
+		inline bool operator > (const Timestamp & a_val)
+		{
+			if (m_totalDays > a_val.m_totalDays)
+			{
+				return true;
+			}
+			else if (m_totalDays == a_val.m_totalDays)
+			{
+				return m_totalSeconds > a_val.m_totalSeconds;
+			}
 			return false;
 		}
-		inline bool operator < (const Timestamp & a_val) 
-		{ 
-			if (m_totalDays < a_val.m_totalDays) 
-			{ 
-				return true;	
-			} 
-			else if (m_totalDays == a_val.m_totalDays) 
-			{ 
-				return m_totalSeconds < a_val.m_totalSeconds; 
-			} 
+		inline bool operator < (const Timestamp & a_val)
+		{
+			if (m_totalDays < a_val.m_totalDays)
+			{
+				return true;
+			}
+			else if (m_totalDays == a_val.m_totalDays)
+			{
+				return m_totalSeconds < a_val.m_totalSeconds;
+			}
 			return false;
 		}
 	};
@@ -72,19 +75,11 @@ public:
 	typedef LinkedList<FileInfo> FileList;
 
 	//\brief Load the game file and parse it into data, will allocate new entries
-	//		 in the list so be sure to use the helper function or delete entries to avoid leaks
-	//\param a_filePath cString of the path to enumerate
-	//\param a_fileList_OUT the list of FileInfo to add to
-	//\param a_fileSubstring optionally exclude all files without this substring in the path
-	bool FillFileList(const char * a_filePath, FileList & a_fileList_OUT, const char * a_fileSubstring = nullptr);
-	bool CheckFilePath(const char * a_filePath);
+	bool FillFileList(std::string_view a_filePath, FileList & a_fileList_OUT, std::string_view a_fileSubstring = {});
+	bool CheckFilePath(std::string_view a_filePath);
 	void CleanupFileList(FileList & a_fileList_OUT);
 
 	//\brief Convenience functions for file lists
-	//\param a_fileList const ref to the fileList being counted
-	//\param a_countFiles bool true if files should be included in the count
-	//\param a_countDirs bool true if directories should be included in the count
-	//\return The number of files and folders in the file list
 	inline unsigned int CountFiles(const FileList & a_fileList, bool a_countFiles, bool a_countDirs) const
 	{
 		unsigned int numFiles = 0;
@@ -111,23 +106,17 @@ public:
 		return numFiles;
 	}
 
-	//\brief Load the game file and parse it into data, will allocate new entries
-	//		 in the list so be sure to use the helper function or delete entries to avoid leaks
-	//\parma a_modifiedCallback Function pointer to some function to be called when file in the path are modified
-	//\param a_filePath cString of the path to enumerate
-	//\param a_fileList_OUT the list of FileInfo to add to
-	//\param a_fileSubstring optionally exclude all files without this substring in the path
+	//\brief Load the game file and parse it into data with a modification callback
 	template <typename TObj, typename TMethod>
-	inline bool FillManagedFileList(TObj * a_callerObject, TMethod a_callback, const char * a_filePath, FileList &a_fileList_OUT, const char * a_fileSubstring = nullptr)
+	inline bool FillManagedFileList(TObj * a_callerObject, TMethod a_callback, std::string_view a_filePath, FileList &a_fileList_OUT, std::string_view a_fileSubstring = {})
 	{
 		// Add an event to the list of items to be processed
-		// TODO memory management! Kill std new with a rusty fork
 		FileEventNode * newFileNode = new FileEventNode();
 		newFileNode->SetData(new FileEvent());
-	
+
 		// Set data for the new event
 		FileEvent * newEvent = newFileNode->GetData();
-		sprintf(newEvent->m_fileName, "%s", a_filePath);
+		newEvent->m_fileName = a_filePath;
 		newEvent->m_delegate.SetCallback(a_callerObject, a_callback);
 		m_events.Insert(newEvent);
 
@@ -136,27 +125,17 @@ public:
 	}
 	inline void CleanupManagedFileList(FileList & a_fileList_OUT) { CleanupFileList(a_fileList_OUT); }
 
-	//\brief Utility function to return a file's time stamp, is RELATIVE to each day.
-	//\param a_path the path to the file to be interrogated
-	//\param an Timestamp ref which will be written with to the file's last modification time, 0 for file not found
-	//\return bool true if the file was found
-	bool GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const;
+	//\brief Utility function to return a file's time stamp
+	bool GetFileTimeStamp(std::string_view a_path, Timestamp & a_timestamp_OUT) const;
 
 private:
 
 	//\brief Storage for an input event and it's callback
 	struct FileEvent
 	{
-		FileEvent() 
-			: m_src(ModificationType::Change)
-			, m_delegate()
-		{
-			m_fileName[0] = '\0';
-		}
-
-		ModificationType m_src;								///< What event happened
-		char m_fileName[StringUtils::s_maxCharsPerName];	///< The file that was affected
-		Delegate<bool, bool> m_delegate;					///< Pointer to object to call when it happens
+		ModificationType m_src{ ModificationType::Change };		///< What event happened
+		std::string m_fileName;									///< The file that was affected
+		Delegate<bool, bool> m_delegate;						///< Pointer to object to call when it happens
 	};
 
 	//\brief Alias to store a list of file handle callbacks
@@ -164,6 +143,6 @@ private:
 	typedef LinkedList<FileEvent> FileEventList;
 
 	FileEventList m_events{};
-}; 
+};
 
 #endif // _ENGINE_FILE_MANAGER_

@@ -1,6 +1,9 @@
 #ifndef _ENGINE_MODEL_H_
 #define _ENGINE_MODEL_H_
 
+#include <string>
+#include <string_view>
+
 #include "../core/Colour.h"
 #include "../core/LinearAllocator.h"
 #include "../core/Vector.h"
@@ -23,12 +26,12 @@ namespace ObjectReadPass
 	};
 }
 
-//\brief Materials define parameters passed through to each shader 
+//\brief Materials define parameters passed through to each shader
 class Material
 {
 public:
 
-	Material() 
+	Material()
 		: m_ambient(1.0f)
 		, m_diffuse(0.5f)
 		, m_specular(0.5f)
@@ -36,14 +39,14 @@ public:
 		, m_shininess(512)
 		, m_diffuseTex(nullptr)
 		, m_normalTex(nullptr)
-		, m_specularTex(nullptr) { m_name[0] = '\0'; }
+		, m_specularTex(nullptr) { }
 
 	//\brief Load values and resources for a material matching a name from an mtl file
 	//\param a_materialFileName pointer to a c string containing the file to load, adjacent to the model file itself
 	//\param a_materialName is the name in the material file to use for the model
 	//\return True if the target material was found in the file and set values of the material
-	bool Load(const char * a_materialFileName, const char * a_materialName);
-	bool Load(DataPackEntry * a_dataPack, const char * a_materialName);
+	bool Load(std::string_view a_materialFileName, std::string_view a_materialName);
+	bool Load(DataPackEntry * a_dataPack, std::string_view a_materialName);
 
 	//\brief Accessors for texture data
 	inline void SetDiffuseTexture(Texture * a_texture) { m_diffuseTex = a_texture; }
@@ -63,7 +66,7 @@ private:
 
 	//\brief Load function will work with either datapack entry or input stream
 	template <typename TInputData>
-	bool LoadData(TInputData & a_input, const char * a_materialName)
+	bool LoadData(TInputData & a_input, std::string_view a_materialName)
 	{
 		// Storage for material file reading progress
 		char line[StringUtils::s_maxCharsPerLine];
@@ -72,7 +75,7 @@ private:
 		unsigned int lineCount = 0;
 		bool foundTargetMaterial = false;
 
-		// Open the file and parse each line 
+		// Open the file and parse each line
 		if (a_input.is_open())
 		{
 			while (a_input.good())
@@ -96,10 +99,13 @@ private:
 					}
 
 					// Cache off the material file name for later usage
-					sscanf(line, "newmtl %s", &m_name);
+					char tempName[StringUtils::s_maxCharsPerName];
+					tempName[0] = '\0';
+					sscanf(line, "newmtl %s", tempName);
+					m_name = tempName;
 
 					// Set flag so we load the next map specific in the material as the diffuse map
-					foundTargetMaterial = strstr(m_name, a_materialName) != nullptr;
+					foundTargetMaterial = m_name.find(a_materialName) != std::string::npos;
 					continue;
 				}
 				else if (foundTargetMaterial)
@@ -113,11 +119,12 @@ private:
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 						if (strstr(line, "\\") == nullptr)
 						{
-							sscanf(line, "map_Kd %s", &tempMatName);
+							sscanf(line, "map_Kd %s", tempMatName);
 						}
 						else
 						{
-							sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+							std::string_view extracted = StringUtils::ExtractFileNameFromPath(line);
+							sscanf(extracted.data(), "%s", tempMatName);
 						}
 						m_diffuseTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 					}
@@ -128,11 +135,12 @@ private:
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 						if (strstr(line, "\\") == nullptr)
 						{
-							sscanf(line, "map_Bump %s", &tempMatName);
+							sscanf(line, "map_Bump %s", tempMatName);
 						}
 						else
 						{
-							sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+							std::string_view extracted = StringUtils::ExtractFileNameFromPath(line);
+							sscanf(extracted.data(), "%s", tempMatName);
 						}
 						m_normalTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 					}
@@ -143,11 +151,12 @@ private:
 						memset(&tempMatName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 						if (strstr(line, "\\") == nullptr)
 						{
-							sscanf(line, "map_Ks %s", &tempMatName);
+							sscanf(line, "map_Ks %s", tempMatName);
 						}
 						else
 						{
-							sscanf(StringUtils::ExtractFileNameFromPath(line), "%s", &tempMatName);
+							std::string_view extracted = StringUtils::ExtractFileNameFromPath(line);
+							sscanf(extracted.data(), "%s", tempMatName);
 						}
 						m_specularTex = TextureManager::Get().GetTexture(tempMatName, TextureCategory::Model);
 					}
@@ -192,7 +201,7 @@ private:
 			}
 			else // Report error and fail out
 			{
-				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot find material def %s", a_materialName);
+				Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot find material def %s", std::string(a_materialName).c_str());
 				return false;
 			}
 		}
@@ -202,7 +211,7 @@ private:
 		return false;
 	}
 
-	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the material as referenced by the model's mtl file
+	std::string m_name;								///< Name of the material as referenced by the model's mtl file
 	Texture * m_diffuseTex;							///< The texture used to draw the model
 	Texture * m_normalTex;							///< For drawing normal depth mapping
 	Texture * m_specularTex;						///< The shininess map
@@ -219,10 +228,10 @@ public:
 		, m_verts(nullptr)
 		, m_normals(nullptr)
 		, m_uvs(nullptr)
-		, m_numVertices(0) { m_name[0] = '\0'; }
+		, m_numVertices(0) { }
 
-	inline const char * GetName() { return m_name; }
-	inline void SetName(const char * a_name) { strncpy(m_name, a_name, strlen(a_name) + 1); }
+	inline const std::string & GetName() const { return m_name; }
+	inline void SetName(std::string_view a_name) { m_name = a_name; }
 	inline void SetNumVertices(unsigned int a_numFaces) { m_numVertices = a_numFaces; }
 	inline void SetVertices(Vector * a_verts) { m_verts = a_verts; }
 	inline void SetNormals(Vector * a_normals) { m_normals = a_normals; }
@@ -236,20 +245,20 @@ public:
 	inline bool HasVertexBuffer() const { return m_vertexBufferId >= 0; }
 	inline unsigned int GetVertexBufferId() const { return m_vertexBufferId; }
 	inline void SetVertexBufferId(int a_bufferId) { m_vertexBufferId = a_bufferId; }
-	
+
 	//\brief Accessors for material data
 	inline void SetMaterial(Material * a_material) { m_material = a_material; }
 	inline Material * GetMaterial() { return m_material; }
-	
+
 	//\brief Read the material file specified in the model file and load any textures required
 	//\param a_materialFileName pointer to a c string containing the file to load, adjacent to the model file itself
 	//\param a_materialName is the name in the material file to use for the model
 	//\return true if the material was loaded successfully and a texture for the model was assigned
-	bool LoadMaterial(const char * a_materialFileName, const char * a_materialName);
+	bool LoadMaterial(std::string_view a_materialFileName, std::string_view a_materialName);
 
 private:
 
-	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the object as referenced by the model file
+	std::string m_name;								///< Name of the object as referenced by the model file
 	Material * m_material;							///< Material properties loaded from file
 
 	unsigned int m_numVertices;						///< All indexed by vertex
@@ -283,7 +292,7 @@ class Model
 public:
 
 	// Assigned texture IDs start from 0
-	Model() { m_name[0] = '\0'; m_materialFileName[0] = '\0'; }
+	Model() { }
 	~Model();
 
 	//\brief Load a TGA file into memory and store out the texture ID
@@ -291,17 +300,17 @@ public:
 	//\param a_modelDataPool is a memory structure used to store all the verts and coors while loading
 	//\param a_dataPack is the source datapack so the model can load other linked resources like materials
 	//\return bool true if the file was loaded successfully, false for failure
-	bool Load(const char * a_modelFilePath, ModelDataPool & a_modelDataPool);
+	bool Load(std::string_view a_modelFilePath, ModelDataPool & a_modelDataPool);
 	bool Load(DataPackEntry * a_packedModel, ModelDataPool & a_modelDataPool, DataPack * a_dataPack);
 
 	bool Unload();
 	inline bool IsLoaded() { return m_objects.GetLength() > 0; }
 
 	//\brief Accessors for the model's data
-	inline const char * GetName() const { return m_name; }
-	inline const char * GetMaterialFileName() const { return m_materialFileName;  }
+	inline const std::string & GetName() const { return m_name; }
+	inline const std::string & GetMaterialFileName() const { return m_materialFileName; }
 	inline unsigned int GetNumObjects() const { return m_objects.GetLength(); }
-	inline Object * GetObjectAtIndex(unsigned int a_objectIndex) 
+	inline Object * GetObjectAtIndex(unsigned int a_objectIndex)
 	{
 		ObjectNode * curObject = m_objects.GetHead();
 		for (unsigned int i = 0; i < a_objectIndex; ++i)
@@ -319,16 +328,14 @@ private:
 
 	//\brief Load function will work with either datapack entry or input stream
 	template <typename TInputData>
-	bool LoadData(TInputData & a_input, ModelDataPool & a_modelDataPool, const char * a_modelFilePath, DataPack * a_dataPack = nullptr)
+	bool LoadData(TInputData & a_input, ModelDataPool & a_modelDataPool, std::string_view a_modelFilePath, DataPack * a_dataPack = nullptr)
 	{
 		// Storage for model file reading progress
 		char line[StringUtils::s_maxCharsPerLine];
 		memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 
 		// Storage for material file reading progress
-		char materialFilePath[StringUtils::s_maxCharsPerLine];
-		strncpy(materialFilePath, a_modelFilePath, StringUtils::s_maxCharsPerLine);
-		StringUtils::TrimFileNameFromPath(materialFilePath);
+		std::string materialFilePath = StringUtils::TrimFileNameFromPath(a_modelFilePath);
 
 		// Read one object at a time
 		Object * currentObject = nullptr;
@@ -346,7 +353,7 @@ private:
 		Vector * objectNormals = nullptr;
 		TexCoord * objectUvs = nullptr;
 
-		// Open the file and parse each line 
+		// Open the file and parse each line
 		if (a_input.is_open())
 		{
 			while (a_input.good())
@@ -363,10 +370,13 @@ private:
 				else if (strstr(line, "mtllib"))
 				{
 					// Cache off the material file name for later usage
-					sscanf(line, "mtllib %s", &m_materialFileName);
+					char tempMaterialFileName[StringUtils::s_maxCharsPerName];
+					tempMaterialFileName[0] = '\0';
+					sscanf(line, "mtllib %s", tempMaterialFileName);
+					m_materialFileName = tempMaterialFileName;
 
 					// Append the filename onto the file path
-					StringUtils::AppendString(materialFilePath, m_materialFileName);
+					materialFilePath = StringUtils::AppendString(materialFilePath, m_materialFileName);
 					continue;
 				}
 				// Object name
@@ -424,7 +434,7 @@ private:
 								}
 								else
 								{
-									Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Material load failed for material called %s in file %s!", materialName, materialFilePath);
+									Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Material load failed for material called %s in file %s!", materialName, materialFilePath.c_str());
 									a_modelDataPool.m_materialPool.DeAllocate(sizeof(Material));
 								}
 							}
@@ -449,7 +459,7 @@ private:
 								// Check for no texture map
 								if (strstr(line, "\\\\") != nullptr)
 								{
-									Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot load model %s with no uv or normal exported per face", a_modelFilePath);
+									Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot load model %s with no uv or normal exported per face", std::string(a_modelFilePath).c_str());
 									a_input.close();
 									return false;
 								}
@@ -481,14 +491,14 @@ private:
 					objectReadPass = ObjectReadPass::ReadFaces;
 					if (!a_input.good())
 					{
-						a_input.seekg(0, ios::beg);
+						a_input.seekg(0, std::ios::beg);
 						a_input.clear();
 					}
-					a_input.seekg((int)currentObjectOffset, ios::beg);
+					a_input.seekg((int)currentObjectOffset, std::ios::beg);
 					a_input.getline(line, StringUtils::s_maxCharsPerLine);
 
 					// If using object names, read an extra line to get to the verts
-					if (strlen(currentObject->GetName()) > 0)
+					if (!currentObject->GetName().empty())
 					{
 						a_input.getline(line, StringUtils::s_maxCharsPerLine);
 					}
@@ -582,7 +592,7 @@ private:
 							}
 							else
 							{
-								Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Model file %s contains faces that have not been unwrapped!", a_modelFilePath);
+								Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "Model file %s contains faces that have not been unwrapped!", std::string(a_modelFilePath).c_str());
 							}
 						}
 						lastReadOffset = a_input.tellg();
@@ -631,7 +641,7 @@ private:
 						}
 						else
 						{
-							Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot allocate memory for the faces of model %s", a_modelFilePath);
+							Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Cannot allocate memory for the faces of model %s", std::string(a_modelFilePath).c_str());
 						}
 
 						// Deallocate the loading pools
@@ -688,9 +698,9 @@ private:
 		return m_objects.GetLength() > 0;
 	}
 
-	char m_name[StringUtils::s_maxCharsPerName];				///< Name of the model as referenced by the game
-	char m_materialFileName[StringUtils::s_maxCharsPerName];	///< Name of the material file referenced by the model game
-	ObjectList m_objects;										///< List of pointers to the objects that are loaded
+	std::string m_name;									///< Name of the model as referenced by the game
+	std::string m_materialFileName;						///< Name of the material file referenced by the model game
+	ObjectList m_objects;								///< List of pointers to the objects that are loaded
 };
 
 #endif /* _ENGINE_MODEL_H_ */

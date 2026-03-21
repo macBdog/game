@@ -20,10 +20,9 @@ ModelManager::ModelManager(float a_updateFreq)
 	, m_updateTimer(0.0f)
 	, m_dataPack(nullptr)
 {
-	m_modelPath[0] = '\0';
 }
 
-bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
+bool ModelManager::Startup(std::string_view a_modelPath, DataPack * a_dataPack)
 {
 	// Reset update timer in case we have been shutdown the re started
 	 m_updateTimer = 0;
@@ -42,7 +41,7 @@ bool ModelManager::Startup(const char * a_modelPath, DataPack * a_dataPack)
 	memset(m_modelPool.GetHead(), 0, m_modelPool.GetAllocationSizeBytes());
 
 	// Cache off the model path for non qualified addressing of models
-	strncpy(m_modelPath, a_modelPath, sizeof(char) * strlen(a_modelPath) + 1);
+	m_modelPath = a_modelPath;
 
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
@@ -111,8 +110,7 @@ bool ModelManager::Update(float a_dt)
 		{
 			FileManager::Timestamp curModelTimestamp;
 			FileManager::Timestamp curMaterialTimestamp;
-			char materialPath[StringUtils::s_maxCharsPerLine];
-			sprintf(materialPath, "%s%s", m_modelPath, curModel->m_model.GetMaterialFileName());
+			std::string materialPath = m_modelPath + curModel->m_model.GetMaterialFileName();
 			bool modelNeedsReload = FileManager::Get().GetFileTimeStamp(curModel->m_path, curModelTimestamp) && curModelTimestamp > curModel->m_modelTimeStamp;
 			bool materialNeedsReload = FileManager::Get().GetFileTimeStamp(materialPath, curMaterialTimestamp) && curMaterialTimestamp > curModel->m_materialTimeStamp;
 			if (modelNeedsReload || materialNeedsReload)
@@ -120,12 +118,12 @@ bool ModelManager::Update(float a_dt)
 				// Timestamp is new on either model or material, trigger a reload
 				if (modelNeedsReload)
 				{
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in model %s, reloading.", curModel->m_path.c_str());
 					curModel->m_modelTimeStamp = curModelTimestamp;
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in material %s, reloading.", materialPath);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in material %s, reloading.", materialPath.c_str());
 					curModel->m_materialTimeStamp = curMaterialTimestamp;
 				}
 
@@ -245,7 +243,7 @@ Model * ModelManager::GetModel(const char * a_modelPath)
 
 			// Also set the timestamp on the associated material. This is the only way to load materials so this is safe.
 			char materialFileNameBuf[StringUtils::s_maxCharsPerLine];
-			sprintf(materialFileNameBuf, "%s%s", m_modelPath, newModel->m_model.GetMaterialFileName());
+			sprintf(materialFileNameBuf, "%s%s", m_modelPath, newModel->m_model.GetMaterialFileName().c_str());
 			fileMan.GetFileTimeStamp(materialFileNameBuf, newModel->m_materialTimeStamp);
 			
 			sprintf(newModel->m_path, "%s", fileNameBuf);

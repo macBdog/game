@@ -27,7 +27,7 @@
 template<> ScriptManager * Singleton<ScriptManager>::s_instance = nullptr;
 
 const float ScriptManager::s_updateFreq = 1.0f;								///< How often the script manager should check for updates to scripts
-const char * ScriptManager::s_mainScriptName = "game.lua";					///< Constant name of the main game script file
+// s_mainScriptName is now constexpr in the header
 
 // Registration of GUI functions
 const luaL_Reg ScriptManager::s_guiFuncs[] = {
@@ -114,7 +114,7 @@ const luaL_Reg ScriptManager::s_renderFuncs[] = {
 	{ nullptr, nullptr }
 };
 
-bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPack)
+bool ScriptManager::Startup(std::string_view a_scriptPath, const DataPack * a_dataPack)
 {
 	// As this method is called when scripts reload, make sure the global state is dead
 	if (m_globalLua != nullptr || m_managedScripts.GetLength() > 0)
@@ -219,22 +219,19 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		luaL_setfuncs(m_globalLua, s_gameObjectMethods, 0);
 		
 		// Cache off path and look for the main game lua file
-		strncpy(m_scriptPath, a_scriptPath, sizeof(char) * strlen(a_scriptPath) + 1);
+		m_scriptPath = a_scriptPath;
 
-		// Construct a string for the main script file 
-		char gameScriptPath[StringUtils::s_maxCharsPerLine];
-		gameScriptPath[0] = '\0';
-		sprintf(gameScriptPath, "%s%s", m_scriptPath, s_mainScriptName);
+		// Construct a string for the main script file
+		std::string gameScriptPath = m_scriptPath + std::string(s_mainScriptName);
 
 		// Register the game's script folder in the lua package path so requires work correctly
 		lua_getglobal(m_globalLua, "package");
 		lua_getfield(m_globalLua, -1, "path");
 
-		char newLuaPath[StringUtils::s_maxCharsPerLine * 2];
 		const char * currentPackagePath = lua_tostring(m_globalLua, -1);
-		sprintf(newLuaPath, "%s;%s\?.lua", currentPackagePath, m_scriptPath);
+		std::string newLuaPath = std::string(currentPackagePath) + ";" + m_scriptPath + "?.lua";
 		lua_pop(m_globalLua, 1);
-		lua_pushstring(m_globalLua, &newLuaPath[0]);
+		lua_pushstring(m_globalLua, newLuaPath.c_str());
 		lua_setfield(m_globalLua, -2, "path");
 		lua_pop(m_globalLua, 1);
 
@@ -245,12 +242,12 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 		{
 			if (DataPackEntry * mainScriptEntry = a_dataPack->GetEntry(gameScriptPath))
 			{
-				luaL_loadbuffer(m_gameLua, mainScriptEntry->m_data, mainScriptEntry->m_size, gameScriptPath);
+				luaL_loadbuffer(m_gameLua, mainScriptEntry->m_data, mainScriptEntry->m_size, gameScriptPath.c_str());
 			}
 		}
 		else
 		{
-			luaL_loadfile(m_gameLua, gameScriptPath);
+			luaL_loadfile(m_gameLua, gameScriptPath.c_str());
 		}
 
 		// Kick it off and wait for a yield
@@ -273,7 +270,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 			FileManager::FileList scriptFiles;
 			if (!fileMan.FillFileList(m_scriptPath, scriptFiles, ".lua"))
 			{
-				m_scriptPath[0] = '\0';
+				m_scriptPath.clear();
 			}
 
 			// Add each script in the directory
@@ -281,8 +278,7 @@ bool ScriptManager::Startup(const char * a_scriptPath, const DataPack * a_dataPa
 			while(curNode != nullptr)
 			{
 				// Get a fresh timestamp on the new script
-				char fullPath[StringUtils::s_maxCharsPerLine];
-				sprintf(fullPath, "%s%s", m_scriptPath, curNode->GetData()->m_name);
+				std::string fullPath = m_scriptPath + curNode->GetData()->m_name;
 				FileManager::Timestamp curTimeStamp;
 				FileManager::Get().GetFileTimeStamp(fullPath, curTimeStamp);
 
@@ -351,7 +347,7 @@ bool ScriptManager::Update(float a_dt)
 		// Test all scripts for modification
 		FileManager & fileMan = FileManager::Get();
 		ManagedScriptNode * next = m_managedScripts.GetHead();
-		if (m_managedScripts.GetLength() == 0 && strlen(m_scriptPath) > 0 && fileMan.CheckFilePath(m_scriptPath))
+		if (m_managedScripts.GetLength() == 0 && !m_scriptPath.empty() && fileMan.CheckFilePath(m_scriptPath))
 		{
 			// There are no scripts to manage, we must have bailed out while starting up, try again
 			Startup(m_scriptPath, nullptr);
@@ -372,7 +368,7 @@ bool ScriptManager::Update(float a_dt)
 					}
 					else
 					{
-						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path);
+						Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in script %s, reloading.", curScript->m_path.c_str());
 					}
 
 					m_forceReloadScripts = false;
@@ -503,15 +499,10 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 
 	// Qualify template path with template extension
 	const char * templateName = luaL_checkstring(a_luaState, 2);
-	char templatePath[StringUtils::s_maxCharsPerName];
-	templatePath[0] = '\n';
-	if (strstr(templateName, ".json") == nullptr)
+	std::string templatePath(templateName);
+	if (templatePath.find(".json") == std::string::npos)
 	{
-		sprintf(templatePath, "%s.json", templateName);
-	}
-	else // Just copy chars over from LUA string
-	{
-		strncpy(templatePath, templateName, StringUtils::s_maxCharsPerName);
+		templatePath += ".json";
 	}
 
 	// Get the scene to add to if specified
@@ -524,7 +515,7 @@ int ScriptManager::CreateGameObject(lua_State * a_luaState)
 	}
 
 	// Create the new object
-	if (GameObject * newGameObject = worldMan.CreateObject(templatePath, sceneToAddTo))
+	if (GameObject * newGameObject = worldMan.CreateObject(templatePath.c_str(), sceneToAddTo))
 	{
 		// Allocate memory for an push userdata onto the stack
 		unsigned int * userData = (unsigned int*)lua_newuserdata(a_luaState, sizeof(unsigned int));
@@ -1719,8 +1710,7 @@ int ScriptManager::DestroyParticleEmitter(lua_State * a_luaState)
 
 int ScriptManager::GUIGetValue(lua_State * a_luaState)
 {
-	char strValue[StringUtils::s_maxCharsPerName];
-	strValue[0] = '\0';
+	std::string strValue;
 	if (lua_gettop(a_luaState) == 2)
 	{
 		luaL_checktype(a_luaState, 2, LUA_TSTRING);
@@ -1728,7 +1718,7 @@ int ScriptManager::GUIGetValue(lua_State * a_luaState)
 		{
 			if (Widget * foundElem = Gui::Get().FindWidget(guiName))
 			{
-				strncpy(strValue, foundElem->GetText(), strlen(foundElem->GetText()) + 1);
+				strValue = foundElem->GetText();
 			}
 		}
 	}
@@ -1736,8 +1726,8 @@ int ScriptManager::GUIGetValue(lua_State * a_luaState)
 	{
 		LogScriptError(a_luaState, "GUI:GetValue", "expects 1 parameter: name of the element to get.");
 	}
-	
-	lua_pushstring(a_luaState, strValue);
+
+	lua_pushstring(a_luaState, strValue.c_str());
 	return 1;
 }
 
@@ -2144,12 +2134,11 @@ int ScriptManager::DataPackRequire(lua_State * a_luaState)
 		const char * scriptPath = lua_tostring(a_luaState, 1);
 		if (scriptPath != nullptr && scriptPath[0] != '\0')
 		{
-			char scriptName[StringUtils::s_maxCharsPerLine];
 			ScriptManager & scriptMan = ScriptManager::Get();
-			sprintf(scriptName, "%s%s.lua", scriptMan.m_scriptPath, scriptPath);
+			std::string scriptName = scriptMan.m_scriptPath + scriptPath + ".lua";
 			if (DataPackEntry * luaResource = DataPack::Get().GetEntry(scriptName))
 			{
-				luaL_loadbuffer(scriptMan.m_gameLua, luaResource->m_data, luaResource->m_size, scriptName);
+				luaL_loadbuffer(scriptMan.m_gameLua, luaResource->m_data, luaResource->m_size, scriptName.c_str());
 				lua_pcall(scriptMan.m_gameLua, 0, 0, 0);
 			}
 			else

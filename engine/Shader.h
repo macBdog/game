@@ -2,7 +2,8 @@
 #define _ENGINE_SHADER_
 #pragma once
 
-#include <string.h>
+#include <string>
+#include <string_view>
 
 #include "../core/Colour.h"
 #include "../core/Matrix.h"
@@ -15,18 +16,16 @@ typedef unsigned int GLuint;
 //\brief Lighting data passed between the game config files and the standard lighting shader
 struct Light
 {
-	Light() 
+	Light()
 		: m_enabled(false)
 		, m_pos(0.0f)
 		, m_dir(0.0f)
 		, m_ambient(0.0f)
 		, m_diffuse(0.0f)
-		, m_specular(0.0f) 
-		{ 
-			m_name[0] = '\0'; 
-		}
+		, m_specular(0.0f)
+		{ }
 	bool m_enabled;									///< If the light is currently on
-	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the light is used for attaching lights to objects
+	std::string m_name;								///< Name of the light is used for attaching lights to objects
 	Vector m_pos;									///< World position of the light
 	Quaternion m_dir;								///< Direction the light is facing, zero means its an omni light
 	Colour m_ambient;								///< Ambient light colour is an aproximation of all reflected light
@@ -51,16 +50,15 @@ public:
 			: m_output(false)
 			, m_id(0)
 		{
-			m_name[0] = '\0';
 		}
 
 		// Initialise values from graphics API on construction
-		bool Init(GLuint a_sourceShader, const char * a_name, bool a_output = false)
+		bool Init(GLuint a_sourceShader, std::string_view a_name, bool a_output = false)
 		{
-			if (a_name != nullptr && a_name[0] != '\0')
+			if (!a_name.empty())
 			{
-				strncpy(m_name, a_name, sizeof(char) * strlen(a_name) + 1);
-				m_id = glGetUniformLocation(a_sourceShader, m_name);
+				m_name = a_name;
+				m_id = glGetUniformLocation(a_sourceShader, m_name.c_str());
 				m_output = a_output;
 			}
 			return m_id >= 0;
@@ -68,7 +66,7 @@ public:
 
 		bool m_output;									///< If the uniform is for input or output
 		int m_id;										///< Identifier for the uniform
-		char m_name[StringUtils::s_maxCharsPerName];	///< Name of the variable referenced in the shader
+		std::string m_name;								///< Name of the variable referenced in the shader
 		TDataType m_data;								///< Data that is referenced by name
 	};
 
@@ -134,14 +132,14 @@ public:
 	};
 
 	//\brief Shaders will compile and link from source upon creation
-	Shader(const char * a_name);
+	Shader(std::string_view a_name);
 	~Shader();
 
 	bool Init(const char * a_vertexSource, const char * a_fragmentSource, const char * a_geometrySource = nullptr);
 
 	//\brief Accessors and mutators
 	inline GLuint GetShader() { return m_shader; }
-	inline const char * GetName() { return &m_name[0]; }
+	inline const std::string & GetName() { return m_name; }
 	inline bool IsCompiled() { return m_vertexShader > 0 && m_fragmentShader > 0 && m_shader > 0; }
 	
 	//\brief Bind the shader and setup the uniforms
@@ -161,7 +159,7 @@ private:
 	//\brief Compile the shader given the source code
     unsigned int Compile(GLuint type, const char * a_src);
 	
-	char m_name[StringUtils::s_maxCharsPerName];	///< Name of the files minus .fsh and .vsh extensions
+	std::string m_name;								///< Name of the files minus .fsh and .vsh extensions
 	GLuint m_vertexShader;							///< Program to transform vertices
 	GLuint m_fragmentShader;						///< Pixel shader
 	GLuint m_geometryShader;						///< Geometry shader

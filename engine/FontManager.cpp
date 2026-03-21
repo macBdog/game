@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 #include "DataPack.h"
 #include "RenderManager.h"
@@ -10,17 +11,15 @@
 #include "Font/default.fnt.inc"
 #include "Font/default.tga.inc"
 
-using namespace std;	//< For fstream operations
-
 template<> FontManager * Singleton<FontManager>::s_instance = nullptr;
 
 const float FontManager::s_debugFontSize2D = 1.25f;
 const float FontManager::s_debugFontSize3D = 10.0f;
 
-bool FontManager::Startup(const char * a_fontPath)
+bool FontManager::Startup(std::string_view a_fontPath)
 {
 	// Sanity check on input arg
-	if (a_fontPath == nullptr || a_fontPath[0] == 0)
+	if (a_fontPath.empty())
 	{
 		return false;
 	}
@@ -32,21 +31,18 @@ bool FontManager::Startup(const char * a_fontPath)
 	FileManager::FileList fontFiles;
 	FileManager::Get().FillFileList(a_fontPath, fontFiles, ".fnt");
 	FileManager::FileListNode * curNode = fontFiles.GetHead();
-	
+
 	// Cache off the font path as textures are relative to fonts
-	char fontFilePath[StringUtils::s_maxCharsPerLine];
-	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
+	m_fontPath = a_fontPath;
 
 	// Load each font in the directory
 	bool loadSuccess = true;
 	while(curNode != nullptr)
 	{
 		// File stream for font config file
-		sprintf(fontFilePath, "%s%s", m_fontPath, curNode->GetData()->m_name);
-		ifstream inputFile(fontFilePath, ifstream::in);
-		loadSuccess &= LoadFont<ifstream>(inputFile);
+		std::string fontFilePath = m_fontPath + curNode->GetData()->m_name;
+		std::ifstream inputFile(fontFilePath, std::ifstream::in);
+		loadSuccess &= LoadFont<std::ifstream>(inputFile);
 		curNode = curNode->GetNext();
 	}
 
@@ -56,7 +52,7 @@ bool FontManager::Startup(const char * a_fontPath)
 	return loadSuccess;
 }
 
-bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
+bool FontManager::Startup(std::string_view a_fontPath, const DataPack * a_dataPack)
 {
 	// Sanity check on input arg
 	if (a_dataPack == nullptr)
@@ -68,10 +64,7 @@ bool FontManager::Startup(const char * a_fontPath, const DataPack * a_dataPack)
 	LoadDefaultFont(defaultFontDefinition);
 
 	// Cache off the font path as textures are relative to fonts
-	char fontFilePath[StringUtils::s_maxCharsPerLine];
-	memset(&fontFilePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-	memset(&m_fontPath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_fontPath, a_fontPath, sizeof(char) * strlen(a_fontPath) + 1);
+	m_fontPath = a_fontPath;
 
 	// Populate a list of font configuration files
 	DataPack::EntryList fontEntries;
@@ -149,9 +142,9 @@ bool FontManager::DrawString(const char * a_string, unsigned int a_fontNameHash,
 					// Safety check for unexported characters
 					const FontChar & curChar = font->m_chars[(int)a_string[j]];
 					if (curChar.m_width > 0 || curChar.m_height > 0)
-					{ 
+					{
 						// Do not add a quad for a space
-						if (a_string[j] != ' ') 
+						if (a_string[j] != ' ')
 						{
 							float xPos = a_pos.GetX() + xAdvance + ((curChar.m_xoffset / font->m_sizeX) * sizeWithAspect.GetX());
 							float yPos = a_pos.GetY() - ((curChar.m_yoffset / font->m_sizeY) * sizeWithAspect.GetY());
@@ -202,7 +195,7 @@ bool FontManager::MeasureString2D(const char * a_string, unsigned int a_fontName
 			a_size *= (float)font->m_sizeX / (float)s_maxFontTexSize;
 			const Vector2 sizeWithAspect = Vector2(a_size, a_size);
 			float xAdvance = 0.0f;
-			
+
 			// Calculate a scaling ratio for the font to match the requested pixel size, font size limit is 1 meg
 			const Vector2 sizeRatio(sizeWithAspect.GetX() / font->m_sizeX / viewAspect, a_size / font->m_sizeY);
 
@@ -224,7 +217,7 @@ bool FontManager::MeasureString2D(const char * a_string, unsigned int a_fontName
 					// Safety check for unexported characters
 					const FontChar & curChar = font->m_chars[(int)a_string[j]];
 					if (curChar.m_width > 0 || curChar.m_height > 0)
-					{ 
+					{
 						xAdvance += curChar.m_xadvance * sizeRatio.GetX();
 						if (xAdvance > a_width)
 						{
@@ -272,12 +265,13 @@ bool FontManager::DrawDebugString3D(const char * a_string, Vector a_pos, Colour 
 	return false;
 }
 
-StringHash * FontManager::GetLoadedFontName(const char * a_fontName)
+StringHash * FontManager::GetLoadedFontName(std::string_view a_fontName)
 {
+	StringHash searchHash(a_fontName);
 	FontListNode * curFont = m_fonts.GetHead();
 	while(curFont != nullptr)
 	{
-		if (curFont->GetData()->m_fontName == StringHash(a_fontName))
+		if (curFont->GetData()->m_fontName == searchHash)
 		{
 			return &curFont->GetData()->m_fontName;
 		}
@@ -356,73 +350,68 @@ bool FontManager::LoadDefaultFont(const char * a_fontDefinition)
 	unsigned int lineHeight, base, pages;
 
 	// Get the number of chars to parse
-	const char * delimeter = "\n";
 	const int fontStringSize = strlen(a_fontDefinition);
-	char * mutableFont = (char *)malloc(sizeof(char) * fontStringSize + 1);
-	if (mutableFont != nullptr)
+	std::string mutableFont(a_fontDefinition, fontStringSize);
+	const char * delimeter = "\n";
+	char * mutableBuf = mutableFont.data();
+	char * line = strtok(mutableBuf, delimeter);
+	int lineCount = 0;
+	while (line != nullptr)
 	{
-		memcpy(mutableFont, a_fontDefinition, sizeof(char) * fontStringSize);
-		char * line = strtok(mutableFont, delimeter);
-		int lineCount = 0;
-		while (line != nullptr)
+		if (lineCount == 0)	// info face="fontname" etc
 		{
-			if (lineCount == 0)	// info face="fontname" etc
+			std::string shortFontName = StringUtils::TrimString(StringUtils::ExtractField(line, "'", 1), true);
+			newFont->m_fontName.SetCString(shortFontName);
+		}
+		else if (lineCount == 1) // common lineHeight=x base=33
+		{
+			sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
+			&lineHeight, &base, &sizeW, &sizeH, &pages);
+			newFont->m_sizeX = sizeW;
+			newFont->m_sizeY = sizeH;
+		}
+		else if (lineCount == 2)
+		{
+		}
+		else if (lineCount == 3) // chars count=x
+		{
+			sscanf_s(line, "chars count=%d", &numChars);
+			newFont->m_numChars = numChars;
+		}
+		else
+		{
+			// Go through each char in the file loading metadata
+			for (unsigned int i = 0; i < numChars; ++i)
 			{
-				char shortFontName[StringUtils::s_maxCharsPerLine];
-				sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "'", 1), true));
-				newFont->m_fontName.SetCString(shortFontName);
-			}
-			else if (lineCount == 1) // common lineHeight=x base=33	
-			{
-				sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
-				&lineHeight, &base, &sizeW, &sizeH, &pages);
-				newFont->m_sizeX = sizeW;
-				newFont->m_sizeY = sizeH;
-			}
-			else if (lineCount == 2)
-			{
-			}
-			else if (lineCount == 3) // chars count=x
-			{
-				sscanf_s(line, "chars count=%d", &numChars);
-				newFont->m_numChars = numChars;
-			}
-			else
-			{
-				// Go through each char in the file loading metadata
-				for (unsigned int i = 0; i < numChars; ++i)
-				{
-					int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
-					sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d",
-						&charId, &x, &y, &width, &height, &xoffset, &yoffset, &xadvance, &page, &chnl);
-					FontChar & curChar = newFont->m_chars[charId];
-					curChar.m_x = (float)x;
-					curChar.m_y = (float)y;
-					curChar.m_width = (float)width;
-					curChar.m_height = (float)height;
-					curChar.m_xoffset = (float)xoffset;
-					curChar.m_yoffset = (float)yoffset;
-					curChar.m_xadvance = (float)xadvance;
+				int charId, x, y, width, height, xoffset, yoffset, xadvance, page, chnl;
+				sscanf_s(line, "char id=%d   x=%d    y=%d    width=%d     height=%d     xoffset=%d     yoffset=%d    xadvance=%d     page=%d  chnl=%d",
+					&charId, &x, &y, &width, &height, &xoffset, &yoffset, &xadvance, &page, &chnl);
+				FontChar & curChar = newFont->m_chars[charId];
+				curChar.m_x = (float)x;
+				curChar.m_y = (float)y;
+				curChar.m_width = (float)width;
+				curChar.m_height = (float)height;
+				curChar.m_xoffset = (float)xoffset;
+				curChar.m_yoffset = (float)yoffset;
+				curChar.m_xadvance = (float)xadvance;
 
-					// This is the glyph size as a ratio of the texture size
-					Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
-					newFont->m_chars[charId].m_charSize = Vector2(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
+				// This is the glyph size as a ratio of the texture size
+				Vector2 sizeRatio(1.0f / newFont->m_sizeX / renMan.GetViewAspect(), 1.0f / newFont->m_sizeY);
+				newFont->m_chars[charId].m_charSize = Vector2(curChar.m_width * sizeRatio.GetX(), curChar.m_height * sizeRatio.GetY());
 
-					// Used to generate the position of the character within the texture
-					newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
-					newFont->m_chars[charId].m_texCoord = TexCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
+				// Used to generate the position of the character within the texture
+				newFont->m_chars[charId].m_texSize = TexCoord(curChar.m_width / newFont->m_sizeX, curChar.m_height / newFont->m_sizeY);
+				newFont->m_chars[charId].m_texCoord = TexCoord(curChar.m_x / newFont->m_sizeX, curChar.m_y / newFont->m_sizeY);
 
-					line = strtok(nullptr, delimeter);
-				}
-				break;
+				line = strtok(nullptr, delimeter);
 			}
-			line = strtok(nullptr, delimeter);
-			++lineCount;
-		}	
-
-		// Clean up and add font to DB
-		free(mutableFont);
-		m_fonts.Insert(newFontNode);
+			break;
+		}
+		line = strtok(nullptr, delimeter);
+		++lineCount;
 	}
-	return false;
+
+	// Add font to DB
+	m_fonts.Insert(newFontNode);
+	return true;
 }

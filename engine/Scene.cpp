@@ -13,20 +13,17 @@ template<> WorldManager * Singleton<WorldManager>::s_instance = nullptr;
 
 const float Scene::s_updateFreq = 1.0f;								///< How often the scene should check it's config on disk for updates
 
-Scene::Scene() 
-: m_state(SceneState::Unloaded) 
+Scene::Scene()
+: m_state(SceneState::Unloaded)
 , m_beginLoaded(false)
 , m_shader(nullptr)
 , m_numLights(0)
 , m_updateTimer(0.0f)
 , m_updateFreq(s_updateFreq)
-{ 
-	m_name[0] = '\0';
-	m_filePath[0] = '\0';
-
+, m_name("defaultScene")
+{
 	// Allocate memory for the scene's object pool
 	m_objects.Init(s_numObjects, sizeof(GameObject));
-	sprintf(m_name, "defaultScene");
 }
 
 Scene::~Scene()
@@ -125,19 +122,19 @@ bool Scene::InitFromConfig()
 			auto & gameObjects = gameObjectsArray->GetChildObjects();
 			for (GameFile::Object * childObj : gameObjects)
 			{
-				const char * templateName = nullptr;
+				const std::string * templateName = nullptr;
 				if (GameFile::Property * prop = childObj->FindProperty("template"))
 				{
-					templateName = prop->GetString();
+					templateName = &prop->GetString();
 				}
 
 				// Create object with optional template values and add to the scene
-				GameObject * newObject = WorldManager::Get().CreateObject(templateName, this);
+				GameObject * newObject = WorldManager::Get().CreateObject(templateName ? templateName->c_str() : nullptr, this);
 
 				// Override any templated values
 				if (templateName != nullptr)
 				{
-					newObject->SetTemplate(templateName);
+					newObject->SetTemplate(*templateName);
 				}
 
 				if (childObj->FindProperty("name"))
@@ -154,26 +151,27 @@ bool Scene::InitFromConfig()
 				}
 				if (GameFile::Property * clipType = childObj->FindProperty("clipType"))
 				{
-					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
+					const auto & clipStr = clipType->GetString();
+					if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != std::string::npos)
 					{
 						newObject->SetClipType(ClipType::Sphere);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+					else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != std::string::npos)
 					{
 						newObject->SetClipType(ClipType::AxisBox);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
+					else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != std::string::npos)
 					{
 						newObject->SetClipType(ClipType::Box);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
+					else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != std::string::npos)
 					{
 						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s in scene %s, defaulting to axisbox.", newObject->GetName(), GetName());
 						newObject->SetClipType(ClipType::AxisBox);
 					}
 					else
 					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipType->GetString(), newObject->GetName(), GetName());
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for object %s in scene %s, defaulting to box.", clipStr.c_str(), newObject->GetName(), GetName());
 						newObject->SetClipType(ClipType::AxisBox);
 					}
 				}
@@ -228,11 +226,11 @@ GameObject * Scene::AddObject()
 	return newGameObject;
 }
 
-bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular)
+bool Scene::AddLight(std::string_view a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular)
 {
 	if (m_numLights < Shader::s_maxLights)
 	{
-		sprintf(m_lights[m_numLights].m_name, "%s", a_name);
+		m_lights[m_numLights].m_name = a_name;
 		m_lights[m_numLights].m_enabled = true;
 		m_lights[m_numLights].m_pos = a_pos;
 		m_lights[m_numLights].m_dir = a_dir;
@@ -249,21 +247,20 @@ bool Scene::AddLight(const char * a_name, const Vector & a_pos, const Quaternion
 	return false;
 }
 
-bool Scene::RemoveLight(const char * a_name)
+bool Scene::RemoveLight(std::string_view a_name)
 {
 	for (unsigned int i = 0; i < Shader::s_maxLights; ++i)
 	{
-		
-		if (strcmp(m_lights[i].m_name, a_name) == 0)
+		if (m_lights[i].m_name == a_name)
 		{
 			// If the light we are looking for is on the end of the light array
-			if (m_numLights == i)
+			if (m_numLights == static_cast<int>(i))
 			{
-				memset(&m_lights[i], 0, sizeof(Light));
+				m_lights[i] = Light();
 			}
 			else // Swap the end light with this one
 			{
-				memcpy(&m_lights[i], &m_lights[m_numLights-1], sizeof(Light));
+				m_lights[i] = m_lights[m_numLights-1];
 			}
 			--m_numLights;
 			return true;
@@ -281,14 +278,14 @@ GameObject * Scene::GetSceneObject(unsigned int a_storageId)
 	return nullptr;
 }
 
-GameObject * Scene::GetSceneObject(const char * a_objName)
+GameObject * Scene::GetSceneObject(std::string_view a_objName)
 {
 	// Iterate through all objects in the scene
 	for (unsigned int i = 0; i < m_objects.GetCount(); ++i)
 	{
 		if (GameObject * gameObj = m_objects.Get(i))
 		{
-			if (strstr(gameObj->GetName(),a_objName) != 0)
+			if (std::string_view(gameObj->GetName()).find(a_objName) != std::string_view::npos)
 			{
 				return gameObj;
 			}
@@ -394,7 +391,7 @@ void Scene::RemoveAllScriptOwnedObjects(bool a_destroyScriptBindings)
 	m_objects.Reset();
 
 	// Load scene front scratch so we are back with just scene objects and no script objects
-	if (m_sourceFile.Load(m_filePath))
+	if (!m_filePath.empty() && m_sourceFile.Load(m_filePath))
 	{
 		InitFromConfig();
 	}
@@ -429,7 +426,7 @@ bool Scene::Update(float a_dt)
 	}
 	else
 	{
-		if (m_filePath[0] != '\0')
+		if (!m_filePath.empty())
 		{
 			m_updateTimer = 0.0f;
 			FileManager::Timestamp curTimeStamp;
@@ -455,8 +452,7 @@ bool Scene::Update(float a_dt)
 void Scene::Serialise()
 {
 	// Construct the path from the scene directory and name of the scene
-	char scenePath[StringUtils::s_maxCharsPerLine];
-	sprintf(scenePath, "%s%s.json", WorldManager::Get().GetScenePath(), m_name);
+	std::string scenePath = std::string(WorldManager::Get().GetScenePath()) + m_name + ".json";
 
 	// Create an output stream
 	GameFile * sceneFile = new GameFile();
@@ -525,7 +521,7 @@ bool Scene::Draw()
 			const Colour drawColour = m_lights[i].m_enabled ? sc_colourYellow : sc_colourGrey;
 			RenderManager::Get().AddDebugSphere(m_lights[i].m_pos, Light::s_lightDrawSize, drawColour);
 			RenderManager::Get().AddDebugLine(m_lights[i].m_pos, m_lights[i].m_pos + m_lights[i].m_dir.GetXYZ(), drawColour);
-			FontManager::Get().DrawDebugString3D(m_lights[i].m_name, m_lights[i].m_pos, drawColour);
+			FontManager::Get().DrawDebugString3D(m_lights[i].m_name.c_str(), m_lights[i].m_pos, drawColour);
 		}
 	}
 

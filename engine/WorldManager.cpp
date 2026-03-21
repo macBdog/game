@@ -10,18 +10,16 @@
 
 template<> WorldManager * Singleton<WorldManager>::s_instance = nullptr;
 
-bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath, const DataPack * a_dataPack)
+bool WorldManager::Startup(std::string_view a_templatePath, std::string_view a_scenePath, const DataPack * a_dataPack)
 {
 	// Cache off the template path for non qualified loading of game object
-	memset(&m_templatePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_templatePath, a_templatePath, sizeof(char) * strlen(a_templatePath) + 1);
+	m_templatePath = a_templatePath;
 
 	// Allocate memory for the global world lookup directory
 	m_objectLookup.Init(s_numLookup, sizeof(ObjectLookup));
 
 	// Generate list to iterate through all scenes in the scenepath and load them
-	memset(&m_scenePath, 0 , StringUtils::s_maxCharsPerLine);
-	strncpy(m_scenePath, a_scenePath, sizeof(char) * strlen(a_scenePath) + 1);
+	m_scenePath = a_scenePath;
 	
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
@@ -78,9 +76,8 @@ bool WorldManager::Startup(const char * a_templatePath, const char * a_scenePath
 		FileManager::FileListNode * curNode = sceneFiles.GetHead();
 		while(curNode != nullptr)
 		{
-			char fullPath[StringUtils::s_maxCharsPerLine];
-			sprintf(fullPath, "%s%s", a_scenePath, curNode->GetData()->m_name);
-		
+			std::string fullPath = std::string(a_scenePath) + curNode->GetData()->m_name;
+
 			// Add to the loaded scenes if begin loaded
 			if (Scene * newScene = new Scene())
 			{
@@ -200,8 +197,7 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		DataPack & dataPack = DataPack::Get();
 		if (dataPack.IsLoaded())
 		{
-			char templatePath[StringUtils::s_maxCharsPerLine];
-			sprintf(templatePath, "%s%s", m_templatePath, a_templatePath);
+			std::string templatePath = m_templatePath + a_templatePath;
 			if (DataPackEntry * templateEntry = dataPack.GetEntry(templatePath))
 			{
 				if (!templateFile.Load(templateEntry))
@@ -213,22 +209,20 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 		}
 		else
 		{
-			char fileNameBuf[StringUtils::s_maxCharsPerLine];
+			std::string fileNameBuf;
 			if (!StringUtils::IsAbsolutePath(a_templatePath))
 			{
-				sprintf(fileNameBuf, "%s%s", m_templatePath, a_templatePath);
+				fileNameBuf = m_templatePath + a_templatePath;
 
 				// Add on file extension if not present
-				if (!strstr(fileNameBuf, ".json"))
+				if (fileNameBuf.find(".json") == std::string::npos)
 				{
-					const char * fileExt = ".json\0";
-					int lastChar = (int)strlen(fileNameBuf);
-					strncpy(&fileNameBuf[lastChar], fileExt, sizeof(char) * strlen(fileExt) + 1);
+					fileNameBuf += ".json";
 				}
 			}
 			else // Already fully qualified
 			{
-				sprintf(fileNameBuf, "%s", a_templatePath);
+				fileNameBuf = a_templatePath;
 			}
 
 			// Open the template file
@@ -265,38 +259,40 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 				bool hasCollision = false;
 				if (GameFile::Property * clipType = object->FindProperty("clipType"))
 				{
-					if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
+					const auto & clipStr = clipType->GetString();
+					if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != std::string::npos)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Sphere);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+					else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != std::string::npos)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::AxisBox);
 					}
-					else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
+					else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != std::string::npos)
 					{
 						hasCollision = true;
 						newGameObject->SetClipType(ClipType::Box);
 					}
 					else
 					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipType->GetString(), a_templatePath);
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Invalid clip type of %s specified for template %s, defaulting to box.", clipStr.c_str(), a_templatePath);
 					}
 				}
 				// Clip group
 				if (GameFile::Property* clipGroup = object->FindProperty("clipGroup"))
 				{
 					const PhysicsManager & pMan = PhysicsManager::Get();
-					if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
+					const auto & clipGroupStr = clipGroup->GetString();
+					if (pMan.GetCollisionGroupId(clipGroupStr.c_str()) >= 0)
 					{
-						int clipGroupId = pMan.GetCollisionGroupId(clipGroup->GetString());
-						newGameObject->SetClipGroup(clipGroup->GetString(), clipGroupId);
+						int clipGroupId = pMan.GetCollisionGroupId(clipGroupStr.c_str());
+						newGameObject->SetClipGroup(clipGroupStr, clipGroupId);
 					}
 					else
 					{
-						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
+						Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroupStr.c_str(), a_templatePath);
 					}
 				}
 				// Clipping size
@@ -329,14 +325,15 @@ GameObject * WorldManager::CreateObject(const char * a_templatePath, Scene * a_s
 					// Set the collision group up first
 					if (GameFile::Property * clipGroup = object->FindProperty("clipGroup"))
 					{
-						if (pMan.GetCollisionGroupId(clipGroup->GetString()) >= 0)
+						const auto & clipGroupStr = clipGroup->GetString();
+						if (pMan.GetCollisionGroupId(clipGroupStr.c_str()) >= 0)
 						{
-							int clipGroupId = pMan.GetCollisionGroupId(clipGroup->GetString());
-							newGameObject->SetClipGroup(clipGroup->GetString(), clipGroupId);
+							int clipGroupId = pMan.GetCollisionGroupId(clipGroupStr.c_str());
+							newGameObject->SetClipGroup(clipGroupStr, clipGroupId);
 						}
 						else
 						{
-							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroup->GetString(), a_templatePath);
+							Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unrecognised clip group of %s specified for template %s, defaulting to ALL.", clipGroupStr.c_str(), a_templatePath);
 						}
 					}
 				}
@@ -432,13 +429,13 @@ GameObject * WorldManager::GetGameObject(unsigned int a_objectId)
 	return nullptr;
 }
 
-Scene * WorldManager::GetScene(const char * a_sceneName)
+Scene * WorldManager::GetScene(std::string_view a_sceneName)
 {
 	SceneNode * next = m_scenes.GetHead();
 	while(next != nullptr)
 	{
 		Scene * curScene = next->GetData();
-		if (strcmp(a_sceneName, curScene->GetName()) == 0)
+		if (a_sceneName == curScene->GetName())
 		{
 			return curScene;
 		}
@@ -448,7 +445,7 @@ Scene * WorldManager::GetScene(const char * a_sceneName)
 	return nullptr;
 }
 
-void WorldManager::SetCurrentScene(const char * a_sceneName)
+void WorldManager::SetCurrentScene(std::string_view a_sceneName)
 {
 	if (Scene * existingScene = GetScene(a_sceneName))
 	{
@@ -456,7 +453,7 @@ void WorldManager::SetCurrentScene(const char * a_sceneName)
 	}
 }
 
-void WorldManager::SetNewScene(const char * a_sceneName)
+void WorldManager::SetNewScene(std::string_view a_sceneName)
 {
 	// Create new scene and set name
 	if (Scene * newScene = new Scene())
@@ -473,7 +470,7 @@ void WorldManager::SetNewScene(const char * a_sceneName)
 	}
 }
 
-GameObject * WorldManager::GetGameObject(const char * a_objName)
+GameObject * WorldManager::GetGameObject(std::string_view a_objName)
 {
 	// First try to find the object in the current scene
 	if (GameObject * foundObject = m_currentScene->GetSceneObject(a_objName))

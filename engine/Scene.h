@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <string_view>
 
 #include "../core/PageAllocator.h"
 
@@ -40,8 +42,8 @@ public:
 	//\brief Read scene details from a file into a scene object
 	//\param a_scenePath is a pointer to a scene file to load
 	//\param a_sceneToLoad_OUT is a pointer to a scene object to modify with data from the scene path
-	inline bool Load(const char * a_sceneConfigFilePath) 
-	{ 
+	inline bool Load(std::string_view a_sceneConfigFilePath)
+	{
 		if (m_sourceFile.Load(a_sceneConfigFilePath))
 		{
 			return InitFromConfig();
@@ -69,15 +71,15 @@ public:
 
 	//\brief Adding lights to the scene
 	//\return false if there are already the maximum number of lights in the scene
-	bool AddLight(const char * a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular);
-	bool RemoveLight(const char * a_name);
+	bool AddLight(std::string_view a_name, const Vector & a_pos, const Quaternion & a_dir, const Colour & a_ambient, const Colour & a_diffuse, const Colour & a_specular);
+	bool RemoveLight(std::string_view a_name);
 	inline Light & GetLight(int a_lightId) { return m_lights[a_lightId]; }
 	inline int GetNumLights() const { return m_numLights; }
 	inline bool HasLights() const { return m_numLights > 0; }
 
 	//\brief Get the name of the scene
 	//\return pointer to C string containing name of scene as referenced in file on disk
-	inline const char * GetName() const { return m_name; }
+	inline const char * GetName() const { return m_name.c_str(); }
 
 	//\brief Get an object by it's ID
 	//\param a_objectId is the ID of the object to get
@@ -87,7 +89,7 @@ public:
 	//\brief Get an object by name
 	//\param a_objName is the string name of object to get
 	//\return a pointer a game object if one exists with that name, otherwise nullptr
-	GameObject * GetSceneObject(const char * a_objName);
+	GameObject * GetSceneObject(std::string_view a_objName);
 	
 	//\brief Get the first object in the scene that intersects with a point in worldspace
 	//\param a vector of the point to check agains
@@ -120,8 +122,8 @@ public:
 	inline unsigned int GetNumObjects() const { return m_objects.GetCount(); }
 	
 	//\brief Resource mutators and accessors
-	inline void SetName(const char * a_name) { strncpy(m_name, a_name, StringUtils::s_maxCharsPerName); }
-	inline void SetFilePath(const char * a_path) { strncpy(m_filePath, a_path, StringUtils::s_maxCharsPerLine); }
+	inline void SetName(std::string_view a_name) { m_name = a_name; }
+	inline void SetFilePath(std::string_view a_path) { m_filePath = a_path; }
 	inline void SetBeginLoaded(bool a_begin) { m_beginLoaded = a_begin; }
 	inline bool IsBeginLoaded() { return m_beginLoaded; }
 	inline Shader * GetShader() { return m_shader; }
@@ -144,8 +146,8 @@ private:
 
 	GameFile m_sourceFile;											///< Configuration of the scene
 	PageAllocator<GameObject> m_objects;							///< Pointer to memory allocated for contiguous game objects
-	char m_name[StringUtils::s_maxCharsPerName];					///< Scene name for serialization
-	char m_filePath[StringUtils::s_maxCharsPerLine];				///< Path of the scene for reloading
+	std::string m_name;												///< Scene name for serialization
+	std::string m_filePath;											///< Path of the scene for reloading
 	FileManager::Timestamp m_timeStamp{ };							///< When the scene file was last edited
 	float m_updateTimer{ 0.0f };									///< The amount of time elapsed since the last file datestamp check
 	float m_updateFreq{ 0.0f };										///< How often the file resource is checked for changes

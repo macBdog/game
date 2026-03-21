@@ -1,10 +1,8 @@
-#include <assert.h>
-
-#include "StringUtils.h"
+#include <cassert>
 
 #include "StringHash.h"
 
-const unsigned int StringHash::s_stdCRCTable[256] = { 
+const unsigned int StringHash::s_stdCRCTable[256] = {
 	0x0,		0x77073096, 0xee0e612c, 0x990951ba, 0x76dc419, 0x706af48f, 0xe963a535,
 	0x9e6495a3, 0xedb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x9b64c2b, 0x7eb17cbd,
 	0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2, 0xf3b97148, 0x84be41de, 0x1adad47d,
@@ -31,58 +29,45 @@ const unsigned int StringHash::s_stdCRCTable[256] = {
 	0xa1d1937e, 0x38d8c2c4, 0x4fdff252, 0xd1bb67f1, 0xa6bc5767, 0x3fb506dd, 0x48b2364b,
 	0xd80d2bda, 0xaf0a1b4c, 0x36034af6, 0x41047a60, 0xdf60efc3, 0xa867df55, 0x316e8eef,
 	0x4669be79, 0xcb61b38c, 0xbc66831a, 0x256fd2a0, 0x5268e236, 0xcc0c7795, 0xbb0b4703,
-	0x220216b9, 0x5505262f, 0xc5ba3bbe, 0xb2bd0b28, 0x2bb45a92, 0x5cb36a04, 0xc2d7ffa7, 
-	0xb5d0cf31, 0x2cd99e8b, 0x5bdeae1d, 0x9b64c2b0, 0xec63f226, 0x756aa39c, 0x26d930a, 
-	0x9c0906a9, 0xeb0e363f, 0x72076785, 0x5005713, 0x95bf4a82, 0xe2b87a14, 0x7bb12bae, 
-	0xcb61b38, 0x92d28e9b, 0xe5d5be0d, 0x7cdcefb7, 0xbdbdf21, 0x86d3d2d4, 0xf1d4e242, 
-	0x68ddb3f8, 0x1fda836e, 0x81be16cd, 0xf6b9265b, 0x6fb077e1, 0x18b74777, 0x88085ae6, 
-	0xff0f6a70, 0x66063bca, 0x11010b5c, 0x8f659eff, 0xf862ae69, 0x616bffd3, 0x166ccf45, 
-	0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2, 0xa7672661, 0xd06016f7, 0x4969474d, 
-	0x3e6e77db, 0xaed16a4a, 0xd9d65adc, 0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 
-	0x47b2cf7f, 0x30b5ffe9, 0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 
-	0xcdd70693, 0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 
-	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d 
+	0x220216b9, 0x5505262f, 0xc5ba3bbe, 0xb2bd0b28, 0x2bb45a92, 0x5cb36a04, 0xc2d7ffa7,
+	0xb5d0cf31, 0x2cd99e8b, 0x5bdeae1d, 0x9b64c2b0, 0xec63f226, 0x756aa39c, 0x26d930a,
+	0x9c0906a9, 0xeb0e363f, 0x72076785, 0x5005713, 0x95bf4a82, 0xe2b87a14, 0x7bb12bae,
+	0xcb61b38, 0x92d28e9b, 0xe5d5be0d, 0x7cdcefb7, 0xbdbdf21, 0x86d3d2d4, 0xf1d4e242,
+	0x68ddb3f8, 0x1fda836e, 0x81be16cd, 0xf6b9265b, 0x6fb077e1, 0x18b74777, 0x88085ae6,
+	0xff0f6a70, 0x66063bca, 0x11010b5c, 0x8f659eff, 0xf862ae69, 0x616bffd3, 0x166ccf45,
+	0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2, 0xa7672661, 0xd06016f7, 0x4969474d,
+	0x3e6e77db, 0xaed16a4a, 0xd9d65adc, 0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5,
+	0x47b2cf7f, 0x30b5ffe9, 0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605,
+	0xcdd70693, 0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
+	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-unsigned int StringHash::GenerateCRC(const char * a_string, bool a_convertToLower)
+unsigned int StringHash::GenerateCRC(std::string_view a_string, bool a_convertToLower)
 {
-	if (strlen(a_string) >= s_stringHashSize)
-	{
-		assert(false);
-	}
-
 	// Start out with all bits set high
-	unsigned int ulCRC = 0xffffffff; 
+	unsigned int ulCRC = 0xffffffff;
 
-	// Perform the algorithm on each character 
-	// in the string, using the lookup table values
-	unsigned char* buffer = (unsigned char*)a_string;
-	while(*buffer) 
+	// Perform the algorithm on each character
+	for (unsigned char c : a_string)
 	{
 		if (a_convertToLower)
 		{
-			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ StringUtils::ConvertToLower(*buffer)];
-			buffer++;
+			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ StringUtils::ConvertToLower(c)];
 		}
 		else
 		{
-			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ *buffer++];
+			ulCRC = (ulCRC >> 8) ^ s_stdCRCTable[(ulCRC & 0xFF) ^ c];
 		}
 	}
 
 	// Exclusive OR the result with the beginning value
-	return (ulCRC ^ 0xffffffff); 
+	return (ulCRC ^ 0xffffffff);
 }
 
 unsigned int StringHash::GenerateCRCBinary(const unsigned int * a_binaryData, unsigned int a_length)
 {
-	if (a_length >= s_stringHashSize)
-	{
-		assert(false);
-	}
-
 	// Start out with all bits set high
-	unsigned int ulCRC = 0xffffffff; 
+	unsigned int ulCRC = 0xffffffff;
 
 	// Perform the algorithm on each character in the string, using the lookup table values
 	for (unsigned int i = 0; i < a_length; ++i)
@@ -97,25 +82,16 @@ unsigned int StringHash::GenerateCRCBinary(const unsigned int * a_binaryData, un
 StringHash::StringHash()
 	: m_hash(0)
 {
-	m_cString[0] = '\0';
 }
 
-StringHash::StringHash(const char * a_sourceString)
+StringHash::StringHash(std::string_view a_sourceString)
+	: m_string(a_sourceString)
+	, m_hash(GenerateCRC(a_sourceString, false))
 {
-	if (strlen(a_sourceString) >= s_stringHashSize)
-	{
-		assert(false);
-	}
-	memcpy(m_cString, a_sourceString, strlen(a_sourceString)+1);
-	m_hash = GenerateCRC(a_sourceString, false);
 }
 
-void StringHash::SetCString(const char * a_newString) 
-{ 
-	if (strlen(a_newString) >= s_stringHashSize)
-	{
-		assert(false);
-	}
-	memcpy(m_cString, a_newString, strlen(a_newString)+1);
+void StringHash::SetCString(std::string_view a_newString)
+{
+	m_string = a_newString;
 	m_hash = GenerateCRC(a_newString, false);
 }

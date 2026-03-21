@@ -24,8 +24,7 @@ const char * GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Count)] =
 
 void GameObject::SetTemplateProperties()
 {
-	char fullTemplatePath[StringUtils::s_maxCharsPerLine];
-	sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+	std::string fullTemplatePath = std::string(WorldManager::Get().GetTemplatePath()) + m_template;
 	GameFile templateFile;
 	if (templateFile.Load(fullTemplatePath) && templateFile.IsLoaded())
 	{
@@ -40,26 +39,27 @@ void GameObject::SetTemplateProperties()
 			}
 			if (GameFile::Property * clipType = object->FindProperty("clipType"))
 			{
-				if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != nullptr)
+				const auto & clipStr = clipType->GetString();
+				if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Sphere)]) != std::string::npos)
 				{
 					SetClipType(ClipType::Sphere);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != nullptr)
+				else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::AxisBox)]) != std::string::npos)
 				{
 					SetClipType(ClipType::AxisBox);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != nullptr)
+				else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Box)]) != std::string::npos)
 				{
 					SetClipType(ClipType::Box);
 				}
-				else if (strstr(clipType->GetString(), GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != nullptr)
+				else if (clipStr.find(GameObject::s_clipTypeStrings[static_cast<int>(ClipType::Mesh)]) != std::string::npos)
 				{
 					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Mesh clip type no longer supported for object %s, defaulting to axisbox.", GetName());
 					SetClipType(ClipType::AxisBox);
 				}
 				else
 				{
-					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unknown clip type of %s specified for object %s, defaulting to axisbox.", clipType->GetString(), GetName());
+					Log::Get().Write(LogLevel::Warning, LogCategory::Game, "Unknown clip type of %s specified for object %s, defaulting to axisbox.", clipStr.c_str(), GetName());
 					SetClipType(ClipType::AxisBox);
 				}
 			}
@@ -122,12 +122,11 @@ bool GameObject::Update(float a_dt)
 	if (HasTemplate())
 	{
 		FileManager::Timestamp tempTime;
-		char fullTemplatePath[StringUtils::s_maxCharsPerLine];
-		sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+		std::string fullTemplatePath = std::string(WorldManager::Get().GetTemplatePath()) + m_template;
 		FileManager::Get().GetFileTimeStamp(fullTemplatePath, tempTime);
 		if (tempTime > m_templateTimeStamp)
 		{
-			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in template file %s, reloading.", fullTemplatePath);
+			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in template file %s, reloading.", fullTemplatePath.c_str());
 			SetTemplateProperties();
 			m_templateTimeStamp = tempTime;
 		}
@@ -215,7 +214,7 @@ bool GameObject::Draw()
 				default: break;
 			}
 
-			FontManager::Get().DrawDebugString3D(m_name, GetClipPos());
+			FontManager::Get().DrawDebugString3D(m_name.c_str(), GetClipPos());
 		}
 
 		return true;
@@ -256,13 +255,12 @@ Vector GameObject::GetScale() const
 	return m_worldMat.GetScale();
 }
 
-void GameObject::SetTemplate(const char * a_templateName) 
-{ 
-	strncpy(m_template, a_templateName, StringUtils::s_maxCharsPerName);
+void GameObject::SetTemplate(std::string_view a_templateName)
+{
+	m_template = a_templateName;
 	// Find the timestamp for the template file monitoring
 #ifndef _RELEASE
-	char fullTemplatePath[StringUtils::s_maxCharsPerLine];
-	sprintf(fullTemplatePath, "%s%s", WorldManager::Get().GetTemplatePath(), a_templateName);
+	std::string fullTemplatePath = std::string(WorldManager::Get().GetTemplatePath()) + m_template;
 	FileManager::Get().GetFileTimeStamp(fullTemplatePath, m_templateTimeStamp);
 #endif
 }
@@ -370,7 +368,7 @@ void GameObject::Serialise(GameFile * outputFile, GameFile::Object * a_parent)
 		outputFile->AddProperty(fileObject, "name", m_name);
 
 		// Save template if set
-		bool templated = m_template[0] != '\0';
+		bool templated = !m_template.empty();
 		if (templated)
 		{
 			outputFile->AddProperty(fileObject, "template", m_template);
@@ -469,8 +467,7 @@ void GameObject::SerialiseTemplate()
 	}
 
 	// Check the template exists, if not create it
-	char templatePath[StringUtils::s_maxCharsPerLine];
-	sprintf(templatePath, "%s%s", WorldManager::Get().GetTemplatePath(), m_template);
+	std::string templatePath = std::string(WorldManager::Get().GetTemplatePath()) + m_template;
 	templateFile->Write(templatePath);
 	delete templateFile;
 }

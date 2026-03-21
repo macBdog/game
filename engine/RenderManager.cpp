@@ -17,17 +17,6 @@
 
 using namespace std;	//< For fstream operations
 
-const char * ParticleDefinition::s_propertyNames[ParticleDefinition::s_maxProperties] =
-{
-	"lifeTime",
-	"startPos",
-	"startSize",
-	"endSize",
-	"startColour",
-	"endColour",
-	"startVel",
-	"endVel",
-};
 
 template<> RenderManager * Singleton<RenderManager>::s_instance = nullptr;
 const float RenderManager::s_updateFreq = 1.0f;
@@ -147,7 +136,7 @@ void RenderManager::ParticleEmitter::Unbind()
 	glDeleteVertexArrays(1, &m_vertexArrayId);
 }
 
-bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderPath, const DataPack * a_dataPack, bool a_vr)
+bool RenderManager::Startup(const Colour & a_clearColour, std::string_view a_shaderPath, const DataPack * a_dataPack, bool a_vr)
 {
 	// Load GL function pointers before any GL calls
 	if (!m_vr)
@@ -317,18 +306,14 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 	glErrorEnum = glGetError();
 
 	// Cache off the shader path
-	if (a_shaderPath != nullptr && a_shaderPath[0] != '\0')
+	if (!a_shaderPath.empty())
 	{
-		strncpy(m_shaderPath, a_shaderPath, sizeof(char) * strlen(a_shaderPath) + 1);
+		m_shaderPath = a_shaderPath;
 	}
 
 	// Load all shaders from the datapack if specifiied
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
-		// Construct paths for both shader file names
-		char shaderNameBuf[StringUtils::s_maxCharsPerName];
-		char fragShaderPathBuf[StringUtils::s_maxCharsPerLine];
-
 		// Start by getting all the vertex shaders from the data pack
 		DataPack::EntryList shaderEntries;
 		a_dataPack->GetAllEntries(".vsh", shaderEntries);
@@ -336,26 +321,24 @@ bool RenderManager::Startup(const Colour & a_clearColour, const char * a_shaderP
 		while (curNode != nullptr)
 		{
 			DataPackEntry * curEntry = curNode->GetData();
-			sprintf(shaderNameBuf, "%s", StringUtils::ExtractFileNameFromPath(curEntry->m_path));
-			const char * shaderNameEnd = strstr(shaderNameBuf, ".");
-			if (shaderNameEnd != nullptr)
+			std::string shaderName = StringUtils::ExtractFileNameFromPath(curEntry->m_path);
+			const auto dotPos = shaderName.find('.');
+			if (dotPos != std::string::npos)
 			{
-				const int shaderNameLen = strlen(shaderNameBuf) - strlen(shaderNameEnd);
-				shaderNameBuf[shaderNameLen] = '\0';
+				shaderName.resize(dotPos);
 			}
-			if (Shader * pNewShader = new Shader(shaderNameBuf))
+			if (Shader * pNewShader = new Shader(shaderName))
 			{
 				bool shaderLoadSuccess = false;
 
 				// Now look for the fragment shader matching the vertex
-				strncpy(fragShaderPathBuf, curEntry->m_path, strlen(curEntry->m_path) + 1);
-				char * extension = strstr(fragShaderPathBuf, ".vsh");
-				if (extension != nullptr)
+				std::string fragShaderPath(curEntry->m_path);
+				const auto vshPos = fragShaderPath.find(".vsh");
+				if (vshPos != std::string::npos)
 				{
-					const int extensionPos = strlen(fragShaderPathBuf) - strlen(extension);
-					fragShaderPathBuf[extensionPos + 1] = 'f';
+					fragShaderPath[vshPos + 1] = 'f';
 				}
-				if (DataPackEntry * fragmentNode = a_dataPack->GetEntry(fragShaderPathBuf))
+				if (DataPackEntry * fragmentNode = a_dataPack->GetEntry(fragShaderPath))
 				{
 					char * vertexSource = (char *)malloc((curEntry->m_size + 1) * sizeof(char));
 					char * fragmentSource = (char *)malloc((fragmentNode->m_size + 1) * sizeof(char));
@@ -615,7 +598,7 @@ bool RenderManager::Update(float a_dt)
 			FileManager::Timestamp curTimeStampFrag;
 			FileManager::Timestamp curTimeStampVert;
 			ManagedShader * curManShader = next->GetData();
-			char fullShaderPath[StringUtils::s_maxCharsPerLine];
+			std::string fullShaderPath;
 			Shader * pShader = curManShader->m_shaderObject != nullptr ? curManShader->m_shaderObject->GetShader() : curManShader->m_shaderScene->GetShader();
 			
 			// Game object or scene owning this shader has passed on to the other world
@@ -630,23 +613,23 @@ bool RenderManager::Update(float a_dt)
 			}
 			else
 			{
-				sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+				fullShaderPath = RenderManager::Get().GetShaderPath() + pShader->GetName() + ".vsh";
 				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStampVert);
 				if (curTimeStampVert > curManShader->m_vertexTimeStamp)
 				{
 					curVertShaderReloaded = true;
 					curManShader->m_vertexTimeStamp = curTimeStampVert;
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath.c_str());
 				}
 
 				// Now check the pixel shader
-				sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+				fullShaderPath = RenderManager::Get().GetShaderPath() + pShader->GetName() + ".fsh";
 				FileManager::Get().GetFileTimeStamp(fullShaderPath, curTimeStampFrag);
 				if (curTimeStampFrag > curManShader->m_fragmentTimeStamp)
 				{
 					curFragShaderReloaded = true;
 					curManShader->m_fragmentTimeStamp = curTimeStampFrag;
-					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath);
+					Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Change detected in shader %s, reloading.", fullShaderPath.c_str());
 				}
 
 				if (curVertShaderReloaded || curFragShaderReloaded)
@@ -1543,7 +1526,7 @@ void RenderManager::AddModel(RenderLayer a_renderLayer, Model * a_model, Matrix 
 		// Make sure the VBO has enough storage for the verts of the model
 		if (rebind)
 		{
-			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Model %s being reallocated, if this happens frequently your game will be slow.", a_model->GetName());
+			Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Model %s being reallocated, if this happens frequently your game will be slow.", a_model->GetName().c_str());
 			vertexBuffer->Realloc(numVertices);
 			vertexBuffer->m_numVerts = numVertices;
 		}
@@ -1569,7 +1552,7 @@ void RenderManager::AddModel(RenderLayer a_renderLayer, Model * a_model, Matrix 
 		// Alias model data
 		if (!modelMat)
 		{
-			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName());
+			Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "No material loaded for model with name %s",  a_model->GetName().c_str());
 			return;
 		}
 
@@ -1833,7 +1816,7 @@ void RenderManager::AddDebugBox(const Matrix & a_worldMat, const Vector & a_dime
 #endif
 }
 
-void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shaderName)
+void RenderManager::ManageShader(GameObject * a_gameObject, std::string_view a_shaderName)
 {
 	bool shaderReferenced = false;
 	if (Shader * existingShader = GetShader(a_shaderName))
@@ -1853,7 +1836,7 @@ void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shade
 		}
 		else // Compile error will be reported in the log
 		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with game object %s", a_shaderName, a_gameObject->GetName());
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with game object %s", std::string(a_shaderName).c_str(), a_gameObject->GetName());
 			delete pNewShader;
 			a_gameObject->SetShader(nullptr);
 		}
@@ -1872,7 +1855,7 @@ void RenderManager::ManageShader(GameObject * a_gameObject, const char * a_shade
 	}
 }
 
-void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
+void RenderManager::ManageShader(Scene * a_scene, std::string_view a_shaderName)
 {
 	if (Shader * existingShader = GetShader(a_shaderName))
 	{
@@ -1891,7 +1874,7 @@ void RenderManager::ManageShader(Scene * a_scene, const char * a_shaderName)
 		}
 		else // Compile error will be reported in the log
 		{
-			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with scene %s", a_shaderName, a_scene->GetName());
+			Log::Get().Write(LogLevel::Error, LogCategory::Game, "Failed loading shader named %s, associated with scene %s", std::string(a_shaderName).c_str(), a_scene->GetName());
 			delete pNewShader;
 			a_scene->SetShader(nullptr);
 		}
@@ -1957,82 +1940,56 @@ void RenderManager::UnManageShader(Scene * a_scene)
 bool RenderManager::InitShaderFromFile(Shader & a_shader_OUT)
 {
 	struct stat fileInfo;
-	unsigned int numChars = 0;
-	char * vertexSource = nullptr;
-	char * fragmentSource = nullptr;
-	char fullShaderPath[StringUtils::s_maxCharsPerLine];
-	char fileLine[StringUtils::s_maxCharsPerLine];
-	
+	std::string vertexSource;
+	std::string fragmentSource;
+
 	// Open file to allocate the correct size string
-	sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
-	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	std::string fullShaderPath = RenderManager::Get().GetShaderPath() + a_shader_OUT.GetName() + ".vsh";
+	if (stat(fullShaderPath.c_str(), &fileInfo) == 0)
 	{
-		if (vertexSource = (char *)malloc(fileInfo.st_size))
+		// Open the file and read till the file has more contents
+		std::string fileLine;
+		ifstream vertexShaderFile(fullShaderPath);
+		if (vertexShaderFile.is_open())
 		{
-			// Open the file and read till the file has more contents
-			int numChars = 0;
-			ifstream vertexShaderFile(fullShaderPath);
-			if (vertexShaderFile.is_open())
+			while (vertexShaderFile.good())
 			{
-				while (vertexShaderFile.good())
-				{
-					vertexShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
-					const int lineSize = strlen(fileLine);
-					strncpy(&vertexSource[numChars], fileLine, sizeof(char) * lineSize);
-					numChars += lineSize;
-				}
-				vertexSource[numChars++] = '\0';
+				std::getline(vertexShaderFile, fileLine);
+				vertexSource += fileLine;
 			}
-			vertexShaderFile.close();
 		}
+		vertexShaderFile.close();
 	}
 
 	// Open the pixel shader file and parse each line into a string
-	sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), a_shader_OUT.GetName());
-	if (stat(&fullShaderPath[0], &fileInfo) == 0)
+	fullShaderPath = RenderManager::Get().GetShaderPath() + a_shader_OUT.GetName() + ".fsh";
+	if (stat(fullShaderPath.c_str(), &fileInfo) == 0)
 	{
-		if (fragmentSource = (char *)malloc(fileInfo.st_size))
+		// Open the file and read till the file has more contents
+		std::string fileLine;
+		ifstream fragmentShaderFile(fullShaderPath);
+		if (fragmentShaderFile.is_open())
 		{
-			// Open the file and read till the file has more contents
-			int numChars = 0;
-			ifstream fragmentShaderFile(fullShaderPath);
-			if (fragmentShaderFile.is_open())
+			while (fragmentShaderFile.good())
 			{
-				while (fragmentShaderFile.good())
-				{
-					fragmentShaderFile.getline(fileLine, StringUtils::s_maxCharsPerLine);
-					const int lineSize = strlen(fileLine);
-					strncpy(&fragmentSource[numChars], fileLine, sizeof(char) * lineSize);
-					numChars += lineSize;
-				}
-				fragmentSource[numChars++] = '\0';
+				std::getline(fragmentShaderFile, fileLine);
+				fragmentSource += fileLine;
 			}
-			fragmentShaderFile.close();
 		}
+		fragmentShaderFile.close();
 	}
 
 	// Init then free the memory for shader sources
-	if (vertexSource && fragmentSource)
+	if (!vertexSource.empty() && !fragmentSource.empty())
 	{
-		bool shadersCompiled = InitShaderFromMemory(vertexSource, fragmentSource, a_shader_OUT);
-		if (vertexSource != nullptr)
-		{
-			free(vertexSource);
-		}
-		if (fragmentSource != nullptr)
-		{
-			free(fragmentSource);
-		}
-		return shadersCompiled;
+		return InitShaderFromMemory(vertexSource.c_str(), fragmentSource.c_str(), a_shader_OUT);
 	}
 	return false;
 }
 
-bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragShaderSrc, Shader & a_shader_OUT)
+bool RenderManager::InitShaderFromMemory(const char * a_vertShaderSrc, const char * a_fragShaderSrc, Shader & a_shader_OUT)
 {
-	const int vertShaderSize = strlen(a_vertShaderSrc);
-	const int fragShaderSize = strlen(a_fragShaderSrc);
-	if (a_vertShaderSrc == nullptr || a_fragShaderSrc == nullptr || vertShaderSize <= 0 || fragShaderSize <= 0)
+	if (a_vertShaderSrc == nullptr || a_fragShaderSrc == nullptr || strlen(a_vertShaderSrc) == 0 || strlen(a_fragShaderSrc) == 0)
 	{
 		return false;
 	}
@@ -2041,46 +1998,11 @@ bool RenderManager::InitShaderFromMemory(char * a_vertShaderSrc, char * a_fragSh
 	#include "Shaders/global.fsh.h"
 	#include "Shaders/global.vsh.h"
 
-	char * vertexSource = nullptr;
-	char * fragmentSource = nullptr;
-	size_t globalVertexSize = sizeof(char) * strlen(globalVertexShader);
-	size_t globalFragmentSize = sizeof(char) * strlen(globalFragmentShader);
-	if (vertexSource = (char *)malloc((globalVertexSize + vertShaderSize + 2) * sizeof(char)))
-	{
-		// Write a copy of the global vertex shader and insert a newline
-		int numChars = globalVertexSize;
-		strncpy(vertexSource, globalVertexShader, globalVertexSize);
-		vertexSource[numChars++] = '\n';
+	// Concatenate global shader headers with the provided shader sources
+	std::string vertexSource = std::string(globalVertexShader) + "\n" + a_vertShaderSrc;
+	std::string fragmentSource = std::string(globalFragmentShader) + "\n" + a_fragShaderSrc;
 
-		// Now write the shader source
-		strncpy(&vertexSource[numChars], a_vertShaderSrc, vertShaderSize);
-		numChars += vertShaderSize;
-		vertexSource[numChars] = '\0';
-	}
-
-	if (fragmentSource = (char *)malloc((globalFragmentSize + fragShaderSize + 2) * sizeof(char)))
-	{
-		// Write a copy of the global fragment shader and insert a newline
-		int numChars = globalFragmentSize;
-		strncpy(fragmentSource, globalFragmentShader, globalFragmentSize);
-		fragmentSource[numChars++] = '\n';
-
-		// Now write the shader source
-		strncpy(&fragmentSource[numChars], a_fragShaderSrc, fragShaderSize);
-		numChars += fragShaderSize;
-		fragmentSource[numChars] = '\0';
-	}
-
-	if (vertexSource == nullptr || fragmentSource == nullptr)
-	{
-		free(vertexSource);
-		free(fragmentSource);
-		Log::Get().WriteEngineErrorNoParams("Memory allocation failed in loading shaders!");
-		return false;
-	}
-	a_shader_OUT.Init(vertexSource, fragmentSource);
-	free(vertexSource);
-	free(fragmentSource);
+	a_shader_OUT.Init(vertexSource.c_str(), fragmentSource.c_str());
 	return a_shader_OUT.IsCompiled();
 }
 
@@ -2100,10 +2022,9 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 		if (!dataPack.IsLoaded())
 		{
 			// Now add the object to the list of managed items by time stamp
-			char fullShaderPath[StringUtils::s_maxCharsPerLine];
-			sprintf(fullShaderPath, "%s%s.vsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+			std::string fullShaderPath = RenderManager::Get().GetShaderPath() + pShader->GetName() + ".vsh";
 			FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_vertexTimeStamp);
-			sprintf(fullShaderPath, "%s%s.fsh", RenderManager::Get().GetShaderPath(), pShader->GetName());
+			fullShaderPath = RenderManager::Get().GetShaderPath() + pShader->GetName() + ".fsh";
 			FileManager::Get().GetFileTimeStamp(fullShaderPath, a_newManShader->m_fragmentTimeStamp);
 		}
 
@@ -2116,13 +2037,13 @@ void RenderManager::AddManagedShader(ManagedShader * a_newManShader)
 	}
 }
 
-Shader * RenderManager::GetShader(const char * a_shaderName)
+Shader * RenderManager::GetShader(std::string_view a_shaderName)
 {
 	// Iterate through all shaders looking for the named program
 	auto next = m_shaders.GetHead();
 	while (next != nullptr)
 	{
-		if (strcmp(next->GetData()->GetName(), a_shaderName) == 0)
+		if (next->GetData()->GetName() == a_shaderName)
 		{
 			return next->GetData();
 		}

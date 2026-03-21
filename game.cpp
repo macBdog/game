@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <string>
 
 #include <SDL.h>
 
@@ -43,18 +44,15 @@ int main(int argc, char *argv[])
 {
 	// Single parameter to the executable is the main config file
 	bool useRelativePaths = false;
-	char titleConfigFilePath[StringUtils::s_maxCharsPerLine];
-	char gameDataPath[StringUtils::s_maxCharsPerLine];
-	titleConfigFilePath[0] = '\0';
-	gameDataPath[0] = '\0';
+	std::string titleConfigFilePath;
+	std::string gameDataPath;
 	if (argc > 1)
 	{
-		memcpy(&titleConfigFilePath, argv, strlen(argv[1]));
-		titleConfigFilePath[strlen(argv[1])] = '\0';
+		titleConfigFilePath = argv[1];
 	}
 	else // No argument specified, use a fallback
 	{
-		sprintf(titleConfigFilePath, "game.json");
+		titleConfigFilePath = "game.json";
 	}
 
 	// Make sure SDL cleans up before exit
@@ -62,20 +60,19 @@ int main(int argc, char *argv[])
 
 	// Figure out where the exe is being run from so relative paths to the exe can be used
 	std::filesystem::path exeDir = std::filesystem::path(argv[0]).parent_path();
-	char partialPath[StringUtils::s_maxCharsPerLine];
-	snprintf(partialPath, sizeof(partialPath), "%s", exeDir.string().c_str());
+	std::string partialPath = exeDir.string();
 
 	// Storage for resource paths
-	char gameConfigPath[StringUtils::s_maxCharsPerLine];
-	char texturePath[StringUtils::s_maxCharsPerLine];
-	char fontPath[StringUtils::s_maxCharsPerLine];
-	char guiPath[StringUtils::s_maxCharsPerLine];
-	char modelPath[StringUtils::s_maxCharsPerLine];
-	char templatePath[StringUtils::s_maxCharsPerLine];
-	char scenePath[StringUtils::s_maxCharsPerLine];
-	char scriptPath[StringUtils::s_maxCharsPerLine];
-	char shaderPath[StringUtils::s_maxCharsPerLine];
-	char soundPath[StringUtils::s_maxCharsPerLine];
+	std::string gameConfigPath;
+	std::string texturePath;
+	std::string fontPath;
+	std::string guiPath;
+	std::string modelPath;
+	std::string templatePath;
+	std::string scenePath;
+	std::string scriptPath;
+	std::string shaderPath;
+	std::string soundPath;
 
 	// For a release build, look for the datapack right next to the executable
 	DataPack & dataPack = DataPack::Get();
@@ -92,7 +89,7 @@ int main(int argc, char *argv[])
 
 	GameFile titleConfigFile;
 	DataPackEntry * titleConfigFileFromPack;
-	if (titleConfigFileFromPack = dataPack.GetEntry(titleConfigFilePath))
+	if (titleConfigFileFromPack = dataPack.GetEntry(titleConfigFilePath.c_str()))
 	{
 		titleConfigFile.Load(titleConfigFileFromPack);
 	}
@@ -103,23 +100,23 @@ int main(int argc, char *argv[])
 #else
 
 	// Read the main config file to setup video etc
-	GameFile titleConfigFile(titleConfigFilePath);
+	GameFile titleConfigFile(titleConfigFilePath.c_str());
 	if (!titleConfigFile.IsLoaded())
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath);	
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath.c_str());
 	}
 
 	// Setup relative pathing if defined
-	const char * gameDataPathFromFile = titleConfigFile.GetString("config", "gameDataPath");
-	if (gameDataPathFromFile != NULL)
+	const std::string & gameDataPathFromFile = titleConfigFile.GetString("config", "gameDataPath");
+	if (!gameDataPathFromFile.empty())
 	{
-		sprintf(gameDataPath, "%s", gameDataPathFromFile);
+		gameDataPath = gameDataPathFromFile;
 		useRelativePaths = true;
 
 		// Resolve relative paths against the executable directory
 		std::filesystem::path resolvedPath = exeDir / gameDataPathFromFile;
 		resolvedPath = resolvedPath.lexically_normal();
-		snprintf(gameDataPath, sizeof(gameDataPath), "%s", resolvedPath.string().c_str());
+		gameDataPath = resolvedPath.string();
 	}
 
 	// All files read by the game will be added to the datapack in case we want to make a pack
@@ -127,47 +124,47 @@ int main(int argc, char *argv[])
 	dataPack.AddFile(titleConfigFilePath);
 #endif
 
-	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath);
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "GameData path is: %s", gameDataPath.c_str());
 
-	strncpy(gameConfigPath, titleConfigFile.GetString("config", "gameConfigFile"), StringUtils::s_maxCharsPerLine);
-	strncpy(texturePath, titleConfigFile.GetString("config", "texturePath"), StringUtils::s_maxCharsPerLine);
-	strncpy(fontPath, titleConfigFile.GetString("config", "fontPath"), StringUtils::s_maxCharsPerLine);
-	strncpy(guiPath, titleConfigFile.GetString("config", "guiPath"), StringUtils::s_maxCharsPerLine);
-	strncpy(modelPath, titleConfigFile.GetString("config", "modelPath"), StringUtils::s_maxCharsPerLine);
-	strncpy(templatePath, titleConfigFile.GetString("config", "templatePath"), StringUtils::s_maxCharsPerLine);
-	strncpy(scenePath, titleConfigFile.GetString("config", "scenePath"), StringUtils::s_maxCharsPerLine);
-	strncpy(scriptPath, titleConfigFile.GetString("config", "scriptPath"), StringUtils::s_maxCharsPerLine);
-	strncpy(shaderPath, titleConfigFile.GetString("config", "shaderPath"), StringUtils::s_maxCharsPerLine);
-	strncpy(soundPath, titleConfigFile.GetString("config", "soundPath"), StringUtils::s_maxCharsPerLine);
+	gameConfigPath = titleConfigFile.GetString("config", "gameConfigFile");
+	texturePath = titleConfigFile.GetString("config", "texturePath");
+	fontPath = titleConfigFile.GetString("config", "fontPath");
+	guiPath = titleConfigFile.GetString("config", "guiPath");
+	modelPath = titleConfigFile.GetString("config", "modelPath");
+	templatePath = titleConfigFile.GetString("config", "templatePath");
+	scenePath = titleConfigFile.GetString("config", "scenePath");
+	scriptPath = titleConfigFile.GetString("config", "scriptPath");
+	shaderPath = titleConfigFile.GetString("config", "shaderPath");
+	soundPath = titleConfigFile.GetString("config", "soundPath");
 
 	// Prefix paths that don't look explicit
 	if (useRelativePaths)
 	{
-		if (strstr(gameConfigPath, ":") == NULL)	{ StringUtils::PrependString(gameConfigPath, gameDataPath); }
-		if (strstr(texturePath, ":") == NULL)		{ StringUtils::PrependString(texturePath, gameDataPath); }
-		if (strstr(fontPath, ":") == NULL)			{ StringUtils::PrependString(fontPath, gameDataPath); }
-		if (strstr(guiPath, ":") == NULL)			{ StringUtils::PrependString(guiPath, gameDataPath); }
-		if (strstr(modelPath, ":") == NULL)			{ StringUtils::PrependString(modelPath, gameDataPath); }
-		if (strstr(templatePath, ":") == NULL)		{ StringUtils::PrependString(templatePath, gameDataPath); }
-		if (strstr(scenePath, ":") == NULL)			{ StringUtils::PrependString(scenePath, gameDataPath); }
-		if (strstr(scriptPath, ":") == NULL)		{ StringUtils::PrependString(scriptPath, gameDataPath); }
-		if (strstr(shaderPath, ":") == NULL)		{ StringUtils::PrependString(shaderPath, gameDataPath); }
-		if (strstr(soundPath, ":") == NULL)			{ StringUtils::PrependString(soundPath, gameDataPath); }
+		if (gameConfigPath.find(':') == std::string::npos)	{ gameConfigPath = gameDataPath + gameConfigPath; }
+		if (texturePath.find(':') == std::string::npos)		{ texturePath = gameDataPath + texturePath; }
+		if (fontPath.find(':') == std::string::npos)		{ fontPath = gameDataPath + fontPath; }
+		if (guiPath.find(':') == std::string::npos)			{ guiPath = gameDataPath + guiPath; }
+		if (modelPath.find(':') == std::string::npos)		{ modelPath = gameDataPath + modelPath; }
+		if (templatePath.find(':') == std::string::npos)	{ templatePath = gameDataPath + templatePath; }
+		if (scenePath.find(':') == std::string::npos)		{ scenePath = gameDataPath + scenePath; }
+		if (scriptPath.find(':') == std::string::npos)		{ scriptPath = gameDataPath + scriptPath; }
+		if (shaderPath.find(':') == std::string::npos)		{ shaderPath = gameDataPath + shaderPath; }
+		if (soundPath.find(':') == std::string::npos)		{ soundPath = gameDataPath + soundPath; }
 	}
 
 	// Load game specific config
 #ifdef _DATAPACK
-	GameFile gameConfig(dataPack.GetEntry(gameConfigPath));
+	GameFile gameConfig(dataPack.GetEntry(gameConfigPath.c_str()));
 	if (!gameConfig.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration from the data pack.");
 		return 1;
 	}
 #else
-	GameFile gameConfig(gameConfigPath);
+	GameFile gameConfig(gameConfigPath.c_str());
 	if (!gameConfig.IsLoaded())
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", gameConfigPath);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the game specific configuration file at %s", gameConfigPath.c_str());
 	}
 
 	// Add all resources to the datapack so all files are written if the user hits the create datapack debug menu button
@@ -231,8 +228,8 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	const char * gameName = titleConfigFile.GetString("config", "name");
-	SDL_Window * sdlWindow = SDL_CreateWindow(gameName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
+	const std::string & gameName = titleConfigFile.GetString("config", "name");
+	SDL_Window * sdlWindow = SDL_CreateWindow(gameName.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, videoFlags);
 
 	if (!sdlWindow)
     {
@@ -287,19 +284,19 @@ int main(int argc, char *argv[])
 	Gui::Get().Startup(guiPath, &dataPack);
 	ScriptManager::Get().Startup(scriptPath, &dataPack);
 #else
-	RenderManager::Get().Startup(sc_colourBlack, shaderPath, NULL, useVr);
+	RenderManager::Get().Startup(sc_colourBlack, shaderPath, nullptr, useVr);
 	RenderManager::Get().Resize(width, height, bpp);
 	TextureManager::Get().Startup(texturePath, gameConfig.GetBool("render", "textureFilter"));
 	FontManager::Get().Startup(fontPath);
 	InputManager::Get().Startup(fullScreen);
-	ModelManager::Get().Startup(modelPath, NULL);
+	ModelManager::Get().Startup(modelPath, nullptr);
 	PhysicsManager::Get().Startup(gameConfig);
-	AnimationManager::Get().Startup(modelPath, NULL);
-	WorldManager::Get().Startup(templatePath, scenePath, NULL);
+	AnimationManager::Get().Startup(modelPath, nullptr);
+	WorldManager::Get().Startup(templatePath, scenePath, nullptr);
 	CameraManager::Get().Startup();
-	SoundManager::Get().Startup(soundPath, NULL);
-	Gui::Get().Startup(guiPath, NULL);
-	ScriptManager::Get().Startup(scriptPath, NULL);
+	SoundManager::Get().Startup(soundPath, nullptr);
+	Gui::Get().Startup(guiPath, nullptr);
+	ScriptManager::Get().Startup(scriptPath, nullptr);
 #endif
 
 #if ENABLE_VR
@@ -401,9 +398,8 @@ int main(int argc, char *argv[])
 		// Draw FPS on top of everything
 		if (DebugMenu::Get().IsDebugMenuEnabled())
 		{
-			char buf[32];
-			sprintf(buf, "FPS: %u", lastFps);
-			FontManager::Get().DrawDebugString2D(buf, Vector2(0.85f, 1.0f));
+			std::string buf = "FPS: " + std::to_string(lastFps);
+			FontManager::Get().DrawDebugString2D(buf.c_str(), Vector2(0.85f, 1.0f));
 		}
 
 		// Drawing the scene will flush the renderLayers

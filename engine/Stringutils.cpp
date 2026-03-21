@@ -1,285 +1,204 @@
 #include "StringUtils.h"
 
-#include <string.h>
-#include <stdlib.h>
+#include <algorithm>
+#include <cstring>
+#include <filesystem>
 
-const char * StringUtils::s_charLineEnd = "\n";				// Char sequence for the end of a line
-const char * StringUtils::s_charTab = "\t";					// Char sequence for a tab
-const char * StringUtils::s_charPathSep = "/";				// Path separator
-
-const char * StringUtils::ExtractField(const char *a_buffer, const char *a_delim, unsigned int a_fieldIndex)
+std::string StringUtils::ExtractField(std::string_view a_buffer, std::string_view a_delim, unsigned int a_fieldIndex)
 {
-	// Early out for bad string or no delim
-	if (a_buffer == nullptr || 
-		strlen(a_buffer) == 0 || 
-		!strstr(a_buffer, a_delim))
-	{
-		return nullptr;
-	}
-   
-    // Ignore all delims before the fields
-    while (strstr(a_buffer, a_delim) == a_buffer) 
-	{
-		a_buffer += strlen(a_delim);
+    if (a_buffer.empty() || a_buffer.find(a_delim) == std::string_view::npos)
+    {
+        return {};
     }
-    
-    // Maintain pointers to the start and end of the buffer
-	const char * ptrStart = nullptr;
-    const char * ptrEnd = nullptr;
-    unsigned int i = 0;
-    ptrStart = ptrEnd = a_buffer;
-    
-    if (a_fieldIndex==0) 
-	{
-		ptrEnd = strstr(ptrStart, a_delim);
-	} 
-	else 
-	{
-		// Move the start and end pointers to the delimeter
-		for (i=0; i<a_fieldIndex; i++) 
-		{
-			ptrEnd = strstr(ptrStart, a_delim);
-            if (ptrEnd==nullptr) 
-			{
-				break;
-			}
 
-            ptrStart = ptrEnd + (sizeof(char)*strlen(a_delim));
-		}
- 
-		if (*ptrStart=='\0' || a_fieldIndex > i) 
-		{
-			return nullptr;
-		} 
-		else 
-		{
-			ptrEnd = strstr(ptrStart, a_delim);
-            if (ptrEnd==nullptr) 
-			{
-				ptrEnd = strchr(ptrStart, '\0');
-			}
-		}
-	}
- 
-	// No instance of delim, early out
-    if (ptrStart==ptrEnd) {
-		return nullptr;
+    // Skip leading delimiters
+    while (a_buffer.substr(0, a_delim.size()) == a_delim)
+    {
+        a_buffer.remove_prefix(a_delim.size());
     }
-            
-    // Allocate memory for the new buffer and return
-    char * retBuf = (char*)malloc(sizeof(char)*(ptrEnd-ptrStart)+1);
-	if (retBuf != nullptr)
-	{
-		// Copy chars from the buffer and terminate the string
-		memcpy(retBuf, ptrStart, (sizeof(char)*(ptrEnd-ptrStart)));
-		retBuf[ptrEnd-ptrStart] = '\0';
- 
-		// Trim off any unwanted characters such an newlines and quotes
-		return TrimString(retBuf, true);
-	}
 
-	// Failure case
-	return nullptr;
-}
+    // Walk through fields
+    size_t start = 0;
+    size_t end = std::string_view::npos;
 
-const char * StringUtils::ExtractPropertyName(const char *a_buffer, const char *a_delim)
-{
-	// Early out for bad string or no delim
-	const char * delimLoc = strstr(a_buffer, a_delim);
-	if (a_buffer == nullptr || 
-		strlen(a_buffer) == 0 || 
-		delimLoc == nullptr)
-	{
-		return nullptr;
-	}
-   
-    // Alloc a new string and return it
-	unsigned int propLength = delimLoc - a_buffer;
-	char * retBuf = (char*)malloc(sizeof(char)*propLength+1);
-	if (retBuf != nullptr)
-	{
-		// Copy all chars up to delim and null terminate
-		memset(retBuf, 0, sizeof(char) * propLength);
-		memcpy(retBuf, a_buffer, propLength);
-		retBuf[propLength] = '\0';
-		return TrimString(retBuf);
-    }
-	
-	// Failure case
-	return nullptr;
-}
-
-const char * StringUtils::ExtractValue(const char *a_buffer, const char *a_delim)
-{
-	// Early out for bad string or no delim
-	const char * delimLoc = strstr(a_buffer, a_delim);
-	if (a_buffer == nullptr || 
-		strlen(a_buffer) == 0 || 
-		delimLoc == nullptr)
-	{
-		return nullptr;
-	}
-   
-	// Return everything after the delimeter
-	return TrimString(delimLoc+1);
-}
-
-const char * StringUtils::ExtractFileNameFromPath(const char * a_buffer)
-{
-	unsigned int  bufLength = strlen(a_buffer);
-	if (bufLength > 0)
-	{
-		for (unsigned int i = bufLength; i > 0; --i)
-		{
-			if (a_buffer[i] == '/' || a_buffer[i] == '\\')
-			{
-				return &a_buffer[i+1];
-			}
-		}
-	}
-
-	return nullptr;
-}
-
-void StringUtils::TrimFileNameFromPath(char * a_buffer_OUT)
-{
-	unsigned int  bufLength = strlen(a_buffer_OUT);
-	if (a_buffer_OUT > 0)
-	{
-		// Work backwards through the string until a slash is encountered
-		for (unsigned int i = bufLength; i > 0; --i)
-		{
-			if (a_buffer_OUT[i] == '/' || a_buffer_OUT[i] == '\\')
-			{
-				// Terminate the string at the slash
-				a_buffer_OUT[i+1] = '\0';
-				return;
-			}
-		}
-	}
-}
-
-
-const char * StringUtils::TrimString(const char * a_buffer, bool a_trimQuotes) 
-{
-	// Iterate through the string and remove bad characters
-	if (a_buffer != nullptr)
-	{
-		const unsigned int stringLength = strlen(a_buffer);
-
-		 // Allocate memory for the new buffer
-		char * retBuf = (char*)malloc(sizeof(char)*stringLength+2);
-		if (retBuf != nullptr)
-		{
-			// Copy chars from the buffer and terminate the string
-			unsigned int nonNullChars = 0;
-			for (unsigned int i = 0; i < stringLength; i++) 
-			{
-				// Remove all whitespace characters
-				if (a_buffer[i] != 10 &&	// 
-					a_buffer[i] != 32 &&	// 
-					a_buffer[i] != 9 &&		// Tab?
-					a_buffer[i] != ';')
-				{
-					// And quotes if requested
-					if (!(a_trimQuotes && a_buffer[i] == '"'))
-					{
-						retBuf[nonNullChars++] = a_buffer[i];
-					}
-				}
-			}
-
-			retBuf[nonNullChars] = '\0';
-
-			return retBuf;
-		}
-	}
-
-	return nullptr;
-}
-
-const char * StringUtils::ReadLine(FILE *a_filePointer) 
-{
-	// Buffer of the max characters per line
-	char * retBuf = (char*)malloc(sizeof(char)*s_maxCharsPerLine+1);
-	memset(&retBuf, 0, sizeof(char) * s_maxCharsPerLine);
-
-    char *findc;
-	do {
-		fgets(retBuf, s_maxCharsPerLine, a_filePointer);
-
-		// Early out for bad file
-        if (feof(a_filePointer)) 
-		{
-            retBuf[0] = 0;
-            return retBuf;
+    for (unsigned int i = 0; i <= a_fieldIndex; ++i)
+    {
+        if (i > 0)
+        {
+            start = end + a_delim.size();
+            if (start >= a_buffer.size())
+            {
+                return {};
+            }
         }
-	} while ((retBuf[0] == '/') || (retBuf[0] == '\n') || (retBuf[0] == '\r'));
+        end = a_buffer.find(a_delim, start);
+        if (end == std::string_view::npos)
+        {
+            if (i < a_fieldIndex)
+            {
+                return {};
+            }
+            end = a_buffer.size();
+        }
+    }
 
-	// Terminate the string
-    findc = strchr(retBuf, '\r');
-    if (findc)
-	{
-        *findc = 0;
-	}
-   
-	return retBuf;										
+    if (start >= a_buffer.size() || start == end)
+    {
+        return {};
+    }
+
+    return TrimString(a_buffer.substr(start, end - start), true);
+}
+
+std::string StringUtils::ExtractPropertyName(std::string_view a_buffer, std::string_view a_delim)
+{
+    if (a_buffer.empty())
+    {
+        return {};
+    }
+
+    size_t delimPos = a_buffer.find(a_delim);
+    if (delimPos == std::string_view::npos)
+    {
+        return {};
+    }
+
+    return TrimString(a_buffer.substr(0, delimPos));
+}
+
+std::string StringUtils::ExtractValue(std::string_view a_buffer, std::string_view a_delim)
+{
+    if (a_buffer.empty())
+    {
+        return {};
+    }
+
+    size_t delimPos = a_buffer.find(a_delim);
+    if (delimPos == std::string_view::npos)
+    {
+        return {};
+    }
+
+    return TrimString(a_buffer.substr(delimPos + a_delim.size()));
+}
+
+std::string_view StringUtils::ExtractFileNameFromPath(std::string_view a_buffer)
+{
+    std::filesystem::path file_path(a_buffer);
+    return file_path.filename().string();
+}
+
+std::string StringUtils::TrimFileNameFromPath(std::string_view a_path)
+{
+    if (a_path.empty())
+    {
+        return {};
+    }
+
+    size_t lastSlash = a_path.find_last_of("/\\");
+    if (lastSlash == std::string_view::npos)
+    {
+        return {};
+    }
+
+    return std::string(a_path.substr(0, lastSlash + 1));
+}
+
+std::string StringUtils::TrimString(std::string_view a_buffer, bool a_trimQuotes)
+{
+    if (a_buffer.empty())
+    {
+        return {};
+    }
+
+    std::string result;
+    result.reserve(a_buffer.size());
+
+    for (char c : a_buffer)
+    {
+        // Remove whitespace characters
+        if (c == '\n' || c == ' ' || c == '\t' || c == ';')
+        {
+            continue;
+        }
+        // Remove quotes if requested
+        if (a_trimQuotes && c == '"')
+        {
+            continue;
+        }
+        result += c;
+    }
+
+    return result;
+}
+
+std::string StringUtils::ReadLine(FILE *a_filePointer)
+{
+    char buf[s_maxCharsPerLine];
+
+    do {
+        if (fgets(buf, s_maxCharsPerLine, a_filePointer) == nullptr)
+        {
+            return {};
+        }
+
+        if (feof(a_filePointer))
+        {
+            return {};
+        }
+    } while (buf[0] == '/' || buf[0] == '\n' || buf[0] == '\r');
+
+    // Remove trailing carriage return
+    char * cr = strchr(buf, '\r');
+    if (cr)
+    {
+        *cr = '\0';
+    }
+
+    return std::string(buf);
 }
 
 unsigned char StringUtils::ConvertToLower(unsigned char a_char)
 {
-	// TODO!
-	return a_char;
+    if (a_char >= 'A' && a_char <= 'Z')
+    {
+        return a_char + ('a' - 'A');
+    }
+    return a_char;
 }
 
-unsigned int StringUtils::CountCharacters(const char * a_string, const char & a_searchChar)
+unsigned int StringUtils::CountCharacters(std::string_view a_string, char a_searchChar)
 {
-	// Early out for bad input
-	if (a_string == nullptr || a_string[0] == '\0')
-	{
-		return 0;
-	}
-
-	// O(n) search through each character
-	unsigned int numOccurances = 0;
-	const unsigned int strLen = strlen(a_string);
-	for (unsigned int i = 0; i < strLen; ++i)
-	{
-		if (a_string[i] == a_searchChar)
-		{
-			++numOccurances;
-		}
-	}
-	return numOccurances;
+    unsigned int count = 0;
+    for (char c : a_string)
+    {
+        if (c == a_searchChar)
+        {
+            ++count;
+        }
+    }
+    return count;
 }
 
-bool StringUtils::PrependString(char * a_buffer_OUT, const char * a_prefix)
+std::string StringUtils::PrependString(std::string_view a_buffer, std::string_view a_prefix)
 {
-	char tempString[s_maxCharsPerLine];
-	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
-	{
-		strncpy(tempString, a_buffer_OUT, s_maxCharsPerLine);
-		sprintf(a_buffer_OUT, "%s%s", a_prefix, tempString);
-		return true;
-	}
-
-	return false;
+    std::string result;
+    result.reserve(a_prefix.size() + a_buffer.size());
+    result.append(a_prefix);
+    result.append(a_buffer);
+    return result;
 }
 
-bool StringUtils::AppendString(char * a_buffer_OUT, const char * a_suffix)
+std::string StringUtils::AppendString(std::string_view a_buffer, std::string_view a_suffix)
 {
-	char tempString[s_maxCharsPerLine];
-	if (strlen(a_buffer_OUT) < s_maxCharsPerLine)
-	{
-		strncpy(tempString, a_buffer_OUT, s_maxCharsPerLine);
-		sprintf(a_buffer_OUT, "%s%s", tempString, a_suffix);
-		return true;
-	}
-
-	return false;
+    std::string result;
+    result.reserve(a_buffer.size() + a_suffix.size());
+    result.append(a_buffer);
+    result.append(a_suffix);
+    return result;
 }
 
-const char * StringUtils::BoolToString(bool a_input)
+std::string_view StringUtils::BoolToString(bool a_input)
 {
-	return a_input ? "true" : "false";
+    return a_input ? "true" : "false";
 }

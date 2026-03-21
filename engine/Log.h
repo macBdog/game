@@ -1,7 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <stdarg.h>
+#include <string>
+#include <string_view>
+#include <cstdarg>
 
 #include "../core/Colour.h"
 #include "../core/HashMap.h"
@@ -56,45 +58,47 @@ public:
 	inline void DisableRendering() { m_renderToScreen = false; }
 	inline void EnableRendering() { m_renderToScreen = true; }
 	void ClearRendering();
- 
+
 private:
-	
+
 	//\brief A log display entry needs it's own properties as it's drawn per line
 	struct LogDisplayEntry
 	{
 		//\brief Set up the basic properties of a log display message
-		LogDisplayEntry(const char * a_message, LogLevel a_level)
+		LogDisplayEntry(std::string_view a_message, LogLevel a_level)
+			: m_message(a_message)
 		{
-			strncpy(m_message, a_message, sizeof(char) * strlen(a_message) + 1);
 			m_lifeTime = s_logDisplayTime[static_cast<int>(a_level)];
 			m_colour = s_logDisplayColour[static_cast<int>(a_level)];
 		}
 
-		char m_message[StringUtils::s_maxCharsPerLine];		// What text to display on screen
+		std::string m_message;								// What text to display on screen
 		Colour m_colour;
 		float m_lifeTime;									// How long to display this line
 	};
 
 	//\brief Utility function to stringify log constants
-	static void PrependLogDetails(LogLevel a_level, LogCategory a_category, char * a_string_OUT)
+	static std::string_view GetLogLevelString(LogLevel a_level)
 	{
 		switch (a_level)
 		{
-			case LogLevel::Info:       sprintf(a_string_OUT, "%s", "INFO"); break;
-			case LogLevel::Warning:    sprintf(a_string_OUT, "%s", "WARNING"); break;
-			case LogLevel::Error:      sprintf(a_string_OUT, "%s", "ERROR"); break;
-			default: break;
+			case LogLevel::Info:       return "INFO";
+			case LogLevel::Warning:    return "WARNING";
+			case LogLevel::Error:      return "ERROR";
+			default: return "";
 		}
-
+	}
+	static std::string_view GetLogCategoryString(LogCategory a_category)
+	{
 		switch (a_category)
 		{
-			case LogCategory::Engine:     sprintf(a_string_OUT, "%s", "ENGINE"); break;
-			case LogCategory::Game:       sprintf(a_string_OUT, "%s", "GAME"); break;
-			default: break;
+			case LogCategory::Engine:  return "ENGINE";
+			case LogCategory::Game:    return "GAME";
+			default: return "";
 		}
 	}
 
-	//\brief Shortcuts for creating and mainting a list of display entries
+	//\brief Shortcuts for creating and maintaining a list of display entries
 	typedef LinkedListNode<LogDisplayEntry> LogDisplayNode;
 	typedef LinkedList<LogDisplayEntry> LogDisplayList;
 

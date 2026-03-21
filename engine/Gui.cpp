@@ -20,14 +20,13 @@ float Gui::s_cursorBlinkTimer = 0.0f;
 const float Gui::s_cursorBlinkTime = 0.55f;
 float Gui::s_widgetPulseTimer = 0.0f;
 
-bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
+bool Gui::Startup(std::string_view a_guiPath, const DataPack * a_dataPack)
 {
 	// Cache off the gui path for later use when loading menus
-	strncpy(m_guiPath, a_guiPath, strlen(a_guiPath) + 1);
+	m_guiPath = a_guiPath;
 
 	// Load in the gui config file
-	char fileName[StringUtils::s_maxCharsPerLine];
-	sprintf(fileName, "%s%s", a_guiPath, "gui.json");
+	std::string fileName = std::string(a_guiPath) + "gui.json";
 
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
 	{
@@ -57,8 +56,8 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
 		// Create one and add it to the list
 		Widget * defaultMenu = new Widget();
 		defaultMenu->SetName("New Menu");
-		sprintf(fileName, "%s%s", a_guiPath, "newMenu.json");
-		defaultMenu->SetFilePath(fileName);
+		std::string defaultMenuPath = std::string(a_guiPath) + "newMenu.json";
+		defaultMenu->SetFilePath(defaultMenuPath.c_str());
 		defaultMenu->SetActive(false);
 
 		MenuListNode * newMenuNode = new MenuListNode();
@@ -213,19 +212,19 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	Alignment alignAnchor;
 	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignX"))
 	{
-		align.SetXFromString(a_widgetFile->FindProperty("alignX")->GetString());
+		align.SetXFromString(alignX->GetString().c_str());
 	}
 	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignY"))
 	{
-		align.SetYFromString(a_widgetFile->FindProperty("alignY")->GetString());
+		align.SetYFromString(alignY->GetString().c_str());
 	}
-	if (GameFile::Property * alignX = a_widgetFile->FindProperty("alignAnchorX"))
+	if (GameFile::Property * alignAnchorX = a_widgetFile->FindProperty("alignAnchorX"))
 	{
-		alignAnchor.SetXFromString(a_widgetFile->FindProperty("alignAnchorX")->GetString());
+		alignAnchor.SetXFromString(alignAnchorX->GetString().c_str());
 	}
-	if (GameFile::Property * alignY = a_widgetFile->FindProperty("alignAnchorY"))
+	if (GameFile::Property * alignAnchorY = a_widgetFile->FindProperty("alignAnchorY"))
 	{
-		alignAnchor.SetYFromString(a_widgetFile->FindProperty("alignAnchorY")->GetString());
+		alignAnchor.SetYFromString(alignAnchorY->GetString().c_str());
 	}
 	defFromFile.m_pos.SetAlignment(align);
 	defFromFile.m_pos.SetAlignmentAnchor(alignAnchor);
@@ -252,11 +251,11 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		// Apply properties not set during creation
 		if (GameFile::Property * name = a_widgetFile->FindProperty("name"))
 		{
-			newWidget->SetName(name->GetString());
+			newWidget->SetName(name->GetString().c_str());
 		}
 		if (GameFile::Property * text = a_widgetFile->FindProperty("text"))
 		{
-			newWidget->SetText(text->GetString());
+			newWidget->SetText(text->GetString().c_str());
 		}
 		if (GameFile::Property * colour = a_widgetFile->FindProperty("colour"))
 		{
@@ -264,7 +263,7 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 		}
 		if (GameFile::Property * alignTo = a_widgetFile->FindProperty("alignTo"))
 		{
-			newWidget->SetAlignTo(alignTo->GetString());
+			newWidget->SetAlignTo(alignTo->GetString().c_str());
 		}
 		if (GameFile::Property * texture = a_widgetFile->FindProperty("texture"))
 		{
@@ -274,8 +273,8 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 			}
 		}
 		if (GameFile::Property * action = a_widgetFile->FindProperty("action"))
-		{		
-			newWidget->SetScriptFuncName(action->GetString());
+		{
+			newWidget->SetScriptFuncName(action->GetString().c_str());
 			newWidget->SetAction(&ScriptManager::Get(), &ScriptManager::OnWidgetAction);
 		}
 		return newWidget;
@@ -283,13 +282,14 @@ Widget * Gui::CreateWidget(GameFile::Object * a_widgetFile, Widget * a_parent, b
 	return nullptr;
 }
 
-Widget * Gui::FindWidget(const char * a_widgetName)
+Widget * Gui::FindWidget(std::string_view a_widgetName)
 {
 	// Search the active menu first
 	Widget * foundWidget = nullptr;
+	std::string widgetNameStr(a_widgetName);
 	if (m_activeMenu != nullptr)
 	{
-		foundWidget = m_activeMenu->Find(a_widgetName);
+		foundWidget = m_activeMenu->Find(widgetNameStr.c_str());
 	}
 
 	// Search through all menus if not found
@@ -298,7 +298,7 @@ Widget * Gui::FindWidget(const char * a_widgetName)
 		MenuListNode * cur = m_menus.GetHead();
 		while(cur != nullptr && foundWidget == nullptr)
 		{
-			foundWidget = cur->GetData()->Find(a_widgetName);
+			foundWidget = cur->GetData()->Find(widgetNameStr.c_str());
 			cur = cur->GetNext();
 		}
 	}
@@ -442,9 +442,8 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 				createdMenu->SetName(a_menuFile.GetString("menu", "name"));
 				if (a_dataPack == nullptr || !a_dataPack->IsLoaded())
 				{
-					char menuFilePath[StringUtils::s_maxCharsPerLine];
-					sprintf(menuFilePath, "%s%s.json", m_guiPath, createdMenu->GetName());
-					createdMenu->SetFilePath(menuFilePath);
+					std::string menuFilePath = m_guiPath + createdMenu->GetName() + ".json";
+					createdMenu->SetFilePath(menuFilePath.c_str());
 				}
 				createdMenu->SetActive(false);
 
@@ -494,7 +493,7 @@ bool Gui::LoadMenu(const GameFile & a_menuFile, const DataPack * a_dataPack)
 	return false;
 }
 
-bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
+bool Gui::LoadMenus(std::string_view a_guiPath, const DataPack * a_dataPack)
 {
 	bool loadSuccess = true;
 	if (a_dataPack != nullptr && a_dataPack->IsLoaded())
@@ -526,8 +525,7 @@ bool Gui::LoadMenus(const char * a_guiPath, const DataPack * a_dataPack)
 		FileManager::FileListNode * curNode = menuFiles.GetHead();
 		while (curNode != nullptr)
 		{
-			char fullPath[StringUtils::s_maxCharsPerLine];
-			sprintf(fullPath, "%s%s", a_guiPath, curNode->GetData()->m_name);
+			std::string fullPath = std::string(a_guiPath) + curNode->GetData()->m_name;
 			GameFile menuFile(fullPath);
 			loadSuccess &= LoadMenu(menuFile, a_dataPack);
 			curNode = curNode->GetNext();

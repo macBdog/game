@@ -33,47 +33,28 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 	return;
 #endif
 
-    char levelBuf[128];
-    char categoryBuf[128];
-	levelBuf[0] = '\0';
-	categoryBuf[0] = '\0';
-	char * formatString = nullptr;
-	char * finalString = nullptr;
-
 	// Create a preformatted error string
-	PrependLogDetails(a_level, a_category, &levelBuf[0]);
 	char errorString[StringUtils::s_maxCharsPerLine];
-	memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
-	sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
+	snprintf(errorString, sizeof(errorString), "%u -> %.*s::%.*s:",
+		Time::GetSystemTime(),
+		(int)GetLogCategoryString(a_category).size(), GetLogCategoryString(a_category).data(),
+		(int)GetLogLevelString(a_level).size(), GetLogLevelString(a_level).data());
 
-	// Grab all the log arguments passed in the elipsis
+	// Grab all the log arguments passed in the ellipsis
 	va_list formatArgs;
 	va_start(formatArgs, a_message);
-	int finalStringSize = _vscprintf(a_message, formatArgs);
-	formatString = (char *)malloc(sizeof(char) * finalStringSize + 1);
-	finalString = (char *)malloc(sizeof(char) * finalStringSize + strlen(errorString) + 8);
- 	if (finalString != nullptr && formatString != nullptr)
-	{
-		vsprintf(formatString, a_message, formatArgs);
-		sprintf(finalString, "%s %s\n", errorString, formatString);
-		printf(finalString);
-	}
-	else // Something is horribly wrong
-	{
-		printf("FATAL ERROR! Memory allocation failed in Log::Write.");
-		free(formatString);
-		free(finalString);
-		va_end(formatArgs);
-		return;
-	}
+	int needed = _vscprintf(a_message, formatArgs);
+	std::string formatString(needed, '\0');
+	vsprintf(formatString.data(), a_message, formatArgs);
 	va_end(formatArgs);
 
-	// Also add to the list which is diaplyed on screen
+	std::string finalString = std::string(errorString) + " " + formatString + "\n";
+	printf("%s", finalString.c_str());
+
+	// Also add to the list which is displayed on screen
 	if (m_renderToScreen)
 	{
-		// Print a single line to the log
-		const unsigned int stringLen = strlen(finalString);
-		if (stringLen < StringUtils::s_maxCharsPerLine)
+		if (finalString.size() < StringUtils::s_maxCharsPerLine)
 		{
 			LogDisplayNode * newLogEntry = new LogDisplayNode();
 			newLogEntry->SetData(new LogDisplayEntry(finalString, a_level));
@@ -81,28 +62,17 @@ void Log::Write(LogLevel a_level, LogCategory a_category, const char * a_message
 		}
 		else // Split up log entries greater than line length
 		{
-			for (unsigned int i = 0; i < stringLen / StringUtils::s_maxCharsPerLine + 1; ++i)
+			for (unsigned int i = 0; i < finalString.size() / StringUtils::s_maxCharsPerLine + 1; ++i)
 			{
-				char * pStart = &finalString[i * StringUtils::s_maxCharsPerLine];
-				unsigned int endOfLine = (i+1) * StringUtils::s_maxCharsPerLine;
-				endOfLine = endOfLine > stringLen ? stringLen : endOfLine;
-				char * pEnd = &finalString[(endOfLine)-1];
-				*pEnd = '\0';
+				unsigned int start = i * StringUtils::s_maxCharsPerLine;
+				unsigned int end = (i + 1) * StringUtils::s_maxCharsPerLine;
+				if (end > finalString.size()) end = (unsigned int)finalString.size();
+				std::string_view chunk(finalString.data() + start, end - start);
 				LogDisplayNode * newLogEntry = new LogDisplayNode();
-				newLogEntry->SetData(new LogDisplayEntry(pStart, a_level));
+				newLogEntry->SetData(new LogDisplayEntry(chunk, a_level));
 				m_displayList.Insert(newLogEntry);
 			}
 		}
-	}
-
-	// Free memory for error strings
-	if (formatString != nullptr)
-	{
-		free(formatString);
-	}
-	if (finalString != nullptr)
-	{
-		free(finalString);
 	}
 }
 
@@ -119,33 +89,24 @@ void Log::WriteOnce(LogLevel a_level, LogCategory a_category, const char * a_mes
 	{
 		m_writeOnceList.Insert(msgHash, tempVal);
 
-		char levelBuf[128];
-		char categoryBuf[128];
-		memset(levelBuf, 0, sizeof(char)*128);
-		memset(categoryBuf, 0, sizeof(char)*128);
-
 		// Create a preformatted error string
-		PrependLogDetails(a_level, a_category, &levelBuf[0]);
 		char errorString[StringUtils::s_maxCharsPerLine];
-		memset(&errorString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
-		sprintf(errorString, "%u -> %s::%s:", Time::GetSystemTime(), categoryBuf, levelBuf);
+		snprintf(errorString, sizeof(errorString), "%u -> %.*s::%.*s:",
+			Time::GetSystemTime(),
+			(int)GetLogCategoryString(a_category).size(), GetLogCategoryString(a_category).data(),
+			(int)GetLogLevelString(a_level).size(), GetLogLevelString(a_level).data());
 
-		// Parse the variable number of arguments
-		char formatString[StringUtils::s_maxCharsPerLine];
-		memset(&formatString, 0, sizeof(char)*StringUtils::s_maxCharsPerLine);
-
-		// Grab all the log arguments passed in the elipsis
+		// Grab all the log arguments passed in the ellipsis
 		va_list formatArgs;
 		va_start(formatArgs, a_message);
+		char formatString[StringUtils::s_maxCharsPerLine];
 		vsprintf(formatString, a_message, formatArgs);
-
-		// Print out both together to standard out
-		char finalString[StringUtils::s_maxCharsPerLine];
-		sprintf(finalString, "%s %s\n", errorString, formatString);
-		printf("%s", finalString);
 		va_end(formatArgs);
 
-		// Also add to the list which is diaplyed on screen
+		std::string finalString = std::string(errorString) + " " + formatString + "\n";
+		printf("%s", finalString.c_str());
+
+		// Also add to the list which is displayed on screen
 		if (m_renderToScreen)
 		{
 			LogDisplayNode * newLogEntry = new LogDisplayNode();
@@ -174,7 +135,7 @@ void Log::Update(float a_dt)
 		// Display log entries that are still alive
 		if (logEntry->m_lifeTime > 0.0f)
 		{
-			FontManager::Get().DrawDebugString2D(logEntry->m_message, Vector2(-1.0f, logDisplayPosY), logEntry->m_colour);
+			FontManager::Get().DrawDebugString2D(logEntry->m_message.c_str(), Vector2(-1.0f, logDisplayPosY), logEntry->m_colour);
 			if (logEntryCount == 0)
 			{
 				logEntry->m_lifeTime -= a_dt;

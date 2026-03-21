@@ -8,24 +8,25 @@
 
 template<> FileManager * Singleton<FileManager>::s_instance = nullptr;
 
-bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, const char * a_fileSubstring)
+bool FileManager::FillFileList(std::string_view a_path, FileList & a_fileList_OUT, std::string_view a_fileSubstring)
 {
 	// Check there is actually a path supplied
-	if (a_path == nullptr || !a_path[0])
+	if (a_path.empty())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
 	}
 
 	// Check path exists and is a directory
+	std::string pathStr(a_path);
 	std::error_code ec;
-	if (!std::filesystem::is_directory(a_path, ec))
+	if (!std::filesystem::is_directory(pathStr, ec))
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "FillFileList: Trying to index invalid path %s", pathStr.c_str());
 		return false;
 	}
 
-	for (const auto & entry : std::filesystem::directory_iterator(a_path, ec))
+	for (const auto & entry : std::filesystem::directory_iterator(pathStr, ec))
 	{
 		const auto filename = entry.path().filename().string();
 
@@ -36,7 +37,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 		}
 
 		// Check substring parameter
-		if (a_fileSubstring && filename.find(a_fileSubstring) == std::string::npos)
+		if (!a_fileSubstring.empty() && filename.find(std::string(a_fileSubstring)) == std::string::npos)
 		{
 			continue;
 		}
@@ -44,7 +45,7 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 		// Allocate a new file and set its properties
 		FileListNode * newFile = new FileListNode();
 		newFile->SetData(new FileInfo());
-		snprintf(newFile->GetData()->m_name, StringUtils::s_maxCharsPerLine, "%s", filename.c_str());
+		newFile->GetData()->m_name = filename;
 		newFile->GetData()->m_sizeBytes = 0;
 		newFile->GetData()->m_isDir = entry.is_directory();
 
@@ -60,22 +61,22 @@ bool FileManager::FillFileList(const char * a_path, FileList & a_fileList_OUT, c
 
 	if (ec)
 	{
-		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error completing enumeration in path %s", a_path);
+		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Error completing enumeration in path %s", pathStr.c_str());
 	}
 
 	return true;
 }
 
-bool FileManager::CheckFilePath(const char * a_filePath)
+bool FileManager::CheckFilePath(std::string_view a_filePath)
 {
-	// Check there is actually a path supplied
-	if (a_filePath == nullptr || !a_filePath[0])
+	if (a_filePath.empty())
 	{
 		return false;
 	}
 
+	std::string pathStr(a_filePath);
 	std::error_code ec;
-	return std::filesystem::is_directory(a_filePath, ec);
+	return std::filesystem::is_directory(pathStr, ec);
 }
 
 void FileManager::CleanupFileList(FileList & a_fileList_OUT)
@@ -94,31 +95,29 @@ void FileManager::CleanupFileList(FileList & a_fileList_OUT)
 	}
 }
 
-bool FileManager::GetFileTimeStamp(const char * a_path, Timestamp & a_timestamp_OUT) const
+bool FileManager::GetFileTimeStamp(std::string_view a_path, Timestamp & a_timestamp_OUT) const
 {
 	// Check there is actually a path supplied
-	if (a_path == nullptr || !a_path[0])
+	if (a_path.empty())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Trying to index an invalid path.");
 		return false;
 	}
 
+	std::string pathStr(a_path);
 	std::error_code ec;
-	auto ftime = std::filesystem::last_write_time(a_path, ec);
+	auto ftime = std::filesystem::last_write_time(pathStr, ec);
 	if (ec)
 	{
-		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", a_path);
+		Log::Get().WriteOnce(LogLevel::Error, LogCategory::Engine, "File modification date NOT retreived for: %s.", pathStr.c_str());
 		return false;
 	}
 
 	// Convert file_clock time to time_t for calendar breakdown
-	// C++17 does not have clock_cast, so use the file_clock epoch offset
 #if defined(_WIN32)
-	// MSVC file_clock epoch matches system_clock (both use Windows FILETIME epoch)
 	auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
 		std::chrono::system_clock::time_point(ftime.time_since_epoch()));
 #else
-	// On other platforms, approximate via current time anchoring
 	auto fileNow = std::filesystem::file_time_type::clock::now();
 	auto sysNow = std::chrono::system_clock::now();
 	auto sctp = sysNow + (ftime - fileNow);

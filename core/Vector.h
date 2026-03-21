@@ -3,7 +3,7 @@
 #pragma once
 
 #include <math.h>
-#include <stdio.h>
+#include <string>
 
 //\brief Basic vector class, W component is only represented in matrices
 class Vector
@@ -24,7 +24,7 @@ public:
 	inline float GetY() const { return y; }
 	inline float GetZ() const { return z; }
 	inline float * GetValues() { return &x; }
-	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f, %f", x, y, z); }
+	inline std::string GetString() const { char buf[96]; snprintf(buf, sizeof(buf), "%f, %f, %f", x, y, z); return buf; }
 
 	// Utility functions
 	const float LengthSquared() const { return x*x + y*y + z*z; }
@@ -79,7 +79,7 @@ public:
 	inline void SetY(const float & a_y) { y = a_y; }
 	inline float GetX() const { return x; }
 	inline float GetY() const { return y; }
-	inline void GetString(char * a_buf_OUT) const { sprintf(a_buf_OUT, "%f, %f", x, y); }
+	inline std::string GetString() const { char buf[64]; snprintf(buf, sizeof(buf), "%f, %f", x, y); return buf; }
 	static Vector2 Vector2Zero() { return Vector2(0.0f, 0.0f); }
 	void Normalise() { float fLen = Length(); if (fLen > 0.0f) { x = x / fLen; y = y / fLen; } }
 

@@ -2,6 +2,9 @@
 #define _ENGINE_FONT_MANAGER_H_
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "../core/Colour.h"
 #include "../core/LinkedList.h"
 #include "../core/Vector.h"
@@ -23,13 +26,12 @@ class FontManager : public Singleton<FontManager>
 {
 public:
 	//\ No work done in the constructor, only Init
-	FontManager() { m_fontPath[0] = '\0'; }
+	FontManager() { }
 	~FontManager() { Shutdown(); }
 
 	//\brief Load all fonts in the supplied argument into memory ready for drawing
-	//\param a_fontPath pointer to cstring of the path to enumerate font files
-	bool Startup(const char * a_fontPath);
-	bool Startup(const char * a_fontPath, const DataPack * a_dataPack);
+	bool Startup(std::string_view a_fontPath);
+	bool Startup(std::string_view a_fontPath, const DataPack * a_dataPack);
 	bool Shutdown();
 
 	//\brief Draw a string using the orthogonal gui render renderLayer
@@ -53,9 +55,9 @@ public:
 	//\brief Get the symbol for a loaded font name
 	//\param pointer to a cstring of the font name to retreieve
 	//\return pointer to a StringHash or nullptr for failure
-	StringHash * GetLoadedFontName(const char * a_fontName);
+	StringHash * GetLoadedFontName(std::string_view a_fontName);
 	const char * GetLoadedFontName(unsigned int a_fontNameHash);
-	const char * GetLoadedFontNameForId(int m_fontId);
+	const char * GetLoadedFontNameForId(int a_fontId);
 	inline int GetNumLoadedFonts() { return m_fonts.GetLength(); }
 
 	//\brief Get a default font name
@@ -113,13 +115,8 @@ private:
 	template <typename TInputData>
 	bool LoadFont(TInputData & a_input)
 	{
-		// Cstrings for reading filenames
-		char textureName[StringUtils::s_maxCharsPerLine];
-		char texturePath[StringUtils::s_maxCharsPerLine];
 		char line[StringUtils::s_maxCharsPerLine];
 		memset(&line, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-		memset(&textureName, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
-		memset(&texturePath, 0, sizeof(char) * StringUtils::s_maxCharsPerLine);
 
 		// Create a new font to be managed
 		RenderManager & renMan = RenderManager::Get();
@@ -127,7 +124,7 @@ private:
 		newFontNode->SetData(new Font());
 		Font * newFont = newFontNode->GetData();
 
-		// Open the file and parse each line 
+		// Open the file and parse each line
 		if (a_input.is_open())
 		{
 			// Font metadata
@@ -141,30 +138,29 @@ private:
 			{
 				// Get the number of chars to parse
 				a_input.getline(line, StringUtils::s_maxCharsPerLine);			// info face="fontname" etc
-				char shortFontName[StringUtils::s_maxCharsPerLine];
-				sprintf(shortFontName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true));
+				std::string shortFontName = StringUtils::TrimString(StringUtils::ExtractField(line, "\"", 1), true);
 				newFont->m_fontName.SetCString(shortFontName);
-				a_input.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33			
+				a_input.getline(line, StringUtils::s_maxCharsPerLine);			// common lineHeight=x base=33
 				sscanf_s(line, "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=%d",
 					&lineHeight, &base, &sizeW, &sizeH, &pages);
 
 				// As we try to render all fonts the same size, fail to load fonts greater than a meg
 				if (sizeW > s_maxFontTexSize || sizeH > s_maxFontTexSize)
 				{
-					Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than 1 meg in resolution.", shortFontName);
+					Log::Get().Write(LogLevel::Warning, LogCategory::Engine, "Cannot load the font called %s because it's bigger than 1 meg in resolution.", shortFontName.c_str());
 					a_input.close();
 					return false;
 				}
 
 				a_input.getline(line, StringUtils::s_maxCharsPerLine);			// page id=0 file="arial.tga"
-				sprintf(textureName, "%s", StringUtils::TrimString(StringUtils::ExtractField(line, "=", 2), true));
+				std::string textureName = StringUtils::TrimString(StringUtils::ExtractField(line, "=", 2), true);
 
 				a_input.getline(line, StringUtils::s_maxCharsPerLine);			// chars count=x
 				sscanf_s(line, "chars count=%d", &numChars);
 
 				// Load texture for font
-				sprintf(texturePath, "%s%s", m_fontPath, textureName);
-				newFont->m_texture = TextureManager::Get().GetTexture(texturePath, TextureCategory::Gui, TextureFilter::Linear);
+				std::string texturePath = m_fontPath + textureName;
+				newFont->m_texture = TextureManager::Get().GetTexture(texturePath.c_str(), TextureCategory::Gui, TextureFilter::Linear);
 				newFont->m_numChars = numChars;
 				newFont->m_sizeX = sizeW;
 				newFont->m_sizeY = sizeH;
@@ -217,7 +213,7 @@ private:
 		return false;
 	}
 	
-	char m_fontPath[StringUtils::s_maxCharsPerLine];	///< Cache off path to fonts
+	std::string m_fontPath;								///< Cache off path to fonts
 	FontList m_fonts;									///< Storage for all fonts that are available for drawing
 	Texture m_defaultFontTexture;						///< Pointer to a texture in memory loaded from an inc file
 };
