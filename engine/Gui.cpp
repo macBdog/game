@@ -86,6 +86,7 @@ bool Gui::Startup(const char * a_guiPath, const DataPack * a_dataPack)
             m_cursor.SetAlignment(AlignX::Middle, AlignY::Centre);
             m_cursor.SetOffset(Vector2(0.0f, 0.0f));
             m_cursor.SetSize(Vector2(0.16f / RenderManager::Get().GetViewAspect(), 0.16f));
+            m_cursor.SetRenderLayer(RenderLayer::GuiOverlay);
             m_cursor.SetActive(true);
         }
     }
@@ -109,14 +110,14 @@ bool Gui::Update(float a_dt)
 {
     // Update mouse position
     m_cursor.SetOffset(InputManager::Get().GetMousePosRelative()); 
-    
+
     // Process mouse position for selection of widgets
     UpdateSelection();
 
     // Update the pulsing of selected widgets that have actions
     s_widgetPulseTimer += a_dt * 16.0f;
     Widget::s_selectedColourValue = sin(s_widgetPulseTimer);
-    
+
     // Draw debug menu elements over the top of the menu
     m_debugRoot.Draw();
 
@@ -131,10 +132,10 @@ bool Gui::Update(float a_dt)
             FontManager::Get().DrawDebugString2D(m_activeMenu->GetName(), Vector2(-1.0, 1.0f));
         }
     }
-    
+
     // Draw game mouse cursor over the top of the gui
     m_cursor.Draw();
-    
+
     // Blink the text cursor
     s_cursorBlinkTimer += a_dt;
     if (s_cursorBlinkTimer >= s_cursorBlinkTime)
@@ -142,7 +143,7 @@ bool Gui::Update(float a_dt)
         s_cursorBlink = !s_cursorBlink;
         s_cursorBlinkTimer = 0.0f;
     }
-    
+
     return true;
 }
 

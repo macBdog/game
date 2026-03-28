@@ -13,6 +13,8 @@
 #include "StringHash.h"
 #include "Texture.h"
 
+enum class RenderLayer : unsigned char;
+
 //\brief Alignment types are used as every widget is relative to another
 enum class AlignX : unsigned char
 {
@@ -171,6 +173,8 @@ public:
 		, m_children()
 		, m_debugRender(false)
 		, m_alwaysRender(false)
+		, m_hasRenderLayerOverride(false)
+		, m_renderLayerOverride{}
 		, m_selectedListItemId(-1)
 		, m_rolloverListItemId(-1)
 		, m_textWidth(-1.0f)
@@ -297,6 +301,7 @@ public:
 	inline void SetSelectFlags(const SelectionFlags & a_flags) { m_selectFlags = static_cast<unsigned int>(a_flags); }
 	inline void SetDebugWidget() { m_debugRender = true; }
 	inline void SetAlwaysDraw() { m_alwaysRender = true; }
+	inline void SetRenderLayer(RenderLayer a_layer) { m_renderLayerOverride = a_layer; m_hasRenderLayerOverride = true; }
 	inline void SetShowTextCursor(bool a_show) { m_showTextCursor = a_show; }
 	void SetAlignTo(Widget * a_alignWidget);
 	void SetAlignTo(const char * a_alignWidgetName);
@@ -392,6 +397,8 @@ private:
 	Delegate<bool, Widget *> m_action;  ///< What to call when the widget is activated
 	bool m_debugRender;					///< If the widget should be rendered using the debug renderLayer
 	bool m_alwaysRender;				///< If the widget should be rendered when the debug menu is off
+	bool m_hasRenderLayerOverride;		///< If the widget has a custom render layer set
+	RenderLayer m_renderLayerOverride;	///< Custom render layer for this widget
 	char m_name[StringUtils::s_maxCharsPerName];			///< Display name or label
 	char m_alignToName[StringUtils::s_maxCharsPerName];		///< Name of alignment relative widget as widgets may be loaded out of order
 	char m_scriptFuncName[StringUtils::s_maxCharsPerName];	///< The name of the global LUA script to call on activation

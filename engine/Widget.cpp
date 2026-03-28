@@ -66,7 +66,7 @@ void Widget::Draw()
         // Determine draw style from selection
         Colour selectColour = m_colour;
         RenderManager & rMan = RenderManager::Get();
-        RenderLayer renderLayer = m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui;
+        RenderLayer renderLayer = m_hasRenderLayerOverride ? m_renderLayerOverride : (m_debugRender ? RenderLayer::Debug2D : RenderLayer::Gui);
         switch (m_selection)
         {
             case SelectionFlags::Rollover:		if (m_action.IsSet()) { selectColour -= sc_rolloverColour * s_selectedColourValue;	} break;
