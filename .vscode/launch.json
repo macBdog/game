@@ -60,6 +60,35 @@
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "bazel-build-datapack",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Lua Debug (Windows - MSVC)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-debug",
+            "console": "integratedTerminal",
+            "environment": [
+                {
+                    "name": "LOCAL_LUA_DEBUGGER_FILEPATH",
+                    "value": "${userHome}/.vscode/extensions/tomblind.local-lua-debugger-vscode-0.3.3/debugger/lldebugger.lua"
+                }
+            ]
+        },
+        {
+            "name": "Lua Debug (Linux/Mac - LLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/game",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "bazel-build-debug",
+            "console": "integratedTerminal",
+            "env": {
+                "LOCAL_LUA_DEBUGGER_FILEPATH": "${userHome}/.vscode/extensions/tomblind.local-lua-debugger-vscode-0.3.3/debugger/lldebugger.lua"
+            }
         }
     ]
 }
