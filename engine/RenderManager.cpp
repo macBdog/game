@@ -1354,10 +1354,10 @@ void RenderManager::AddQuad2D(RenderLayer a_renderLayer, Vector2 * a_verts, Text
 		{
 			case TextureOrientation::Normal:
 			{
-				q->m_verts[0].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
-				q->m_verts[1].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
-				q->m_verts[2].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
-				q->m_verts[3].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_verts[0].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_verts[1].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texSize.GetY() - a_texCoord.GetY());
+				q->m_verts[2].m_uv = TexCoord(a_texCoord.GetX(),					1.0f - a_texCoord.GetY());
+				q->m_verts[3].m_uv = TexCoord(a_texCoord.GetX() + a_texSize.GetX(),	1.0f - a_texCoord.GetY());
 				break;
 			}
 			case TextureOrientation::FlipVert:
