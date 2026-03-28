@@ -1,0 +1,11 @@
+cc_test(
+    name = "test_material_load",
+    srcs = ["test_material_load.cpp"],
+    deps = [
+        "//engine",
+    ],
+    copts = select({
+        "@platforms//os:windows": ["/D_CRT_SECURE_NO_WARNINGS"],
+        "//conditions:default": [],
+    }),
+)
