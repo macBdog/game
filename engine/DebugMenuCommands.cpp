@@ -9,6 +9,8 @@
 
 #include "DebugMenuCommands.h"
 
+static const WidgetVector s_debugMenuButtonSize(0.2f, 0.075f);
+
 DebugMenuCommand::DebugMenuCommand(const char * a_name, Widget * a_parent, Colour a_colour, EditType a_parentMenu)
 : m_gameObjectFunction()
 , m_widgetFunction()
@@ -62,7 +64,7 @@ Widget * DebugMenuCommand::CreateButton(const char * a_name, Widget * a_parent, 
 {
     // All debug menu elements are created equal
     Widget::WidgetDef curItem;
-    curItem.m_size = WidgetVector(0.2f, 0.1f);
+    curItem.m_size = s_debugMenuButtonSize;
     curItem.m_pos = WidgetVector(0.0f, 0.0f);
     curItem.m_pos.SetAlignment(AlignX::Left, AlignY::Top);
     curItem.m_pos.SetAlignmentAnchor(AlignX::Left, AlignY::Top);
@@ -219,11 +221,11 @@ DebugCommandReturnData DebugMenuCommandRegistry::HandleRightClick(Widget * a_sel
     Vector2 menuDrawSize(m_commands.GetHead()->GetData()->GetWidget()->GetSize());
     if (menu_type != EditType::None)
     {
-        menuDrawSize.SetY(0.1f * s_numDebugMenuCommands[static_cast<int>(menu_type)]);
+        menuDrawSize.SetY(s_debugMenuButtonSize.GetY() * s_numDebugMenuCommands[static_cast<int>(menu_type)]);
     }
     else
     {
-        menuDrawSize.SetY(0.1f * 5); // Root menu has 5 options
+        menuDrawSize.SetY(s_debugMenuButtonSize.GetY() * 5); // Root menu has 5 options
     }
     Alignment menuAlign;
     menuAlign.m_x = menuDrawPos.GetX() + menuDrawSize.GetX() > 1.0f - screenSideLimit.GetX() ? AlignX::Left : AlignX::Right;
