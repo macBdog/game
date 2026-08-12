@@ -39,31 +39,66 @@
 #include "engine/PhysicsManager.h"
 #include "engine/SoundManager.h"
 
+static void EnsureTrailingPathSeparator(char * a_path, size_t a_pathCapacity)
+{
+	const size_t len = strlen(a_path);
+	if (len == 0 || len + 1 >= a_pathCapacity)
+	{
+		return;
+	}
+
+	const char last = a_path[len - 1];
+	if (last != '\\' && last != '/')
+	{
+#ifdef _WIN32
+		a_path[len] = '\\';
+#else
+		a_path[len] = '/';
+#endif
+		a_path[len + 1] = '\0';
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	// Single parameter to the executable is the main config file
+	// Optional first argument is the boot config JSON (defaults to game.json next to cwd/exe usage)
 	bool useRelativePaths = false;
 	char titleConfigFilePath[StringUtils::s_maxCharsPerLine];
 	char gameDataPath[StringUtils::s_maxCharsPerLine];
 	titleConfigFilePath[0] = '\0';
 	gameDataPath[0] = '\0';
-	if (argc > 1)
-	{
-		memcpy(&titleConfigFilePath, argv, strlen(argv[1]));
-		titleConfigFilePath[strlen(argv[1])] = '\0';
-	}
-	else // No argument specified, use a fallback
-	{
-		sprintf(titleConfigFilePath, "game.json");
-	}
 
 	// Make sure SDL cleans up before exit
 	atexit(SDL_Quit);
 
 	// Figure out where the exe is being run from so relative paths to the exe can be used
 	std::filesystem::path exeDir = std::filesystem::path(argv[0]).parent_path();
+	if (exeDir.empty())
+	{
+		exeDir = std::filesystem::current_path();
+	}
 	char partialPath[StringUtils::s_maxCharsPerLine];
 	snprintf(partialPath, sizeof(partialPath), "%s", exeDir.string().c_str());
+
+	if (argc > 1 && argv[1] != nullptr && argv[1][0] != '\0')
+	{
+		std::filesystem::path configPath(argv[1]);
+		std::error_code pathError;
+		if (!configPath.is_absolute())
+		{
+			configPath = std::filesystem::absolute(configPath, pathError);
+			if (pathError)
+			{
+				configPath = std::filesystem::current_path() / argv[1];
+			}
+		}
+		configPath = configPath.lexically_normal();
+		snprintf(titleConfigFilePath, sizeof(titleConfigFilePath), "%s", configPath.string().c_str());
+	}
+	else
+	{
+		snprintf(titleConfigFilePath, sizeof(titleConfigFilePath), "game.json");
+	}
 
 	// Storage for resource paths
 	char gameConfigPath[StringUtils::s_maxCharsPerLine];
@@ -103,23 +138,36 @@ int main(int argc, char *argv[])
 #else
 
 	// Read the main config file to setup video etc
+	Log::Get().Write(LogLevel::Info, LogCategory::Engine, "Boot config path is: %s", titleConfigFilePath);
 	GameFile titleConfigFile(titleConfigFilePath);
 	if (!titleConfigFile.IsLoaded())
 	{
 		Log::Get().Write(LogLevel::Error, LogCategory::Engine, "Unable to load the main configuration file at %s", titleConfigFilePath);	
+		return 1;
 	}
 
 	// Setup relative pathing if defined
 	const char * gameDataPathFromFile = titleConfigFile.GetString("config", "gameDataPath");
-	if (gameDataPathFromFile != NULL)
+	if (gameDataPathFromFile != NULL && gameDataPathFromFile[0] != '\0')
 	{
-		sprintf(gameDataPath, "%s", gameDataPathFromFile);
 		useRelativePaths = true;
 
-		// Resolve relative paths against the executable directory
-		std::filesystem::path resolvedPath = exeDir / gameDataPathFromFile;
-		resolvedPath = resolvedPath.lexically_normal();
-		snprintf(gameDataPath, sizeof(gameDataPath), "%s", resolvedPath.string().c_str());
+		std::filesystem::path bootConfigDir = std::filesystem::path(titleConfigFilePath).parent_path();
+		if (bootConfigDir.empty())
+		{
+			bootConfigDir = exeDir;
+		}
+
+		std::filesystem::path dataPath(gameDataPathFromFile);
+		if (!dataPath.is_absolute())
+		{
+			// Resolve relative game data against the boot config's folder so content-local
+			// game.json files work when launched via command-line argument.
+			dataPath = bootConfigDir / dataPath;
+		}
+		dataPath = dataPath.lexically_normal();
+		snprintf(gameDataPath, sizeof(gameDataPath), "%s", dataPath.string().c_str());
+		EnsureTrailingPathSeparator(gameDataPath, sizeof(gameDataPath));
 	}
 
 	// All files read by the game will be added to the datapack in case we want to make a pack

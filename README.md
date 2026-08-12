@@ -99,7 +99,20 @@ bazel-bin/game.exe
 bazel-bin/game
 ```
 
-The working directory must contain `game.cfg` and (optionally) the `datapack.dtz` data file.
+By default the engine loads `game.json` from the working directory. Pass another boot
+config as the first argument to point at a different content project:
+
+```
+# Windows
+bazel-bin/game.exe C:\Projects\eos4\game.json
+
+# Linux / macOS
+bazel-bin/game /path/to/mygame/game.json
+```
+
+Relative `gameDataPath` values inside that boot config are resolved against the config
+file's directory. The working directory should contain `game.json` when no argument is
+passed, and (optionally) a `datapack.dtz` for datapack builds.
 
 ### IDE Support (compile_commands.json)
 
