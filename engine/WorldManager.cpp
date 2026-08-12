@@ -412,6 +412,7 @@ void WorldManager::DestroyAllScriptOwnedObjects(bool a_destroyScriptBindings)
 {
 	// Iterate through all scenes and destroy objects
 	m_totalGameObjects = 0;
+	m_objectLookup.Reset();
 	SceneNode * next = m_scenes.GetHead();
 	while(next != nullptr)
 	{

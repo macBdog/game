@@ -82,6 +82,20 @@ bool PhysicsManager::Shutdown()
 
 void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 {
+	// Drop destroyed objects left behind by incomplete teardown
+	for (auto it = m_collisionWorld.begin(); it != m_collisionWorld.end();)
+	{
+		GameObject * obj = *it;
+		if (obj == nullptr || !obj->IsActive())
+		{
+			it = m_collisionWorld.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
 	// Clear all collision each frame
 	for (const auto& objA : m_collisionWorld)
 	{
@@ -91,9 +105,14 @@ void PhysicsManager::UpdateCollisionWorld(const float& a_dt)
 	// Solve collisions
 	for (const auto& objA : m_collisionWorld)
 	{
+		if (!objA->IsClipping())
+		{
+			continue;
+		}
+
 		for (const auto& objB : m_collisionWorld)
 		{
-			if (objA == objB)
+			if (objA == objB || !objB->IsClipping())
 			{
 				continue;
 			}
@@ -313,6 +332,14 @@ bool PhysicsManager::AddCollisionObject(GameObject * a_gameObj)
 		return false;
 	}
 
+	for (const auto & existing : m_collisionWorld)
+	{
+		if (existing == a_gameObj)
+		{
+			return true;
+		}
+	}
+
 	m_collisionWorld.push_back(a_gameObj);
 	return m_collisionWorld.back() == a_gameObj;
 }
@@ -350,18 +377,20 @@ bool PhysicsManager::RemoveCollisionObject(GameObject* a_gameObj)
 	if (a_gameObj != nullptr)
 	{
 		ClearCollisions(a_gameObj);
+		bool removed = false;
 		for (auto it = m_collisionWorld.begin(); it != m_collisionWorld.end();)
 		{
 			if (*it == a_gameObj)
 			{
 				it = m_collisionWorld.erase(it);
-				return true;
+				removed = true;
 			}
 			else
 			{
 				++it;
 			}
 		}
+		return removed;
 	}
 	return false;
 }

@@ -1939,16 +1939,16 @@ void RenderManager::UnManageShader(Scene * a_scene)
 		ManagedShaderNode * next = m_managedShaders.GetHead();
 		while (next != nullptr)
 		{
-			if (next->GetData()->m_shaderScene == a_scene)
+			ManagedShaderNode * cur = next;
+			next = next->GetNext();
+			if (cur->GetData()->m_shaderScene == a_scene)
 			{
 				// Delete the management resources, the object owns the shader 
-				m_managedShaders.Remove(next);
-				delete next->GetData();
-				delete next;
-				return;
+				m_managedShaders.Remove(cur);
+				delete cur->GetData();
+				delete cur;
 			}
 		}
-		next = next->GetNext();
 	}
 
 	// TODO If the shader that was just unmanaged is not shared by any other object or scene then remove it from m_shaders

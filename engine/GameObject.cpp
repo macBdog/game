@@ -226,12 +226,12 @@ bool GameObject::Draw()
 
 bool GameObject::Shutdown() 
 {
-	// Empty collision list and remove from physics simulation
+	// Always remove from collision AND physics worlds independently
+	PhysicsManager & physMan = PhysicsManager::Get();
+	physMan.RemoveCollisionObject(this);
 	if (m_physics != nullptr)
 	{
-		PhysicsManager & physMan = PhysicsManager::Get();
 		physMan.RemovePhysicsObject(this);
-		physMan.RemoveCollisionObject(this);
 		m_physics = nullptr;
 	}
 

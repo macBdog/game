@@ -379,8 +379,20 @@ bool ScriptManager::Update(float a_dt)
                     scriptsReloaded = true;
                     curScript->m_timeStamp = curTimeStamp;
 
+                    const size_t collisionCountBefore = PhysicsManager::Get().GetCollisionWorldCount();
+
                     // Clean up any script-owned objects
                     WorldManager::Get().DestroyAllScriptOwnedObjects();
+
+                    Log::Get().Write(LogLevel::Info, LogCategory::Engine,
+                        "Script reload: collision world %zu -> %zu entries after object teardown.",
+                        collisionCountBefore, PhysicsManager::Get().GetCollisionWorldCount());
+
+                    // Ensure collision/physics worlds are empty after object teardown.
+                    // GameObject::Shutdown removes each entry, but clear explicitly so a
+                    // missed removal can't accumulate across hot-reloads.
+                    PhysicsManager::Get().ClearCollisionWorld();
+                    PhysicsManager::Get().ClearPhysicsWorld();
 
                     // Stop any music that has been playing
                     SoundManager::Get().StopAllSoundsAndMusic();

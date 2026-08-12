@@ -143,6 +143,14 @@ public:
 	//\return true if the collision world was affected
 	bool RemoveCollisionObject(GameObject* a_gameObj);
 
+	//\brief Remove every entry from the collision world, used on script hot-reload
+	inline void ClearCollisionWorld() { m_collisionWorld.clear(); }
+	inline size_t GetCollisionWorldCount() const { return m_collisionWorld.size(); }
+
+	//\brief Remove every dynamics body from the physics world
+	inline void ClearPhysicsWorld() { m_physicsWorld.clear(); }
+	inline size_t GetPhysicsWorldCount() const { return m_physicsWorld.size(); }
+
 	//\brief Apply an impulse to the centre of the physics object in a direction
 	//\param a_gameObj the object that owns the physics body to apply the force to
 	//\param a_force the direction the force should be applied
